@@ -1,9 +1,11 @@
 name: documentation
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main"]
+    paths:
+      - 'doc/**'
 
-on: [push, pull_request, workflow_dispatch]
-
-permissions:
-  contents: write
 
 jobs:
   docs:
