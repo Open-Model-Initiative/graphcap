@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/Open-Model-Initiative/graphcap )](https://github.com/Open-Model-Initiative/graphcap/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues/Open-Model-Initiative/graphcap )](https://github.com/Open-Model-Initiative/graphcap/issues)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10020/badge)](https://www.bestpractices.dev/en/projects/10020)
+
 
 **Keywords:** image captioning, scene graph, DAG, FastAPI, multimodal, machine learning, open source, artificial intelligence, datasets, open model initiative, OMI
 
