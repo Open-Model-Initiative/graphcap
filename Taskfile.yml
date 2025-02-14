@@ -1,0 +1,37 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - uv run python -m build --outdir ./dist 
+
+  lint:
+    cmds:
+      - uv run ruff check .
+      - uv run ruff format --check .
+
+  test:
+    cmds:
+      - uv run pytest
+
+  lint:
+    desc: Run Ruff linter on all Python files
+    cmds:
+      - uv run ruff check 
+
+  format:
+    desc: Run Ruff formatter on all Python files
+    cmds:
+      - uv run ruff format 
+
+  check:all:
+    desc: Run both linter and formatter in check mode
+    cmds:
+      - uv run ruff check 
+      - uv run ruff format --check 
+
+  fix:all:
+    desc: Run both linter and formatter with fixes
+    cmds:
+      - uv run ruff check --fix 
+      - uv run ruff format 

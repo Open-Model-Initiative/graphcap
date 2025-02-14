@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0
+name: contxt library tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "ci" ]
+    paths:
+      - 'graphcap/**'
+      - 'test/**'
+  pull_request:
+    branches: [ "main", "ci" ]
+    paths:
+      - 'graphcap/**'
+      - 'test/**'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Run Ruff
+        continue-on-error: true
+        run: |
+          # Run linting and save output
+          ruff check ./contxt --output-format=github > ruff_report.txt || true
+          ruff format --check ./contxt >> ruff_report.txt || true
+          
+          # Display the report
+          cat ruff_report.txt
+          
+          # Add warning annotation for the PR
+          echo "::warning::Linting issues found. See report for details."
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: ruff_report.txt
+          retention-days: 14
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Setup test environment
+        run: |
+          uv venv
+          uv pip install --upgrade pip
+          uv sync
+          uv pip install -e ".[dev]"
+      - name: Run tests
+        run: |
+          uv run pytest -v -m "not integration"

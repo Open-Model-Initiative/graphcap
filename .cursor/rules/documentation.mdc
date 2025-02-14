@@ -1,6 +1,6 @@
 ---
 description: Docstring or Module string generation with in-code documentation best practices and guidelines for generating README files.
-globs: *.tsx, *.ts, *.py
+globs:  *.tsx, *.ts, *.py
 ---
 # Documentation Policy
 
@@ -244,7 +244,7 @@ README files (commonly named `README.md` or `README.rst`) are often the first po
     Incorporate badges to visually communicate status or link to related resources:
     - **Badge with link:**
       ```markdown
-      @![please replace with alt text](https://example.org)
+      @![please replace with alt text](mdc:https:/example.org)
       ```
     - **Badge without link:**
       ```markdown
