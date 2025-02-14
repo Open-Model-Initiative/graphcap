@@ -9,4 +9,4 @@
 
 ![Image](./doc/static/logo.png)
 
-graphcap is an applications that leverages directed acyclic graphs (DAGs) along with vision and language models to generate structured image captions and scene graphs from multimodal data.
+graphcap is an application that leverages directed acyclic graphs (DAGs) along with vision and language models to generate structured image captions and scene graphs from multimodal data.
