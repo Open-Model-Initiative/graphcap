@@ -2,10 +2,14 @@ name: documentation
 on:
   workflow_dispatch:
   push:
-    branches: [ "main"]
+    branches: [ "main", "doc_sandbox"]
     paths:
       - 'doc/**'
 
+# Add permissions block at workflow level
+permissions:
+  contents: read
+  pages: write
 
 jobs:
   docs:
