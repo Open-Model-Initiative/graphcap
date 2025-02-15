@@ -1,0 +1,29 @@
+FROM node:20-alpine as builder
+
+# Install pnpm
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+RUN pnpm install
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN pnpm run build
+
+# Production stage
+FROM nginx:1.25.4-alpine-slim as prod
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Add nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 32101
+
+CMD ["nginx", "-g", "daemon off;"] 
