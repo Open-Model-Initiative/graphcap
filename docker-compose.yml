@@ -1,45 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
 services:
-  # graphcap_server:
-  #   container_name: graphcap_server
-  #   build:
-  #     context: ./
-  #     dockerfile: server/Dockerfile.server
-  #   ports:
-  #     - 32100:32100
-  #   volumes:
-  #     - ./lib/graphcap:/app/lib/graphcap
-  #     - ./server:/app/server
-  #     - ./config:/workspace/config
-  #     - ./.local:/workspace/.local
-  #     - ./datasets:/workspace/datasets
-  #     - ./.local/logs/graphcap_server:/workspace/logs
-  #   environment:
-  #     - HOST_PLATFORM=${HOST_PLATFORM:-linux}
-  #     - PYTHONPATH=/app/server
-  #     - DATABASE_URL=postgresql+asyncpg://graphcap:graphcap@graphcap_postgres:5432/graphcap
-  #   env_file:
-  #     - ./.env
-  #   develop:
-  #     watch:
-  #       - action: sync+restart
-  #         path: ./lib/graphcap
-  #         target: /app/lib/graphcap
-  #         ignore:
-  #           - "**/__pycache__"
-  #           - "**/*.pyc"
-  #       - action: sync
-  #         path: ./server/server
-  #         target: /app/server/server
-  #         ignore:
-  #           - "**/__pycache__"
-  #           - "**/*.pyc"
-  #   networks:
-  #     - graphcap
-  #   depends_on:
-  #     graphcap_postgres:
-  #       condition: service_healthy
+  graphcap_server:
+    container_name: graphcap_server
+    build:
+      context: ./graphcap/server
+      dockerfile: Dockerfile.server
+    ports:
+      - 32100:32100
+    volumes:
+      - ./graphcap:/app
+      - ./workspace:/workspace
+    environment:
+      - HOST_PLATFORM=${HOST_PLATFORM:-linux}
+      - PYTHONPATH=/app/server
+      - DATABASE_URL=postgresql+asyncpg://graphcap:graphcap@graphcap_postgres:5432/graphcap
+    env_file:
+      - ./workspace/config/.env
+    networks:
+      - graphcap
+    depends_on:
+      graphcap_postgres:
+        condition: service_healthy
 
   graphcap_postgres:
     image: postgres:17

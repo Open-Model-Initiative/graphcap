@@ -5,8 +5,11 @@ on:
     branches: [ "main"]
     paths:
       - 'doc/**'
+      - '.github/workflows/documentation.yml'
 
 
+
+permissions:
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -21,7 +24,7 @@ jobs:
           sphinx-build doc _build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/doc_sandbox') }}
+        if: ${{(github.ref == 'refs/heads/main' || github.ref == 'refs/heads/doc_sandbox') }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
