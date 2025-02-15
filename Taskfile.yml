@@ -1,4 +1,5 @@
 version: "3"
+dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 tasks:
   build:

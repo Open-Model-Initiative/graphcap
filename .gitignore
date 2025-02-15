@@ -10,4 +10,11 @@ wheels/
 .venv
 
 .local/
-    
+.env
+provider.config.toml
+
+# Ignore all files in the .env directory
+.env/*
+
+# Ignore all files in the .env directory
+.env/*

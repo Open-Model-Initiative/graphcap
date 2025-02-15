@@ -1,0 +1,136 @@
+# SPDX-License-Identifier: Apache-2.0
+name: graphcap
+services:
+  # graphcap_server:
+  #   container_name: graphcap_server
+  #   build:
+  #     context: ./
+  #     dockerfile: server/Dockerfile.server
+  #   ports:
+  #     - 32100:32100
+  #   volumes:
+  #     - ./lib/graphcap:/app/lib/graphcap
+  #     - ./server:/app/server
+  #     - ./config:/workspace/config
+  #     - ./.local:/workspace/.local
+  #     - ./datasets:/workspace/datasets
+  #     - ./.local/logs/graphcap_server:/workspace/logs
+  #   environment:
+  #     - HOST_PLATFORM=${HOST_PLATFORM:-linux}
+  #     - PYTHONPATH=/app/server
+  #     - DATABASE_URL=postgresql+asyncpg://graphcap:graphcap@graphcap_postgres:5432/graphcap
+  #   env_file:
+  #     - ./.env
+  #   develop:
+  #     watch:
+  #       - action: sync+restart
+  #         path: ./lib/graphcap
+  #         target: /app/lib/graphcap
+  #         ignore:
+  #           - "**/__pycache__"
+  #           - "**/*.pyc"
+  #       - action: sync
+  #         path: ./server/server
+  #         target: /app/server/server
+  #         ignore:
+  #           - "**/__pycache__"
+  #           - "**/*.pyc"
+  #   networks:
+  #     - graphcap
+  #   depends_on:
+  #     graphcap_postgres:
+  #       condition: service_healthy
+
+  graphcap_postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: graphcap
+      POSTGRES_PASSWORD: graphcap
+      POSTGRES_DB: graphcap
+    ports:
+      - "35432:5432"
+    volumes:
+      - graphcap_server_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graphcap"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - graphcap
+
+  # graphcap_ui:
+  #   container_name: graphcap_ui
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile.client
+  #     args:
+  #       - VITE_API_URL=http://localhost:32200/api
+  #   ports:
+  #     - "32200:32200"
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--spider", "http://localhost:32200"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 5s
+  #   volumes:
+  #     - ./.local/logs/graphcap_ui:/workspace/logs
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./ui/src
+  #         target: /app/src
+  #         ignore:
+  #           - "**/.git"
+  #           - "**/node_modules"
+  #           - "**/.DS_Store"
+  #       - action: sync
+  #         path: ./ui/public
+  #         target: /app/public
+  #       - action: sync
+  #         path: ./ui/index.html
+  #         target: /app/index.html
+  #       - action: sync
+  #         path: ./ui/vite.config.ts
+  #         target: /app/vite.config.ts
+  #       - action: sync+restart
+  #         path: ./ui/pnpm-lock.yaml
+  #         target: /app/pnpm-lock.yaml
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-development}
+  #     - VITE_API_URL=http://localhost:32100/api
+  #     - VITE_WORKSPACE_PATH=/workspace/.local
+  #   networks:
+  #     - graphcap
+
+  graphcap_pipelines:
+    build:
+      context: ./graphcap/pipelines
+      dockerfile: Dockerfile.pipelines
+    container_name: graphcap_pipelines
+    volumes:
+      - ./graphcap:/app/graphcap
+      - ./workspace:/workspace
+    environment:
+      - DAGSTER_HOME=/workspace/.local/.dagster
+      - DAGSTER_PORT=32300
+      - DAGSTER_POSTGRES_USER=graphcap
+      - DAGSTER_POSTGRES_PASSWORD=graphcap
+      - DAGSTER_POSTGRES_DB=graphcap
+      - PYTHONPATH=/app
+    ports:
+      - "32300:32300"
+    networks:
+      - graphcap
+    depends_on:
+      - graphcap_postgres
+    env_file:
+      - ./workspace/config/.env
+
+volumes:
+  graphcap_server_db:
+
+networks:
+  graphcap:
+    driver: bridge

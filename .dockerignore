@@ -1,0 +1,14 @@
+.git
+.DS_Store
+**/__pycache__
+**/*.pyc
+node_modules
+.env
+.local
+workspace
+test
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# This is a Docker Compose override file that allows you to customize service configurations.
+# To use this file:
+#
+# 1. Uncomment the services you want to modify
+# 2. Make your desired changes to those services
+# 3. Save as 'docker-compose.override.yaml'
+# 4. Run 'docker compose build' and 'docker compose up -d' as normal
+#
+# Note: Each service (api, postgres, etc.) can only be defined once in the override file.
+# If you need multiple changes to a service, combine them under a single service definition.
+
+
+name: graphcap
+# services:
+  # caption:
+  #   build:
+  #     context: ./server
+  #     dockerfile: ./Dockerfile.server
+  #   ports:
+  #     - 32100:32100
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   volumes:
+  #     - graphcap_cache:/cache/HF_HOME
+  #     - ./local/cache:/cache/local_cache
+  #   environment:
+  #     - HF_HOME=/cache/HF_HOME
+  #     - ODR_TEXT_MODEL=${ODR_TEXT_MODEL:-Qwen/Qwen2.5-14B-Instruct-GPTQ-Int8}
+  #     - ODR_VISION_MODEL=${ODR_VISION_MODEL:-mistral-community/pixtral-12b}
+  #     - HOST_PLATFORM=${HOST_PLATFORM:-linux}
+  #   develop:
+  #     watch:
+  #       - action: sync
+  #         path: ./graphcap
+  #         target: /app/graphcap
+
+  # postgres:
+  #   image: postgres:17
+  #   environment:
+  #     POSTGRES_USER: graphcap
+  #     POSTGRES_PASSWORD: graphcap
+  #     POSTGRES_DB: graphcap
+  #   ports:
+  #     - "35432:5432"
+  #   volumes:
+  #     - graphcap_data:/var/lib/postgresql/data
+
+# volumes:
+#   graphcap_data:
+#   graphcap_cache:

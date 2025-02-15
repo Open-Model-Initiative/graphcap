@@ -1,0 +1,38 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - docker compose build gcap_pipelines
+
+
+
+  up:
+    cmds:
+      - docker compose up gcap_pipelines
+
+
+  down:
+    cmds:
+      - docker compose down gcap_pipelines
+
+
+  dev:
+    cmds:
+      - docker compose up --watch --build gcap_pipelines
+  
+
+  stop:
+    cmds:
+      - docker compose stop gcap_pipelines
+
+
+  logs:
+    cmds:
+      - docker compose logs -f  gcap_pipelines 
+
+  
+  
+  update-config:
+    cmds:
+      - bash -c "cp ./pipelines/dagster.example.yml ./.local/.dagster/dagster.yaml"
