@@ -85,3 +85,12 @@ class PoeticMetaphorProcessor(BasePerspective):
             "poetic_clues": result.get("poetic_clues", ""),
             "poetic_caption": result.get("poetic_caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert poetic caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<PoeticCaption>\n"
+        context_block += f"{result.get('poetic_caption', '')}\n"
+        context_block += "</PoeticCaption>\n"
+        return context_block

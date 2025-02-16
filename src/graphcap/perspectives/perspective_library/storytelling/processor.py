@@ -99,3 +99,13 @@ class StorytellingCaptionProcessor(BasePerspective):
             "climax": result.get("climax", ""),
             "storytelling_caption": result.get("storytelling_caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert storytelling caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<StorytellingCaption>\n"
+        context_block += f"{result.get('storytelling_caption', '')}\n"
+        context_block += "</StorytellingCaption>\n"
+        return context_block
+

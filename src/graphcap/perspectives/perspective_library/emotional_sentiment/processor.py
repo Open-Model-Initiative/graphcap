@@ -90,3 +90,12 @@ class EmotionalSentimentProcessor(BasePerspective):
             "emotion_analysis": result.get("emotion_analysis", ""),
             "sentiment_caption": result.get("sentiment_caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert emotional sentiment caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<EmotionalSentimentCaption>\n"
+        context_block += f"{result.get('sentiment_caption', '')}\n"
+        context_block += "</EmotionalSentimentCaption>\n"
+        return context_block

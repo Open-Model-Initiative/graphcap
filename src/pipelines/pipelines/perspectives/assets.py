@@ -6,22 +6,12 @@ from typing import Any, Dict, List
 
 import dagster as dg
 import pandas as pd
-from graphcap.perspectives.perspective_library import (
-    get_perspective, get_perspective_list
-)
-from graphcap.providers.clients import (
-    BaseClient,
-    GeminiClient,
-    OllamaClient,
-    OpenAIClient,
-    OpenRouterClient,
-    VLLMClient,
-)
-from graphcap.providers.provider_config import get_providers_config
+from graphcap.perspectives.perspective_library import get_perspective, get_perspective_list, get_synthesizer
 
 from ..common.logging import write_caption_results
 from ..common.resources import ProviderConfigFile
 from ..io.image import DatasetIOConfig
+from ..providers.util import get_provider
 
 
 @dg.asset(group_name="perspectives", compute_kind="python")
@@ -49,34 +39,8 @@ async def perspective_caption(
     context.log.info(f"Image selection: {image_list}")
     context.log.info(f"Perspective: {perspective_list}")
 
-    config_path = provider_config_file.provider_config
-
-    providers = get_providers_config(config_path)
-    selected_provider_config = providers[default_provider]
-
     # Instantiate the client
-    client_args = {
-        "name": default_provider,
-        "kind": selected_provider_config.kind,
-        "environment": selected_provider_config.environment,
-        "env_var": selected_provider_config.env_var,
-        "base_url": selected_provider_config.base_url,
-        "default_model": selected_provider_config.default_model,
-    }
-
-    client: BaseClient
-    if selected_provider_config.kind == "openai":
-        client = OpenAIClient(**client_args)
-    elif selected_provider_config.kind == "gemini":
-        client = GeminiClient(**client_args)
-    elif selected_provider_config.kind == "vllm":
-        client = VLLMClient(**client_args)
-    elif selected_provider_config.kind == "ollama":
-        client = OllamaClient(**client_args)
-    elif selected_provider_config.kind == "openrouter":
-        client = OpenRouterClient(**client_args)
-    else:
-        raise ValueError(f"Unknown provider kind: {selected_provider_config.kind}")
+    client = get_provider(provider_config_file, default_provider)
 
     all_results = []
     for perspective in perspective_list:
@@ -86,7 +50,8 @@ async def perspective_caption(
             # Process images in batch
             image_paths = [Path(image) for image in image_list]
             caption_data_list = await processor.process_batch(
-                client, image_paths, output_dir=Path(image_dataset_config.output_dir)
+                client, image_paths, output_dir=Path(image_dataset_config.output_dir),
+                global_context="ARR YER A PIRATE HARRY. CAPTION EACH IMAGE IN ALL CAPS AND AS A PIRATE."
             )
 
             # Aggregate results
@@ -98,6 +63,7 @@ async def perspective_caption(
                         "perspective": perspective,
                         "image_filename": image_filename,
                         "caption_data": caption_data,
+                        "context": processor.to_context(caption_data),
                     }
                 )
         except Exception as e:
@@ -113,15 +79,76 @@ async def perspective_caption(
     context.add_output_metadata(metadata)
     return all_results
 
+@dg.asset(
+    group_name="perspectives",
+    compute_kind="python",
+)
+def caption_contexts(
+    context: dg.AssetExecutionContext,
+    perspective_caption: List[Dict[str, Any]],
+    image_dataset_config: DatasetIOConfig,
+    perspective_list: List[str],
+) -> Dict[str, List[str]]:
+    """Extracts contexts from the perspective caption data and adds to a dictionary of path:List[str].
+       if the path exists, the context is appended to the list."""
+    contexts = {}
+    for item in perspective_caption:
+        context.log.info(f"Processing {item['image_filename']} ({item['perspective']})")
+        path = item["image_filename"]
+        item_context = item["context"]
+        if path in contexts:
+            contexts[path].append(item_context)
+        else:
+            contexts[path] = [item_context]
+    context.log.info(f"Found {len(contexts)} contexts")
+    context.log.info(contexts)
+    return contexts
 
 @dg.asset(
     group_name="perspectives",
     compute_kind="python",
-    deps=[perspective_caption, "image_dataset_config", perspective_list],
+)
+async def synthesizer_caption(
+    context: dg.AssetExecutionContext,
+    provider_config_file: ProviderConfigFile,
+    default_provider: str,
+    caption_contexts: Dict[str, List[str]],
+    image_dataset_config: DatasetIOConfig,
+) -> List:
+    """Synthesizes captions from the perspective caption data."""
+    context.log.info("Synthesizing captions")
+
+    client = get_provider(provider_config_file, default_provider)
+    synthesizer = get_synthesizer()
+    # paths = [Path(path) for path in caption_contexts.keys()]
+    image_dir = Path(image_dataset_config.output_dir)/"images"
+    paths = [image_dir / path for path in caption_contexts.keys()]
+    results = await synthesizer.process_batch(client, paths,
+                                              output_dir=Path(image_dataset_config.output_dir),
+                                              contexts=caption_contexts)
+    
+    # Format the results to match the perspective_caption output
+    formatted_results = []
+    for path, caption_data in zip(paths, results):
+        image_filename = path.name
+        formatted_results.append({
+            "perspective": "synthesized_caption",
+            "image_filename": image_filename,
+            "caption_data": caption_data,
+            "context": synthesizer.to_context(caption_data),
+        })
+    context.log.info(f"Synthesizer caption results: {formatted_results}")
+    return formatted_results
+
+@dg.asset(
+    group_name="perspectives",
+    compute_kind="python",
+    deps=[perspective_caption, "image_dataset_config", "perspective_list", "synthesizer_caption"],
 )
 def caption_output_files(
     context: dg.AssetExecutionContext,
     perspective_caption: List[Dict[str, Any]],
+    synthesizer_caption: List[Dict[str, Any]],
     image_dataset_config: DatasetIOConfig,
     perspective_list: List[str],
 ) -> None:
@@ -161,10 +188,26 @@ def caption_output_files(
         perspective_dataframes[perspective] = df
         context.log.info(f"Completed {perspective} perspective with {len(table_data)} entries")
 
+
+
     # Write to Excel (each perspective to a separate sheet)
     with pd.ExcelWriter(excel_path) as writer:
         for perspective, df in perspective_dataframes.items():
             df.to_excel(writer, sheet_name=perspective, index=False)
+
+        # Add synthesizer data to a separate sheet
+        synthesizer_table_data = []
+        processor = get_synthesizer()
+        for item in synthesizer_caption:
+            image_filename = item["image_filename"]
+            caption_data = item["caption_data"]
+            table_row = processor.to_table(caption_data)
+            table_row["image_filename"] = image_filename
+            synthesizer_table_data.append(table_row)
+
+        synthesizer_df = pd.DataFrame(synthesizer_table_data)
+        synthesizer_df.to_excel(writer, sheet_name="synthesizer", index=False)
+
     context.log.info(f"Wrote caption results to Excel: {excel_path}")
 
     # Write to Parquet (all perspectives in a single file)
@@ -178,3 +221,4 @@ def caption_output_files(
             "parquet_output_path": str(parquet_path),
         }
     )
+

@@ -116,6 +116,8 @@ class BaseCaptionProcessor(ABC):
         temperature: Optional[float] = 0.8,
         top_p: Optional[float] = 0.9,
         repetition_penalty: Optional[float] = 1.15,
+        context: list[str] | None = None,
+        global_context: str | None = None,
     ) -> dict:
         """
         Process a single image and return caption data.
@@ -133,9 +135,20 @@ class BaseCaptionProcessor(ABC):
         Raises:
             Exception: If image processing fails
         """
+        if context or global_context:
+            context_block = "<Contexts> Consider the following context when generating the caption:\n"
+            if global_context:
+                context_block += f"<GlobalContext>\n{global_context}\n</GlobalContext>\n"
+            if context:
+                for entry in context:
+                    context_block += f"<Context>\n{entry}\n</Context>\n"
+            context_block += "</Contexts>\n"
+            prompt = f"{context_block}{self.vision_config.prompt}"
+        else:
+            prompt = self.vision_config.prompt
         try:
             completion = await provider.vision(
-                prompt=self.vision_config.prompt,
+                prompt=prompt,
                 image=image_path,
                 schema=self.vision_config.schema,
                 model=provider.default_model,
@@ -182,6 +195,8 @@ class BaseCaptionProcessor(ABC):
         store_logs: bool = False,
         formats: Optional[List[str]] = None,
         copy_images: bool = False,
+        global_context: str | None = None,
+        contexts: dict[str, list[str]] | None = None,
     ) -> List[Dict[str, Any]]:
         """
         Process multiple images and return their captions.
@@ -197,7 +212,7 @@ class BaseCaptionProcessor(ABC):
             store_logs: Whether to store logs in the output directory
             formats: List of additional formats to write caption data
             copy_images: Whether to copy images to the output directory
-
+            contexts: Additional context for the vision model based on image paths
         Returns:
             List[Dict[str, Any]]: List of caption results with metadata
         """
@@ -250,6 +265,7 @@ class BaseCaptionProcessor(ABC):
                 "log_file": str(log_file.relative_to(job_dir)) if log_file else None,
                 "formats": formats or [],
                 "copy_images": copy_images,
+                "global_context": global_context,
             }
             job_info.write_text(json.dumps(job_info_data, indent=2))
 
@@ -295,6 +311,8 @@ class BaseCaptionProcessor(ABC):
                         temperature=temperature,
                         top_p=top_p,
                         repetition_penalty=repetition_penalty,
+                        context=contexts.get(path.name) if contexts else None,
+                        global_context=global_context,
                     )
 
                     active_requests -= 1
@@ -325,12 +343,6 @@ class BaseCaptionProcessor(ABC):
                     console.print(f"\n[bold cyan]Processed {path.name}:[/bold cyan]")
                     table = self.create_rich_table(caption_data)
                     console.print(table)
-
-                    # Write additional formats if requested
-                    if formats:
-                        for fmt in formats:
-                            if fmt in self.supported_formats:
-                                self.write_format(fmt, job_dir, caption_data)
 
                     return caption_data
                 except Exception as e:
@@ -389,5 +401,12 @@ class BaseCaptionProcessor(ABC):
 
         Returns:
             Dict[str, Any]: Flattened dictionary for tabular representation
+        """
+        pass
+    
+    @abstractmethod
+    def to_context(self, caption_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert caption data to a context string suitable for downstream perspectives.
         """
         pass

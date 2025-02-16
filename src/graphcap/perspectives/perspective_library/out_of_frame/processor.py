@@ -91,3 +91,12 @@ class OutOfFrameProcessor(BasePerspective):
             "imagined_context": result.get("imagined_context", ""),
             "out_of_frame_caption": result.get("out_of_frame_caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert Out-of-Frame caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<OutOfFrameCaption>\n"
+        context_block += f"{result.get('out_of_frame_caption', '')}\n"
+        context_block += "</OutOfFrameCaption>\n"
+        return context_block

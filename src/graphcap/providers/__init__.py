@@ -17,4 +17,3 @@ Components:
     provider_config: Configuration management
     provider_manager: Provider lifecycle management
 """
-

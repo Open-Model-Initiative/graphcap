@@ -19,12 +19,32 @@ Clients:
     OpenRouterClient: OpenRouter API client
 """
 
+from loguru import logger
+
 from .base_client import BaseClient
 from .gemini_client import GeminiClient
 from .ollama_client import OllamaClient
 from .openai_client import OpenAIClient
 from .openrouter_client import OpenRouterClient
 from .vllm_client import VLLMClient
+
+
+def get_client(kind:  str, **kwargs) -> BaseClient:
+    client: BaseClient
+    logger.info(f"Creating client for {kind} with args: {kwargs}")
+    if kind == "openai":
+        client = OpenAIClient(kind=kind, **kwargs)
+    elif kind == "gemini":
+        client = GeminiClient(kind=kind, **kwargs)
+    elif kind == "vllm":
+        client = VLLMClient(kind=kind, **kwargs)
+    elif kind == "ollama":
+        client = OllamaClient(kind=kind, **kwargs)
+    elif kind == "openrouter":
+        client = OpenRouterClient(kind=kind, **kwargs)
+    else:
+        raise ValueError(f"Unknown provider kind: {kind}")
+    return client
 
 __all__ = [
     "BaseClient",
@@ -33,4 +53,5 @@ __all__ = [
     "OpenAIClient",
     "OpenRouterClient",
     "VLLMClient",
+    "get_client",
 ]

@@ -14,7 +14,7 @@ from rich.table import Table
 from typing_extensions import override
 
 from ..base import BasePerspective
-from .types import GraphCaptionData, ParsedData
+from .types import GraphCaptionData, ParsedData, TagType
 
 instruction = """<Task>You are a structured image analysis agent. Generate comprehensive tag list, caption,
 and dense caption for an image classification system.</Task>
@@ -142,9 +142,8 @@ class GraphCaptionProcessor(BasePerspective):
             )
             f.write("\n")  # Add newline between entries
 
-    @override
-    def to_table(self, caption_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Convert graph caption data to a flat dictionary."""
+    def tags_to_string(self, caption_data: Dict[str, Any]) -> str:
+        """Convert tags list to a string."""
         result = caption_data.get("parsed", {})  # Use .get() to handle missing "parsed" key
 
         # Check for error key and return error message if present
@@ -158,6 +157,18 @@ class GraphCaptionProcessor(BasePerspective):
                 for tag in tags_list
             ]
         )
+        return tags_str
+
+    @override
+    def to_table(self, caption_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert graph caption data to a flat dictionary."""
+        result = caption_data.get("parsed", {})  # Use .get() to handle missing "parsed" key
+
+        # Check for error key and return error message if present
+        if "error" in result:
+            return {"filename": caption_data.get("filename", "unknown"), "error": result["error"]}
+
+        tags_str = self.tags_to_string(caption_data)
 
         return {
             "filename": caption_data.get("filename", "unknown"),
@@ -166,3 +177,14 @@ class GraphCaptionProcessor(BasePerspective):
             "verification": result.get("verification", ""),
             "dense_caption": result.get("dense_caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert graph caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<GraphCaption>\n"
+        context_block += f"{result.get('short_caption', '')}\n"
+        context_block += f"{self.tags_to_string(caption_data)}\n"
+        context_block += f"{result.get('dense_caption', '')}\n"
+        context_block += "</GraphCaption>\n"
+        return context_block

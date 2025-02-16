@@ -88,3 +88,12 @@ class CustomCaptionProcessor(BasePerspective):
             "scratchpad": result.get("scratchpad", ""),
             "caption": result.get("caption", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert custom caption data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<CustomCaption>\n"
+        context_block += f"{result.get('caption', '')}\n"
+        context_block += "</CustomCaption>\n"
+        return context_block

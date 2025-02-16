@@ -124,3 +124,12 @@ class ArtCriticProcessor(BasePerspective):
             "formal_tags": ", ".join(result.get("formal_tags", [])),
             "formal_analysis": result.get("formal_analysis", ""),
         }
+
+    @override
+    def to_context(self, caption_data: Dict[str, Any]) -> str:
+        """Convert art critic data to a context string."""
+        result = caption_data.get("parsed", {})
+        context_block = "<ArtCriticAnalysis>\n"
+        context_block += f"{result.get('formal_analysis', '')}\n"
+        context_block += "</ArtCriticAnalysis>\n"
+        return context_block

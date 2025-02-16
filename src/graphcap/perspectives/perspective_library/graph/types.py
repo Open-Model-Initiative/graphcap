@@ -101,3 +101,5 @@ class CaptionData(TypedDict):
     filename: str
     input_path: str
     parsed: ParsedData
+
+

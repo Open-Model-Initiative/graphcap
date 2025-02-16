@@ -13,6 +13,8 @@ basic_caption_pipeline = dg.define_asset_job(
         "image_list",
         "perspective_list",
         "perspective_caption",
+        "caption_contexts",
+        "synthesizer_caption",
         "caption_output_files",
     ],
     description="Basic caption pipeline, graphcap's \"hello world\" example",
