@@ -6,7 +6,9 @@ from typing import Any, Dict, List
 
 import dagster as dg
 import pandas as pd
-from graphcap.perspectives.perspective_library import ArtCriticProcessor, GraphCaptionProcessor
+from graphcap.perspectives.perspective_library import (
+    get_perspective, get_perspective_list
+)
 from graphcap.providers.clients import (
     BaseClient,
     GeminiClient,
@@ -26,7 +28,7 @@ from ..io.image import DatasetIOConfig
 def perspective_list(context: dg.AssetExecutionContext) -> List[str]:
     """List of perspectives."""
     context.log.info("Generating perspective list")
-    return ["art_critic", "graph_analysis"]
+    return get_perspective_list()
 
 
 @dg.asset(
@@ -78,13 +80,7 @@ async def perspective_caption(
 
     all_results = []
     for perspective in perspective_list:
-        if perspective == "art_critic":
-            processor = ArtCriticProcessor()
-        elif perspective == "graph_analysis":
-            processor = GraphCaptionProcessor()
-        else:
-            context.log.warning(f"Unknown perspective: {perspective}")
-            continue
+        processor = get_perspective(perspective)
 
         try:
             # Process images in batch
@@ -147,13 +143,7 @@ def caption_output_files(
         perspective_data = [item for item in perspective_caption if item["perspective"] == perspective]
         table_data = []
 
-        if perspective == "art_critic":
-            processor = ArtCriticProcessor()
-        elif perspective == "graph_analysis":
-            processor = GraphCaptionProcessor()
-        else:
-            context.log.warning(f"Unknown perspective: {perspective}")
-            continue
+        processor = get_perspective(perspective)
 
         for item in perspective_data:
             image_filename = item["image_filename"]
