@@ -4,9 +4,9 @@
 from pathlib import Path
 
 import dagster as dg
+from graphcap.perspectives.types import PerspectiveCaptionOutput
 from huggingface_hub import HfApi, upload_file
 
-from ..perspectives.types import PerspectiveCaptionOutput
 from .dataset_manifest import (
     create_dataset_manifest,
     load_perspective_results_from_manifest,

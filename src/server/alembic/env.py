@@ -11,13 +11,13 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import Base and all models
 from server.db import Base
 from server.models import *
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Add the server directory to Python path
 server_dir = str(Path(__file__).parent.parent.absolute())

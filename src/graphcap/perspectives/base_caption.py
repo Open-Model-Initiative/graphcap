@@ -108,17 +108,6 @@ class BaseCaptionProcessor(ABC):
         """
         pass
 
-    def write_format(self, format_name: str, job_dir: Path, caption_data: Dict[str, Any]) -> None:
-        """
-        Write caption data in a specific format.
-
-        Args:
-            format_name: Name of the format to write
-            job_dir: Directory to write the output to
-            caption_data: Caption data to format and write
-        """
-        pass
-
     async def process_single(
         self,
         provider: BaseClient,

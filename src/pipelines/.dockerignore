@@ -1,0 +1,3 @@
+./pipelines/.venv
+./pipelines/.env
+./pipelines/Dockerfile.pipelines

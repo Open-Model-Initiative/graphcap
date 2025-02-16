@@ -27,13 +27,13 @@ RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Copy pyproject.toml files first
-COPY . /app/pipelines/
-RUN chmod -R 777 /app/pipelines/
+COPY . /app
 
 # Install dependencies using uv
 RUN uv pip install --upgrade pip && \
-    cd /app/pipelines && \
-    uv pip install -e ".[dev]"
+    cd /app && \
+    uv pip install -e "/app" && \
+    uv pip install -e "/app/pipelines[dev]"
 
 ENV DAGSTER_RELOAD_TRIGGER_FILE_PATTERN="/app/pipelines/**/*.py"
 ENV PYTHONPATH=/app

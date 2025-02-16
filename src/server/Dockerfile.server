@@ -10,24 +10,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy all pyproject.toml files first (matching local structure)
-COPY pyproject.toml /app/server/pyproject.toml
 
 WORKDIR /app/server
 
+# Create venv in a standard location
+ENV VIRTUAL_ENV=/opt/venv
+RUN uv venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Copy source code
+COPY . /app
 # Create venv and install dependencies in one layer
 RUN uv venv && \
     . .venv/bin/activate && \
-    uv pip install -e .
+    uv pip install -e "/app" && \
+    uv pip install -e "/app/server"
 
-# Copy source code
-COPY . /app/server
-RUN . .venv/bin/activate && \
-    uv pip install -e . && \
-    chmod +x /app/server/_scripts/endpoints-entrypoint.sh
+RUN chmod +x /app/server/_scripts/endpoints-entrypoint.sh
 
 EXPOSE 32100
-ENV PATH="/app/server/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/server:$PYTHONPATH"
 ENTRYPOINT ["/bin/bash", "/app/server/_scripts/endpoints-entrypoint.sh"]
 CMD ["tail", "-f", "/dev/null"]

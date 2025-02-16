@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
-from ..perspectives.types import PerspectiveCaptionResult
+from graphcap.perspectives.types import PerspectiveCaptionResult
 
 
 def create_mock_perspective_results() -> List[Dict[str, Any]]:

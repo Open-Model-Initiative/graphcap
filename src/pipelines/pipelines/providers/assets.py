@@ -2,10 +2,10 @@
 """Assets for loading provider configurations."""
 
 import dagster as dg
+from graphcap.providers.provider_config import get_providers_config
+from graphcap.providers.types import ProviderConfig
 
 from ..common.resources import ProviderConfigFile
-from .provider_config import get_providers_config
-from .types import ProviderConfig
 
 
 @dg.asset(compute_kind="python", group_name="providers")

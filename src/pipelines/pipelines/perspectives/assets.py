@@ -6,11 +6,8 @@ from typing import Any, Dict, List
 
 import dagster as dg
 import pandas as pd
-
-from ..common.logging import write_caption_results
-from ..common.resources import ProviderConfigFile
-from ..io.image import DatasetIOConfig
-from ..providers.clients import (
+from graphcap.perspectives.perspective_library import ArtCriticProcessor, GraphCaptionProcessor
+from graphcap.providers.clients import (
     BaseClient,
     GeminiClient,
     OllamaClient,
@@ -18,7 +15,11 @@ from ..providers.clients import (
     OpenRouterClient,
     VLLMClient,
 )
-from .perspective_library import ArtCriticProcessor, GraphCaptionProcessor
+from graphcap.providers.provider_config import get_providers_config
+
+from ..common.logging import write_caption_results
+from ..common.resources import ProviderConfigFile
+from ..io.image import DatasetIOConfig
 
 
 @dg.asset(group_name="perspectives", compute_kind="python")
@@ -47,7 +48,6 @@ async def perspective_caption(
     context.log.info(f"Perspective: {perspective_list}")
 
     config_path = provider_config_file.provider_config
-    from ..providers.provider_config import get_providers_config
 
     providers = get_providers_config(config_path)
     selected_provider_config = providers[default_provider]

@@ -4,7 +4,6 @@ from dagster_graphql import DagsterGraphQLClientError
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
-
 from server.pipelines.dagster_client import DagsterClientWrapper
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])

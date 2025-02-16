@@ -17,51 +17,7 @@ error() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] ❌ ERROR: $1" >&2
 }
 
-# Function to check and setup virtual environment
-setup_venv() {
-    log "Setting up Python virtual environment..."
-    cd /app/server
-    
-    echo "Current directory: $(pwd)"
-    echo "Contents of current directory:"
-    ls -la
-    
-    # Check if venv exists and is activated
-    if [ -d ".venv" ] && [ -n "$VIRTUAL_ENV" ]; then
-        log "✅ Virtual environment already active at: $VIRTUAL_ENV"
-        return 0
-    fi
-    
-    # If .venv doesn't exist or is empty, create it
-    if [ ! -d ".venv" ] || [ ! -f ".venv/bin/activate" ]; then
-        log "Creating new virtual environment..."
-        rm -rf .venv 2>/dev/null  # Clean up any partial venv
-        uv venv && \
-        uv pip install -e . || {
-            error "Failed to create virtual environment"
-            return 1
-        }
-    fi
-    
-    # Activate the venv
-    if [ -f ".venv/bin/activate" ]; then
-        log "Activating virtual environment..."
-        echo "Contents of .venv/bin:"
-        ls -la .venv/bin
-        source .venv/bin/activate || {
-            error "Failed to activate virtual environment"
-            return 1
-        }
-    else
-        error "Virtual environment creation failed - activate script not found"
-        echo "Looking for activate script:"
-        find .venv -name activate 2>/dev/null || echo "No activate script found"
-        return 1
-    fi
-    
-    log "✅ Virtual environment ready at: $VIRTUAL_ENV"
-    return 0
-}
+
 
 # Function to check if dependencies need updating
 check_dependencies() {
@@ -125,9 +81,7 @@ main() {
     cd /app/server
     
     log "🔍 Starting pre-flight checks..."
-    
-    # Setup virtual environment first
-    setup_venv || exit 1
+
     
     # Check environment after venv setup
     check_environment || exit 1
@@ -142,7 +96,7 @@ main() {
     sleep 5
     
     log "Starting uvicorn server..."
-    exec python -m uvicorn server.main:app \
+    exec uv run --active python -m uvicorn server.main:app \
         --host 0.0.0.0 \
         --port 32100 \
         --reload \
