@@ -4,12 +4,12 @@ services:
   graphcap_server:
     container_name: graphcap_server
     build:
-      context: ./graphcap/server
-      dockerfile: Dockerfile.server
+      context: ./src
+      dockerfile: ./server/Dockerfile.server
     ports:
       - 32100:32100
     volumes:
-      - ./graphcap:/app
+      - ./src:/app
       - ./workspace:/workspace
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
@@ -88,12 +88,12 @@ services:
 
   graphcap_pipelines:
     build:
-      context: ./graphcap/pipelines
-      dockerfile: Dockerfile.pipelines
+      context: ./src
+      dockerfile: pipelines/Dockerfile.pipelines
     container_name: graphcap_pipelines
     volumes:
-      - ./graphcap:/app/graphcap
       - ./workspace:/workspace
+      - ./src:/app
     environment:
       - DAGSTER_HOME=/workspace/.local/.dagster
       - DAGSTER_PORT=32300

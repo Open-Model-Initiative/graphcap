@@ -8,8 +8,8 @@ tasks:
 
   lint:
     cmds:
-      - uv run ruff check .
-      - uv run ruff format --check .
+      - uv run ruff check ./src
+      - uv run ruff format --check ./src
 
   test:
     cmds:
@@ -34,5 +34,15 @@ tasks:
   fix:all:
     desc: Run both linter and formatter with fixes
     cmds:
-      - uv run ruff check --fix 
-      - uv run ruff format 
+      - uv run ruff check --fix ./src
+      - uv run ruff format ./src
+
+  dev:
+    desc: Start the Docker Compose services in watch mode
+    cmds:
+      - docker compose up --watch --build 
+
+  stop:
+    desc: Stop the Docker Compose services
+    cmds:
+      - docker compose down 
