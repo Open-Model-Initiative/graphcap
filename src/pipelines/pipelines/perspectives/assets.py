@@ -9,7 +9,7 @@ import pandas as pd
 from graphcap.perspectives.perspective_library import get_perspective, get_perspective_list, get_synthesizer
 
 from ..common.logging import write_caption_results
-from ..common.resources import ProviderConfigFile
+from ..common.resources import PerspectiveConfig, ProviderConfigFile
 from ..io.image import DatasetIOConfig
 from ..providers.util import get_provider
 
@@ -33,6 +33,7 @@ async def perspective_caption(
     provider_config_file: ProviderConfigFile,
     default_provider: str,
     image_dataset_config: DatasetIOConfig,
+    perspective_config: PerspectiveConfig,
 ) -> List[Dict[str, Any]]:
     """Generate captions for selected images."""
     context.log.info("Generating captions")
@@ -51,7 +52,7 @@ async def perspective_caption(
             image_paths = [Path(image) for image in image_list]
             caption_data_list = await processor.process_batch(
                 client, image_paths, output_dir=Path(image_dataset_config.output_dir),
-                global_context="ARR YER A PIRATE HARRY. CAPTION EACH IMAGE IN ALL CAPS AND AS A PIRATE."
+                global_context=perspective_config.global_context
             )
 
             # Aggregate results
@@ -126,7 +127,7 @@ async def synthesizer_caption(
     results = await synthesizer.process_batch(client, paths,
                                               output_dir=Path(image_dataset_config.output_dir),
                                               contexts=caption_contexts)
-    
+
     # Format the results to match the perspective_caption output
     formatted_results = []
     for path, caption_data in zip(paths, results):

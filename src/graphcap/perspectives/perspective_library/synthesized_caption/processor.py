@@ -19,8 +19,9 @@ from .types import SynthesizedCaptionData, ParsedData
 
 # Instruction prompt for generating the synthesized final caption.
 instruction = """<Task>You are a synthesis agent that integrates multiple image caption outputs and the original image.</Task>
-<CompositeAnalysis note="Combine insights from various captioning perspectives (factual, imaginative, poetic, emotional, etc.).">
-<FinalCaption note="Generate a final, coherent caption that encapsulates all insights into a single, engaging description.">
+<CompositeAnalysis note="Combine insights from various captioning perspectives (factual, imaginative, poetic, emotional, etc.).
+Verify the images content is consistent with the context and identify hallucinations.">
+<FinalCaption note="Generate a final, coherent caption that encapsulates all insights into a single, engaging grounded visual description.">
 """
 
 class SynthesizedCaptionProcessor(BasePerspective):

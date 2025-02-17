@@ -10,7 +10,7 @@ from .common.io import SimpleFileSystemIOManager
 from .common.logging import configure_loggers
 
 # Import resources and IO managers
-from .common.resources import FileSystemConfig, PostgresConfig, ProviderConfigFile
+from .common.resources import FileSystemConfig, PerspectiveConfig, PostgresConfig, ProviderConfigFile
 from .huggingface import huggingface_client
 from .huggingface.types import HfUploadManifestConfig
 
@@ -37,6 +37,7 @@ defs = dg.Definitions(
         "huggingface_client": huggingface_client,
         "provider_config_file": ProviderConfigFile.configure_at_launch(),
         "config": HfUploadManifestConfig,
+        "perspective_config": PerspectiveConfig.configure_at_launch(),
         **loggers,  # Integrate custom loggers into resources
     },
     jobs=[*JOBS],
