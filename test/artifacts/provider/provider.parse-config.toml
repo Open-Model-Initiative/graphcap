@@ -22,7 +22,7 @@ default_model = "gpt-4o-mini"
 [gemini]
 kind = "gemini"
 environment = "cloud"
-env_var = "GEMINI_API_KEY"
+env_var = "GOOGLE_API_KEY"
 base_url = "https://generativelanguage.googleapis.com/v1beta"
 models = [
     "gemini-2.0-flash-exp",

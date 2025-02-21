@@ -77,7 +77,7 @@ def test_default_model_handling():
     THEN should handle default model selection correctly
     AND should raise appropriate errors for invalid configurations
     """
-    from graphcap.providers.provider_config import parse_provider_config
+    from graphcap.providers.provider_config import _parse_provider_config
 
     # Test using explicit default_model
     config = {
@@ -88,27 +88,27 @@ def test_default_model_handling():
         "models": ["model1", "model2"],
         "default_model": "model2",
     }
-    provider = parse_provider_config(config)
+    provider = _parse_provider_config(config)
     assert provider.default_model == "model2"
 
     # Test fallback to first model in list
     config.pop("default_model")
-    provider = parse_provider_config(config)
+    provider = _parse_provider_config(config)
     assert provider.default_model == "model1"
 
     # Test error when no models or default_model specified
     config["models"] = []
     with pytest.raises(ValueError, match="Must specify default_model when no models list is provided"):
-        parse_provider_config(config)
+        _parse_provider_config(config)
 
     # Test with fetch_models=True requires default_model
     config["fetch_models"] = True
     with pytest.raises(ValueError, match="Must specify default_model when no models list is provided"):
-        parse_provider_config(config)
+        _parse_provider_config(config)
 
     # Test with fetch_models=True and default_model works
     config["default_model"] = "runtime-model"
-    provider = parse_provider_config(config)
+    provider = _parse_provider_config(config)
     assert provider.default_model == "runtime-model"
 
 
@@ -193,7 +193,7 @@ def test_provider_completeness(provider_artifacts_dir):
         "gemini": {
             "kind": "gemini",
             "environment": "cloud",
-            "env_var": "GEMINI_API_KEY",
+            "env_var": "GOOGLE_API_KEY",
             "base_url": "https://generativelanguage.googleapis.com/v1beta",
             "has_models": True,
             "fetch_models": False,
