@@ -67,11 +67,12 @@ def create_provider_config(
         }
 
     if enable_vllm:
+        vllm_url = os.environ.get("VLLM_BASE_URL", "http://localhost:11435")
         config["vllm"] = {
             "kind": "vllm",
             "environment": "local",
-            "env_var": "NONE",
-            "base_url": "http://192.168.1.75:11435",
+            "env_var": "VLLM_BASE_URL",
+            "base_url": vllm_url,
             "models": ["vision-worker", "text-worker"],
             "default_model": "vision-worker",
         }
@@ -130,6 +131,17 @@ def cli():
     google_api_key = check_env_var("GOOGLE_API_KEY", enable_google)
     vllm_base_url = check_env_var("VLLM_BASE_URL", enable_vllm)
     ollama_base_url = check_env_var("OLLAMA_BASE_URL", enable_ollama)
+
+    # Modified vLLM base URL check
+    if enable_vllm:
+        vllm_base_url = os.environ.get("VLLM_BASE_URL")
+        if not vllm_base_url:
+            cprint("VLLM_BASE_URL not set.", "yellow")
+            vllm_base_url = Prompt.ask(
+                "[bold blue]Please enter the vLLM base URL[/]",
+                default="http://localhost:12434"
+            )
+            os.environ["VLLM_BASE_URL"] = vllm_base_url
 
     # Store provider choices and API keys in .env file
     if overwrite_env:
