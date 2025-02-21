@@ -15,9 +15,9 @@ Classes:
 
 
 import pytest
+
 from graphcap.providers.provider_config import _load_provider_config, get_providers_config, validate_config
 from graphcap.providers.provider_manager import ProviderManager
-from graphcap.providers.types import ProviderConfig
 
 
 def test_load_provider_config(provider_artifacts_dir):
@@ -36,38 +36,36 @@ def test_load_provider_config(provider_artifacts_dir):
 
     # Test specific provider configurations
     openai = providers["openai"]
-    assert openai.kind == "openai"
-    assert openai.environment == "cloud"
-    assert openai.env_var == "OPENAI_API_KEY"
-    assert openai.base_url == "https://api.openai.com/v1"
-    assert openai.models == ["gpt-4o-mini", "gpt-4o"]
-    assert openai.default_model == "gpt-4o-mini"
-    assert not openai.fetch_models
+    assert openai["kind"] == "openai"
+    assert openai["environment"] == "cloud"
+    assert openai["env_var"] == "OPENAI_API_KEY"
+    assert openai["base_url"] == "https://api.openai.com/v1"
+    assert openai["models"] == ["gpt-4o-mini", "gpt-4o"]
+    assert openai["default_model"] == "gpt-4o-mini"
 
     # Test local provider with fetch_models
     ollama = providers["ollama"]
-    assert ollama.kind == "ollama"
-    assert ollama.environment == "local"
-    assert ollama.env_var == "NONE"
-    assert ollama.base_url == "http://localhost:11434"
-    assert not ollama.models  # No models list for fetch_models=True
-    assert ollama.default_model == "llama3.2"
-    assert ollama.fetch_models
+    assert ollama["kind"] == "ollama"
+    assert ollama["environment"] == "local"
+    assert ollama["env_var"] == "NONE"
+    assert ollama["base_url"] == "http://localhost:11434"
+    assert ollama["default_model"] == "llama3.2"
+    assert ollama["fetch_models"]
 
     # Test VLLM provider
     vllm = providers["vllm-pixtral"]
-    assert vllm.kind == "vllm"
-    assert vllm.environment == "local"
-    assert vllm.env_var == "NONE"
-    assert vllm.base_url == "http://localhost:11435"
-    assert vllm.default_model == "vision-worker"
-    assert vllm.fetch_models
+    assert vllm["kind"] == "vllm"
+    assert vllm["environment"] == "local"
+    assert vllm["env_var"] == "NONE"
+    assert vllm["base_url"] == "http://localhost:11435"
+    assert vllm["default_model"] == "vision-worker"
+    assert vllm["fetch_models"]
 
     # Test provider with many models
     openrouter = providers["openrouter"]
-    assert openrouter.kind == "openrouter"
-    assert len(openrouter.models) == 8  # Check number of models
-    assert openrouter.default_model == "meta-llama/llama-3.2-90b-vision-instruct:free"
+    assert openrouter["kind"] == "openrouter"
+    assert len(openrouter["models"]) == 8  # Check number of models
+    assert openrouter["default_model"] == "meta-llama/llama-3.2-90b-vision-instruct:free"
 
 
 def test_default_model_handling():
