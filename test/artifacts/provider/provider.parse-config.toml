@@ -53,7 +53,7 @@ default_model = "meta-llama/llama-3.2-90b-vision-instruct:free"
 kind = "ollama"
 environment = "local"
 env_var = "NONE"
-base_url = "http://localhost:11434"
+base_url = "https://localhost:11434"
 default_model = "llama3.2"
 fetch_models = true
 
@@ -61,7 +61,7 @@ fetch_models = true
 kind = "vllm"
 environment = "local"
 env_var = "NONE"
-base_url = "http://localhost:11435"
+base_url = "https://localhost:11435"
 default_model = "vision-worker"
 fetch_models = true
 

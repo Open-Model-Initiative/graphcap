@@ -4,16 +4,20 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import Generator
 
 import pytest
 from dotenv import load_dotenv
 from httpx import AsyncClient
 
+# Constants
+TEST_LOGS_FILE = "test_logs.jsonl"
+
 # Load environment variables from .env
 load_dotenv("./workspace/.env")
 
 
-def log_test_response(test_name: str, response: dict, log_file: str = "test_logs.jsonl"):
+def log_test_response(test_name: str, response: dict, log_file: str = TEST_LOGS_FILE):
     """Log test responses to a JSON Lines file"""
     log_entry = {"timestamp": datetime.now().isoformat(), "test_name": test_name, "response": response}
 
@@ -36,8 +40,8 @@ def test_logger():
 @pytest.fixture(scope="session", autouse=True)
 def clean_logs():
     """Clean up log file at the start of test session"""
-    if os.path.exists("test_logs.jsonl"):
-        os.remove("test_logs.jsonl")
+    if os.path.exists(TEST_LOGS_FILE):
+        os.remove(TEST_LOGS_FILE)
 
 
 # Event loop setup with proper cleanup
@@ -79,7 +83,7 @@ def test_data_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def test_export_dir(tmp_path_factory) -> Path:
+def test_export_dir(tmp_path_factory) -> Generator[Path, None, None]:
     """Fixture providing a temporary directory for test exports"""
     export_dir = tmp_path_factory.mktemp("exports")
     yield export_dir
