@@ -48,7 +48,7 @@ def test_load_provider_config(provider_artifacts_dir):
     assert ollama["kind"] == "ollama"
     assert ollama["environment"] == "local"
     assert ollama["env_var"] == "NONE"
-    assert ollama["base_url"] == "http://localhost:11434"
+    assert ollama["base_url"] == "https://localhost:11434"
     assert ollama["default_model"] == "llama3.2"
     assert ollama["fetch_models"]
 
@@ -57,7 +57,7 @@ def test_load_provider_config(provider_artifacts_dir):
     assert vllm["kind"] == "vllm"
     assert vllm["environment"] == "local"
     assert vllm["env_var"] == "NONE"
-    assert vllm["base_url"] == "http://localhost:11435"
+    assert vllm["base_url"] == "https://localhost:11435"
     assert vllm["default_model"] == "vision-worker"
     assert vllm["fetch_models"]
 
