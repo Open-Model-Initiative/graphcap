@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Graphcap is a tool for capturing and analyzing graph data."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "python-dotenv>=1.0.1",
+]
 
 [dependency-groups]
 dev = [

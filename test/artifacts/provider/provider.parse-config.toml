@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# This is a provider configuration test file that allows you to customize provider configurations.
+# To use this file:
+#
+# 1. Uncomment the providers you want to enable
+# 2. Make your desired changes to those providers
+# 3. Save as 'provider.config.toml'
+# 4. Run 'docker compose build' and 'docker compose up -d' as normal
+
+[openai]
+kind = "openai"
+environment = "cloud"
+env_var = "OPENAI_API_KEY"
+base_url = "https://api.openai.com/v1"
+models = [
+    "gpt-4o-mini",
+    "gpt-4o",
+]
+default_model = "gpt-4o-mini"
+
+[gemini]
+kind = "gemini"
+environment = "cloud"
+env_var = "GEMINI_API_KEY"
+base_url = "https://generativelanguage.googleapis.com/v1beta"
+models = [
+    "gemini-2.0-flash-exp",
+]
+default_model = "gemini-2.0-flash-exp"
+
+[openrouter]
+kind = "openrouter"
+environment = "cloud"
+env_var = "OPENROUTER_API_KEY"
+base_url = "https://openrouter.ai/api/v1"
+models = [
+    "minimax/minimax-01",
+    "qwen/qvq-72b-preview",
+    "qwen/qvq-32b-preview",
+    "qwen/qvq-1.5b-preview",
+    "google/gemini-2.0-flash-exp:free",
+    "mistralai/pixtral-large-2411",
+    "meta-llama/llama-3.2-90b-vision-instruct:free",
+    "qwen/qwen-2-vl-72b-instruct"
+]
+default_model = "meta-llama/llama-3.2-90b-vision-instruct:free"
+# [custom]
+# # Custom provider configuration
+# # Each provider needs a unique name, env_var (or stub), and base_url
+
+[ollama]
+kind = "ollama"
+environment = "local"
+env_var = "NONE"
+base_url = "http://localhost:11434"
+default_model = "llama3.2"
+fetch_models = true
+
+[vllm-pixtral]
+kind = "vllm"
+environment = "local"
+env_var = "NONE"
+base_url = "http://localhost:11435"
+default_model = "vision-worker"
+fetch_models = true
+
+# # Add more custom providers as needed following the same pattern:
+[provider_name]
+environment = "cloud"
+kind = "vllm"
+env_var = "API_KEY"
+base_url = "https://runpod.net/api/v1"
+models = ["model1", "model2"]
+default_model = "model1"
