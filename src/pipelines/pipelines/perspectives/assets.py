@@ -2,6 +2,7 @@
 """Assets and ops for basic text captioning."""
 
 from pathlib import Path
+from datetime import datetime
 from typing import Any, Dict, List
 
 import dagster as dg
@@ -50,8 +51,9 @@ async def perspective_caption(
             # Process images in batch
             image_paths = [Path(image) for image in perspective_image_list]
             caption_data_list = await processor.process_batch(
-                client, image_paths, output_dir=Path(io_config.output_dir),
-                global_context=perspective_config.global_context
+                client, image_paths, output_dir=Path(io_config.run_dir),
+                global_context=perspective_config.global_context,
+                name=perspective
             )
 
             # Aggregate results
@@ -126,8 +128,9 @@ async def synthesizer_caption(
     image_dir = Path(io_config.output_dir)/"images"
     paths = [image_dir / path for path in caption_contexts.keys()]
     results = await synthesizer.process_batch(client, paths,
-                                          output_dir=Path(io_config.output_dir),
-                                          contexts=caption_contexts)
+                                          output_dir=Path(io_config.run_dir),
+                                          contexts=caption_contexts,
+                                          name="synthesized_caption")
 
     # Format the results to match the perspective_caption output
     formatted_results = []
@@ -156,17 +159,18 @@ def caption_output_files(
     """Writes the output data to an excel document and to a parquet file."""
     io_config = perspective_pipeline_run_config.io
     output_dir = Path(io_config.output_dir)
+    run_dir = Path(io_config.run_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-
+    run_dir.mkdir(parents=True, exist_ok=True)
     # Get enabled perspectives
     enabled_perspectives = [
         name for name, enabled in perspective_pipeline_run_config.perspective.enabled_perspectives.items() 
         if enabled
     ]
-
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Prepare data for DataFrame
-    excel_path = output_dir / "caption_results.xlsx"
-    parquet_path = output_dir / "caption_results.parquet"
+    excel_path = run_dir / f"caption_results_{timestamp}.xlsx"
+    parquet_path = run_dir / f"caption_results_{timestamp}.parquet"
 
     # Create a dictionary to hold DataFrames for each perspective
     perspective_dataframes: Dict[str, pd.DataFrame] = {}

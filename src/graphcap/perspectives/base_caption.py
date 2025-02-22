@@ -197,6 +197,7 @@ class BaseCaptionProcessor(ABC):
         copy_images: bool = False,
         global_context: str | None = None,
         contexts: dict[str, list[str]] | None = None,
+        name: str | None = None,
     ) -> List[Dict[str, Any]]:
         """
         Process multiple images and return their captions.
@@ -224,7 +225,7 @@ class BaseCaptionProcessor(ABC):
 
         if output_dir:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            job_dir = output_dir / f"batch_{timestamp}"
+            job_dir = output_dir / f"batch_{name or timestamp}"
             job_dir.mkdir(parents=True, exist_ok=True)
 
             # Create output file and job info

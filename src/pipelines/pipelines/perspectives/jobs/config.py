@@ -4,7 +4,7 @@
 import tomllib
 from dataclasses import dataclass
 from typing import Dict
-
+from datetime import datetime
 import dagster as dg
 from pydantic import BaseModel, Field
 
@@ -34,6 +34,7 @@ class IOConfig:
     dataset_name: str
     input_dir: str
     output_dir: str
+    run_dir: str
     copy_images: bool
     sampling_strategy: str
     num_samples: int
@@ -76,12 +77,14 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
             global_context=config["perspective"]["global_context"],
             enabled_perspectives=config["perspective"]["enabled"]
         )
-
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_dir = config["io"]["output_dir"] + "/" + timestamp
         # Create IO config
         io = IOConfig(
             dataset_name=config["io"]["dataset_name"],
             input_dir=config["io"]["input_dir"],
             output_dir=config["io"]["output_dir"],
+            run_dir=run_dir,
             copy_images=config["io"]["copy_images"],
             sampling_strategy=config["io"]["sampling_strategy"],
             num_samples=config["io"]["num_samples"],
