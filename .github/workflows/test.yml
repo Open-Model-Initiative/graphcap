@@ -55,10 +55,11 @@ jobs:
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - name: Setup test environment
         run: |
-          uv venv
+          uv venv --python 3.11
           uv pip install --upgrade pip
           uv sync
           uv pip install -e ".[dev]"
+          uv pip install -e ./src
       - name: Run tests
         run: |
           uv run pytest -v -m "not integration"

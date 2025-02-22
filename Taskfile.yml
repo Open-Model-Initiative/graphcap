@@ -46,3 +46,11 @@ tasks:
     desc: Stop the Docker Compose services
     cmds:
       - docker compose down 
+
+  setup:
+    desc: Setup the project
+    cmds:
+      - uv venv --python 3.11
+      - uv pip install -e ".[dev]"
+      - uv pip install -e ./src
+      - uv run python -m src.scripts

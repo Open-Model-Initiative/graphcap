@@ -18,3 +18,5 @@ provider.config.toml
 
 # Ignore all files in the .env directory
 .env/*
+provider.test.config.toml
+test_logs.jsonl
