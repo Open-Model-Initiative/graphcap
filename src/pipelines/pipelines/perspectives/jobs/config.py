@@ -3,6 +3,7 @@
 
 import tomllib
 from dataclasses import dataclass
+from typing import Dict
 
 import dagster as dg
 from pydantic import BaseModel, Field
@@ -21,6 +22,7 @@ class FileSystemConfig:
 class ProviderConfig:
     """Provider configuration settings."""
 
+    default: str
     name: str
     provider_config_file: str
 
@@ -43,7 +45,7 @@ class PerspectiveConfig:
     """Perspective configuration settings."""
 
     global_context: str
-
+    enabled_perspectives: Dict[str, bool] = Field(default_factory=dict)
 
 class PerspectivePipelineConfig(BaseModel):
     """Configuration for pipeline runs loaded from TOML file."""
@@ -69,8 +71,11 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
         with open(self.config_path, "rb") as f:
             config = tomllib.load(f)
 
-        # Create perspective config
-        perspective = PerspectiveConfig(global_context=config["perspective"]["global_context"])
+        # Create perspective config with enabled perspectives
+        perspective = PerspectiveConfig(
+            global_context=config["perspective"]["global_context"],
+            enabled_perspectives=config["perspective"]["enabled"]
+        )
 
         # Create IO config
         io = IOConfig(
@@ -85,6 +90,7 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
 
         # Create provider config
         provider = ProviderConfig(
+            default=config["providers"]["default"]["name"],
             name=config["providers"]["default"]["name"],
             provider_config_file=config["providers"]["default"]["provider_config_file"],
         )
@@ -97,7 +103,12 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
         )
 
         # Return the complete config object
-        return PerspectivePipelineConfig(perspective=perspective, io=io, provider=provider, filesystem=filesystem)
+        return PerspectivePipelineConfig(
+            perspective=perspective,
+            io=io,
+            provider=provider,
+            filesystem=filesystem
+        )
 
 
 @dg.asset

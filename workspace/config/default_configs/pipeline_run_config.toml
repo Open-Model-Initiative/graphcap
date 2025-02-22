@@ -10,7 +10,7 @@ input_dir = "/workspace/datasets/os_img"
 output_dir = "/workspace/.local/output/os_img"
 copy_images = true
 sampling_strategy = "increment"
-num_samples = 100
+num_samples = 1
 sorting_strategy = "name"
 
 [providers.default]
@@ -24,3 +24,13 @@ output_dir = "/workspace/.local/output"
 
 [perspective]
 global_context = "You are a captioning perspective."
+
+[perspective.enabled]
+graph_caption = true
+art_critic = true
+out_of_frame = true
+poetic_metaphor = true
+storytelling = true
+emotional_sentiment = true
+custom_caption = false
+synthesized_caption = true

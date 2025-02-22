@@ -34,6 +34,7 @@ def provider_list(
         return {}
 
 
+# TODO: Remove this asset
 @dg.asset(compute_kind="python", group_name="providers")
 def default_provider(context: dg.AssetExecutionContext, provider_config_file: ProviderConfigFile) -> str | None:
     """Loads the default provider based on the selected_provider config."""

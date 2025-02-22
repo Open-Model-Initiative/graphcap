@@ -1,18 +1,17 @@
 from graphcap.providers.provider_config import get_providers_config
 from graphcap.providers.clients import get_client
-from ..common.resources import ProviderConfigFile
+from ..perspectives.jobs.config import PerspectivePipelineConfig
 
-def get_provider(provider_config_file: ProviderConfigFile, default_provider: str):
+def get_provider(config_path: str, default_provider: str):
     """Instantiates the client based on the provider configuration.
 
     Args:
-        provider_config_file (ProviderConfigFile): The configuration for the selected provider.
+        config_path (str): Path to the provider configuration file.
         default_provider (str): The name of the default provider.
 
     Returns:
         The instantiated client.
     """
-    config_path = provider_config_file.provider_config
     providers = get_providers_config(config_path)
     selected_provider_config = providers[default_provider]
     client_args = {
