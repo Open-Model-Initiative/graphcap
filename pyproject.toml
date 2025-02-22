@@ -11,7 +11,7 @@ dependencies = [
     "toml>=0.10.2",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "build>=1.2.2.post1",
     "contxt>=0.1.1",
@@ -75,3 +75,6 @@ line-ending = "auto"
 
 [tool.uv]
 link-mode = "copy"
+dev-dependencies = [
+    "pytest-asyncio>=0.25.3",
+]

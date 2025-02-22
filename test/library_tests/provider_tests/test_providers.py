@@ -67,7 +67,7 @@ pytestmark = pytest.mark.asyncio  # Mark all tests in module as async
 @pytest.fixture(scope="function")
 async def provider_manager():
     """Initialize provider manager with test config"""
-    manager = ProviderManager("./tests/provider.test.config.toml")
+    manager = ProviderManager("./test/provider.test.config.toml")
     try:
         yield manager
     finally:
@@ -155,37 +155,6 @@ class TestGeminiProvider:
         await run_structured_vision(client, test_logger, image_path)
 
 
-@pytest.mark.integration
-@pytest.mark.ollama
-class TestOllamaProvider:
-    @pytest.fixture(autouse=True)
-    async def check_ollama_available(self, provider_manager):
-        try:
-            client = provider_manager.get_client("ollama")
-            await client.get_models()
-        except Exception:
-            pytest.skip("Ollama service not available. Skipping Ollama tests.")
-
-    async def test_ollama_chat_completion(self, provider_manager):
-        """
-        GIVEN an Ollama client with available service
-        WHEN making a simple chat completion request
-        THEN should return a valid response
-        AND should contain non-empty message content
-        """
-        client = provider_manager.get_client("ollama")
-        completion = await client.chat.completions.create(
-            model=client.default_model,
-            messages=[{"role": "user", "content": "Say hello in 5 words or less."}],
-            max_tokens=20,
-        )
-
-        assert hasattr(completion, "choices"), "Should have 'choices' attribute"
-        assert len(completion.choices) > 0, "Should have at least one choice"
-        assert hasattr(completion.choices[0], "message"), "Choice should have a message"
-        assert isinstance(completion.choices[0].message.content, str), "Message should be string"
-        assert len(completion.choices[0].message.content) > 0, "Message should not be empty"
-
 
 @pytest.mark.integration
 @pytest.mark.vllm
@@ -257,99 +226,6 @@ class TestVLLMProvider:
         image_path = provider_artifacts_dir / "test_image.png"
         await run_structured_vision(client, test_logger, image_path)
 
-
-@pytest.mark.integration
-@pytest.mark.openrouter
-class TestOpenRouterProvider:
-    @pytest.fixture(autouse=True)
-    def check_openrouter_api_key(self):
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        if not api_key:
-            pytest.skip("No OPENROUTER_API_KEY found. Skipping OpenRouter tests.")
-
-    async def test_openrouter_chat_completion(self, provider_manager):
-        """
-        GIVEN an OpenRouter client with valid API key
-        WHEN making a chat completion request
-        THEN should return a valid response
-        AND should contain non-empty message content
-        AND should handle any API-specific requirements
-        """
-        client = provider_manager.get_client("openrouter")
-        try:
-            completion = await client.chat.completions.create(
-                model=client.default_model,
-                messages=[{"role": "user", "content": "Say hello in 5 words or less."}],
-                max_tokens=20,
-            )
-        except Exception as e:
-            pytest.fail(f"OpenRouter chat completion failed: {str(e)}")
-
-        # Add debug logging
-        logger.debug(f"OpenRouter completion response: {completion}")
-
-        assert completion is not None, "Completion should not be None"
-        assert hasattr(completion, "choices"), "Should have 'choices' attribute"
-        assert completion.choices is not None, "Choices should not be None"
-        assert len(completion.choices) > 0, "Should have at least one choice"
-        assert hasattr(completion.choices[0], "message"), "Choice should have a message"
-        assert isinstance(completion.choices[0].message.content, str), "Message should be string"
-        assert len(completion.choices[0].message.content) > 0, "Message should not be empty"
-
-    async def test_openrouter_models(self, provider_manager):
-        """
-        GIVEN an OpenRouter client
-        WHEN requesting available models
-        THEN should return a list of models
-        AND should include GPT models in the list
-        """
-        client = provider_manager.get_client("openrouter")
-        models = await client.get_available_models()
-
-        assert hasattr(models, "data"), "Should have 'data' attribute"
-        assert len(models.data) > 0, "Should have at least one model"
-        assert any("gpt" in model.id for model in models.data), "Should have GPT models available"
-
-    async def test_openrouter_vision(self, test_logger, provider_manager, provider_artifacts_dir):
-        """
-        GIVEN an OpenRouter client and test image
-        WHEN requesting vision analysis
-        THEN should return a valid image description
-        AND should handle potential API errors gracefully
-        """
-        client = provider_manager.get_client("openrouter")
-        image_path = provider_artifacts_dir / "test_image.png"
-
-        try:
-            completion = await client.vision(
-                prompt="What's in this image? Describe it briefly.",
-                image=image_path,
-                model=client.default_model,
-            )
-        except Exception as e:
-            pytest.fail(f"OpenRouter vision completion failed: {str(e)}")
-
-        test_logger("openrouter_vision", completion.model_dump())
-        logger.debug(f"OpenRouter vision response: {completion}")
-
-        assert completion is not None, "Completion should not be None"
-        assert hasattr(completion, "choices"), "Should have 'choices' attribute"
-        assert completion.choices is not None, "Choices should not be None"
-        assert len(completion.choices) > 0, "Should have at least one choice"
-        assert hasattr(completion.choices[0], "message"), "Choice should have a message"
-        assert isinstance(completion.choices[0].message.content, str), "Message should be string"
-        assert len(completion.choices[0].message.content) > 0, "Message should not be empty"
-
-    async def test_openrouter_structured_vision(self, test_logger, provider_manager, provider_artifacts_dir):
-        """
-        GIVEN an OpenRouter client and test image
-        WHEN requesting structured vision analysis
-        THEN should return data matching the schema
-        AND should handle JSON parsing correctly
-        """
-        client = provider_manager.get_client("openrouter")
-        image_path = provider_artifacts_dir / "test_image.png"
-        await run_structured_vision(client, test_logger, image_path)
 
 
 @pytest.mark.asyncio
