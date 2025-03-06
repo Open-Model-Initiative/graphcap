@@ -40,7 +40,8 @@ class GeminiClient(BaseClient):
 
     def _format_vision_content(self, text: str, image_data: str) -> list[dict[str, Any]]:
         """Format vision content for Gemini API"""
-        logger.info("Sleeping for 3 seconds")
+        # TODO: Add feature flag to handle gemini free tier rate limits instead of this hack
+        logger.info("Sleeping for 3 seconds to avoid rate limits")
         time.sleep(3)
         return [
             {"type": "text", "text": text},
