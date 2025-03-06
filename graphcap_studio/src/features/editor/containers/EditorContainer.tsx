@@ -7,6 +7,7 @@ import { ImageEditor } from '../components/ImageEditor';
 import { ImageGallery } from '../components/ImageGallery';
 import { DatasetTree } from '../components/DatasetTree';
 import { ImageProperties } from '../components/ImageProperties';
+import { EditorContextProvider, useEditorContext, ViewMode } from '../context/EditorContext';
 
 interface EditorContainerProps {
   directory?: string;
@@ -23,6 +24,18 @@ const QUERY_KEYS = {
  * A container component that integrates the image editor with the gallery
  */
 export function EditorContainer({ directory, onClose }: EditorContainerProps) {
+  return (
+    <EditorContextProvider>
+      <EditorContainerInner directory={directory} onClose={onClose} />
+    </EditorContextProvider>
+  );
+}
+
+/**
+ * Inner component that uses the EditorContext
+ */
+function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
+  const { viewMode, setViewMode } = useEditorContext();
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
@@ -159,6 +172,17 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
     console.log('Saving properties for image:', selectedImage.path, properties);
   };
 
+  const handleSetViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    
+    // If switching to carousel and we have a selected image, make sure it's visible
+    if (mode === 'carousel' && !selectedImage && filteredImages.length > 0) {
+      // If no image is selected, select the first one
+      setSelectedImage(filteredImages[0]);
+      setShowProperties(true);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-900 text-white">
@@ -221,6 +245,38 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
       <div className="flex h-12 items-center justify-between border-b border-gray-700 bg-gray-800 px-4">
         <h2 className="text-lg font-medium text-white">Image Editor</h2>
         <div className="flex space-x-2">
+          {/* View mode toggle buttons with icons */}
+          <div className="flex rounded-md overflow-hidden border border-gray-600">
+            <button
+              className={`flex items-center justify-center p-2 text-white transition-colors ${
+                viewMode === 'grid' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              onClick={() => handleSetViewMode('grid')}
+              title="Grid View"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              className={`flex items-center justify-center p-2 text-white transition-colors ${
+                viewMode === 'carousel' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              onClick={() => handleSetViewMode('carousel')}
+              title="Carousel View"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 21V3" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21V3" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18" />
+              </svg>
+            </button>
+          </div>
+          
           {selectedImage && (
             <>
               <button

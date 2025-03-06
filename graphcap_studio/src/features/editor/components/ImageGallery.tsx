@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import { Image, getImageUrl, getThumbnailUrl } from '@/services/images';
+import { useEditorContext } from '../context/EditorContext';
 
 interface ImageGalleryProps {
   images: Image[];
@@ -20,11 +21,17 @@ export function ImageGallery({
   isLoading,
   isEmpty
 }: ImageGalleryProps) {
+  const { viewMode } = useEditorContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [visibleImages, setVisibleImages] = useState<Image[]>([]);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const thumbnailsRef = useRef<HTMLDivElement>(null);
+  
+  // Number of thumbnails to show on each side of the current image
+  const thumbnailsToShow = 5;
   
   // Image dimensions
   const imageHeight = 200;
@@ -91,6 +98,86 @@ export function ImageGallery({
   useEffect(() => {
     calculateVisibleImages();
   }, [calculateVisibleImages, images]);
+
+  // Set carousel index to match selected image
+  useEffect(() => {
+    if (selectedImage && images.length > 0) {
+      const index = images.findIndex(img => img.path === selectedImage.path);
+      if (index !== -1) {
+        setCarouselIndex(index);
+      }
+    }
+  }, [selectedImage, images]);
+
+  // Scroll selected thumbnail into view
+  useEffect(() => {
+    if (viewMode === 'carousel' && thumbnailsRef.current) {
+      const thumbnailWidth = 80; // Width of each thumbnail + gap
+      const scrollPosition = carouselIndex * thumbnailWidth - (thumbnailsRef.current.clientWidth / 2) + (thumbnailWidth / 2);
+      thumbnailsRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, [carouselIndex, viewMode]);
+
+  // Handle keyboard navigation for carousel
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (viewMode !== 'carousel') return;
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+          navigateCarousel(-1);
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          navigateCarousel(1);
+          e.preventDefault();
+          break;
+        case 'ArrowUp':
+          navigateCarousel(-1);
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          navigateCarousel(1);
+          e.preventDefault();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewMode, carouselIndex, images.length]);
+
+  // Navigate carousel by delta
+  const navigateCarousel = (delta: number) => {
+    if (images.length === 0) return;
+    
+    const newIndex = (carouselIndex + delta + images.length) % images.length;
+    setCarouselIndex(newIndex);
+    onSelectImage(images[newIndex]);
+  };
+
+  // Handle mouse wheel for carousel
+  const handleWheel = (e: React.WheelEvent) => {
+    if (viewMode !== 'carousel') return;
+    
+    // Determine direction (positive deltaY means scrolling down)
+    const delta = e.deltaY > 0 ? 1 : -1;
+    navigateCarousel(delta);
+    e.preventDefault();
+  };
+
+  // Get visible thumbnails for carousel
+  const getVisibleThumbnails = () => {
+    if (images.length <= thumbnailsToShow * 2 + 1) {
+      return images;
+    }
+    
+    const startIndex = Math.max(0, carouselIndex - thumbnailsToShow);
+    const endIndex = Math.min(images.length, carouselIndex + thumbnailsToShow + 1);
+    return images.slice(startIndex, endIndex);
+  };
   
   if (isLoading) {
     return (
@@ -129,27 +216,109 @@ export function ImageGallery({
   return (
     <div 
       ref={containerRef}
-      className="h-full w-full overflow-auto bg-gray-900"
+      className="h-full w-full overflow-auto bg-gray-900 relative"
       onScroll={handleScroll}
+      onWheel={viewMode === 'carousel' ? handleWheel : undefined}
     >
-      <div className="p-6">
-        <div 
-          className="grid auto-rows-[200px] grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4"
-          style={{ 
-            height: Math.ceil(images.length / Math.floor(containerWidth / (imageWidth + gap))) * (imageHeight + gap),
-            position: 'relative'
-          }}
-        >
-          {visibleImages.map((image, index) => (
-            <LazyImage
-              key={image.path}
-              image={image}
-              isSelected={selectedImage?.path === image.path}
-              onSelect={onSelectImage}
-            />
-          ))}
+      {viewMode === 'grid' ? (
+        <div className="p-6">
+          <div 
+            className="grid auto-rows-[200px] grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4"
+            style={{ 
+              height: Math.ceil(images.length / Math.floor(containerWidth / (imageWidth + gap))) * (imageHeight + gap),
+              position: 'relative'
+            }}
+          >
+            {visibleImages.map((image, index) => (
+              <LazyImage
+                key={image.path}
+                image={image}
+                isSelected={selectedImage?.path === image.path}
+                onSelect={onSelectImage}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex h-full w-full flex-col">
+          {/* Main carousel image */}
+          <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
+            {/* Current image */}
+            {images.length > 0 && (
+              <div className="max-h-full max-w-full">
+                <img
+                  src={getImageUrl(images[carouselIndex].path)}
+                  alt={images[carouselIndex].name}
+                  className="max-h-[calc(100vh-180px)] max-w-full object-contain"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Thumbnails row with navigation buttons */}
+          <div className="h-24 border-t border-gray-700 bg-gray-800 flex items-center px-4 relative">
+            {/* Previous button */}
+            <button
+              className="absolute left-4 z-10 rounded-full bg-gray-700 p-2 text-white hover:bg-gray-600"
+              onClick={() => navigateCarousel(-1)}
+              aria-label="Previous image"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            {/* Thumbnails container */}
+            <div 
+              ref={thumbnailsRef}
+              className="flex-1 overflow-x-auto mx-14 scrollbar-thin scrollbar-thumb-gray-600 flex items-center"
+            >
+              <div className="flex space-x-2 px-2">
+                {getVisibleThumbnails().map((image, index) => (
+                  <div
+                    key={image.path}
+                    className={`h-16 w-16 flex-shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-all ${
+                      image.path === images[carouselIndex].path
+                        ? 'border-blue-500 shadow-md'
+                        : 'border-transparent hover:border-gray-600'
+                    }`}
+                    onClick={() => {
+                      const newIndex = images.findIndex(img => img.path === image.path);
+                      if (newIndex !== -1) {
+                        setCarouselIndex(newIndex);
+                        onSelectImage(image);
+                      }
+                    }}
+                  >
+                    <img
+                      src={getThumbnailUrl(image.path, 80, 80)}
+                      alt={image.name}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Next button */}
+            <button
+              className="absolute right-4 z-10 rounded-full bg-gray-700 p-2 text-white hover:bg-gray-600"
+              onClick={() => navigateCarousel(1)}
+              aria-label="Next image"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
+            {/* Image counter */}
+            <div className="absolute right-16 bottom-1 text-xs text-gray-400">
+              {carouselIndex + 1} / {images.length}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
