@@ -15,6 +15,7 @@ Classes:
     GeminiClient: Gemini API client implementation
 """
 
+import time
 from typing import Any
 
 from loguru import logger
@@ -39,6 +40,9 @@ class GeminiClient(BaseClient):
 
     def _format_vision_content(self, text: str, image_data: str) -> list[dict[str, Any]]:
         """Format vision content for Gemini API"""
+        # TODO: Add feature flag to handle gemini free tier rate limits instead of this hack
+        logger.info("Sleeping for 3 seconds to avoid rate limits")
+        time.sleep(3)
         return [
             {"type": "text", "text": text},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
@@ -50,6 +54,7 @@ class GeminiClient(BaseClient):
         json_schema = self._get_schema_from_input(schema)
 
         try:
+
             completion = self.chat.completions.create(
                 model=model, messages=messages, response_format={"type": "json_schema", "schema": json_schema}, **kwargs
             )

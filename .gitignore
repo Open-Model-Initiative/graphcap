@@ -20,3 +20,4 @@ provider.config.toml
 .env/*
 provider.test.config.toml
 test_logs.jsonl
+docker-compose.override.yml

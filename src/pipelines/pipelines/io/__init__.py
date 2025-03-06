@@ -6,10 +6,10 @@ used in the pipeline system.
 
 """
 
-from .image import image_dataset_config, image_list, load_pil_images_op
+from .image import image_dataset_config, image_list, load_pil_images_op, perspective_image_list
 from .image.image_metadata import ASSETS as IMAGE_METADATA_ASSETS
 
-IMAGE_ASSETS = [image_list, image_dataset_config, *IMAGE_METADATA_ASSETS]
+IMAGE_ASSETS = [image_list, image_dataset_config, perspective_image_list, *IMAGE_METADATA_ASSETS]
 IMAGE_OPS = [load_pil_images_op]
 ASSETS = [*IMAGE_ASSETS]
 OPS = [*IMAGE_OPS]

@@ -1,0 +1,36 @@
+# pipeline_run_config.toml
+
+[pipeline]
+name = "basic_caption_pipeline"
+environment = "development"
+
+[io]
+dataset_name = "graphcap_dataset"
+input_dir = "/workspace/datasets/os_img"
+output_dir = "/workspace/.local/output/v2/os_img"
+copy_images = true
+sampling_strategy = "increment"
+num_samples = 1
+sorting_strategy = "name"
+
+[providers.default]
+name = "gemini"
+provider_config_file = "/workspace/config/provider.config.toml"
+
+[filesystem]
+workspace_dir = "/workspace"
+dataset_dir = "/workspace/datasets"
+output_dir = "/workspace/.local/output/v2"
+
+[perspective]
+global_context = "You are a captioning perspective."
+
+[perspective.enabled]
+graph_caption = true
+art_critic = true
+out_of_frame = true
+poetic_metaphor = true
+storytelling = true
+emotional_sentiment = true
+custom_caption = false
+synthesized_caption = true

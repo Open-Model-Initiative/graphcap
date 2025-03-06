@@ -67,7 +67,7 @@ def huggingface_upload_manifest(
     context: dg.AssetExecutionContext,
     dataset_metadata: DatasetMetadata,
     dataset_export_manifest: dg.MaterializeResult,
-    config: HfUploadManifestConfig,
+    hf_upload_manifest_config: HfUploadManifestConfig,
 ) -> dg.MaterializeResult:
     """
     Uploads the exported manifest dataset to Hugging Face Hub.
@@ -105,22 +105,22 @@ def huggingface_upload_manifest(
     huggingface_client: HfApi = context.resources.huggingface_client
     dataset_url = upload_perspective_dataset_to_huggingface(
         hf_dataset=hf_dataset,
-        dataset_name=config.dataset_name,
-        namespace=config.namespace,
+        dataset_name=hf_upload_manifest_config.dataset_name,
+        namespace=hf_upload_manifest_config.namespace,
         huggingface_client=huggingface_client,
-        private_dataset=config.private_dataset,
+        private_dataset=hf_upload_manifest_config.private_dataset,
     )
 
     # Create dataset card content
     readme_content = generate_readme_content(
-        dataset_name=config.dataset_name,
-        dataset_description=config.dataset_description,
-        dataset_tags=config.dataset_tags,
+        dataset_name=hf_upload_manifest_config.dataset_name,
+        dataset_description=hf_upload_manifest_config.dataset_description,
+        dataset_tags=hf_upload_manifest_config.dataset_tags,
         perspective_results_len=len(perspective_results),
     )
 
     # Upload README.md
-    repo_id = f"{config.namespace}/{config.dataset_name}"
+    repo_id = f"{hf_upload_manifest_config.namespace}/{hf_upload_manifest_config.dataset_name}"
     try:
         context.log.info(f"Uploading README.md to Hugging Face Hub: {repo_id}")
         upload_file(
@@ -137,8 +137,8 @@ def huggingface_upload_manifest(
 
     return dg.MaterializeResult(
         metadata={
-            "dataset_name": config.dataset_name,
-            "namespace": config.namespace,
+            "dataset_name": hf_upload_manifest_config.dataset_name,
+            "namespace": hf_upload_manifest_config.namespace,
             "dataset_url": dataset_url,
         }
     )

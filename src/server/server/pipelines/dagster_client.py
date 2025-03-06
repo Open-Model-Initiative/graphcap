@@ -1,16 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dagster_graphql import DagsterGraphQLClient, DagsterGraphQLClientError
+from server.features.repositories.types import RepositoryParams
 from loguru import logger
 
-REPO_LOCATION_NAME = "pipelines.definitions"
-REPO_NAME = "__repository__"
-DAGSTER_HOST = "graphcap_pipelines"  # Docker service name for Dagster
-DAGSTER_PORT = 32300
-
+params = RepositoryParams()
 
 class DagsterClientWrapper:
-    def __init__(self, host: str = DAGSTER_HOST, port: int = DAGSTER_PORT):
+    def __init__(self, params: RepositoryParams = RepositoryParams()):
         """
         Initialize Dagster client with host and port.
 
@@ -18,10 +15,10 @@ class DagsterClientWrapper:
             host (str): Dagster GraphQL host. Defaults to Docker service name.
             port (int): Dagster GraphQL port. Defaults to 32300.
         """
-        logger.info(f"Initializing Dagster client with host={host}, port={port}")
-        self.client = DagsterGraphQLClient(host, port_number=port)
-        self.repo_location_name = REPO_LOCATION_NAME
-        self.repo_name = REPO_NAME
+        logger.info(f"Initializing Dagster client with host={params.dagster_host}, port={params.dagster_port}")
+        self.client = DagsterGraphQLClient(params.dagster_host, port_number=params.dagster_port)
+        self.repo_location_name = params.repo_location_name
+        self.repo_name = params.repo_name
 
     def submit_job_execution(self, job_name: str) -> str:
         """

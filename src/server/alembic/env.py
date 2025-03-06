@@ -9,6 +9,7 @@ import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
+from typing import Dict, Any
 
 from alembic import context
 
@@ -33,7 +34,21 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-DB_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://graphcap:graphcap@gcap_postgres:5432/graphcap")
+
+# Get database connection parameters from environment variables
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+DB_HOST = os.getenv("POSTGRES_HOST")
+DB_PORT = os.getenv("POSTGRES_PORT")
+DB_NAME = os.getenv("POSTGRES_DB")
+
+# Construct the database URL from environment variables or use DATABASE_URL directly
+DB_URL = os.getenv("DATABASE_URL")
+if not DB_URL and all([DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME]):
+    DB_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+if not DB_URL:
+    raise ValueError("DATABASE_URL or all database connection parameters must be provided in environment variables")
 
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations in offline/online modes."""
@@ -44,7 +59,11 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Run migrations in 'async' mode."""
-    configuration = config.get_section(config.config_ini_section)
+    configuration = config.get_section(config.config_ini_section) or {}
+    configuration = dict(configuration)  # Ensure it's a dictionary
+    
+    # At this point, DB_URL is guaranteed to be a string (not None) due to the check above
+    assert DB_URL is not None, "DB_URL should not be None at this point"
     configuration["sqlalchemy.url"] = DB_URL
 
     connectable = async_engine_from_config(
