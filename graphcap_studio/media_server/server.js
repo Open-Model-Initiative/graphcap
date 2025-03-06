@@ -7,6 +7,7 @@ const sharp = require('sharp');
 const multer = require('multer');
 const { glob } = require('glob');
 const morgan = require('morgan');
+const crypto = require('crypto');
 
 /**
  * Graphcap Media Server
@@ -40,16 +41,40 @@ if (!fs.existsSync(thumbnailsDir)) {
   fs.mkdirSync(thumbnailsDir, { recursive: true });
 }
 
+// Define file size limits
+const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB limit for uploads
+
+// File filter to validate file types
+const fileFilter = (req, file, cb) => {
+  // Accept only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'), false);
+  }
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    // Sanitize the original filename to prevent path traversal
+    const sanitizedFilename = path.basename(file.originalname).replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${Date.now()}-${sanitizedFilename}`);
   }
 });
-const upload = multer({ storage });
+
+// Configure multer with limits and file filter
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: FILE_SIZE_LIMIT,
+    files: 5 // Maximum number of files per upload
+  },
+  fileFilter
+});
 
 // Enhanced logging function
 function logInfo(message, data = null) {
@@ -59,10 +84,46 @@ function logInfo(message, data = null) {
   console.log(`[INFO] ${new Date().toISOString()} - ${logMessage}`);
 }
 
-// Enhanced error logging function
+/**
+ * Log error messages
+ * 
+ * @param {string} message - The error message
+ * @param {Error|Object} error - The error object or additional data
+ */
 function logError(message, error) {
-  console.error(`[ERROR] ${new Date().toISOString()} - ${message}:`, error);
+  console.error(`[ERROR] ${new Date().toISOString()} - ${message}`);
+  if (error) {
+    if (error instanceof Error) {
+      console.error(`${error.message}\n${error.stack}`);
+    } else {
+      console.error(JSON.stringify(error, null, 2));
+    }
+  }
 }
+
+// Middleware to handle multer errors
+const handleMulterErrors = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // A Multer error occurred when uploading
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      logError('File too large', err);
+      return res.status(413).json({ 
+        error: `File too large. Maximum size is ${FILE_SIZE_LIMIT / (1024 * 1024)}MB` 
+      });
+    } else if (err.code === 'LIMIT_FILE_COUNT') {
+      logError('Too many files', err);
+      return res.status(413).json({ error: 'Too many files. Maximum is 5 files per upload' });
+    } else {
+      logError('Multer error', err);
+      return res.status(400).json({ error: err.message });
+    }
+  } else if (err) {
+    // Other errors
+    logError('Upload error', err);
+    return res.status(500).json({ error: 'File upload failed' });
+  }
+  next();
+};
 
 /**
  * Validates and sanitizes a file path to prevent path traversal attacks
@@ -105,10 +166,35 @@ function validatePath(userPath, basePath = WORKSPACE_PATH) {
  */
 async function generateThumbnail(imagePath, width, height) {
   try {
-    // Create a hash of the path and dimensions for the thumbnail filename
-    const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
-    const thumbnailFilename = `${imagePathHash}_${width}x${height}.webp`;
-    const thumbnailPath = path.join(thumbnailsDir, thumbnailFilename);
+    // Ensure imagePath is a string and already validated
+    if (typeof imagePath !== 'string') {
+      throw new Error('Invalid image path: must be a string');
+    }
+    
+    // Validate width and height are numbers
+    const parsedWidth = parseInt(width, 10);
+    const parsedHeight = parseInt(height, 10);
+    
+    if (isNaN(parsedWidth) || isNaN(parsedHeight) || parsedWidth <= 0 || parsedHeight <= 0) {
+      throw new Error('Invalid dimensions: width and height must be positive numbers');
+    }
+    
+    // Create a secure hash of the path and dimensions for the thumbnail filename
+    // Use crypto for a more secure hash
+    const hash = crypto.createHash('sha256');
+    hash.update(imagePath + parsedWidth + 'x' + parsedHeight);
+    const imagePathHash = hash.digest('hex');
+    
+    // Create a safe filename with the hash and dimensions
+    const thumbnailFilename = `${imagePathHash}_${parsedWidth}x${parsedHeight}.webp`;
+    
+    // Securely join paths to prevent path traversal
+    const thumbnailPath = path.resolve(thumbnailsDir, thumbnailFilename);
+    
+    // Verify the thumbnail path is within the thumbnails directory
+    if (!thumbnailPath.startsWith(path.resolve(thumbnailsDir))) {
+      throw new Error('Security error: Generated thumbnail path is outside the thumbnails directory');
+    }
     
     // Check if thumbnail already exists
     if (fs.existsSync(thumbnailPath)) {
@@ -117,11 +203,11 @@ async function generateThumbnail(imagePath, width, height) {
     }
     
     // Generate the thumbnail
-    logInfo(`Generating thumbnail for ${imagePath} at ${width}x${height}`);
+    logInfo(`Generating thumbnail for ${imagePath} at ${parsedWidth}x${parsedHeight}`);
     await sharp(imagePath)
       .resize({
-        width: parseInt(width),
-        height: parseInt(height),
+        width: parsedWidth,
+        height: parsedHeight,
         fit: 'cover',
         position: 'centre'
       })
@@ -130,7 +216,7 @@ async function generateThumbnail(imagePath, width, height) {
     
     return thumbnailPath;
   } catch (error) {
-    logError(`Failed to generate thumbnail for ${imagePath}`, error);
+    logError('Error generating thumbnail', error);
     throw error;
   }
 }
@@ -360,9 +446,25 @@ app.get('/api/images/view/*', async (req, res) => {
     const height = req.query.height;
     
     if (width && height) {
+      // Validate width and height are positive integers
+      const parsedWidth = parseInt(width, 10);
+      const parsedHeight = parseInt(height, 10);
+      
+      if (isNaN(parsedWidth) || isNaN(parsedHeight) || parsedWidth <= 0 || parsedHeight <= 0) {
+        return res.status(400).json({ error: 'Width and height must be positive integers' });
+      }
+      
+      // Set reasonable limits to prevent DoS attacks
+      const MAX_DIMENSION = 2000; // Maximum allowed dimension
+      if (parsedWidth > MAX_DIMENSION || parsedHeight > MAX_DIMENSION) {
+        return res.status(400).json({ 
+          error: `Dimensions too large. Maximum allowed is ${MAX_DIMENSION}x${MAX_DIMENSION}` 
+        });
+      }
+      
       try {
         // Generate thumbnail
-        const thumbnailPath = await generateThumbnail(fullPath, width, height);
+        const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight);
         logInfo(`Serving thumbnail: ${thumbnailPath}`);
         return res.sendFile(thumbnailPath);
       } catch (error) {
@@ -378,7 +480,7 @@ app.get('/api/images/view/*', async (req, res) => {
     res.sendFile(fullPath);
   } catch (error) {
     logError('Error serving image', error);
-    res.status(500).json({ error: 'Failed to serve image' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -502,7 +604,7 @@ app.post('/api/images/process', async (req, res) => {
  * @param {File} req.file - The image file to upload
  * @returns {Object} Uploaded image information
  */
-app.post('/api/images/upload', upload.single('image'), (req, res) => {
+app.post('/api/images/upload', handleMulterErrors, upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       logError('No image file provided', { body: req.body });
@@ -519,11 +621,26 @@ app.post('/api/images/upload', upload.single('image'), (req, res) => {
     });
   } catch (error) {
     logError('Error uploading image', error);
-    res.status(500).json({ error: 'Failed to upload image' });
+    res.status(500).json({ error: 'Failed to process uploaded image' });
   }
+});
+
+// Global error handler - must be defined after all routes
+app.use((err, req, res, next) => {
+  logError('Unhandled server error', err);
+  
+  // Don't expose stack traces in production
+  const errorMessage = process.env.NODE_ENV === 'production' 
+    ? 'Internal server error' 
+    : err.message || 'Unknown error';
+    
+  res.status(500).json({ error: errorMessage });
 });
 
 // Start the server
 app.listen(PORT, () => {
-  logInfo(`Graphcap Media Server running on port ${PORT}`);
+  logInfo(`Media Server running on port ${PORT}`);
+  logInfo(`Workspace path: ${WORKSPACE_PATH}`);
+  logInfo(`Upload directory: ${uploadDir}`);
+  logInfo(`Thumbnails directory: ${thumbnailsDir}`);
 }); 
