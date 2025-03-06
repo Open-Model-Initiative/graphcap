@@ -34,6 +34,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Create thumbnails directory if it doesn't exist
+const thumbnailsDir = path.join(WORKSPACE_PATH, 'thumbnails');
+if (!fs.existsSync(thumbnailsDir)) {
+  fs.mkdirSync(thumbnailsDir, { recursive: true });
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -86,6 +92,46 @@ function validatePath(userPath, basePath = WORKSPACE_PATH) {
   } catch (error) {
     logError('Path validation error', error);
     return { isValid: false, path: null, error: 'Invalid path' };
+  }
+}
+
+/**
+ * Generates a thumbnail for an image
+ * 
+ * @param {string} imagePath - Path to the original image
+ * @param {number} width - Desired width of the thumbnail
+ * @param {number} height - Desired height of the thumbnail
+ * @returns {Promise<string>} Path to the generated thumbnail
+ */
+async function generateThumbnail(imagePath, width, height) {
+  try {
+    // Create a hash of the path and dimensions for the thumbnail filename
+    const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
+    const thumbnailFilename = `${imagePathHash}_${width}x${height}.webp`;
+    const thumbnailPath = path.join(thumbnailsDir, thumbnailFilename);
+    
+    // Check if thumbnail already exists
+    if (fs.existsSync(thumbnailPath)) {
+      logInfo(`Using existing thumbnail: ${thumbnailPath}`);
+      return thumbnailPath;
+    }
+    
+    // Generate the thumbnail
+    logInfo(`Generating thumbnail for ${imagePath} at ${width}x${height}`);
+    await sharp(imagePath)
+      .resize({
+        width: parseInt(width),
+        height: parseInt(height),
+        fit: 'cover',
+        position: 'centre'
+      })
+      .webp({ quality: 80 })
+      .toFile(thumbnailPath);
+    
+    return thumbnailPath;
+  } catch (error) {
+    logError(`Failed to generate thumbnail for ${imagePath}`, error);
+    throw error;
   }
 }
 
@@ -290,7 +336,7 @@ app.get('/api/datasets/images', async (req, res) => {
  * @param {string} imagePath - Path to the image
  * @returns {File} The image file
  */
-app.get('/api/images/view/*', (req, res) => {
+app.get('/api/images/view/*', async (req, res) => {
   try {
     const imagePath = req.params[0];
     
@@ -302,7 +348,6 @@ app.get('/api/images/view/*', (req, res) => {
     }
     
     const fullPath = pathValidation.path;
-    logInfo(`Serving image: ${imagePath}`, { fullPath });
     
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
@@ -310,7 +355,26 @@ app.get('/api/images/view/*', (req, res) => {
       return res.status(404).json({ error: 'Image not found' });
     }
     
-    // Serve the file
+    // Check if thumbnail is requested
+    const width = req.query.width;
+    const height = req.query.height;
+    
+    if (width && height) {
+      try {
+        // Generate thumbnail
+        const thumbnailPath = await generateThumbnail(fullPath, width, height);
+        logInfo(`Serving thumbnail: ${thumbnailPath}`);
+        return res.sendFile(thumbnailPath);
+      } catch (error) {
+        logError('Error generating thumbnail', error);
+        // Fall back to original image if thumbnail generation fails
+        logInfo(`Falling back to original image: ${fullPath}`);
+        return res.sendFile(fullPath);
+      }
+    }
+    
+    // Serve the original file
+    logInfo(`Serving image: ${imagePath}`, { fullPath });
     res.sendFile(fullPath);
   } catch (error) {
     logError('Error serving image', error);
@@ -405,6 +469,17 @@ app.post('/api/images/process', async (req, res) => {
     
     // Save the processed image
     await image.toFile(outputPath);
+    
+    // Clear thumbnails for this image
+    const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
+    const thumbnailPattern = path.join(thumbnailsDir, `${imagePathHash}_*`);
+    const thumbnailFiles = await glob(thumbnailPattern);
+    
+    // Delete existing thumbnails
+    for (const thumbnailFile of thumbnailFiles) {
+      fs.unlinkSync(thumbnailFile);
+      logInfo(`Deleted thumbnail: ${thumbnailFile}`);
+    }
     
     logInfo(`Image processed successfully: ${outputPath}`);
     

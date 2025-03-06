@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
-import { Image, Dataset, listDatasetImages } from '@/services/images';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Image, Dataset, listDatasetImages, preloadImage, getThumbnailUrl } from '@/services/images';
 import { ImageEditor } from '../components/ImageEditor';
 import { ImageGallery } from '../components/ImageGallery';
 import { DatasetTree } from '../components/DatasetTree';
@@ -13,6 +13,12 @@ interface EditorContainerProps {
   onClose?: () => void;
 }
 
+// Query keys for caching
+const QUERY_KEYS = {
+  datasets: ['datasets'],
+  datasetImages: (datasetName: string) => ['datasets', datasetName, 'images'],
+};
+
 /**
  * A container component that integrates the image editor with the gallery
  */
@@ -22,12 +28,30 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(null);
   const [showProperties, setShowProperties] = useState(false);
+  
+  // Get query client for prefetching and cache management
+  const queryClient = useQueryClient();
 
-  // Fetch datasets
-  const { data: datasetsData, isLoading, error } = useQuery({
-    queryKey: ['datasets'],
+  // Fetch datasets with improved caching
+  const { 
+    data: datasetsData, 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: QUERY_KEYS.datasets,
     queryFn: listDatasetImages,
+    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
+    gcTime: 30 * 60 * 1000, // Cache data for 30 minutes (formerly cacheTime)
   });
+
+  // Find the currently selected dataset
+  const currentDataset = datasetsData?.datasets?.find(d => d.name === selectedDataset);
+  
+  // Filter images by subfolder if selected
+  const filteredImages = currentDataset?.images.filter(image => {
+    if (!selectedSubfolder) return true;
+    return image.directory.includes(selectedSubfolder);
+  }) || [];
 
   // Set the first dataset as selected by default
   useEffect(() => {
@@ -36,9 +60,52 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
     }
   }, [datasetsData, selectedDataset]);
 
+  // Preload images for better performance
+  const preloadImages = useCallback((images: Image[], count = 10) => {
+    // Preload the first N images as thumbnails
+    images.slice(0, count).forEach(image => {
+      preloadImage(image.path, 'thumbnail');
+    });
+    
+    // If we have a selected image, preload it at full resolution
+    if (selectedImage) {
+      preloadImage(selectedImage.path, 'full');
+    }
+  }, [selectedImage]);
+
+  // Preload images when dataset changes
+  useEffect(() => {
+    if (filteredImages.length > 0) {
+      preloadImages(filteredImages);
+    }
+  }, [filteredImages, preloadImages]);
+
   const handleSelectImage = (image: Image) => {
     setSelectedImage(image);
     setShowProperties(true);
+    
+    // Preload the full-size image
+    preloadImage(image.path, 'full');
+    
+    // Prefetch adjacent images
+    const currentIndex = filteredImages.findIndex(img => img.path === image.path);
+    if (currentIndex !== -1) {
+      // Preload next 3 images
+      for (let i = 1; i <= 3; i++) {
+        const nextIndex = currentIndex + i;
+        if (nextIndex < filteredImages.length) {
+          preloadImage(filteredImages[nextIndex].path, 'thumbnail');
+        }
+      }
+      
+      // Preload previous 3 images
+      for (let i = 1; i <= 3; i++) {
+        const prevIndex = currentIndex - i;
+        if (prevIndex >= 0) {
+          preloadImage(filteredImages[prevIndex].path, 'thumbnail');
+        }
+      }
+    }
   };
 
   const handleEditImage = () => {
@@ -52,6 +119,11 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
   const handleSave = () => {
     toast.success('Image saved successfully');
     setIsEditing(false);
+    
+    // Invalidate cache for this dataset to refresh the images
+    if (selectedDataset) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetImages(selectedDataset) });
+    }
   };
 
   const handleCancel = () => {
@@ -64,6 +136,15 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
     setSelectedImage(null);
     setIsEditing(false);
     setShowProperties(false);
+    
+    // Prefetch images for the selected dataset
+    if (datasetsData?.datasets) {
+      const dataset = datasetsData.datasets.find(d => d.name === datasetName);
+      if (dataset) {
+        // Preload the first few images
+        preloadImages(dataset.images);
+      }
+    }
   };
 
   const handleToggleProperties = () => {
@@ -78,15 +159,6 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
     console.log('Saving properties for image:', selectedImage.path, properties);
   };
 
-  // Find the currently selected dataset
-  const currentDataset = datasetsData?.datasets?.find(d => d.name === selectedDataset);
-  
-  // Filter images by subfolder if selected
-  const filteredImages = currentDataset?.images.filter(image => {
-    if (!selectedSubfolder) return true;
-    return image.directory.includes(selectedSubfolder);
-  }) || [];
-
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-900 text-white">
@@ -98,76 +170,78 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
   if (error) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-900">
-        <div className="rounded-lg bg-red-900/20 p-6 text-center">
-          <h3 className="mb-2 text-lg font-medium text-red-400">Error Loading Datasets</h3>
-          <p className="text-red-300">{error instanceof Error ? error.message : 'Unknown error'}</p>
-          <p className="mt-4 text-sm text-red-400">Please check your connection and try again</p>
+        <div className="max-w-md rounded-lg bg-red-900/20 p-6 text-center">
+          <h3 className="text-lg font-medium text-red-400">Error loading images</h3>
+          <p className="mt-2 text-sm text-gray-300">
+            {error instanceof Error ? error.message : 'An unknown error occurred'}
+          </p>
+          <button
+            className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
-  // Handle the case when no datasets are found
-  if (!datasetsData?.datasets || datasetsData.datasets.length === 0) {
+  if (isEditing && selectedImage) {
     return (
-      <div className="flex h-full w-full flex-col bg-gray-900 text-white">
-        <div className="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-lg font-medium">Image Editor</span>
-          </div>
-          {onClose && (
+      <div className="flex h-full w-full flex-col bg-gray-900">
+        <div className="flex h-12 items-center justify-between border-b border-gray-700 bg-gray-800 px-4">
+          <h2 className="text-lg font-medium text-white">
+            Editing: {selectedImage.name}
+          </h2>
+          <div className="flex space-x-2">
             <button
-              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
-              onClick={onClose}
+              className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
+              onClick={handleCancel}
             >
-              Close
+              Cancel
             </button>
-          )}
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="rounded-lg bg-yellow-900/20 p-6 text-center">
-            <h3 className="mb-2 text-lg font-medium text-yellow-400">No Datasets Found</h3>
-            <p className="text-yellow-300">
-              No image datasets were found in the workspace. Please add images to the datasets directory.
-            </p>
+            <button
+              className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
+              onClick={handleSave}
+            >
+              Save
+            </button>
           </div>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <ImageEditor imagePath={selectedImage.path} onSave={handleSave} onCancel={handleCancel} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-900 text-white">
-      {/* Compact Header */}
-      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
-        <div className="flex items-center space-x-4">
-          <span className="text-lg font-medium">Image Editor</span>
-          {selectedImage && (
-            <span className="text-sm text-gray-400 truncate max-w-md">
-              {selectedImage.name}
-            </span>
-          )}
-        </div>
+    <div className="flex h-full w-full flex-col bg-gray-900">
+      {/* Header */}
+      <div className="flex h-12 items-center justify-between border-b border-gray-700 bg-gray-800 px-4">
+        <h2 className="text-lg font-medium text-white">Image Editor</h2>
         <div className="flex space-x-2">
-          {selectedImage && !isEditing && (
-            <button
-              className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
-              onClick={handleEditImage}
-            >
-              Edit
-            </button>
-          )}
           {selectedImage && (
-            <button
-              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
-              onClick={handleToggleProperties}
-            >
-              {showProperties ? 'Hide Info' : 'Show Info'}
-            </button>
+            <>
+              <button
+                className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
+                onClick={handleEditImage}
+              >
+                Edit Image
+              </button>
+              <button
+                className={`rounded-md px-3 py-1 text-sm text-white ${
+                  showProperties ? 'bg-purple-600 hover:bg-purple-500' : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+                onClick={handleToggleProperties}
+              >
+                {showProperties ? 'Hide Properties' : 'Show Properties'}
+              </button>
+            </>
           )}
           {onClose && (
             <button
-              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
+              className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
               onClick={onClose}
             >
               Close
@@ -179,64 +253,37 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar - Dataset tree */}
-        <div className="w-[20%] min-w-[200px] max-w-[300px] flex-shrink-0 overflow-hidden flex flex-col border-r border-gray-700 bg-gray-800">
-          <div className="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 p-3 flex-shrink-0">
-            <h2 className="text-base font-medium">Datasets</h2>
-          </div>
-          <div className="p-3 overflow-auto flex-1">
-            <DatasetTree 
-              datasets={datasetsData.datasets} 
-              selectedDataset={selectedDataset}
-              selectedSubfolder={selectedSubfolder}
-              onSelectNode={handleDatasetChange}
+        <div className="w-64 overflow-auto border-r border-gray-700 bg-gray-800">
+          <DatasetTree
+            datasets={datasetsData?.datasets || []}
+            selectedDataset={selectedDataset}
+            selectedSubfolder={selectedSubfolder}
+            onSelectNode={handleDatasetChange}
+          />
+        </div>
+
+        {/* Main content - Image gallery */}
+        <div className={`flex-1 overflow-hidden ${showProperties ? 'flex' : ''}`}>
+          <div className={showProperties ? 'flex-1' : 'w-full h-full'}>
+            <ImageGallery
+              images={filteredImages}
+              onSelectImage={handleSelectImage}
+              selectedImage={selectedImage}
+              isLoading={isLoading}
+              isEmpty={filteredImages.length === 0}
             />
           </div>
-        </div>
 
-        {/* Center - Image gallery or editor */}
-        <div className="relative flex-1 overflow-hidden bg-gray-900">
-          <div className="absolute inset-0 overflow-hidden">
-            {isEditing && selectedImage ? (
-              <ImageEditor
-                imagePath={selectedImage.path}
-                onSave={handleSave}
-                onCancel={handleCancel}
-              />
-            ) : (
-              <ImageGallery 
-                images={filteredImages} 
-                onSelectImage={handleSelectImage}
-                selectedImage={selectedImage}
-                isLoading={isLoading}
-                isEmpty={filteredImages.length === 0}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Right sidebar - Properties panel */}
-        {showProperties && selectedImage && (
-          <div className="w-[25%] min-w-[250px] max-w-[400px] flex-shrink-0 overflow-hidden flex flex-col border-l border-gray-700 bg-gray-800">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-3 flex-shrink-0">
-              <h2 className="text-base font-medium">Properties</h2>
-              <button
-                onClick={handleToggleProperties}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
-              >
-                <span className="sr-only">Close panel</span>
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-3 overflow-auto flex-1">
-              <ImageProperties 
-                image={selectedImage} 
+          {/* Right sidebar - Image properties */}
+          {showProperties && selectedImage && (
+            <div className="w-80 overflow-auto border-l border-gray-700 bg-gray-800">
+              <ImageProperties
+                image={selectedImage}
                 onSave={handleSaveProperties}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

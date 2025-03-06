@@ -82,6 +82,15 @@ export const ImageProcessResponseSchema = z.object({
 
 export type ImageProcessResponse = z.infer<typeof ImageProcessResponseSchema>;
 
+// Cache for image URLs to avoid redundant requests
+const imageUrlCache = new Map<string, string>();
+
+// Cache for image thumbnails
+const thumbnailCache = new Map<string, string>();
+
+// Cache expiration time (30 minutes)
+const CACHE_EXPIRATION = 30 * 60 * 1000;
+
 /**
  * List all images in the workspace
  * 
@@ -142,7 +151,71 @@ export async function listDatasetImages(): Promise<DatasetListResponse> {
  * @returns URL for viewing the image
  */
 export function getImageUrl(imagePath: string): string {
-  return `${MEDIA_SERVER_URL}/api/images/view${imagePath}`;
+  // Check if URL is in cache
+  if (imageUrlCache.has(imagePath)) {
+    return imageUrlCache.get(imagePath)!;
+  }
+  
+  const url = `${MEDIA_SERVER_URL}/api/images/view${imagePath}`;
+  
+  // Cache the URL
+  imageUrlCache.set(imagePath, url);
+  
+  // Set cache expiration
+  setTimeout(() => {
+    imageUrlCache.delete(imagePath);
+  }, CACHE_EXPIRATION);
+  
+  return url;
+}
+
+/**
+ * Get the URL for a thumbnail version of an image
+ * 
+ * @param imagePath - Path to the image
+ * @param width - Desired width of the thumbnail
+ * @param height - Desired height of the thumbnail
+ * @returns URL for the thumbnail
+ */
+export function getThumbnailUrl(imagePath: string, width = 200, height = 200): string {
+  const cacheKey = `${imagePath}_${width}x${height}`;
+  
+  // Check if thumbnail URL is in cache
+  if (thumbnailCache.has(cacheKey)) {
+    return thumbnailCache.get(cacheKey)!;
+  }
+  
+  // In a real implementation, we would add query parameters for thumbnail size
+  // For now, we'll create a thumbnail URL by adding width and height parameters
+  const baseUrl = getImageUrl(imagePath);
+  const url = new URL(baseUrl);
+  url.searchParams.append('width', width.toString());
+  url.searchParams.append('height', height.toString());
+  
+  // Cache the thumbnail URL
+  thumbnailCache.set(cacheKey, url.toString());
+  
+  // Set cache expiration
+  setTimeout(() => {
+    thumbnailCache.delete(cacheKey);
+  }, CACHE_EXPIRATION);
+  
+  return url.toString();
+}
+
+/**
+ * Preload an image to cache it in the browser
+ * 
+ * @param imagePath - Path to the image
+ * @param size - Size of the image to preload ('thumbnail' or 'full')
+ */
+export function preloadImage(imagePath: string, size: 'thumbnail' | 'full' = 'thumbnail'): void {
+  const url = size === 'thumbnail' 
+    ? getThumbnailUrl(imagePath) 
+    : getImageUrl(imagePath);
+  
+  const img = new Image();
+  img.src = url;
 }
 
 /**
@@ -169,6 +242,18 @@ export async function processImage(request: ImageProcessRequest): Promise<ImageP
   
   const data = await response.json();
   console.log('Processed image result:', data);
+  
+  // Clear caches for this image path to ensure fresh data
+  const imagePath = request.imagePath;
+  imageUrlCache.delete(imagePath);
+  
+  // Clear all thumbnail cache entries for this image
+  for (const key of thumbnailCache.keys()) {
+    if (key.startsWith(imagePath + '_')) {
+      thumbnailCache.delete(key);
+    }
+  }
+  
   return ImageProcessResponseSchema.parse(data);
 }
 

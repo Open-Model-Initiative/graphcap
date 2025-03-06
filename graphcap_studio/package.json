@@ -23,6 +23,8 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.2.3",
     "react-easy-crop": "^5.4.1",
+    "react-window": "^1.8.11",
+    "react-window-infinite-loader": "^1.0.10",
     "sonner": "^1.7.4",
     "styled-components": "^6.1.15",
     "tailwindcss": "^4.0.3",
