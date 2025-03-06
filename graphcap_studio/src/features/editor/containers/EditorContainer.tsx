@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Image } from '@/services/images';
 import { ImageEditor } from '../components/ImageEditor';
-import { EditorContextProvider, useEditorContext } from '../context/EditorContext';
+import { EditorContextProvider, useEditorContext, ViewMode } from '../context/EditorContext';
 import { EditorLayout } from '../components/layout';
 import { ImageViewerToggle } from '../components/ui';
 import { 
@@ -18,6 +18,7 @@ import {
   useViewMode,
   useUploader
 } from '../hooks';
+import { ImageUploader } from '../components/ImageUploader';
 
 interface EditorContainerProps {
   directory?: string;
@@ -73,7 +74,10 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     handleCancel
   } = useImageEditor({ selectedDataset });
 
-  const { showUploader, handleToggleUploader } = useUploader();
+  const { showUploader, setShowUploader, handleToggleUploader } = useUploader();
+  
+  // Track previous view mode to restore uploader state when switching back to grid
+  const [wasUploaderVisible, setWasUploaderVisible] = useState(false);
 
   // Adapter for handleEditImage to work with our component interface
   const handleEditImage = () => {
@@ -87,6 +91,35 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     filteredImages,
     setShowProperties
   });
+  
+  // Handle view mode changes to manage uploader visibility
+  useEffect(() => {
+    if (viewMode === 'carousel' && showUploader) {
+      // Save the current uploader state and hide it
+      setWasUploaderVisible(true);
+      setShowUploader(false);
+    } else if (viewMode === 'grid' && wasUploaderVisible) {
+      // Restore uploader state when switching back to grid
+      setShowUploader(true);
+      setWasUploaderVisible(false);
+    }
+  }, [viewMode, showUploader, setShowUploader, wasUploaderVisible]);
+
+  // Handle upload completion
+  const handleUploadFinished = () => {
+    handleUploadComplete();
+    // Keep the uploader open for additional uploads
+  };
+
+  // Custom view mode toggle that manages uploader visibility
+  const handleViewModeToggle = (mode: ViewMode) => {
+    if (mode === 'carousel' && showUploader) {
+      // Save uploader state before hiding
+      setWasUploaderVisible(true);
+      setShowUploader(false);
+    }
+    setViewMode(mode);
+  };
 
   if (isLoading) {
     return (
@@ -151,23 +184,29 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
         <div className="flex items-center space-x-2">
           <h4 className="text-base font-medium text-white">Image Gallery</h4>
           
-          {/* View mode toggle */}
+          {/* View mode toggle with custom handler */}
           <ImageViewerToggle
             viewMode={viewMode}
-            onToggle={setViewMode}
+            onToggle={handleViewModeToggle}
             className="scale-90"
           />
         </div>
         
         <div className="flex items-center space-x-1">
-          {/* Upload button - more compact */}
-          <button
-            className="rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-green-700"
-            onClick={handleToggleUploader}
-            title="Upload Images"
-          >
-            Upload
-          </button>
+          {/* Upload button - hide in carousel mode */}
+          {viewMode === 'grid' && (
+            <button
+              className={`rounded px-2 py-0.5 text-xs font-medium ${
+                showUploader
+                  ? 'bg-green-700 text-white'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+              onClick={handleToggleUploader}
+              title="Upload Images"
+            >
+              {showUploader ? 'Hide Upload' : 'Upload'}
+            </button>
+          )}
           
           {/* Properties toggle - more compact */}
           <button
@@ -210,16 +249,42 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
             />
           }
           viewer={
-            <ViewerContainer
-              images={filteredImages}
-              selectedImage={selectedImage}
-              onSelectImage={handleSelectImage}
-              onEditImage={handleEditImage}
-              onAddToDataset={selectedImage && selectedDataset ? 
-                () => handleAddToDataset(selectedImage.path, selectedDataset) : undefined}
-              isLoading={isLoading}
-              isEmpty={filteredImages.length === 0}
-            />
+            <div className="relative h-full w-full">
+              {/* Always show the viewer */}
+              <ViewerContainer
+                images={filteredImages}
+                selectedImage={selectedImage}
+                onSelectImage={handleSelectImage}
+                onEditImage={handleEditImage}
+                onAddToDataset={selectedImage && selectedDataset ? 
+                  () => handleAddToDataset(selectedImage.path, selectedDataset) : undefined}
+                isLoading={isLoading}
+                isEmpty={filteredImages.length === 0}
+              />
+              
+              {/* Show uploader as an overlay when active - only in grid view */}
+              {showUploader && viewMode === 'grid' && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-95 p-4 border-t border-gray-700 shadow-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-medium text-white">Upload to {selectedDataset || 'dataset'}</h3>
+                    <button 
+                      onClick={handleToggleUploader}
+                      className="text-gray-400 hover:text-white"
+                      aria-label="Close uploader"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                  <ImageUploader 
+                    datasetName={selectedDataset || ''} 
+                    onUploadComplete={handleUploadFinished}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
           }
           properties={
             <PropertiesContainer
