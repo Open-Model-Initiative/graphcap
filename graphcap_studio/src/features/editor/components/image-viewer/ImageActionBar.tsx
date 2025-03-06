@@ -51,10 +51,10 @@ export function ImageActionBar({
   };
 
   return (
-    <div className={`flex items-center space-x-1 bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded-md ${className}`}>
+    <div className={`flex items-center space-x-1 bg-gray-800/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md ${className}`}>
       <button
         onClick={onEdit}
-        className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
+        className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-1.5 py-0.5 rounded"
         title="Edit image"
       >
         Edit
@@ -63,7 +63,7 @@ export function ImageActionBar({
       {onAddToDataset && (
         <button
           onClick={onAddToDataset}
-          className="text-xs text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded"
+          className="text-xs text-white bg-green-600 hover:bg-green-700 px-1.5 py-0.5 rounded"
           title="Add to dataset"
         >
           Add
@@ -72,19 +72,19 @@ export function ImageActionBar({
       
       <button
         onClick={handleDownload}
-        className="text-xs text-white bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded"
+        className="text-xs text-white bg-gray-600 hover:bg-gray-700 px-1.5 py-0.5 rounded"
         title="Download image"
       >
-        Download
+        DL
       </button>
       
       {onDelete && (
         <button
           onClick={onDelete}
-          className="text-xs text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+          className="text-xs text-white bg-red-600 hover:bg-red-700 px-1.5 py-0.5 rounded"
           title="Delete image"
         >
-          Delete
+          Del
         </button>
       )}
     </div>

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { toast } from 'sonner';
 import { processImage, ImageProcessResponse, getImageUrl } from '@/services/images';
-import { ImageViewer } from './ImageViewer';
+import { ImageViewer } from './image-viewer';
 
 interface ImageEditorProps {
   imagePath: string;
@@ -61,22 +61,24 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-gray-900 text-white">
-      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
-        <h2 className="text-base font-medium">Image Editor</h2>
-        <div className="flex space-x-2">
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 px-2 py-1">
+        <h2 className="text-sm font-medium">Image Editor</h2>
+        <div className="flex space-x-1">
           {isEditing ? (
             <>
               <button
-                className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
+                className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                 onClick={() => setIsEditing(false)}
                 disabled={isSaving}
+                title="Cancel Editing"
               >
                 Cancel
               </button>
               <button
-                className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
                 onClick={handleSave}
                 disabled={isSaving}
+                title="Save Changes"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
@@ -84,14 +86,16 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
           ) : (
             <>
               <button
-                className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
+                className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700"
                 onClick={() => setIsEditing(true)}
+                title="Edit Image"
               >
                 Edit
               </button>
               <button
-                className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
+                className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                 onClick={onCancel}
+                title="Close Editor"
               >
                 Close
               </button>

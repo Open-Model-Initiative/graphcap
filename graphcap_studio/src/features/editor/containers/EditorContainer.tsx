@@ -310,19 +310,19 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
   if (isEditing && selectedImage) {
     return (
       <div className="flex h-full w-full flex-col bg-gray-900">
-        <div className="flex h-12 items-center justify-between border-b border-gray-700 bg-gray-800 px-4">
-          <h2 className="text-lg font-medium text-white">
+        <div className="flex h-8 items-center justify-between border-b border-gray-700 bg-gray-800 px-2">
+          <h2 className="text-sm font-medium text-white">
             Editing: {selectedImage.name}
           </h2>
-          <div className="flex space-x-2">
+          <div className="flex space-x-1">
             <button
-              className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
+              className="rounded-md bg-gray-700 px-2 py-0.5 text-xs text-white hover:bg-gray-600"
               onClick={handleCancel}
             >
               Cancel
             </button>
             <button
-              className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
+              className="rounded-md bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-500"
               onClick={handleSave}
             >
               Save
@@ -338,44 +338,48 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Header with actions */}
-      <div className="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-white">Image Gallery</h1>
+      {/* Header with actions - more compact */}
+      <div className="flex items-center justify-between border-b border-gray-700 bg-gray-800 px-2 py-1">
+        <div className="flex items-center space-x-2">
+          <h4 className="text-base font-medium text-white">Image Gallery</h4>
           
           {/* View mode toggle */}
           <ImageViewerToggle
             viewMode={viewMode}
             onToggle={setViewMode}
+            className="scale-90"
           />
         </div>
         
-        <div className="flex items-center space-x-2">
-          {/* Upload button */}
+        <div className="flex items-center space-x-1">
+          {/* Upload button - more compact */}
           <button
-            className="rounded bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700"
+            className="rounded bg-green-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-green-700"
             onClick={handleToggleUploader}
+            title="Upload Images"
           >
-            Upload Images
+            Upload
           </button>
           
-          {/* Properties toggle */}
+          {/* Properties toggle - more compact */}
           <button
-            className={`rounded px-3 py-1 text-sm font-medium ${
+            className={`rounded px-2 py-0.5 text-xs font-medium ${
               showProperties
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
             onClick={handleToggleProperties}
+            title={showProperties ? "Hide Properties Panel" : "Show Properties Panel"}
           >
-            {showProperties ? 'Hide Properties' : 'Show Properties'}
+            {showProperties ? 'Hide Props' : 'Show Props'}
           </button>
           
-          {/* Close button */}
+          {/* Close button - more compact */}
           {onClose && (
             <button
-              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
+              className="rounded bg-gray-700 px-2 py-0.5 text-xs font-medium text-white hover:bg-gray-600"
               onClick={onClose}
+              title="Close Editor"
             >
               Close
             </button>
