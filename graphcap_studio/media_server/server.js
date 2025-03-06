@@ -59,6 +59,37 @@ function logError(message, error) {
 }
 
 /**
+ * Validates and sanitizes a file path to prevent path traversal attacks
+ * 
+ * @param {string} userPath - The user-provided path
+ * @param {string} basePath - The base path that the final path must be within
+ * @returns {Object} Object containing the validated path and success status
+ */
+function validatePath(userPath, basePath = WORKSPACE_PATH) {
+  try {
+    // Normalize the path to resolve any '..' or '.' segments
+    const normalizedPath = path.normalize(userPath).replace(/^(\.\.(\/|\\|$))+/, '');
+    
+    // Construct the full path
+    const fullPath = path.join(basePath, normalizedPath);
+    
+    // Ensure the path is within the allowed base path
+    if (!fullPath.startsWith(path.resolve(basePath))) {
+      return { 
+        isValid: false, 
+        path: null, 
+        error: 'Access denied: Path outside of allowed directory' 
+      };
+    }
+    
+    return { isValid: true, path: fullPath, error: null };
+  } catch (error) {
+    logError('Path validation error', error);
+    return { isValid: false, path: null, error: 'Invalid path' };
+  }
+}
+
+/**
  * Health check endpoint
  * 
  * @returns {Object} Status object
@@ -76,15 +107,16 @@ app.get('/health', (req, res) => {
 app.get('/api/images', async (req, res) => {
   try {
     const directory = req.query.directory || '';
-    const fullPath = path.join(WORKSPACE_PATH, directory);
     
-    logInfo(`Listing images in directory: ${directory}`, { fullPath });
-    
-    // Validate the path is within workspace
-    if (!fullPath.startsWith(WORKSPACE_PATH)) {
-      logError('Access denied: Path outside of workspace', { fullPath, WORKSPACE_PATH });
-      return res.status(403).json({ error: 'Access denied: Path outside of workspace' });
+    // Validate the path
+    const pathValidation = validatePath(directory);
+    if (!pathValidation.isValid) {
+      logError('Invalid directory path', { directory, error: pathValidation.error });
+      return res.status(403).json({ error: pathValidation.error });
     }
+    
+    const fullPath = pathValidation.path;
+    logInfo(`Listing images in directory: ${directory}`, { fullPath });
     
     // Find all image files
     const imageFiles = await glob(`${fullPath}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
@@ -116,8 +148,14 @@ app.get('/api/images', async (req, res) => {
  */
 app.get('/api/datasets/images', async (req, res) => {
   try {
-    const datasetsPath = path.join(WORKSPACE_PATH, 'datasets');
+    // Validate the datasets path
+    const pathValidation = validatePath('datasets');
+    if (!pathValidation.isValid) {
+      logError('Invalid datasets path', { error: pathValidation.error });
+      return res.status(403).json({ error: pathValidation.error });
+    }
     
+    const datasetsPath = pathValidation.path;
     logInfo(`Listing datasets from: ${datasetsPath}`);
     
     // Validate the datasets directory exists
@@ -169,7 +207,14 @@ app.get('/api/datasets/images', async (req, res) => {
         continue;
       }
       
-      const dirPath = path.join(datasetsPath, dir);
+      // Validate the dataset directory path
+      const datasetPathValidation = validatePath(`datasets/${dir}`);
+      if (!datasetPathValidation.isValid) {
+        logError(`Invalid dataset directory: ${dir}`, { error: datasetPathValidation.error });
+        continue;
+      }
+      
+      const dirPath = datasetPathValidation.path;
       logInfo(`Scanning directory: ${dirPath}`);
       
       // Find all image files in this directory
@@ -199,32 +244,35 @@ app.get('/api/datasets/images', async (req, res) => {
     }
     
     // Also check the .local directory if it exists
-    const localDir = path.join(datasetsPath, '.local');
-    if (fs.existsSync(localDir)) {
-      logInfo(`Scanning .local directory: ${localDir}`);
-      
-      const imageFiles = await glob(`${localDir}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
-        nodir: true,
-        ignore: ['**/node_modules/**', '**/.git/**'] 
-      });
-      
-      logInfo(`Found ${imageFiles.length} images in .local`);
-      
-      if (imageFiles.length > 0) {
-        const images = imageFiles.map(file => {
-          const relativePath = file.replace(WORKSPACE_PATH, '');
-          return {
-            path: relativePath,
-            name: path.basename(file),
-            directory: path.dirname(relativePath),
-            url: `/api/images/view${relativePath}`
-          };
+    const localDirValidation = validatePath('datasets/.local');
+    if (localDirValidation.isValid) {
+      const localDir = localDirValidation.path;
+      if (fs.existsSync(localDir)) {
+        logInfo(`Scanning .local directory: ${localDir}`);
+        
+        const imageFiles = await glob(`${localDir}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
+          nodir: true,
+          ignore: ['**/node_modules/**', '**/.git/**'] 
         });
         
-        datasets.push({
-          name: '.local',
-          images
-        });
+        logInfo(`Found ${imageFiles.length} images in .local`);
+        
+        if (imageFiles.length > 0) {
+          const images = imageFiles.map(file => {
+            const relativePath = file.replace(WORKSPACE_PATH, '');
+            return {
+              path: relativePath,
+              name: path.basename(file),
+              directory: path.dirname(relativePath),
+              url: `/api/images/view${relativePath}`
+            };
+          });
+          
+          datasets.push({
+            name: '.local',
+            images
+          });
+        }
       }
     }
     
@@ -245,15 +293,16 @@ app.get('/api/datasets/images', async (req, res) => {
 app.get('/api/images/view/*', (req, res) => {
   try {
     const imagePath = req.params[0];
-    const fullPath = path.join(WORKSPACE_PATH, imagePath);
     
-    logInfo(`Serving image: ${imagePath}`, { fullPath });
-    
-    // Validate the path is within workspace
-    if (!fullPath.startsWith(WORKSPACE_PATH)) {
-      logError('Access denied: Path outside of workspace', { fullPath, WORKSPACE_PATH });
-      return res.status(403).json({ error: 'Access denied: Path outside of workspace' });
+    // Validate the path
+    const pathValidation = validatePath(imagePath);
+    if (!pathValidation.isValid) {
+      logError('Invalid image path', { imagePath, error: pathValidation.error });
+      return res.status(403).json({ error: pathValidation.error });
     }
+    
+    const fullPath = pathValidation.path;
+    logInfo(`Serving image: ${imagePath}`, { fullPath });
     
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
@@ -290,13 +339,14 @@ app.post('/api/images/process', async (req, res) => {
       return res.status(400).json({ error: 'Image path is required' });
     }
     
-    const fullPath = path.join(WORKSPACE_PATH, imagePath);
-    
-    // Validate the path is within workspace
-    if (!fullPath.startsWith(WORKSPACE_PATH)) {
-      logError('Access denied: Path outside of workspace', { fullPath, WORKSPACE_PATH });
-      return res.status(403).json({ error: 'Access denied: Path outside of workspace' });
+    // Validate the path
+    const pathValidation = validatePath(imagePath);
+    if (!pathValidation.isValid) {
+      logError('Invalid image path', { imagePath, error: pathValidation.error });
+      return res.status(403).json({ error: pathValidation.error });
     }
+    
+    const fullPath = pathValidation.path;
     
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
@@ -344,8 +394,13 @@ app.post('/api/images/process', async (req, res) => {
     } else {
       const originalExt = path.extname(fullPath);
       const originalName = path.basename(fullPath, originalExt);
-      const outputFilename = outputName || `${originalName}_edited${originalExt}`;
-      outputPath = path.join(uploadDir, outputFilename);
+      
+      // Sanitize the output filename
+      const sanitizedOutputName = outputName 
+        ? outputName.replace(/[^a-zA-Z0-9_\-\.]/g, '_') 
+        : `${originalName}_edited${originalExt}`;
+      
+      outputPath = path.join(uploadDir, sanitizedOutputName);
     }
     
     // Save the processed image
