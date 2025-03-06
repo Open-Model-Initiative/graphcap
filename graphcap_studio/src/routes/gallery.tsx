@@ -3,9 +3,13 @@ import { createFileRoute } from '@tanstack/react-router'
 import { EditorContainer } from '../features/editor/containers/EditorContainer'
 
 export const Route = createFileRoute('/gallery')({
-  component: ImageEditorWrapper,
+  component: Gallery,
 })
 
-function ImageEditorWrapper() {
-  return <EditorContainer />
+export default function Gallery() {
+  return (
+    <div className="h-full w-full overflow-hidden">
+      <EditorContainer />
+    </div>
+  );
 }

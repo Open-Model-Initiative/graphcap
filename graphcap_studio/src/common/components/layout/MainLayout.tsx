@@ -12,25 +12,29 @@ interface MainLayoutProps {
 export function MainLayout({ children, leftSidebar, rightSidebar }: MainLayoutProps) {
   // Calculate content padding based on visible sidebars
   const contentClasses = `
-    min-h-screen pt-14 pb-12
+    flex-1 overflow-hidden
     ${leftSidebar ? 'pl-64' : ''}
     ${rightSidebar ? 'pr-64' : ''}
   `
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-950">
-      <Header />
-      
-      {leftSidebar && <Sidebar side="left">{leftSidebar}</Sidebar>}
-      {rightSidebar && <Sidebar side="right">{rightSidebar}</Sidebar>}
-      
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
+      {/* Header with fixed height */}
+      <div className="flex-shrink-0">
+        <Header />
+      </div>
+
+      {/* Main content area that takes remaining space */}
       <main className={contentClasses}>
-        <div className="h-full p-6">
+        <div className="h-full">
           {children}
         </div>
       </main>
       
-      <Footer />
+      {/* Footer with fixed height */}
+      <div className="flex-shrink-0">
+        <Footer />
+      </div>
     </div>
   )
 } 

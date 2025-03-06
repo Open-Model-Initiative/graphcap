@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
-import { Image } from '@/services/images';
-import { ImageViewer } from './ImageViewer';
+import { Image, getImageUrl } from '@/services/images';
 
 interface ImageGalleryProps {
   images: Image[];
   onSelectImage: (image: Image) => void;
+  selectedImage: Image | null;
   isLoading?: boolean;
   isEmpty?: boolean;
 }
@@ -16,16 +16,10 @@ interface ImageGalleryProps {
 export function ImageGallery({ 
   images, 
   onSelectImage, 
-  isLoading = false, 
-  isEmpty = false 
+  selectedImage,
+  isLoading,
+  isEmpty
 }: ImageGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
-
-  const handleSelectImage = (image: Image) => {
-    setSelectedImage(image);
-    onSelectImage(image);
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -34,30 +28,68 @@ export function ImageGallery({
     );
   }
 
-  if (isEmpty || images.length === 0) {
+  if (isEmpty) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <p className="text-gray-500">No images found</p>
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <div className="text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No images</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            No images found in this location.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid h-full w-full grid-cols-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {images.map((image) => (
-        <div
-          key={image.path}
-          className={`group relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 ${
-            selectedImage?.path === image.path ? 'border-blue-600' : 'border-transparent'
-          } hover:border-blue-400`}
-          onClick={() => handleSelectImage(image)}
-        >
-          <ImageViewer imagePath={image.path} className="h-full w-full object-cover" />
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
-            <p className="truncate text-sm">{image.name}</p>
-          </div>
+    <div className="h-full w-full overflow-auto">
+      <div className="p-6">
+        <div className="grid auto-rows-[200px] grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+          {images.map((image) => (
+            <div
+              key={image.path}
+              className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all hover:shadow-lg ${
+                selectedImage?.path === image.path
+                  ? 'border-blue-500 shadow-md'
+                  : 'border-transparent hover:border-gray-300'
+              }`}
+              onClick={() => onSelectImage(image)}
+            >
+              {/* Image container with aspect ratio */}
+              <div className="relative h-full w-full">
+                <img
+                  src={getImageUrl(image.path)}
+                  alt={image.name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(e) => {
+                    console.error(`Failed to load image: ${image.path}`);
+                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yNCAxMmMwIDYuNjI3LTUuMzczIDEyLTEyIDEycy0xMi01LjM3My0xMi0xMiA1LjM3My0xMiAxMi0xMiAxMiA1LjM3MyAxMiAxMnptLTEyIDJjLjU1MiAwIDEtLjQ0OCAxLTFzLS40NDgtMS0xLTEtMSAuNDQ4LTEgMSAuNDQ4IDEgMSAxem0xLTkuNXYxLjVjMCAuMjc2LS4yMjQuNS0uNS41aGMtLjI3NiAwLS41LS4yMjQtLjUtLjV2LTEuNWMwLS4yNzYuMjI0LS41LjUtLjVoYy4yNzYgMCAuNS4yMjQuNS41em0wIDEyLjV2MS41YzAgLjI3Ni0uMjI0LjUtLjUuNWhjLS4yNzYgMC0uNS0uMjI0LS41LS41di0xLjVjMC0uMjc2LjIyNC0uNS41LS41aGMuMjc2IDAgLjUuMjI0LjUuNXptLTEyLTEydjEuNWMwIC4yNzYuMjI0LjUuNS41aGMuMjc2IDAgLjUtLjIyNC41LS41di0xLjVjMC0uMjc2LS4yMjQtLjUtLjUtLjVoYy0uMjc2IDAtLjUuMjI0LS41LjV6bTAgMTIuNXYxLjVjMCAuMjc2LjIyNC41LjUuNWhjLjI3NiAwIC41LS4yMjQuNS0uNXYtMS41YzAtLjI3Ni0uMjI0LS41LS41LS41aGMtLjI3NiAwLS41LjIyNC0uNS41eiIvPjwvc3ZnPg==';
+                  }}
+                />
+                {/* Overlay with image name */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="truncate text-sm font-medium text-white">
+                    {image.name}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 } 

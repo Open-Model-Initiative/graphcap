@@ -19,37 +19,6 @@ error() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] ❌ ERROR: $1" >&2
 }
 
-# Function to clean install dependencies
-clean_install() {
-    log "Performing clean dependency installation..."
-    
-    # Remove existing node_modules if they exist
-    if [ -d "node_modules" ]; then
-        log "Removing existing node_modules..."
-        rm -rf node_modules
-    fi
-    
-    # Clear pnpm store
-    log "Clearing pnpm store..."
-    pnpm store prune
-    
-    # Install dependencies with frozen lockfile
-    log "Installing dependencies..."
-    pnpm install --frozen-lockfile || {
-        error "Failed to install dependencies"
-        return 1
-    }
-    
-    # Verify vite installation
-    if ! pnpm list vite > /dev/null 2>&1; then
-        log "Installing vite..."
-        pnpm add -D vite || {
-            error "Failed to install vite"
-            return 1
-        }
-    fi
-}
-
 # Verify environment variables
 check_env() {
     log "Checking environment variables..."
@@ -67,26 +36,31 @@ main() {
     # Check environment first
     check_env || exit 1
     
-    # Perform clean install
-    # clean_install || exit 1
+    # Install dependencies if node_modules doesn't exist or if package.json has changed
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
         log "Installing dependencies..."
-    pnpm install --frozen-lockfile || {
-        error "Failed to install dependencies"
-        return 1
-    }
+        pnpm install || {
+            error "Failed to install dependencies"
+            return 1
+        }
+    else
+        log "✅ Dependencies already installed"
+    fi
+    
     log "✅ All checks passed"
-    log "🚀 Starting development server..."
     
     if [ "$NODE_ENV" = "production" ]; then
+        log "🚀 Building for production..."
         pnpm run build && pnpm run preview
     else
-        # Use exec to replace shell with node process
-        exec pnpm run dev
+        log "🚀 Starting development server with HMR enabled..."
+        # Use exec to replace shell with node process for proper signal handling
+        exec pnpm run dev -- --host 0.0.0.0 --port 32200
     fi
 }
 
-# Trap errors
-trap 'error "An error occurred. Exiting..."; exit 1' ERR
+# Trap signals for proper shutdown
+trap 'log "Received SIGINT or SIGTERM. Shutting down..."; exit 0' INT TERM
 
 # Run main with error handling
 main "$@" || {

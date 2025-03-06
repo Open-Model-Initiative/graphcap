@@ -62,23 +62,23 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./ui/src
+          path: ./graphcap_studio/src
           target: /app/src
           ignore:
             - "**/.git"
             - "**/node_modules"
             - "**/.DS_Store"
         - action: sync
-          path: ./ui/public
+          path: ./graphcap_studio/public
           target: /app/public
         - action: sync
-          path: ./ui/index.html
+          path: ./graphcap_studio/index.html
           target: /app/index.html
         - action: sync
-          path: ./ui/vite.config.ts
+          path: ./graphcap_studio/vite.config.ts
           target: /app/vite.config.ts
         - action: sync+restart
-          path: ./ui/pnpm-lock.yaml
+          path: ./graphcap_studio/pnpm-lock.yaml
           target: /app/pnpm-lock.yaml
     environment:
       - NODE_ENV=${NODE_ENV:-development}

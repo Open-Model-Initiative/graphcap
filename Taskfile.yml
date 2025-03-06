@@ -63,6 +63,17 @@ tasks:
       - pnpm install --no-frozen-lockfile
       
   studio-dev:
-    desc: Start only the graphcap_studio and graphcap_media_server services
+    desc: Start only the graphcap_studio and graphcap_media_server services with hot module reloading
     cmds:
-      - docker compose up graphcap_studio graphcap_media_server --build
+      - docker compose up graphcap_studio graphcap_media_server --build --watch
+      
+  studio-rebuild:
+    desc: Rebuild and restart the graphcap_studio and graphcap_media_server services
+    cmds:
+      - docker compose build graphcap_studio graphcap_media_server
+      - docker compose up graphcap_studio graphcap_media_server --force-recreate
+      
+  studio-restart:
+    desc: Restart just the graphcap_studio service for quicker development iterations
+    cmds:
+      - docker compose restart graphcap_studio

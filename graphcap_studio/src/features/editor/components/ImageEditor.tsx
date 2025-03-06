@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
-import { Area } from 'react-easy-crop/types';
+import Cropper, { Area } from 'react-easy-crop';
 import { toast } from 'sonner';
-import { processImage, ImageProcessResponse } from '@/services/images';
+import { processImage, ImageProcessResponse, getImageUrl } from '@/services/images';
 import { ImageViewer } from './ImageViewer';
 
 interface ImageEditorProps {
@@ -61,8 +60,8 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-200 p-4">
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 p-4 bg-gray-50">
         <h2 className="text-xl font-semibold">Image Editor</h2>
         <div className="flex space-x-2">
           {isEditing ? (
@@ -105,7 +104,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
         {isEditing ? (
           <>
             <Cropper
-              image={imagePath}
+              image={getImageUrl(imagePath)}
               crop={crop}
               zoom={zoom}
               rotation={rotation}
@@ -114,7 +113,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
             />
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-4 rounded-lg bg-white p-2 shadow-lg">
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-4 rounded-lg bg-white p-2 shadow-lg z-10">
               <div className="flex flex-col items-center">
                 <label htmlFor="zoom" className="text-sm text-gray-600">
                   Zoom
@@ -150,7 +149,9 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
             </div>
           </>
         ) : (
-          <ImageViewer imagePath={imagePath} className="h-full w-full" />
+          <div className="h-full w-full overflow-auto">
+            <ImageViewer imagePath={imagePath} className="h-full w-full" />
+          </div>
         )}
       </div>
     </div>
