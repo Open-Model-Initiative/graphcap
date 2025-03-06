@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
-import { Image } from '@/services/images';
+import { Image, Dataset } from '@/services/images';
 
 interface ImagePropertiesProps {
   image: Image;
   onSave: (properties: Record<string, any>) => void;
+  datasets?: Dataset[];
+  currentDataset?: string;
+  onAddToDataset?: (imagePath: string, targetDataset: string) => void;
 }
 
 interface ImagePropertiesData {
@@ -18,7 +21,13 @@ interface ImagePropertiesData {
 /**
  * A component for displaying and editing image properties
  */
-export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
+export function ImageProperties({ 
+  image, 
+  onSave, 
+  datasets = [], 
+  currentDataset = '',
+  onAddToDataset 
+}: ImagePropertiesProps) {
   const [properties, setProperties] = useState<ImagePropertiesData>({
     title: '',
     description: '',
@@ -28,9 +37,21 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
   });
   const [newTag, setNewTag] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedDataset, setSelectedDataset] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Load properties from localStorage if available
   useEffect(() => {
+    if (!image) {
+      setError("No image selected");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    
     try {
       const savedProps = localStorage.getItem(`image-props:${image.path}`);
       if (savedProps) {
@@ -38,7 +59,7 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
       } else {
         // Initialize with default properties and image info
         setProperties({
-          title: image.name,
+          title: image.name || 'Untitled',
           description: '',
           tags: [],
           rating: 0,
@@ -49,10 +70,21 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
           }
         });
       }
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading image properties:', error);
+      setError("Failed to load properties");
+      setIsLoading(false);
     }
   }, [image]);
+
+  // Reset selected dataset when datasets change
+  useEffect(() => {
+    if (datasets.length > 0 && !selectedDataset) {
+      // Default to current dataset if available
+      setSelectedDataset(currentDataset || datasets[0].name);
+    }
+  }, [datasets, currentDataset, selectedDataset]);
 
   const handlePropertyChange = (key: keyof ImagePropertiesData, value: any) => {
     setProperties(prev => ({
@@ -85,8 +117,71 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
     setIsEditing(false);
   };
 
+  const handleAddToDataset = () => {
+    if (onAddToDataset && selectedDataset) {
+      onAddToDataset(image.path, selectedDataset);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-4">
+        <div className="text-red-500 text-center">
+          <svg className="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Action Bar */}
+      <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
+        <h3 className="mb-2 font-medium text-gray-200">Actions</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-300">
+              Add to Dataset
+            </label>
+            <div className="flex space-x-2">
+              <select
+                value={selectedDataset}
+                onChange={(e) => setSelectedDataset(e.target.value)}
+                className="flex-1 rounded-l-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
+                data-action="add-to-dataset"
+              >
+                <option value="">Select a dataset</option>
+                {datasets
+                  .filter(dataset => dataset.name !== currentDataset)
+                  .map(dataset => (
+                    <option key={dataset.name} value={dataset.name}>
+                      {dataset.name}
+                    </option>
+                  ))}
+              </select>
+              <button
+                onClick={handleAddToDataset}
+                disabled={!selectedDataset}
+                className="rounded-r-md bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:bg-gray-600 disabled:text-gray-400"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-medium text-gray-200">Basic Information</h3>

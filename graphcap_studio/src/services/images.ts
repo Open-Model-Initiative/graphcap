@@ -322,4 +322,48 @@ export async function uploadImage(file: File, datasetName?: string): Promise<Ima
   console.log('Upload result:', data);
   
   return ImageProcessResponseSchema.parse(data);
+}
+
+/**
+ * Add an existing image to a dataset
+ * 
+ * @param imagePath - Path of the image to add
+ * @param datasetName - Name of the dataset to add the image to
+ * @returns Promise with the result of the operation
+ */
+export async function addImageToDataset(imagePath: string, datasetName: string): Promise<{ success: boolean; message: string }> {
+  console.log('Adding image to dataset:', imagePath, 'to dataset:', datasetName);
+  
+  try {
+    const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/add-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        imagePath, 
+        datasetName 
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error(`Failed to add image to dataset: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('Add image to dataset result:', result);
+    
+    return { 
+      success: true, 
+      message: `Image added to dataset ${datasetName} successfully` 
+    };
+  } catch (error) {
+    console.error('Error adding image to dataset:', error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
 } 

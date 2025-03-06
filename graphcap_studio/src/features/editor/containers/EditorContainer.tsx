@@ -2,14 +2,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Image, Dataset, listDatasetImages, preloadImage, getThumbnailUrl } from '@/services/images';
+import { Image, listDatasetImages, preloadImage,  addImageToDataset, createDataset } from '@/services/images';
 import { ImageEditor } from '../components/ImageEditor';
-import { ImageGallery } from '../components/ImageGallery';
-import { DatasetTree } from '../components/DatasetTree';
-import { ImageProperties } from '../components/ImageProperties';
-import { CreateDatasetModal } from '../components/CreateDatasetModal';
-import { ImageUploader } from '../components/ImageUploader';
 import { EditorContextProvider, useEditorContext, ViewMode } from '../context/EditorContext';
+import { EditorLayout } from '../components/layout';
+import { ImageViewerToggle } from '../components/ui';
+import { 
+  ViewerContainer, 
+  NavigationContainer, 
+  PropertiesContainer 
+} from '../components/containers';
 
 interface EditorContainerProps {
   directory?: string;
@@ -42,9 +44,10 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(null);
-  const [showProperties, setShowProperties] = useState(false);
+  const [showProperties, setShowProperties] = useState(true);
   const [isCreateDatasetModalOpen, setIsCreateDatasetModalOpen] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   
   // Get query client for prefetching and cache management
   const queryClient = useQueryClient();
@@ -97,32 +100,38 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     }
   }, [filteredImages, preloadImages]);
 
+  // Set carousel index to match selected image
+  useEffect(() => {
+    if (selectedImage && filteredImages.length > 0) {
+      const index = filteredImages.findIndex(img => img.path === selectedImage.path);
+      if (index !== -1) {
+        setCarouselIndex(index);
+      }
+    }
+  }, [selectedImage, filteredImages]);
+
+  // Ensure selected image is set when switching to carousel view
+  useEffect(() => {
+    if (viewMode === 'carousel' && filteredImages.length > 0 && !selectedImage) {
+      // If no image is selected in carousel view, select the first one
+      setSelectedImage(filteredImages[0]);
+    }
+  }, [viewMode, filteredImages, selectedImage]);
+
   const handleSelectImage = (image: Image) => {
     setSelectedImage(image);
-    setShowProperties(true);
+    
+    // Find the index of the selected image for carousel view
+    const index = filteredImages.findIndex(img => img.path === image.path);
+    if (index !== -1) {
+      setCarouselIndex(index);
+    }
     
     // Preload the full-size image
     preloadImage(image.path, 'full');
     
-    // Prefetch adjacent images
-    const currentIndex = filteredImages.findIndex(img => img.path === image.path);
-    if (currentIndex !== -1) {
-      // Preload next 3 images
-      for (let i = 1; i <= 3; i++) {
-        const nextIndex = currentIndex + i;
-        if (nextIndex < filteredImages.length) {
-          preloadImage(filteredImages[nextIndex].path, 'thumbnail');
-        }
-      }
-      
-      // Preload previous 3 images
-      for (let i = 1; i <= 3; i++) {
-        const prevIndex = currentIndex - i;
-        if (prevIndex >= 0) {
-          preloadImage(filteredImages[prevIndex].path, 'thumbnail');
-        }
-      }
-    }
+    // Show properties panel when an image is selected
+    setShowProperties(true);
   };
 
   const handleEditImage = () => {
@@ -165,6 +174,13 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
   };
 
   const handleToggleProperties = () => {
+    // In carousel view, we don't want to hide properties completely
+    if (viewMode === 'carousel' && showProperties) {
+      // Instead of hiding properties, we could minimize them or show a notification
+      toast.info('Properties panel is always visible in carousel view');
+      return;
+    }
+    
     setShowProperties(!showProperties);
   };
 
@@ -176,29 +192,76 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     console.log('Saving properties for image:', selectedImage.path, properties);
   };
 
+  /**
+   * Handle adding an image to a dataset
+   */
+  const handleAddToDataset = async (imagePath: string, targetDataset: string) => {
+    if (!imagePath || !targetDataset) return;
+    
+    try {
+      const result = await addImageToDataset(imagePath, targetDataset);
+      
+      if (result.success) {
+        toast.success(result.message);
+        
+        // Invalidate queries to refresh the datasets
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasets });
+        if (selectedDataset) {
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetImages(selectedDataset) });
+        }
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetImages(targetDataset) });
+        
+        // Force a refresh after a short delay
+        setTimeout(() => {
+          queryClient.refetchQueries({ queryKey: QUERY_KEYS.datasets });
+        }, 500);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Failed to add image to dataset');
+      console.error('Error adding image to dataset:', error);
+    }
+  };
+
   const handleSetViewMode = (mode: ViewMode) => {
     setViewMode(mode);
     
     // If switching to carousel and we have a selected image, make sure it's visible
-    if (mode === 'carousel' && !selectedImage && filteredImages.length > 0) {
-      // If no image is selected, select the first one
-      setSelectedImage(filteredImages[0]);
+    if (mode === 'carousel') {
+      if (!selectedImage && filteredImages.length > 0) {
+        // If no image is selected, select the first one
+        setSelectedImage(filteredImages[0]);
+      }
+      // Always ensure properties are visible in carousel mode
       setShowProperties(true);
+    } else if (mode === 'grid' && selectedImage) {
+      // When switching to grid, maintain the selected image and properties panel
+      setShowProperties(true);
+      
+      // Force a refresh of the selected image to ensure it's displayed correctly
+      const currentImage = selectedImage;
+      setSelectedImage(null);
+      setTimeout(() => {
+        setSelectedImage(currentImage);
+      }, 50);
     }
   };
 
-  const handleCreateDataset = (datasetName: string) => {
-    // Invalidate the datasets query to refresh the list
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasets });
-    
-    // Select the newly created dataset
-    setSelectedDataset(datasetName);
-    setSelectedSubfolder(null);
-    setSelectedImage(null);
-    
-    // Show the uploader
-    setShowUploader(true);
-  };
+  const handleCreateDataset = useCallback(async (name: string): Promise<void> => {
+    try {
+      await createDataset(name);
+      
+      // Invalidate the datasets cache
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasets });
+      
+      toast.success(`Created dataset ${name}`);
+    } catch (error) {
+      console.error('Failed to create dataset:', error);
+      toast.error(`Failed to create dataset: ${(error as Error).message}`);
+      throw error;
+    }
+  }, [queryClient]);
 
   const handleUploadComplete = () => {
     // Invalidate both the datasets query and the specific dataset query to refresh the list
@@ -213,7 +276,7 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     }, 500);
   };
 
-  const toggleUploader = () => {
+  const handleToggleUploader = () => {
     setShowUploader(!showUploader);
   };
 
@@ -274,85 +337,44 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-gray-900">
-      {/* Header */}
-      <div className="flex h-12 items-center justify-between border-b border-gray-700 bg-gray-800 px-4">
-        <h2 className="text-lg font-medium text-white">Image Editor</h2>
-        <div className="flex space-x-2">
-          {/* View mode toggle buttons with icons */}
-          <div className="flex rounded-md overflow-hidden border border-gray-600">
-            <button
-              className={`flex items-center justify-center p-2 text-white transition-colors ${
-                viewMode === 'grid' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-              onClick={() => handleSetViewMode('grid')}
-              title="Grid View"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button
-              className={`flex items-center justify-center p-2 text-white transition-colors ${
-                viewMode === 'carousel' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-              onClick={() => handleSetViewMode('carousel')}
-              title="Carousel View"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth={2} />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 21V3" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 21V3" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18" />
-              </svg>
-            </button>
-          </div>
+    <div className="flex h-full w-full flex-col">
+      {/* Header with actions */}
+      <div className="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-4">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-semibold text-white">Image Gallery</h1>
           
-          {selectedImage && (
-            <>
-              <button
-                className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
-                onClick={handleEditImage}
-              >
-                Edit Image
-              </button>
-              <button
-                className={`rounded-md px-3 py-1 text-sm text-white ${
-                  showProperties ? 'bg-purple-600 hover:bg-purple-500' : 'bg-gray-700 hover:bg-gray-600'
-                }`}
-                onClick={handleToggleProperties}
-              >
-                {showProperties ? 'Hide Properties' : 'Show Properties'}
-              </button>
-            </>
-          )}
-          
+          {/* View mode toggle */}
+          <ImageViewerToggle
+            viewMode={viewMode}
+            onToggle={setViewMode}
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
           {/* Upload button */}
           <button
-            className={`rounded-md px-3 py-1 text-sm text-white ${
-              showUploader ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'
-            }`}
-            onClick={toggleUploader}
-            disabled={!selectedDataset}
-            title={selectedDataset ? 'Upload images to this dataset' : 'Select a dataset first'}
+            className="rounded bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700"
+            onClick={handleToggleUploader}
           >
-            {showUploader ? 'Hide Uploader' : 'Upload Images'}
+            Upload Images
           </button>
           
-          {/* Create dataset button */}
+          {/* Properties toggle */}
           <button
-            className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
-            onClick={() => setIsCreateDatasetModalOpen(true)}
+            className={`rounded px-3 py-1 text-sm font-medium ${
+              showProperties
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+            onClick={handleToggleProperties}
           >
-            New Dataset
+            {showProperties ? 'Hide Properties' : 'Show Properties'}
           </button>
           
+          {/* Close button */}
           {onClose && (
             <button
-              className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
+              className="rounded bg-gray-700 px-3 py-1 text-sm font-medium text-white hover:bg-gray-600"
               onClick={onClose}
             >
               Close
@@ -360,65 +382,44 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
           )}
         </div>
       </div>
-
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar - Dataset tree */}
-        <div className="w-64 overflow-auto border-r border-gray-700 bg-gray-800">
-          <DatasetTree
-            datasets={datasetsData?.datasets || []}
-            selectedDataset={selectedDataset}
-            selectedSubfolder={selectedSubfolder}
-            onSelectNode={handleDatasetChange}
-          />
-        </div>
-
-        {/* Main content - Image gallery and uploader */}
-        <div className={`flex-1 overflow-hidden ${showProperties ? 'flex' : ''}`}>
-          <div className={`${showProperties ? 'flex-1' : 'w-full h-full'} flex flex-col`}>
-            {/* Image uploader */}
-            {showUploader && selectedDataset && (
-              <div className="border-b border-gray-700 bg-gray-800 p-4">
-                <h3 className="mb-2 text-sm font-medium text-gray-300">
-                  Upload to {selectedSubfolder || selectedDataset}
-                </h3>
-                <ImageUploader
-                  datasetName={selectedDataset}
-                  onUploadComplete={handleUploadComplete}
-                />
-              </div>
-            )}
-            
-            {/* Image gallery */}
-            <div className="flex-1">
-              <ImageGallery
-                images={filteredImages}
-                onSelectImage={handleSelectImage}
-                selectedImage={selectedImage}
-                isLoading={isLoading}
-                isEmpty={filteredImages.length === 0}
-              />
-            </div>
-          </div>
-
-          {/* Right sidebar - Image properties */}
-          {showProperties && selectedImage && (
-            <div className="w-80 overflow-auto border-l border-gray-700 bg-gray-800">
-              <ImageProperties
-                image={selectedImage}
-                onSave={handleSaveProperties}
-              />
-            </div>
-          )}
-        </div>
-      </div>
       
-      {/* Create dataset modal */}
-      <CreateDatasetModal
-        isOpen={isCreateDatasetModalOpen}
-        onClose={() => setIsCreateDatasetModalOpen(false)}
-        onDatasetCreated={handleCreateDataset}
-      />
+      {/* Main content with resizable layout */}
+      <div className="flex-1 overflow-hidden">
+        <EditorLayout
+          navigation={
+            <NavigationContainer
+              datasets={datasetsData?.datasets || []}
+              selectedDataset={selectedDataset}
+              selectedSubfolder={selectedSubfolder}
+              onSelectDataset={handleDatasetChange}
+              onSelectSubfolder={setSelectedSubfolder}
+              onCreateDataset={handleCreateDataset}
+              isLoading={isLoading}
+            />
+          }
+          viewer={
+            <ViewerContainer
+              images={filteredImages}
+              selectedImage={selectedImage}
+              onSelectImage={handleSelectImage}
+              onEditImage={handleEditImage}
+              onAddToDataset={selectedImage && selectedDataset ? 
+                () => handleAddToDataset(selectedImage.path, selectedDataset) : undefined}
+              isLoading={isLoading}
+              isEmpty={filteredImages.length === 0}
+            />
+          }
+          properties={
+            <PropertiesContainer
+              selectedImage={selectedImage}
+              datasets={datasetsData?.datasets || []}
+              onAddToDataset={(image, datasetName) => handleAddToDataset(image.path, datasetName)}
+              onEditImage={handleEditImage}
+            />
+          }
+          showProperties={showProperties}
+        />
+      </div>
     </div>
   );
 } 

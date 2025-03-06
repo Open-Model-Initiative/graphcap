@@ -724,6 +724,78 @@ app.post('/api/datasets/create', async (req, res) => {
   }
 });
 
+/**
+ * Add an existing image to a dataset
+ * 
+ * @param {string} req.body.imagePath - Path of the image to add
+ * @param {string} req.body.datasetName - Name of the dataset to add the image to
+ * @returns {Object} Success status and new image path
+ */
+app.post('/api/datasets/add-image', async (req, res) => {
+  try {
+    const { imagePath, datasetName } = req.body;
+    
+    if (!imagePath || !datasetName) {
+      return res.status(400).json({ error: 'Image path and dataset name are required' });
+    }
+    
+    // Validate dataset name (alphanumeric, underscores, and hyphens only)
+    if (!/^[a-zA-Z0-9_-]+$/.test(datasetName)) {
+      return res.status(400).json({ 
+        error: 'Dataset name can only contain letters, numbers, underscores, and hyphens' 
+      });
+    }
+    
+    // Validate the image path
+    const fullImagePath = path.join(WORKSPACE_PATH, imagePath.replace(/^\//, ''));
+    if (!validatePath(fullImagePath)) {
+      return res.status(400).json({ error: 'Invalid image path' });
+    }
+    
+    // Check if the image exists
+    if (!fs.existsSync(fullImagePath)) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Check if the dataset exists
+    const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', datasetName);
+    if (!fs.existsSync(datasetPath)) {
+      return res.status(404).json({ error: 'Dataset not found' });
+    }
+    
+    // Get the image filename
+    const imageName = path.basename(fullImagePath);
+    
+    // Create the new path for the image in the dataset
+    const newImagePath = path.join(datasetPath, imageName);
+    
+    // Check if the image already exists in the dataset
+    if (fs.existsSync(newImagePath)) {
+      return res.status(409).json({ error: 'Image already exists in the dataset' });
+    }
+    
+    // Copy the image to the dataset
+    fs.copyFileSync(fullImagePath, newImagePath);
+    
+    // Get the relative path for the response
+    const relativePath = `/datasets/.local/${datasetName}/${imageName}`;
+    
+    logInfo(`Image added to dataset: ${datasetName}`, {
+      originalPath: fullImagePath,
+      newPath: newImagePath
+    });
+    
+    res.json({
+      success: true,
+      path: relativePath,
+      url: `/api/images/view${relativePath}`
+    });
+  } catch (error) {
+    logError('Error adding image to dataset', error);
+    res.status(500).json({ error: 'Failed to add image to dataset' });
+  }
+});
+
 // Global error handler - must be defined after all routes
 app.use((err, req, res, next) => {
   logError('Unhandled server error', err);
