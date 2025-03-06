@@ -5,6 +5,7 @@ Server Configuration
 Manages server configuration settings using Pydantic.
 """
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -14,8 +15,15 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Server configuration settings."""
 
-    # Database settings
-    DATABASE_URL: str = "postgresql+asyncpg://graphcap:graphcap@gcap_postgres:5432/graphcap"
+    # Database connection parameters from environment variables
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_DB: str
+
+    # Database URL (constructed in __init__ if not provided)
+    DATABASE_URL: Optional[str] = None
 
     # Job settings
     MAX_CONCURRENT_JOBS: int = 5
@@ -24,6 +32,7 @@ class Settings(BaseSettings):
     # Debug settings
     SQL_DEBUG: bool = False
 
+    # Path settings
     DATASETS_PATH: Path = Path("/datasets")
     CONFIG_PATH: Path = Path("/config")
     PROVIDER_CONFIG_PATH: Optional[Path] = None
@@ -33,6 +42,10 @@ class Settings(BaseSettings):
         # If provider config not set, default to config directory
         if not self.PROVIDER_CONFIG_PATH:
             self.PROVIDER_CONFIG_PATH = self.CONFIG_PATH / "provider.config.toml"
+            
+        # Construct DATABASE_URL if not provided
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     class Config:
         """Pydantic config."""

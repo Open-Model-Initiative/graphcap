@@ -14,7 +14,7 @@ services:
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
       - PYTHONPATH=/app/server
-      - DATABASE_URL=postgresql+asyncpg://graphcap:graphcap@graphcap_postgres:5432/graphcap
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}
     env_file:
       - ./workspace/config/.env
     networks:
@@ -26,15 +26,15 @@ services:
   graphcap_postgres:
     image: postgres:17
     environment:
-      POSTGRES_USER: graphcap
-      POSTGRES_PASSWORD: graphcap
-      POSTGRES_DB: graphcap
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "35432:5432"
     volumes:
       - graphcap_server_db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U graphcap"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -97,9 +97,9 @@ services:
     environment:
       - DAGSTER_HOME=/workspace/.local/.dagster
       - DAGSTER_PORT=32300
-      - DAGSTER_POSTGRES_USER=graphcap
-      - DAGSTER_POSTGRES_PASSWORD=graphcap
-      - DAGSTER_POSTGRES_DB=graphcap
+      - DAGSTER_POSTGRES_USER=${POSTGRES_USER}
+      - DAGSTER_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_POSTGRES_DB=${POSTGRES_DB}
       - PYTHONPATH=/app
     ports:
       - "32300:32300"
