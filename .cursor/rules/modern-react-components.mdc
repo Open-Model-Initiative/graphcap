@@ -1,0 +1,201 @@
+---
+description: Creating react components and features
+globs: graphcap_studio/src/**
+alwaysApply: false
+---
+
+# Creating Modern React Components in 2025
+
+React has evolved significantly over the years, and with it, the way we write components. This guide will walk you through creating modern React components using the latest best practices as of 2025.
+
+## Key Principles
+
+1. Use function components
+2. Leverage TypeScript for type safety
+3. Utilize hooks effectively
+4. Employ component composition
+5. Keep components small and focused
+
+## Basic Component Structure
+
+Here's the basic structure of a modern React component:
+
+```tsx
+import React from 'react';
+
+type ComponentProps = {
+  // Define your props here
+};
+
+export default function Component({ /* destructured props */ }: ComponentProps) {
+  // Component logic here
+
+  return (
+    // JSX here
+  );
+}
+```
+
+## Detailed Guide
+
+### 1. Use Function Components
+
+Always use function components instead of class components. They're simpler, more concise, and work better with hooks.
+
+```tsx
+// Good
+export default function MyComponent() {
+  return <div>Hello, World!</div>;
+}
+
+// Avoid
+class MyComponent extends React.Component {
+  render() {
+    return <div>Hello, World!</div>;
+  }
+}
+```
+
+### 2. Leverage TypeScript
+
+Use TypeScript to define prop types and component return types for better type safety and developer experience.
+
+```tsx
+type ButtonProps = {
+  label: string;
+  onClick: () => void;
+};
+
+export default function Button({ label, onClick }: ButtonProps): JSX.Element {
+  return <button onClick={onClick}>{label}</button>;
+}
+```
+
+### 3. Utilize Hooks Effectively
+
+Use React hooks for state management and side effects. Common hooks include `useState`, `useEffect`, `useCallback`, and `useMemo`.
+
+```tsx
+import { useState, useEffect, useCallback } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    document.title = `Count: \${count}`;
+  }, [count]);
+
+  const increment = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+}
+```
+
+### 4. Employ Component Composition
+
+Break down complex components into smaller, reusable pieces. This improves readability and maintainability.
+
+```tsx
+function Header({ title }: { title: string }) {
+  return <h1>{title}</h1>;
+}
+
+function Content({ children }: { children: React.ReactNode }) {
+  return <div className="content">{children}</div>;
+}
+
+function Footer({ copyright }: { copyright: string }) {
+  return <footer>{copyright}</footer>;
+}
+
+export default function Page({ title, content, copyright }: PageProps) {
+  return (
+    <div>
+      <Header title={title} />
+      <Content>{content}</Content>
+      <Footer copyright={copyright} />
+    </div>
+  );
+}
+```
+
+### 5. Keep Components Small and Focused
+
+Each component should have a single responsibility. If a component grows too large or complex, consider breaking it down into smaller components.
+
+### 6. Use Default Exports
+
+Prefer default exports for components. This makes imports cleaner and more consistent.
+
+```tsx
+// In Component.tsx
+export default function Component() {
+  // ...
+}
+
+// In another file
+import Component from './Component';
+```
+
+### 7. Proper File Naming
+
+Use PascalCase for component file names, matching the component name.
+
+```
+UserProfile.tsx
+Button.tsx
+NavigationBar.tsx
+```
+
+### 8. Implement Error Boundaries
+
+Use error boundaries to catch and handle errors in component trees.
+
+```tsx
+import React, { ErrorInfo } from 'react';
+
+type ErrorBoundaryProps = {
+  children: React.ReactNode;
+  fallback: React.ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
+export default ErrorBoundary;
+```
+
+## Conclusion
+
+By following these guidelines, you'll create React components that are modern, maintainable, and efficient. Remember, the key is to keep your components simple, typed, and composable. As React continues to evolve, stay updated with the latest best practices and adapt your component style accordingly.

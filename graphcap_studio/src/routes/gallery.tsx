@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
 import { createFileRoute } from '@tanstack/react-router'
-import { GalleryView } from '../features/gallery/containers/GalleryView'
+import { EditorContainer } from '../features/editor/containers/EditorContainer'
 
 export const Route = createFileRoute('/gallery')({
-  component: GalleryViewWrapper,
+  component: ImageEditorWrapper,
 })
 
-function GalleryViewWrapper() {
-  const { batchId } = Route.useParams()
-  return <GalleryView batchId={batchId} />
+function ImageEditorWrapper() {
+  return <EditorContainer />
 }

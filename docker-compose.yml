@@ -58,6 +58,7 @@ services:
       start_period: 5s
     volumes:
       - ./.local/logs/graphcap_studio:/workspace/logs
+      - ./workspace:/workspace
     develop:
       watch:
         - action: sync
@@ -83,6 +84,31 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - VITE_API_URL=http://localhost:32100/api
       - VITE_WORKSPACE_PATH=/workspace/.local
+      - VITE_MEDIA_SERVER_URL=http://localhost:32400
+    networks:
+      - graphcap
+    depends_on:
+      - graphcap_media_server
+
+  graphcap_media_server:
+    container_name: graphcap_media_server
+    build:
+      context: ./graphcap_studio/media_server
+      dockerfile: Dockerfile.media_server
+    ports:
+      - "32400:32400"
+    volumes:
+      - ./workspace:/workspace
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=32400
+      - WORKSPACE_PATH=/workspace
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - graphcap
 

@@ -1,0 +1,47 @@
+---
+description: Current Task for the Agent
+globs: 
+alwaysApply: true
+---
+### Is your feature request related to a problem?
+Currently, our Graphcap Studio interface lacks an integrated, interactive image viewer and editor. Users must manually handle image modifications outside the application, which slows down workflows and disrupts consistency. We wish Graphcap could offer an in-app solution to view, crop, rotate, and perform basic edits on images stored on our mounted `/workspace` volume—streamlining processes and reducing context switches.
+
+### Describe the solution you'd like
+We propose building an image viewer and editor feature integrated into our Graphcap Studio frontend. This solution would include:
+
+- **Backend (Node/Express):**
+  - **File Listing & Serving:** An API endpoint that lists images from the `/workspace` volume and serves them directly.
+  - **Image Processing:** An endpoint that accepts editing parameters (crop coordinates, rotation angles, etc.) and processes images using Sharp, saving the result (or optionally overwriting) in a designated folder.
+  
+- **Frontend (React):**
+  - **Gallery Integration:** Extend our existing gallery feature to allow users to click an image and open an editor.
+  - **Interactive Editor:** A dedicated image editor component that supports:
+    - Cropping using libraries like React Easy Crop or React Cropper.
+    - Rotation and basic adjustments with real-time previews.
+    - Clear "Save" functionality that sends the edit parameters to the backend API and displays the processed image.
+  - **UI Consistency:** Seamless integration with our existing routing (via TanStack Router), state management (React Query), and Tailwind CSS theming, ensuring the new feature adheres to our established visual and interaction guidelines.
+  - **User Feedback:** Loading indicators, error messages, and notifications (using sonner or similar) during image processing.
+
+### Alternatives Considered
+- **Client-Side Processing Only:**  
+  We considered handling all image modifications directly in the browser with WebAssembly-based processors or using the Canvas API. However, this approach risks performance issues on high-resolution images and inconsistent behavior across devices.
+
+- **Third-Party Cloud Processing:**  
+  Outsourcing image processing to a cloud service was another option. While this could work, it introduces external dependencies and costs, and it doesn’t leverage our existing mounted volume setup.
+
+- **Hybrid Approach (Chosen):**  
+  By integrating a Node/Express backend that uses Sharp, we can efficiently process images in a controlled environment. This solution leverages our current infrastructure (mounted `/workspace` volume) and ensures consistent, high-performance processing while keeping the interactive editing experience in the React frontend.
+
+### Additional Context
+- **Integration:**  
+  This feature will align with our current Graphcap Studio architecture:
+  - It will use our established folder structure (e.g., creating a new feature folder under `features/editor` or integrating into `features/gallery`).
+  - It will adhere to our API patterns and state management using React Query, similar to our workflows and gallery services.
+  
+- **UI & Theming:**  
+  The image editor will follow our existing styling conventions (Tailwind CSS, design tokens) and integrate into the current layout (e.g., within MainLayout alongside Header and Footer).
+
+- **Future Extensions:**  
+  Once the image viewer/editor is in place, we can consider extending similar functionality to video processing or more advanced image manipulations.
+
+This integrated approach will streamline user workflows, maintain consistency with our Graphcap Studio UI, and provide a robust, maintainable solution for image editing directly from our mounted volume.

@@ -54,3 +54,15 @@ tasks:
       - uv pip install -e ".[dev]"
       - uv pip install -e ./src
       - uv run python -m src.scripts
+      - task update-studio-deps
+
+  update-studio-deps:
+    desc: Update the pnpm-lock.yaml file for the graphcap_studio project
+    dir: ./graphcap_studio
+    cmds:
+      - pnpm install --no-frozen-lockfile
+      
+  studio-dev:
+    desc: Start only the graphcap_studio and graphcap_media_server services
+    cmds:
+      - docker compose up graphcap_studio graphcap_media_server --build
