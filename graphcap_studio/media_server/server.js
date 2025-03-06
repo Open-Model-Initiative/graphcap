@@ -334,12 +334,60 @@ app.get('/api/datasets/images', async (req, res) => {
     const datasets = [];
     
     for (const dir of directories) {
-      // Skip .local and other hidden directories
-      if (dir.startsWith('.')) {
+      // Skip hidden directories except .local
+      if (dir.startsWith('.') && dir !== '.local') {
         continue;
       }
       
-      // Validate the dataset directory path
+      // If this is the .local directory, process its subdirectories as individual datasets
+      if (dir === '.local') {
+        const localDirValidation = validatePath('datasets/.local');
+        if (localDirValidation.isValid) {
+          const localDir = localDirValidation.path;
+          if (fs.existsSync(localDir)) {
+            logInfo(`Scanning .local directory: ${localDir}`);
+            
+            // Get all subdirectories in .local
+            const localSubdirs = fs.readdirSync(localDir, { withFileTypes: true })
+              .filter(dirent => dirent.isDirectory())
+              .map(dirent => dirent.name);
+            
+            // Process each subdirectory as a dataset
+            for (const subdir of localSubdirs) {
+              const subdirPath = path.join(localDir, subdir);
+              logInfo(`Scanning local dataset: ${subdirPath}`);
+              
+              // Find all image files in this directory
+              const imageFiles = await glob(`${subdirPath}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
+                nodir: true,
+                ignore: ['**/node_modules/**', '**/.git/**'] 
+              });
+              
+              logInfo(`Found ${imageFiles.length} images in local dataset ${subdir}`);
+              
+              if (imageFiles.length > 0) {
+                const images = imageFiles.map(file => {
+                  const relativePath = file.replace(WORKSPACE_PATH, '');
+                  return {
+                    path: relativePath,
+                    name: path.basename(file),
+                    directory: path.dirname(relativePath),
+                    url: `/api/images/view${relativePath}`
+                  };
+                });
+                
+                datasets.push({
+                  name: subdir,
+                  images
+                });
+              }
+            }
+          }
+        }
+        continue; // Skip the rest of the loop for .local
+      }
+      
+      // Process regular dataset directory
       const datasetPathValidation = validatePath(`datasets/${dir}`);
       if (!datasetPathValidation.isValid) {
         logError(`Invalid dataset directory: ${dir}`, { error: datasetPathValidation.error });
@@ -372,39 +420,6 @@ app.get('/api/datasets/images', async (req, res) => {
           name: dir,
           images
         });
-      }
-    }
-    
-    // Also check the .local directory if it exists
-    const localDirValidation = validatePath('datasets/.local');
-    if (localDirValidation.isValid) {
-      const localDir = localDirValidation.path;
-      if (fs.existsSync(localDir)) {
-        logInfo(`Scanning .local directory: ${localDir}`);
-        
-        const imageFiles = await glob(`${localDir}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
-          nodir: true,
-          ignore: ['**/node_modules/**', '**/.git/**'] 
-        });
-        
-        logInfo(`Found ${imageFiles.length} images in .local`);
-        
-        if (imageFiles.length > 0) {
-          const images = imageFiles.map(file => {
-            const relativePath = file.replace(WORKSPACE_PATH, '');
-            return {
-              path: relativePath,
-              name: path.basename(file),
-              directory: path.dirname(relativePath),
-              url: `/api/images/view${relativePath}`
-            };
-          });
-          
-          datasets.push({
-            name: '.local',
-            images
-          });
-        }
       }
     }
     
@@ -602,6 +617,7 @@ app.post('/api/images/process', async (req, res) => {
  * Upload an image
  * 
  * @param {File} req.file - The image file to upload
+ * @param {string} req.body.dataset - Optional dataset name to upload to
  * @returns {Object} Uploaded image information
  */
 app.post('/api/images/upload', handleMulterErrors, upload.single('image'), (req, res) => {
@@ -611,9 +627,48 @@ app.post('/api/images/upload', handleMulterErrors, upload.single('image'), (req,
       return res.status(400).json({ error: 'No image file provided' });
     }
     
-    logInfo(`Image uploaded: ${req.file.path}`);
+    // Check if a dataset was specified
+    const { dataset } = req.body;
+    let targetPath = req.file.path;
+    let relativePath = req.file.path.replace(WORKSPACE_PATH, '');
     
-    const relativePath = req.file.path.replace(WORKSPACE_PATH, '');
+    // If dataset is specified, move the file to the dataset directory
+    if (dataset) {
+      // Validate dataset name
+      if (!/^[a-zA-Z0-9_-]+$/.test(dataset)) {
+        return res.status(400).json({ 
+          error: 'Invalid dataset name. Use only letters, numbers, underscores, and hyphens.' 
+        });
+      }
+      
+      // Create dataset directory if it doesn't exist (in .local subdirectory)
+      const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', dataset);
+      if (!fs.existsSync(datasetPath)) {
+        fs.mkdirSync(datasetPath, { recursive: true });
+      }
+      
+      // Move the file to the dataset directory
+      const fileName = path.basename(req.file.path);
+      const newPath = path.join(datasetPath, fileName);
+      
+      // Ensure the target directory exists
+      fs.mkdirSync(path.dirname(newPath), { recursive: true });
+      
+      // Move the file
+      fs.renameSync(req.file.path, newPath);
+      
+      // Update paths
+      targetPath = newPath;
+      relativePath = `/datasets/.local/${dataset}/${fileName}`;
+      
+      logInfo(`Image moved to dataset: ${dataset}`, { 
+        originalPath: req.file.path,
+        newPath: targetPath
+      });
+    }
+    
+    logInfo(`Image uploaded: ${targetPath}`);
+    
     res.json({
       success: true,
       path: relativePath,
@@ -622,6 +677,50 @@ app.post('/api/images/upload', handleMulterErrors, upload.single('image'), (req,
   } catch (error) {
     logError('Error uploading image', error);
     res.status(500).json({ error: 'Failed to process uploaded image' });
+  }
+});
+
+/**
+ * Create a new dataset
+ * 
+ * @param {string} req.body.name - Name of the dataset to create
+ * @returns {Object} Success status and dataset path
+ */
+app.post('/api/datasets/create', async (req, res) => {
+  try {
+    const { name } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Dataset name is required' });
+    }
+    
+    // Validate dataset name (alphanumeric, underscores, and hyphens only)
+    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+      return res.status(400).json({ 
+        error: 'Dataset name can only contain letters, numbers, underscores, and hyphens' 
+      });
+    }
+    
+    // Create dataset directory in the .local subdirectory
+    const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', name);
+    
+    // Check if dataset already exists
+    if (fs.existsSync(datasetPath)) {
+      return res.status(409).json({ error: 'Dataset already exists' });
+    }
+    
+    // Create the directory
+    fs.mkdirSync(datasetPath, { recursive: true });
+    
+    logInfo(`Created dataset: ${name}`, { path: datasetPath });
+    
+    res.json({
+      success: true,
+      path: `/datasets/.local/${name}`
+    });
+  } catch (error) {
+    logError('Error creating dataset', error);
+    res.status(500).json({ error: 'Failed to create dataset' });
   }
 });
 
@@ -638,9 +737,24 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logInfo(`Media Server running on port ${PORT}`);
   logInfo(`Workspace path: ${WORKSPACE_PATH}`);
   logInfo(`Upload directory: ${uploadDir}`);
   logInfo(`Thumbnails directory: ${thumbnailsDir}`);
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  logInfo('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    logInfo('HTTP server closed');
+  });
+});
+
+process.on('SIGINT', () => {
+  logInfo('SIGINT signal received: closing HTTP server');
+  server.close(() => {
+    logInfo('HTTP server closed');
+  });
 }); 

@@ -258,15 +258,54 @@ export async function processImage(request: ImageProcessRequest): Promise<ImageP
 }
 
 /**
+ * Create a new dataset
+ * 
+ * @param name - Name of the dataset to create
+ * @returns Promise that resolves when the dataset is created
+ */
+export async function createDataset(name: string): Promise<void> {
+  console.log('Creating dataset:', name);
+  const url = new URL(`${MEDIA_SERVER_URL}/api/datasets/create`);
+  
+  try {
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error(`Failed to create dataset: ${response.statusText}`);
+    }
+    
+    console.log('Dataset created successfully:', name);
+  } catch (error) {
+    console.error('Error creating dataset:', error);
+    throw error;
+  }
+}
+
+/**
  * Upload an image
  * 
- * @param file - Image file to upload
+ * @param file - The image file to upload
+ * @param datasetName - Optional dataset name to upload to
  * @returns Promise with the uploaded image response
  */
-export async function uploadImage(file: File): Promise<ImageProcessResponse> {
-  console.log('Uploading image:', file.name);
+export async function uploadImage(file: File, datasetName?: string): Promise<ImageProcessResponse> {
+  console.log('Uploading image:', file.name, datasetName ? `to dataset: ${datasetName}` : '');
+  
   const formData = new FormData();
   formData.append('image', file);
+  
+  // If dataset name is provided, add it to the form data
+  if (datasetName) {
+    formData.append('dataset', datasetName);
+  }
   
   const response = await fetch(`${MEDIA_SERVER_URL}/api/images/upload`, {
     method: 'POST',
@@ -281,5 +320,6 @@ export async function uploadImage(file: File): Promise<ImageProcessResponse> {
   
   const data = await response.json();
   console.log('Upload result:', data);
+  
   return ImageProcessResponseSchema.parse(data);
 } 

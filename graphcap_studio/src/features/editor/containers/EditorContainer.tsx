@@ -7,6 +7,8 @@ import { ImageEditor } from '../components/ImageEditor';
 import { ImageGallery } from '../components/ImageGallery';
 import { DatasetTree } from '../components/DatasetTree';
 import { ImageProperties } from '../components/ImageProperties';
+import { CreateDatasetModal } from '../components/CreateDatasetModal';
+import { ImageUploader } from '../components/ImageUploader';
 import { EditorContextProvider, useEditorContext, ViewMode } from '../context/EditorContext';
 
 interface EditorContainerProps {
@@ -41,6 +43,8 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
   const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(null);
   const [showProperties, setShowProperties] = useState(false);
+  const [isCreateDatasetModalOpen, setIsCreateDatasetModalOpen] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
   
   // Get query client for prefetching and cache management
   const queryClient = useQueryClient();
@@ -183,6 +187,36 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
     }
   };
 
+  const handleCreateDataset = (datasetName: string) => {
+    // Invalidate the datasets query to refresh the list
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasets });
+    
+    // Select the newly created dataset
+    setSelectedDataset(datasetName);
+    setSelectedSubfolder(null);
+    setSelectedImage(null);
+    
+    // Show the uploader
+    setShowUploader(true);
+  };
+
+  const handleUploadComplete = () => {
+    // Invalidate both the datasets query and the specific dataset query to refresh the list
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasets });
+    if (selectedDataset) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetImages(selectedDataset) });
+    }
+    
+    // Force a refresh after a short delay to ensure the UI updates
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: QUERY_KEYS.datasets });
+    }, 500);
+  };
+
+  const toggleUploader = () => {
+    setShowUploader(!showUploader);
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-gray-900 text-white">
@@ -295,6 +329,27 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
               </button>
             </>
           )}
+          
+          {/* Upload button */}
+          <button
+            className={`rounded-md px-3 py-1 text-sm text-white ${
+              showUploader ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-700 hover:bg-gray-600'
+            }`}
+            onClick={toggleUploader}
+            disabled={!selectedDataset}
+            title={selectedDataset ? 'Upload images to this dataset' : 'Select a dataset first'}
+          >
+            {showUploader ? 'Hide Uploader' : 'Upload Images'}
+          </button>
+          
+          {/* Create dataset button */}
+          <button
+            className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
+            onClick={() => setIsCreateDatasetModalOpen(true)}
+          >
+            New Dataset
+          </button>
+          
           {onClose && (
             <button
               className="rounded-md bg-gray-700 px-3 py-1 text-sm text-white hover:bg-gray-600"
@@ -318,16 +373,32 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
           />
         </div>
 
-        {/* Main content - Image gallery */}
+        {/* Main content - Image gallery and uploader */}
         <div className={`flex-1 overflow-hidden ${showProperties ? 'flex' : ''}`}>
-          <div className={showProperties ? 'flex-1' : 'w-full h-full'}>
-            <ImageGallery
-              images={filteredImages}
-              onSelectImage={handleSelectImage}
-              selectedImage={selectedImage}
-              isLoading={isLoading}
-              isEmpty={filteredImages.length === 0}
-            />
+          <div className={`${showProperties ? 'flex-1' : 'w-full h-full'} flex flex-col`}>
+            {/* Image uploader */}
+            {showUploader && selectedDataset && (
+              <div className="border-b border-gray-700 bg-gray-800 p-4">
+                <h3 className="mb-2 text-sm font-medium text-gray-300">
+                  Upload to {selectedSubfolder || selectedDataset}
+                </h3>
+                <ImageUploader
+                  datasetName={selectedDataset}
+                  onUploadComplete={handleUploadComplete}
+                />
+              </div>
+            )}
+            
+            {/* Image gallery */}
+            <div className="flex-1">
+              <ImageGallery
+                images={filteredImages}
+                onSelectImage={handleSelectImage}
+                selectedImage={selectedImage}
+                isLoading={isLoading}
+                isEmpty={filteredImages.length === 0}
+              />
+            </div>
           </div>
 
           {/* Right sidebar - Image properties */}
@@ -341,6 +412,13 @@ function EditorContainerInner({ directory, onClose }: EditorContainerProps) {
           )}
         </div>
       </div>
+      
+      {/* Create dataset modal */}
+      <CreateDatasetModal
+        isOpen={isCreateDatasetModalOpen}
+        onClose={() => setIsCreateDatasetModalOpen(false)}
+        onDatasetCreated={handleCreateDataset}
+      />
     </div>
   );
 } 

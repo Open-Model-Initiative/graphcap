@@ -32,5 +32,8 @@ RUN mkdir -p /app/processed
 
 EXPOSE 32400
 
-# Start the server
-CMD ["node", "server.js"] 
+# Use nodemon for development mode
+ENV NODE_ENV=development
+
+# Start the server with nodemon for hot reloading
+CMD ["npm", "run", "dev"] 

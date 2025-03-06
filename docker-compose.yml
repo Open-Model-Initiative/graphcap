@@ -103,6 +103,17 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=32400
       - WORKSPACE_PATH=/workspace
+    develop:
+      watch:
+        - action: sync
+          path: ./graphcap_studio/media_server
+          target: /app
+          ignore:
+            - "**/.git"
+            - "**/node_modules"
+            - "**/.DS_Store"
+        - action: rebuild
+          path: ./graphcap_studio/media_server/package.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
       interval: 10s
