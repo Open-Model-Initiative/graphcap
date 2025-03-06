@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { useEditorContext, ViewMode } from '../context/EditorContext';
+import { ViewMode } from '../context/EditorContext';
 
 interface UseViewModeProps {
   selectedImage: Image | null;
   setSelectedImage: (image: Image | null) => void;
   filteredImages: Image[];
   setShowProperties: (show: boolean) => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 }
 
 /**
@@ -22,10 +24,10 @@ export function useViewMode({
   selectedImage,
   setSelectedImage,
   filteredImages,
-  setShowProperties
+  setShowProperties,
+  viewMode,
+  setViewMode
 }: UseViewModeProps) {
-  const { viewMode, setViewMode } = useEditorContext();
-
   // Ensure selected image is set when switching to carousel view
   useEffect(() => {
     if (viewMode === 'carousel' && filteredImages.length > 0 && !selectedImage) {

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ViewMode } from '../../context/EditorContext';
+import { useEditorContext, ViewMode } from '../../context/EditorContext';
 
 interface ImageViewerToggleProps {
-  viewMode: ViewMode;
-  onToggle: (mode: ViewMode) => void;
+  onToggle?: (mode: ViewMode) => void;
   className?: string;
   disabled?: boolean;
 }
@@ -12,20 +11,32 @@ interface ImageViewerToggleProps {
  * A toggle component for switching between grid and carousel view modes
  * 
  * This component provides icon-based buttons for toggling between grid and carousel views.
+ * It uses the EditorContext directly for the viewMode state.
  */
 export function ImageViewerToggle({
-  viewMode,
   onToggle,
   className = '',
   disabled = false,
 }: ImageViewerToggleProps) {
+  const { viewMode, setViewMode } = useEditorContext();
+  
+  const handleToggle = (mode: ViewMode) => {
+    // Use the custom onToggle if provided, otherwise use the context's setViewMode
+    if (onToggle) {
+      onToggle(mode);
+    }
+    
+    // Always update the context's viewMode to ensure it's properly updated
+    setViewMode(mode);
+  };
+  
   return (
     <div className={`flex rounded-md overflow-hidden border border-gray-600 ${className} ${disabled ? 'opacity-50' : ''}`}>
       <button
         className={`flex items-center justify-center p-1 text-white transition-colors ${
           viewMode === 'grid' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
         }`}
-        onClick={() => onToggle('grid')}
+        onClick={() => handleToggle('grid')}
         title="Grid View"
         disabled={disabled}
       >
@@ -40,7 +51,7 @@ export function ImageViewerToggle({
         className={`flex items-center justify-center p-1 text-white transition-colors ${
           viewMode === 'carousel' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-700 hover:bg-gray-600'
         }`}
-        onClick={() => onToggle('carousel')}
+        onClick={() => handleToggle('carousel')}
         title="Carousel View"
         disabled={disabled}
       >

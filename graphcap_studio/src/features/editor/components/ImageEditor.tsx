@@ -61,13 +61,13 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-gray-900 text-white">
-      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 px-2 py-1">
-        <h2 className="text-sm font-medium">Image Editor</h2>
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800/90 px-2 py-0.5">
+        <h2 className="text-xs font-medium">Image Editor</h2>
         <div className="flex space-x-1">
           {isEditing ? (
             <>
               <button
-                className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
+                className="rounded bg-gray-700 px-1.5 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                 onClick={() => setIsEditing(false)}
                 disabled={isSaving}
                 title="Cancel Editing"
@@ -75,7 +75,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
                 Cancel
               </button>
               <button
-                className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
                 onClick={handleSave}
                 disabled={isSaving}
                 title="Save Changes"
@@ -86,14 +86,14 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
           ) : (
             <>
               <button
-                className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700"
+                className="rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white hover:bg-blue-700"
                 onClick={() => setIsEditing(true)}
                 title="Edit Image"
               >
                 Edit
               </button>
               <button
-                className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
+                className="rounded bg-gray-700 px-1.5 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                 onClick={onCancel}
                 title="Close Editor"
               >
@@ -117,10 +117,10 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
             />
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-4 rounded-lg bg-gray-800 p-2 shadow-lg z-10 border border-gray-700">
-              <div className="flex flex-col items-center">
-                <label htmlFor="zoom" className="text-sm text-gray-300">
-                  Zoom
+            <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 space-x-2 rounded-lg bg-gray-800/80 p-1 shadow-lg z-10 border border-gray-700">
+              <div className="flex items-center space-x-1">
+                <label htmlFor="zoom" className="text-xs text-gray-300">
+                  Zoom:
                 </label>
                 <input
                   id="zoom"
@@ -130,20 +130,20 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
                   step={0.1}
                   value={zoom}
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-32"
+                  className="w-24 h-3"
                 />
               </div>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-300">Rotate</span>
-                <div className="flex space-x-2">
+              <div className="flex items-center space-x-1">
+                <span className="text-xs text-gray-300">Rotate:</span>
+                <div className="flex space-x-1">
                   <button
-                    className="rounded bg-gray-700 px-2 py-1 text-gray-200 hover:bg-gray-600"
+                    className="rounded bg-gray-700 px-1 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                     onClick={() => handleRotate(-90)}
                   >
                     ↺
                   </button>
                   <button
-                    className="rounded bg-gray-700 px-2 py-1 text-gray-200 hover:bg-gray-600"
+                    className="rounded bg-gray-700 px-1 py-0.5 text-xs text-gray-200 hover:bg-gray-600"
                     onClick={() => handleRotate(90)}
                   >
                     ↻

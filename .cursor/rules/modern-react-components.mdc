@@ -15,6 +15,7 @@ React has evolved significantly over the years, and with it, the way we write co
 3. Utilize hooks effectively
 4. Employ component composition
 5. Keep components small and focused
+6. Utilize Context api for UI state
 
 ## Basic Component Structure
 

@@ -10,7 +10,6 @@ interface EditorLayoutProps {
   minNavigationWidth?: number;
   minViewerWidth?: number;
   minPropertiesWidth?: number;
-  showProperties?: boolean;
   className?: string;
 }
 
@@ -25,12 +24,11 @@ export function EditorLayout({
   navigation,
   viewer,
   properties,
-  defaultNavigationWidth = 280,
-  defaultPropertiesWidth = 320,
-  minNavigationWidth = 200,
+  defaultNavigationWidth = 250,
+  defaultPropertiesWidth = 300,
+  minNavigationWidth = 180,
   minViewerWidth = 400,
-  minPropertiesWidth = 250,
-  showProperties = true,
+  minPropertiesWidth = 220,
   className = '',
 }: EditorLayoutProps) {
   const [navigationWidth, setNavigationWidth] = useState(defaultNavigationWidth);
@@ -50,24 +48,34 @@ export function EditorLayout({
         setContainerWidth(rect.width);
       }
     };
-    
+
     updateDimensions();
-    
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-    
-    return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
-      }
-    };
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Ensure navigation width doesn't exceed limits
+  useEffect(() => {
+    if (containerWidth > 0) {
+      const maxNavigationWidth = containerWidth - minViewerWidth - minPropertiesWidth;
+      if (navigationWidth > maxNavigationWidth) {
+        setNavigationWidth(Math.max(minNavigationWidth, maxNavigationWidth));
+      }
+    }
+  }, [containerWidth, navigationWidth, minNavigationWidth, minViewerWidth, minPropertiesWidth]);
+
+  // Ensure properties width doesn't exceed limits
+  useEffect(() => {
+    if (containerWidth > 0) {
+      const maxPropertiesWidth = containerWidth - minViewerWidth - navigationWidth;
+      if (propertiesWidth > maxPropertiesWidth) {
+        setPropertiesWidth(Math.max(minPropertiesWidth, maxPropertiesWidth));
+      }
+    }
+  }, [containerWidth, propertiesWidth, navigationWidth, minViewerWidth, minPropertiesWidth]);
+
   // Calculate viewer width based on container width and panel widths
-  const viewerWidth = containerWidth - navigationWidth - (showProperties ? propertiesWidth : 0);
+  const viewerWidth = containerWidth - navigationWidth - propertiesWidth;
 
   // Handle mouse down for navigation resizer
   const handleNavResizerMouseDown = (e: React.MouseEvent) => {
@@ -90,7 +98,7 @@ export function EditorLayout({
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizingNav) {
         const newWidth = Math.max(minNavigationWidth, startWidth + (e.clientX - startX));
-        const maxWidth = containerWidth - minViewerWidth - (showProperties ? propertiesWidth : 0);
+        const maxWidth = containerWidth - minViewerWidth - minPropertiesWidth;
         setNavigationWidth(Math.min(newWidth, maxWidth));
       } else if (isResizingProps) {
         const newWidth = Math.max(minPropertiesWidth, startWidth - (e.clientX - startX));
@@ -113,7 +121,7 @@ export function EditorLayout({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizingNav, isResizingProps, startX, startWidth, containerWidth, navigationWidth, propertiesWidth, showProperties, minNavigationWidth, minViewerWidth, minPropertiesWidth]);
+  }, [isResizingNav, isResizingProps, startX, startWidth, containerWidth, navigationWidth, propertiesWidth, minNavigationWidth, minViewerWidth, minPropertiesWidth]);
 
   return (
     <div 
@@ -143,23 +151,18 @@ export function EditorLayout({
       </div>
 
       {/* Properties panel and resizer (conditionally rendered) */}
-      {showProperties && (
-        <>
-          {/* Properties resizer */}
-          <div
-            className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors"
-            onMouseDown={handlePropsResizerMouseDown}
-          />
+      <div
+        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors"
+        onMouseDown={handlePropsResizerMouseDown}
+      />
 
-          {/* Properties panel */}
-          <div 
-            className="h-full overflow-auto bg-gray-800"
-            style={{ width: `${propertiesWidth}px`, flexShrink: 0 }}
-          >
-            {properties}
-          </div>
-        </>
-      )}
+      {/* Properties panel */}
+      <div 
+        className="h-full overflow-auto bg-gray-800"
+        style={{ width: `${propertiesWidth}px`, flexShrink: 0 }}
+      >
+        {properties}
+      </div>
     </div>
   );
 } 

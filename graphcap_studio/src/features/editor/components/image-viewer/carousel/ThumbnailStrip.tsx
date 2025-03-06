@@ -26,9 +26,9 @@ export function ThumbnailStrip({
   selectedIndex,
   onSelect,
   className = '',
-  minThumbnailWidth = 64,
-  maxThumbnailWidth = 120,
-  gap = 8,
+  minThumbnailWidth = 32,
+  maxThumbnailWidth = 64,
+  gap = 4,
   aspectRatio = 1
 }: ThumbnailStripProps) {
   // Use custom hook for dynamic thumbnail sizing

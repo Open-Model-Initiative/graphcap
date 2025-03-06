@@ -4,13 +4,10 @@ import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
 import { LazyImage } from './LazyImage';
 import { LoadingSpinner, EmptyState } from '../ui';
+import { useEditorContext } from '../../context/EditorContext';
 
 interface GridViewerProps {
   images: Image[];
-  selectedImage: Image | null;
-  onSelectImage: (image: Image) => void;
-  onEditImage?: () => void;
-  onAddToDataset?: () => void;
   isLoading?: boolean;
   isEmpty?: boolean;
   className?: string;
@@ -29,10 +26,6 @@ interface GridViewerProps {
  * - Automatic resizing with ResizeObserver
  * 
  * @param images - Array of image objects to display
- * @param selectedImage - Currently selected image
- * @param onSelectImage - Callback when an image is selected
- * @param onEditImage - Optional callback for edit action
- * @param onAddToDataset - Optional callback for adding to dataset
  * @param isLoading - Whether the grid is in loading state
  * @param isEmpty - Whether there are no images to display
  * @param className - Additional CSS classes
@@ -41,130 +34,123 @@ interface GridViewerProps {
  */
 export function GridViewer({
   images,
-  selectedImage,
-  onSelectImage,
-  onEditImage,
-  onAddToDataset,
   isLoading = false,
   isEmpty = false,
   className = '',
   containerWidth: externalWidth,
-  containerHeight: externalHeight,
+  containerHeight: externalHeight
 }: GridViewerProps) {
+  const {
+    selectedImage,
+    handleSelectImage,
+    handleEditImage
+  } = useEditorContext();
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(externalWidth || 0);
-  const [containerHeight, setContainerHeight] = useState(externalHeight || 0);
-  
-  // Image dimensions
-  const imageHeight = 200;
-  const imageWidth = 200;
-  const gap = 16; // 4 in Tailwind units = 16px
-  
-  // Update container dimensions on resize if external dimensions are not provided
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [itemSize, setItemSize] = useState(180); // Default item size
+  const [columnCount, setColumnCount] = useState(1);
+
+  // Update dimensions when container size changes
   useEffect(() => {
-    if (externalWidth && externalHeight) {
-      setContainerWidth(externalWidth);
-      setContainerHeight(externalHeight);
-      return;
-    }
-    
+    if (!containerRef.current && !externalWidth && !externalHeight) return;
+
     const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerWidth(rect.width);
-        setContainerHeight(rect.height);
-      }
+      // Use external dimensions if provided, otherwise measure container
+      const width = externalWidth || (containerRef.current?.clientWidth || 0);
+      const height = externalHeight || (containerRef.current?.clientHeight || 0);
+      
+      setContainerSize({ width, height });
+      
+      // Calculate optimal item size and column count based on container width
+      // Aim for items between 120px and 200px
+      const minItemSize = 120;
+      const maxItemSize = 200;
+      const gap = 8;
+      
+      // Calculate how many items we can fit at maximum size
+      const columnsAtMaxSize = Math.floor((width - gap) / (maxItemSize + gap));
+      
+      // Calculate how many items we can fit at minimum size
+      const columnsAtMinSize = Math.floor((width - gap) / (minItemSize + gap));
+      
+      // Choose column count that gives us closest to target size
+      const targetColumns = Math.max(1, columnsAtMaxSize > 0 ? columnsAtMaxSize : columnsAtMinSize);
+      setColumnCount(targetColumns);
+      
+      // Calculate item size based on column count
+      const calculatedItemSize = Math.floor((width - (gap * (targetColumns + 1))) / targetColumns);
+      setItemSize(calculatedItemSize);
     };
     
     updateDimensions();
     
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    
-    if (containerRef.current) {
+    // Set up resize observer if using container ref
+    if (containerRef.current && !externalWidth && !externalHeight) {
+      const resizeObserver = new ResizeObserver(updateDimensions);
       resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
     }
-    
-    return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
-      }
-    };
   }, [externalWidth, externalHeight]);
-  
-  // Calculate columns based on container width
-  const columnCount = Math.max(1, Math.floor((containerWidth - gap) / (imageWidth + gap)));
-  
-  // Calculate row count
+
+  // Calculate row count based on number of images and column count
   const rowCount = Math.ceil(images.length / columnCount);
   
-  // Cell renderer for the grid
+  // Cell renderer for the virtualized grid
   const Cell = useCallback(({ columnIndex, rowIndex, style }: any) => {
     const index = rowIndex * columnCount + columnIndex;
-    
-    if (index >= images.length) {
-      return null;
-    }
+    if (index >= images.length) return null;
     
     const image = images[index];
     const isSelected = selectedImage?.path === image.path;
     
-    // Adjust style to account for gap
-    const adjustedStyle = {
-      ...style,
-      left: `${parseFloat(style.left as string) + gap}px`,
-      top: `${parseFloat(style.top as string) + gap}px`,
-      width: `${parseFloat(style.width as string) - gap}px`,
-      height: `${parseFloat(style.height as string) - gap}px`,
-    };
-    
     return (
-      <div style={adjustedStyle}>
+      <div style={style} className="p-2">
         <LazyImage
-          key={image.path}
           image={image}
           isSelected={isSelected}
-          onSelect={onSelectImage}
-          onEdit={isSelected ? onEditImage : undefined}
-          onAddToDataset={isSelected ? onAddToDataset : undefined}
+          onSelect={handleSelectImage}
+          onEdit={isSelected ? handleEditImage : undefined}
         />
       </div>
     );
-  }, [images, columnCount, selectedImage, onSelectImage, onEditImage, onAddToDataset]);
-  
+  }, [images, columnCount, selectedImage, handleSelectImage, handleEditImage]);
+
+  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gray-900">
-        <LoadingSpinner size="md" color="primary" />
+      <div className={`flex h-full w-full items-center justify-center ${className}`}>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
   
-  if (isEmpty) {
+  // Show empty state
+  if (isEmpty || images.length === 0) {
     return (
-      <EmptyState
-        title="No images"
-        description="No images found in this location."
-        className="bg-gray-900"
-      />
+      <div className={`flex h-full w-full items-center justify-center ${className}`}>
+        <EmptyState
+          title="No images found"
+          description="Try selecting a different dataset or uploading new images."
+        />
+      </div>
     );
   }
-  
+
   return (
-    <div
+    <div 
       ref={containerRef}
-      className={`h-full w-full overflow-auto bg-gray-900 p-6 ${className}`}
-      style={{ display: 'flex', flexDirection: 'column' }}
+      className={`h-full w-full overflow-hidden ${className}`}
     >
-      {containerWidth > 0 && containerHeight > 0 && (
+      {containerSize.width > 0 && containerSize.height > 0 && (
         <FixedSizeGrid
           columnCount={columnCount}
-          columnWidth={imageWidth + gap}
+          columnWidth={itemSize}
+          height={containerSize.height}
           rowCount={rowCount}
-          rowHeight={imageHeight + gap}
-          height={Math.max(200, containerHeight - 48)} // Ensure minimum height and account for padding
-          width={containerWidth - 48} // Account for padding
+          rowHeight={itemSize}
+          width={containerSize.width}
           itemData={images}
-          className="flex-grow"
         >
           {Cell}
         </FixedSizeGrid>

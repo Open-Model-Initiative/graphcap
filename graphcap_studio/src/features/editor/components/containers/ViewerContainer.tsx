@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { GridViewer } from '../image-viewer/GridViewer';
-import { CarouselViewer } from '../image-viewer/carousel/CarouselViewer';
+import { ImageGallery } from '../image-viewer';
 import { useEditorContext } from '../../context/EditorContext';
 
 interface ViewerContainerProps {
   images: Image[];
-  selectedImage: Image | null;
-  onSelectImage: (image: Image) => void;
-  onEditImage?: () => void;
-  onAddToDataset?: () => void;
   isLoading?: boolean;
   isEmpty?: boolean;
   className?: string;
@@ -19,21 +14,15 @@ interface ViewerContainerProps {
 /**
  * A container component for the image viewer that handles responsive layout
  * 
- * This component renders either a GridViewer or CarouselViewer based on the
- * current view mode in the EditorContext. It also handles responsive layout
+ * This component renders the ImageGallery component and handles responsive layout
  * adjustments for different screen sizes and zoom levels.
  */
 export function ViewerContainer({
   images,
-  selectedImage,
-  onSelectImage,
-  onEditImage,
-  onAddToDataset,
   isLoading = false,
   isEmpty = false,
   className = '',
 }: ViewerContainerProps) {
-  const { viewMode } = useEditorContext();
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
 
@@ -77,40 +66,19 @@ export function ViewerContainer({
       )
     ),
     gap: Math.max(4, Math.min(12, Math.floor(containerSize.width / 200))), // Dynamic gap
-    aspectRatio: 1, // Square thumbnails by default
   };
 
   return (
     <div 
       ref={setContainerRef}
       className={`h-full w-full overflow-hidden ${className}`}
-      style={{ display: 'flex', flexDirection: 'column' }}
     >
-      {viewMode === 'grid' ? (
-        <GridViewer
-          images={images}
-          selectedImage={selectedImage}
-          onSelectImage={onSelectImage}
-          onEditImage={onEditImage}
-          onAddToDataset={onAddToDataset}
-          isLoading={isLoading}
-          isEmpty={isEmpty}
-          containerWidth={containerSize.width}
-          containerHeight={containerSize.height}
-          className="flex-grow"
-        />
-      ) : (
-        <CarouselViewer
-          images={images}
-          selectedImage={selectedImage}
-          onSelectImage={onSelectImage}
-          onEditImage={onEditImage}
-          onAddToDataset={onAddToDataset}
-          isLoading={isLoading}
-          isEmpty={isEmpty}
-          thumbnailOptions={thumbnailOptions}
-        />
-      )}
+      <ImageGallery
+        images={images}
+        isLoading={isLoading}
+        isEmpty={isEmpty}
+        thumbnailOptions={thumbnailOptions}
+      />
     </div>
   );
 } 

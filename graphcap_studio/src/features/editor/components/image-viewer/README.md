@@ -8,10 +8,10 @@ This directory contains components for viewing, browsing, and interacting with i
 
 - **ImageViewer**: Core component for displaying a single image with loading and error states.
 - **GridViewer**: Displays images in a responsive, virtualized grid layout.
-- **ImageGallery**: Container component that switches between grid and carousel views.
+- **ImageGallery**: Container component that switches between grid and carousel views and provides an info bar with image actions.
 - **LazyImage**: Optimized image component with intersection observer for efficient loading.
-- **ImageActionBar**: Provides action buttons for operations on the selected image.
 - **CarouselNavigation**: Navigation controls for moving between images in carousel view.
+- **CompactActionBar**: Provides a compact action bar with icons for image operations.
 
 ### Carousel Components
 
@@ -31,6 +31,9 @@ The components are designed to be used together in a hierarchical structure:
   selectedImage={selectedImage}
   onSelectImage={handleSelectImage}
   onEditImage={handleEditImage}
+  onDownload={handleDownload}
+  onDelete={handleDelete}
+  onAddToDataset={handleAddToDataset}
   isLoading={isLoading}
   isEmpty={isEmpty}
 />
@@ -45,20 +48,20 @@ The `ImageGallery` component will automatically switch between `GridViewer` and 
 - **Lazy Loading**: Images load only when scrolled into view
 - **View Modes**: Switch between grid and carousel views
 - **Image Selection**: Select images for editing or other operations
-- **Action Bar**: Quick access to common image operations
+- **Compact Info Bar**: Displays image information and provides quick access to common image operations with space-efficient icons
 
 ## Component Relationships
 
 ```
 ImageGallery
+├── CompactActionBar
 ├── GridViewer
 │   └── LazyImage
 │       └── ImageViewer
-├── CarouselViewer
-│   ├── ImageViewer
-│   ├── ThumbnailStrip
-│   └── Pagination
-└── ImageActionBar
+└── CarouselViewer
+    ├── ImageViewer
+    ├── ThumbnailStrip
+    └── Pagination
 ```
 
 ## State Management
