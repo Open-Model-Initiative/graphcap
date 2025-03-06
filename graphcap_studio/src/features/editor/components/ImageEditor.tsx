@@ -60,21 +60,21 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 p-4 bg-gray-50">
-        <h2 className="text-xl font-semibold">Image Editor</h2>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-900 text-white">
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
+        <h2 className="text-base font-medium">Image Editor</h2>
         <div className="flex space-x-2">
           {isEditing ? (
             <>
               <button
-                className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
                 onClick={() => setIsEditing(false)}
                 disabled={isSaving}
               >
                 Cancel
               </button>
               <button
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -84,13 +84,13 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
           ) : (
             <>
               <button
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
                 onClick={() => setIsEditing(true)}
               >
                 Edit
               </button>
               <button
-                className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+                className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
                 onClick={onCancel}
               >
                 Close
@@ -113,9 +113,9 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
             />
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-4 rounded-lg bg-white p-2 shadow-lg z-10">
+            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-4 rounded-lg bg-gray-800 p-2 shadow-lg z-10 border border-gray-700">
               <div className="flex flex-col items-center">
-                <label htmlFor="zoom" className="text-sm text-gray-600">
+                <label htmlFor="zoom" className="text-sm text-gray-300">
                   Zoom
                 </label>
                 <input
@@ -130,16 +130,16 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
                 />
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-sm text-gray-600">Rotate</span>
+                <span className="text-sm text-gray-300">Rotate</span>
                 <div className="flex space-x-2">
                   <button
-                    className="rounded bg-gray-200 px-2 py-1 text-gray-700 hover:bg-gray-300"
+                    className="rounded bg-gray-700 px-2 py-1 text-gray-200 hover:bg-gray-600"
                     onClick={() => handleRotate(-90)}
                   >
                     ↺
                   </button>
                   <button
-                    className="rounded bg-gray-200 px-2 py-1 text-gray-700 hover:bg-gray-300"
+                    className="rounded bg-gray-700 px-2 py-1 text-gray-200 hover:bg-gray-600"
                     onClick={() => handleRotate(90)}
                   >
                     ↻
@@ -149,7 +149,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
             </div>
           </>
         ) : (
-          <div className="h-full w-full overflow-auto">
+          <div className="h-full w-full overflow-auto bg-gray-900">
             <ImageViewer imagePath={imagePath} className="h-full w-full" />
           </div>
         )}

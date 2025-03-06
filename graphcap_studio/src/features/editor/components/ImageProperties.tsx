@@ -87,11 +87,11 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg bg-white p-4 shadow-sm">
+      <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="font-medium">Basic Information</h3>
+          <h3 className="font-medium text-gray-200">Basic Information</h3>
           <button
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-blue-400 hover:text-blue-300"
             onClick={() => setIsEditing(!isEditing)}
           >
             {isEditing ? 'Cancel' : 'Edit'}
@@ -101,35 +101,35 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
         {isEditing ? (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-300">
                 Title
               </label>
               <input
                 type="text"
                 value={properties.title}
                 onChange={(e) => handlePropertyChange('title', e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-300">
                 Description
               </label>
               <textarea
                 value={properties.description}
                 onChange={(e) => handlePropertyChange('description', e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
                 rows={3}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-300">
                 Rating
               </label>
               <select
                 value={properties.rating}
                 onChange={(e) => handlePropertyChange('rating', Number(e.target.value))}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
               >
                 <option value={0}>Not rated</option>
                 <option value={1}>★</option>
@@ -140,7 +140,7 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-300">
                 Tags
               </label>
               <div className="flex">
@@ -148,7 +148,7 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
                   type="text"
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  className="flex-1 rounded-l-md border border-gray-300 px-3 py-2 text-sm"
+                  className="flex-1 rounded-l-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
                   placeholder="Add a tag"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                 />
@@ -163,12 +163,12 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
                 {properties.tags.map((tag: string) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                    className="inline-flex items-center rounded-full bg-blue-900/50 px-2.5 py-0.5 text-xs font-medium text-blue-200"
                   >
                     {tag}
                     <button
                       type="button"
-                      className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-600"
+                      className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-300 hover:bg-blue-800 hover:text-blue-100"
                       onClick={() => handleRemoveTag(tag)}
                     >
                       ×
@@ -187,33 +187,33 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
         ) : (
           <div className="space-y-2">
             <div>
-              <span className="text-sm font-medium text-gray-500">Title:</span>
-              <p className="text-sm">{properties.title || 'No title'}</p>
+              <span className="text-sm font-medium text-gray-400">Title:</span>
+              <p className="text-sm text-gray-200">{properties.title || 'No title'}</p>
             </div>
             <div>
-              <span className="text-sm font-medium text-gray-500">Description:</span>
-              <p className="text-sm">{properties.description || 'No description'}</p>
+              <span className="text-sm font-medium text-gray-400">Description:</span>
+              <p className="text-sm text-gray-200">{properties.description || 'No description'}</p>
             </div>
             <div>
-              <span className="text-sm font-medium text-gray-500">Rating:</span>
-              <p className="text-sm">
+              <span className="text-sm font-medium text-gray-400">Rating:</span>
+              <p className="text-sm text-gray-200">
                 {properties.rating ? '★'.repeat(properties.rating) : 'Not rated'}
               </p>
             </div>
             <div>
-              <span className="text-sm font-medium text-gray-500">Tags:</span>
+              <span className="text-sm font-medium text-gray-400">Tags:</span>
               <div className="mt-1 flex flex-wrap gap-1">
                 {properties.tags.length > 0 ? (
                   properties.tags.map((tag: string) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+                      className="inline-flex items-center rounded-full bg-blue-900/50 px-2 py-0.5 text-xs font-medium text-blue-200"
                     >
                       {tag}
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-gray-400">No tags</span>
+                  <span className="text-sm text-gray-500">No tags</span>
                 )}
               </div>
             </div>
@@ -221,20 +221,20 @@ export function ImageProperties({ image, onSave }: ImagePropertiesProps) {
         )}
       </div>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h3 className="mb-2 font-medium">File Information</h3>
+      <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
+        <h3 className="mb-2 font-medium text-gray-200">File Information</h3>
         <div className="space-y-2">
           <div>
-            <span className="text-sm font-medium text-gray-500">Filename:</span>
-            <p className="text-sm break-all">{image.name}</p>
+            <span className="text-sm font-medium text-gray-400">Filename:</span>
+            <p className="text-sm break-all text-gray-200">{image.name}</p>
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-500">Path:</span>
-            <p className="text-sm break-all">{image.path}</p>
+            <span className="text-sm font-medium text-gray-400">Path:</span>
+            <p className="text-sm break-all text-gray-200">{image.path}</p>
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-500">Directory:</span>
-            <p className="text-sm break-all">{image.directory}</p>
+            <span className="text-sm font-medium text-gray-400">Directory:</span>
+            <p className="text-sm break-all text-gray-200">{image.directory}</p>
           </div>
         </div>
       </div>

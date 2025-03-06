@@ -22,18 +22,18 @@ export function ImageGallery({
 }: ImageGalleryProps) {
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      <div className="flex h-full w-full items-center justify-center bg-gray-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500"></div>
       </div>
     );
   }
 
   if (isEmpty) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-8">
+      <div className="flex h-full w-full items-center justify-center p-8 bg-gray-900">
         <div className="text-center">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-gray-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -45,8 +45,8 @@ export function ImageGallery({
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No images</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-gray-300">No images</h3>
+          <p className="mt-1 text-sm text-gray-400">
             No images found in this location.
           </p>
         </div>
@@ -55,7 +55,7 @@ export function ImageGallery({
   }
 
   return (
-    <div className="h-full w-full overflow-auto">
+    <div className="h-full w-full overflow-auto bg-gray-900">
       <div className="p-6">
         <div className="grid auto-rows-[200px] grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
           {images.map((image) => (
@@ -64,7 +64,7 @@ export function ImageGallery({
               className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all hover:shadow-lg ${
                 selectedImage?.path === image.path
                   ? 'border-blue-500 shadow-md'
-                  : 'border-transparent hover:border-gray-300'
+                  : 'border-transparent hover:border-gray-600'
               }`}
               onClick={() => onSelectImage(image)}
             >
@@ -80,7 +80,7 @@ export function ImageGallery({
                   }}
                 />
                 {/* Overlay with image name */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity group-hover:opacity-100">
                   <p className="truncate text-sm font-medium text-white">
                     {image.name}
                   </p>

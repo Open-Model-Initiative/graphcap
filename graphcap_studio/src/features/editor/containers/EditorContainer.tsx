@@ -89,19 +89,19 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
 
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      <div className="flex h-full w-full items-center justify-center bg-gray-900 text-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-600 border-t-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <div className="rounded-lg bg-red-50 p-6 text-center">
-          <h3 className="mb-2 text-lg font-medium text-red-800">Error Loading Datasets</h3>
-          <p className="text-red-600">{error instanceof Error ? error.message : 'Unknown error'}</p>
-          <p className="mt-4 text-sm text-red-500">Please check your connection and try again</p>
+      <div className="flex h-full w-full items-center justify-center bg-gray-900">
+        <div className="rounded-lg bg-red-900/20 p-6 text-center">
+          <h3 className="mb-2 text-lg font-medium text-red-400">Error Loading Datasets</h3>
+          <p className="text-red-300">{error instanceof Error ? error.message : 'Unknown error'}</p>
+          <p className="mt-4 text-sm text-red-400">Please check your connection and try again</p>
         </div>
       </div>
     );
@@ -110,12 +110,14 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
   // Handle the case when no datasets are found
   if (!datasetsData?.datasets || datasetsData.datasets.length === 0) {
     return (
-      <div className="flex h-full w-full flex-col">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h1 className="text-2xl font-bold">Image Editor</h1>
+      <div className="flex h-full w-full flex-col bg-gray-900 text-white">
+        <div className="flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-lg font-medium">Image Editor</span>
+          </div>
           {onClose && (
             <button
-              className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
               onClick={onClose}
             >
               Close
@@ -123,9 +125,9 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
           )}
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="rounded-lg bg-yellow-50 p-6 text-center">
-            <h3 className="mb-2 text-lg font-medium text-yellow-800">No Datasets Found</h3>
-            <p className="text-yellow-600">
+          <div className="rounded-lg bg-yellow-900/20 p-6 text-center">
+            <h3 className="mb-2 text-lg font-medium text-yellow-400">No Datasets Found</h3>
+            <p className="text-yellow-300">
               No image datasets were found in the workspace. Please add images to the datasets directory.
             </p>
           </div>
@@ -135,30 +137,37 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 p-4 bg-gray-50">
-        <h1 className="text-2xl font-bold">Image Editor</h1>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-gray-900 text-white">
+      {/* Compact Header */}
+      <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-2">
+        <div className="flex items-center space-x-4">
+          <span className="text-lg font-medium">Image Editor</span>
+          {selectedImage && (
+            <span className="text-sm text-gray-400 truncate max-w-md">
+              {selectedImage.name}
+            </span>
+          )}
+        </div>
         <div className="flex space-x-2">
           {selectedImage && !isEditing && (
             <button
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
               onClick={handleEditImage}
             >
-              Edit Image
+              Edit
             </button>
           )}
           {selectedImage && (
             <button
-              className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
               onClick={handleToggleProperties}
             >
-              {showProperties ? 'Hide Properties' : 'Show Properties'}
+              {showProperties ? 'Hide Info' : 'Show Info'}
             </button>
           )}
           {onClose && (
             <button
-              className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              className="rounded bg-gray-700 px-3 py-1 text-gray-200 hover:bg-gray-600"
               onClick={onClose}
             >
               Close
@@ -170,11 +179,11 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar - Dataset tree */}
-        <div className="w-[20%] min-w-[200px] max-w-[300px] flex-shrink-0 overflow-hidden flex flex-col border-r border-gray-200 bg-gray-50">
-          <div className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-            <h2 className="text-lg font-semibold">Datasets</h2>
+        <div className="w-[20%] min-w-[200px] max-w-[300px] flex-shrink-0 overflow-hidden flex flex-col border-r border-gray-700 bg-gray-800">
+          <div className="sticky top-0 z-10 border-b border-gray-700 bg-gray-800 p-3 flex-shrink-0">
+            <h2 className="text-base font-medium">Datasets</h2>
           </div>
-          <div className="p-4 overflow-auto flex-1">
+          <div className="p-3 overflow-auto flex-1">
             <DatasetTree 
               datasets={datasetsData.datasets} 
               selectedDataset={selectedDataset}
@@ -185,7 +194,7 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
         </div>
 
         {/* Center - Image gallery or editor */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden bg-gray-900">
           <div className="absolute inset-0 overflow-hidden">
             {isEditing && selectedImage ? (
               <ImageEditor
@@ -207,12 +216,12 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
 
         {/* Right sidebar - Properties panel */}
         {showProperties && selectedImage && (
-          <div className="w-[25%] min-w-[250px] max-w-[400px] flex-shrink-0 overflow-hidden flex flex-col border-l border-gray-200 bg-gray-50">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-              <h2 className="text-lg font-semibold">Properties</h2>
+          <div className="w-[25%] min-w-[250px] max-w-[400px] flex-shrink-0 overflow-hidden flex flex-col border-l border-gray-700 bg-gray-800">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-700 bg-gray-800 p-3 flex-shrink-0">
+              <h2 className="text-base font-medium">Properties</h2>
               <button
                 onClick={handleToggleProperties}
-                className="rounded-md p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
               >
                 <span className="sr-only">Close panel</span>
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -220,7 +229,7 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
                 </svg>
               </button>
             </div>
-            <div className="p-4 overflow-auto flex-1">
+            <div className="p-3 overflow-auto flex-1">
               <ImageProperties 
                 image={selectedImage} 
                 onSave={handleSaveProperties}
