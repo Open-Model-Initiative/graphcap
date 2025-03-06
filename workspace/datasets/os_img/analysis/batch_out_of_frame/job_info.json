@@ -1,0 +1,27 @@
+{
+  "started_at": "20250306_222449",
+  "provider": "gemini",
+  "model": "gemini-2.0-flash-exp",
+  "config_name": "out_of_frame",
+  "version": "1",
+  "total_images": 7,
+  "sampling": {
+    "original_count": 7,
+    "sample_size": 7,
+    "sample_method": "all"
+  },
+  "params": {
+    "max_tokens": 4096,
+    "temperature": 0.8,
+    "top_p": 0.9,
+    "max_concurrent": 4,
+    "repetition_penalty": 1.15
+  },
+  "log_file": null,
+  "formats": [],
+  "copy_images": false,
+  "global_context": "You are a captioning perspective.",
+  "processed_count": 7,
+  "failed_count": 0,
+  "completed_at": "20250306_222531"
+}
