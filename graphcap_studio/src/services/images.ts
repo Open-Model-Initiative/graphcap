@@ -279,7 +279,13 @@ export async function createDataset(name: string): Promise<void> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Error response:', errorText);
-      throw new Error(`Failed to create dataset: ${response.statusText}`);
+      
+      // Handle specific error cases
+      if (response.status === 409) {
+        throw new Error(`Dataset "${name}" already exists (409)`);
+      } else {
+        throw new Error(`Failed to create dataset: ${response.statusText}`);
+      }
     }
     
     console.log('Dataset created successfully:', name);

@@ -48,7 +48,18 @@ export function CreateDatasetModal({
       onClose();
     } catch (error) {
       console.error('Error creating dataset:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create dataset');
+      
+      // Check if this is a 409 conflict error (dataset already exists)
+      if (error instanceof Error && error.message.includes('409')) {
+        // If the dataset already exists, we can still consider this a success
+        // and notify the user that we're switching to the existing dataset
+        toast.info(`Dataset "${datasetName}" already exists. Switching to it.`);
+        onDatasetCreated(datasetName);
+        onClose();
+      } else {
+        // For other errors, show the error message
+        setError(error instanceof Error ? error.message : 'Failed to create dataset');
+      }
     } finally {
       setIsCreating(false);
     }
