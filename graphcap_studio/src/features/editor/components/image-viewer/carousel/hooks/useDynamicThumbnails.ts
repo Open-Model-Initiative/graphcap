@@ -7,6 +7,7 @@ interface UseDynamicThumbnailsProps {
   maxThumbnailWidth?: number;
   gap?: number;
   aspectRatio?: number;
+  maxHeight?: number;
 }
 
 interface UseDynamicThumbnailsResult {
@@ -32,7 +33,8 @@ export function useDynamicThumbnails({
   minThumbnailWidth = 64,
   maxThumbnailWidth = 120,
   gap = 8,
-  aspectRatio = 1
+  aspectRatio = 1,
+  maxHeight = 80 // Default max height (5rem - padding)
 }: UseDynamicThumbnailsProps): UseDynamicThumbnailsResult {
   // Reference for the container element
   const containerRef = useRef<HTMLDivElement>(null) as RefObject<HTMLDivElement>;
@@ -48,56 +50,53 @@ export function useDynamicThumbnails({
     
     const containerWidth = containerRef.current.clientWidth;
     
+    // First, determine the maximum height we can use
+    const maxThumbnailHeight = maxHeight;
+    
+    // Calculate the maximum width based on the height constraint and aspect ratio
+    const heightConstrainedWidth = Math.floor(maxThumbnailHeight * aspectRatio);
+    
+    // Use the smaller of the height-constrained width and the maxThumbnailWidth
+    const effectiveMaxWidth = Math.min(heightConstrainedWidth, maxThumbnailWidth);
+    
     // Calculate how many thumbnails can fit at minimum size
     const maxPossibleCount = Math.floor((containerWidth + gap) / (minThumbnailWidth + gap));
     
     // Calculate how many thumbnails can fit at maximum size
-    const minPossibleCount = Math.floor((containerWidth + gap) / (maxThumbnailWidth + gap));
+    const minPossibleCount = Math.max(1, Math.floor((containerWidth + gap) / (effectiveMaxWidth + gap)));
     
-    // Determine the optimal count based on total available
-    // Use a more dynamic approach to determine the optimal count
+    // Determine the optimal count
     let optimalCount;
     
     if (totalCount <= minPossibleCount) {
       // If we have fewer images than can fit at max size, use max size
       optimalCount = totalCount;
-    } else if (containerWidth < minThumbnailWidth * 3) {
-      // For very small containers, show at least 1 thumbnail
-      optimalCount = 1;
     } else {
-      // Calculate a balanced number based on container width
-      // This creates a smoother transition between sizes
-      const availableWidth = containerWidth - ((maxPossibleCount - 1) * gap);
-      const idealWidth = Math.min(
-        maxThumbnailWidth,
-        Math.max(minThumbnailWidth, Math.floor(availableWidth / Math.min(maxPossibleCount, totalCount)))
-      );
-      
-      // Recalculate how many can fit with this ideal width
-      optimalCount = Math.min(
-        Math.floor((containerWidth + gap) / (idealWidth + gap)),
-        totalCount
-      );
+      // Try to fit as many as possible while keeping them reasonably sized
+      optimalCount = Math.min(maxPossibleCount, totalCount);
     }
-    
-    // Ensure at least one thumbnail is visible
-    optimalCount = Math.max(optimalCount, 1);
     
     // Calculate the optimal width based on the count
     const availableWidth = containerWidth - ((optimalCount - 1) * gap);
-    const optimalWidth = Math.floor(availableWidth / optimalCount);
+    const calculatedWidth = Math.floor(availableWidth / optimalCount);
     
     // Ensure width is within bounds
-    const boundedWidth = Math.min(Math.max(optimalWidth, minThumbnailWidth), maxThumbnailWidth);
+    const boundedWidth = Math.min(
+      Math.max(calculatedWidth, minThumbnailWidth), 
+      effectiveMaxWidth
+    );
     
     // Calculate height based on aspect ratio
-    const optimalHeight = Math.floor(boundedWidth / aspectRatio);
+    const calculatedHeight = Math.floor(boundedWidth / aspectRatio);
+    
+    // Ensure height doesn't exceed max height
+    const boundedHeight = Math.min(calculatedHeight, maxThumbnailHeight);
     
     // Update state
     setThumbnailWidth(boundedWidth);
-    setThumbnailHeight(optimalHeight);
+    setThumbnailHeight(boundedHeight);
     setVisibleCount(optimalCount);
-  }, [minThumbnailWidth, maxThumbnailWidth, gap, totalCount, aspectRatio]);
+  }, [minThumbnailWidth, maxThumbnailWidth, gap, totalCount, aspectRatio, maxHeight]);
   
   // Recalculate on resize or when dependencies change
   useEffect(() => {

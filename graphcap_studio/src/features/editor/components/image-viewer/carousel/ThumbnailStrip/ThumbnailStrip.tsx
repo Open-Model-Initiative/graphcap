@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useCallback, memo } from 'react';
-import { Image, getThumbnailUrl } from '@/services/images';
-import { useThumbnailScroll, useDynamicThumbnails } from '../hooks';
+import { memo } from 'react';
+import { Image } from '@/services/images';
+import { ThumbnailImage } from '@/common/components/ui/responsive-image';
+import { useDynamicThumbnails } from '../hooks';
 import styles from './ThumbnailStrip.module.css';
 
 interface ThumbnailStripProps {
@@ -13,6 +14,7 @@ interface ThumbnailStripProps {
   readonly maxThumbnailWidth?: number;
   readonly gap?: number;
   readonly aspectRatio?: number;
+  readonly maxHeight?: number;
 }
 
 /**
@@ -31,13 +33,9 @@ function ThumbnailStripBase({
   minThumbnailWidth = 32,
   maxThumbnailWidth = 64,
   gap = 4,
-  aspectRatio = 1
+  aspectRatio = 1,
+  maxHeight = 70
 }: Readonly<ThumbnailStripProps>) {
-  // Track loading state for each image
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
-    Object.fromEntries(images.map(img => [img.path, true]))
-  );
-
   // Use custom hook for dynamic thumbnail sizing
   const {
     containerRef,
@@ -49,60 +47,35 @@ function ThumbnailStripBase({
     minThumbnailWidth,
     maxThumbnailWidth,
     gap,
-    aspectRatio
+    aspectRatio,
+    maxHeight
   });
-
-  // Use custom hook for thumbnail scrolling
-  const scrollRef = useThumbnailScroll({
-    selectedIndex,
-    totalCount: images.length,
-    thumbnailWidth: thumbnailWidth + calculatedGap
-  });
-
-  // Combine refs
-  const setRefs = (element: HTMLDivElement | null) => {
-    if (element) {
-      // @ts-ignore - This is a valid way to set multiple refs
-      containerRef.current = element;
-      // @ts-ignore
-      scrollRef.current = element;
-    }
-  };
-
-  // Handle image load completion
-  const handleImageLoaded = useCallback((path: string) => {
-    setLoadingStates(prev => ({ ...prev, [path]: false }));
-  }, []);
 
   return (
     <div 
-      ref={setRefs}
+      ref={containerRef}
       className={`${styles.container} ${className}`}
       style={{ gap: `${calculatedGap}px` }}
+      data-testid="thumbnail-strip"
     >
       {images.map((image, index) => (
-        <button
+        <div
           key={image.path}
-          className={`${styles.thumbnailButton} ${index === selectedIndex ? styles.selected : ''}`}
           style={{ 
             width: `${thumbnailWidth}px`, 
-            height: `${thumbnailHeight}px` 
+            height: `${thumbnailHeight}px`,
+            flexShrink: 0
           }}
-          onClick={() => onSelect(index)}
-          aria-label={`Select image ${image.name}`}
-          aria-pressed={index === selectedIndex}
         >
-          <img
-            src={getThumbnailUrl(image.path, thumbnailWidth, thumbnailHeight)}
+          <ThumbnailImage
+            imagePath={image.path}
             alt={image.name}
-            className={`${styles.thumbnailImage} ${loadingStates[image.path] ? styles.loading : ''}`}
-            loading="lazy"
-            onLoad={() => handleImageLoaded(image.path)}
+            isSelected={index === selectedIndex}
+            aspectRatio={aspectRatio}
+            className="h-full w-full"
+            onClick={() => onSelect(index)}
           />
-          {index === selectedIndex && (
-            <div className={styles.selectedIndicator}></div>
-          )}
-        </button>
+        </div>
       ))}
     </div>
   );

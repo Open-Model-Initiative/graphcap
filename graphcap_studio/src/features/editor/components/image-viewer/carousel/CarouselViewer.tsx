@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef, RefObject } from 'react';
+import React, { useRef } from 'react';
 import { Image } from '@/services/images';
-import { ImageViewer } from '../ImageViewer';
+import { ResponsiveImage } from '@/common/components/ui/responsive-image';
 import { 
   LoadingSpinner, 
   EmptyState, 
@@ -29,6 +29,7 @@ interface CarouselViewerProps {
     readonly maxWidth?: number;
     readonly gap?: number;
     readonly aspectRatio?: number;
+    readonly maxHeight?: number;
   };
 }
 
@@ -55,7 +56,8 @@ export function CarouselViewer({
     minWidth = 64, 
     maxWidth = 120, 
     gap = 8,
-    aspectRatio = 1
+    aspectRatio = 1,
+    maxHeight = 70
   } = thumbnailOptions;
 
   // Use custom hook for carousel layout
@@ -134,12 +136,16 @@ export function CarouselViewer({
         }}
       >
         {selectedImage && (
-          <ImageViewer
-            imagePath={selectedImage.path}
-            alt={selectedImage.name}
-            className={styles.image}
-            padding={16}
-          />
+          <div className="relative h-full w-full p-4">
+            <ResponsiveImage
+              imagePath={selectedImage.path}
+              alt={selectedImage.name}
+              className="h-full w-full"
+              objectFit="contain"
+              priority={true} // Main image is high priority
+              sizes="(max-width: 768px) 100vw, 80vw"
+            />
+          </div>
         )}
         
         {/* Navigation buttons */}
@@ -169,6 +175,8 @@ export function CarouselViewer({
             maxThumbnailWidth={maxWidth}
             gap={gap}
             aspectRatio={aspectRatio}
+            maxHeight={maxHeight}
+            className="w-full"
           />
           
           {/* Navigation counter - centered below thumbnails */}

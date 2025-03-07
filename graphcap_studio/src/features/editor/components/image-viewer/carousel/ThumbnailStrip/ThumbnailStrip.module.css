@@ -1,29 +1,39 @@
 .container {
   display: flex;
   overflow-x: auto;
-  padding: 0.5rem 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(75, 85, 99, 0.8) rgba(31, 41, 55, 0.6);
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  height: 100%;
+  max-height: 4.5rem;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
 .container::-webkit-scrollbar {
-  height: 6px;
+  display: none;
+  height: 0;
+  width: 0;
 }
 
+/* Hide scrollbar track */
 .container::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.6);
-  border-radius: 3px;
+  display: none;
 }
 
+/* Hide scrollbar thumb */
 .container::-webkit-scrollbar-thumb {
-  background-color: rgba(75, 85, 99, 0.8);
-  border-radius: 3px;
+  display: none;
 }
 
+/* Hide scrollbar thumb hover */
 .container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(107, 114, 128, 0.9);
+  display: none;
 }
 
 .thumbnailButton {

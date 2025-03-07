@@ -26,7 +26,7 @@ interface UseCarouselLayoutResult {
  * @returns Object containing refs and calculated heights
  */
 export function useCarouselLayout({
-  thumbnailHeight = 96 // 6rem
+  thumbnailHeight = 96 // 6rem - keep this in sync with CSS
 }: UseCarouselLayoutProps = {}): UseCarouselLayoutResult {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -42,8 +42,9 @@ export function useCarouselLayout({
       if (containerRef.current) {
         const containerHeight = containerRef.current.clientHeight;
         
-        // Calculate available image container height
-        const availableHeight = containerHeight - thumbnailHeight;
+        // Ensure we have a positive height and account for the thumbnail container
+        // Add a small buffer (2px) to prevent potential scrollbars
+        const availableHeight = Math.max(0, containerHeight - thumbnailHeight - 2);
         setImageContainerHeight(availableHeight);
       }
       
@@ -62,9 +63,20 @@ export function useCarouselLayout({
       resizeObserver.observe(containerRef.current);
     }
     
+    // Also observe window resize events for more reliable updates
+    const handleWindowResize = () => {
+      calculateHeights();
+    };
+    
+    window.addEventListener('resize', handleWindowResize);
+    
     // Cleanup
     return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
       resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
     };
   }, [thumbnailHeight]);
 
