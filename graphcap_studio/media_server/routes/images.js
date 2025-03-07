@@ -51,14 +51,25 @@ router.get('/view/*', async (req, res) => {
     const width = req.query.width;
     const height = req.query.height;
     
-    logInfo(`Image view request received for: ${imagePath}`, { width, height });
+    // Log the original request path and query parameters
+    logInfo(`Image view request received for: ${imagePath}`, { 
+      width, 
+      height,
+      originalUrl: req.originalUrl,
+      query: req.query
+    });
+    
+    // Check if the path includes workspace
+    const hasWorkspace = imagePath.startsWith('workspace/') || imagePath.includes('/workspace/');
+    logInfo(`Path workspace check: ${hasWorkspace ? 'includes workspace' : 'no workspace prefix'}`);
     
     const result = await serveImage(imagePath, width, height);
     
     // Log successful image serving
     logInfo(`Serving image file: ${result.path}`, { 
       isThumbnail: result.isThumbnail,
-      originalPath: imagePath
+      originalPath: imagePath,
+      resolvedPath: result.path
     });
     
     // Set CORS headers specifically for image files
@@ -80,14 +91,17 @@ router.get('/view/*', async (req, res) => {
     logError('Error serving image', { 
       path: req.params[0], 
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      originalUrl: req.originalUrl,
+      query: req.query
     });
     
     // Send a more descriptive error response
     res.status(404).json({ 
       error: 'Failed to load image', 
       path: req.params[0],
-      message: error.message
+      message: error.message,
+      originalUrl: req.originalUrl
     });
   }
 });
