@@ -156,7 +156,16 @@ export function getImageUrl(imagePath: string): string {
     return imageUrlCache.get(imagePath)!;
   }
   
-  const url = `${MEDIA_SERVER_URL}/api/images/view${imagePath}`;
+  // Ensure the path starts with a slash and doesn't have duplicate slashes
+  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  // Add a cache-busting parameter to prevent CORS caching issues
+  const cacheBuster = `_cb=${Date.now()}`;
+  
+  // Construct the URL with the media server URL and normalized path
+  const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?${cacheBuster}`;
+  
+  console.log('Generated image URL:', url, 'from path:', imagePath);
   
   // Cache the URL
   imageUrlCache.set(imagePath, url);
@@ -185,22 +194,26 @@ export function getThumbnailUrl(imagePath: string, width = 200, height = 200): s
     return thumbnailCache.get(cacheKey)!;
   }
   
-  // In a real implementation, we would add query parameters for thumbnail size
-  // For now, we'll create a thumbnail URL by adding width and height parameters
-  const baseUrl = getImageUrl(imagePath);
-  const url = new URL(baseUrl);
-  url.searchParams.append('width', width.toString());
-  url.searchParams.append('height', height.toString());
+  // Ensure the path starts with a slash and doesn't have duplicate slashes
+  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  // Add a cache-busting parameter to prevent CORS caching issues
+  const cacheBuster = `_cb=${Date.now()}`;
+  
+  // Create a direct URL with width and height parameters
+  const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?width=${width}&height=${height}&${cacheBuster}`;
+  
+  console.log('Generated thumbnail URL:', url);
   
   // Cache the thumbnail URL
-  thumbnailCache.set(cacheKey, url.toString());
+  thumbnailCache.set(cacheKey, url);
   
   // Set cache expiration
   setTimeout(() => {
     thumbnailCache.delete(cacheKey);
   }, CACHE_EXPIRATION);
   
-  return url.toString();
+  return url;
 }
 
 /**

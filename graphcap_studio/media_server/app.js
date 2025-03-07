@@ -29,10 +29,37 @@ const app = express();
 app.disable('x-powered-by');
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins for now, can be restricted to specific domains later
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // Cache preflight requests for 24 hours
+}));
+
+// Add specific CORS headers for image routes
+app.use('/api/images/view', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+
 app.use(express.json());
 app.use(morgan('dev'));
-app.use(helmet());
+
+// Configure helmet with options that allow cross-origin resource sharing
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', '*'], // Allow images from any source
+      connectSrc: ["'self'", '*'] // Allow connections to any source
+    }
+  }
+}));
 
 // Create required directories if they don't exist
 if (!fs.existsSync(uploadDir)) {

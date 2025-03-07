@@ -51,11 +51,44 @@ router.get('/view/*', async (req, res) => {
     const width = req.query.width;
     const height = req.query.height;
     
+    logInfo(`Image view request received for: ${imagePath}`, { width, height });
+    
     const result = await serveImage(imagePath, width, height);
-    res.sendFile(result.path);
+    
+    // Log successful image serving
+    logInfo(`Serving image file: ${result.path}`, { 
+      isThumbnail: result.isThumbnail,
+      originalPath: imagePath
+    });
+    
+    // Set CORS headers specifically for image files
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache images for 1 hour
+    
+    // Use sendFile with options to ensure proper delivery
+    res.sendFile(result.path, {
+      headers: {
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+        'Access-Control-Allow-Origin': '*'
+      },
+      dotfiles: 'deny',
+      maxAge: 3600000 // 1 hour in milliseconds
+    });
   } catch (error) {
-    logError('Error serving image', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logError('Error serving image', { 
+      path: req.params[0], 
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // Send a more descriptive error response
+    res.status(404).json({ 
+      error: 'Failed to load image', 
+      path: req.params[0],
+      message: error.message
+    });
   }
 });
 

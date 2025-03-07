@@ -49,7 +49,8 @@ function securePath(userPath, basePath = WORKSPACE_PATH, options = {}) {
     const normalizedBasePath = path.resolve(basePath);
     
     // Remove any leading slashes from user path to ensure it's treated as relative
-    const sanitizedUserPath = userPath.toString().replace(/^[/\\]+/, '');
+    // Convert to string first to handle non-string inputs safely
+    const sanitizedUserPath = String(userPath).replace(/^[/\\]+/, '');
     
     // Join the base path with the sanitized user path
     let fullPath = path.join(normalizedBasePath, sanitizedUserPath);
@@ -73,7 +74,7 @@ function securePath(userPath, basePath = WORKSPACE_PATH, options = {}) {
         isValid: false,
         path: null,
         relativePath: null,
-        error: 'Path does not exist'
+        error: `Path does not exist: ${fullPath}`
       };
     }
     
@@ -156,10 +157,11 @@ function validateFilename(filename) {
   // Remove any path components
   const basename = path.basename(filename);
   
-  // Check for invalid characters
-  if (/[<>:"/\\|?*\u0000-\u001F]/.test(basename)) {
-    // Sanitize by replacing invalid characters
-    const sanitized = basename.replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_');
+  // Check for invalid characters - using explicit character class instead of control character range
+  // This avoids issues with control character encoding in the source file
+  if (/[<>:"\/\\|?*\x00-\x1F]/.test(basename)) {
+    // Sanitize by replacing invalid characters - also using explicit hex notation
+    const sanitized = basename.replace(/[<>:"\/\\|?*\x00-\x1F]/g, '_');
     return {
       isValid: false,
       sanitized,

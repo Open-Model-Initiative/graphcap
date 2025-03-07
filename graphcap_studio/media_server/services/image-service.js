@@ -235,14 +235,24 @@ async function processImage(imagePath, operations, outputName, overwrite) {
  */
 async function serveImage(imagePath, width, height) {
   try {
+    // Ensure imagePath is a string and normalize it
+    const normalizedPath = String(imagePath || '').replace(/^\/+/, '');
+    
+    logInfo(`Processing image path for serving: ${normalizedPath}`);
+    
     // Validate the path
-    const pathResult = securePath(imagePath, WORKSPACE_PATH, { mustExist: true });
+    const pathResult = securePath(normalizedPath, WORKSPACE_PATH, { mustExist: true });
     if (!pathResult.isValid) {
-      logError('Invalid image path', { imagePath, error: pathResult.error });
-      throw new Error(pathResult.error);
+      logError('Invalid image path', { 
+        imagePath: normalizedPath, 
+        error: pathResult.error,
+        fullPath: pathResult.path
+      });
+      throw new Error(`Invalid image path: ${pathResult.error}`);
     }
     
     const fullPath = pathResult.path;
+    logInfo(`Resolved image path: ${fullPath}`);
     
     // Check if thumbnail is requested
     if (width && height) {
@@ -261,10 +271,14 @@ async function serveImage(imagePath, width, height) {
     }
     
     // Serve the original file
-    logInfo(`Serving image: ${imagePath}`, { fullPath });
+    logInfo(`Serving image: ${normalizedPath}`, { fullPath });
     return { path: fullPath, isThumbnail: false };
   } catch (error) {
-    logError('Error serving image', error);
+    logError('Error serving image', { 
+      imagePath, 
+      error: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 }
