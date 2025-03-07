@@ -137,6 +137,116 @@ async function loadImageCaptions(imagePath) {
 }
 
 /**
+ * Updates metadata from job info if not already set
+ * 
+ * @param {Object} results - Results object to update
+ * @param {Object} jobInfo - Job info object
+ */
+function updateMetadataFromJobInfo(results, jobInfo) {
+  if (jobInfo.completed_at && !results.metadata.captioned_at) {
+    results.metadata.captioned_at = jobInfo.completed_at;
+  }
+  
+  if (jobInfo.provider && !results.metadata.provider) {
+    results.metadata.provider = jobInfo.provider;
+  }
+  
+  if (jobInfo.model && !results.metadata.model) {
+    results.metadata.model = jobInfo.model;
+  }
+}
+
+/**
+ * Reads and processes job info file
+ * 
+ * @param {string} jobInfoPath - Path to the job info file
+ * @param {string} batchFolder - Name of the batch folder
+ * @param {Object} results - Results object to update
+ */
+function processJobInfo(jobInfoPath, batchFolder, results) {
+  if (!fs.existsSync(jobInfoPath)) {
+    return;
+  }
+  
+  try {
+    const jobInfo = JSON.parse(fs.readFileSync(jobInfoPath, 'utf8'));
+    logInfo(`Read job info for ${batchFolder}`, { 
+      completed_at: jobInfo.completed_at,
+      provider: jobInfo.provider,
+      model: jobInfo.model
+    });
+    
+    updateMetadataFromJobInfo(results, jobInfo);
+  } catch (error) {
+    logError(`Error parsing job info for ${batchFolder}`, error);
+  }
+}
+
+/**
+ * Processes a caption line to check if it matches the target image
+ * 
+ * @param {Object} captionData - Parsed caption data
+ * @param {string} filename - Target image filename
+ * @param {string} perspectiveType - Perspective type
+ * @param {Object} results - Results object to update
+ * @returns {boolean} Whether a caption was found
+ */
+function processCaptionLine(captionData, filename, perspectiveType, results) {
+  // The filename in the caption might be relative to a different base path
+  // So we check if the basename matches
+  const captionFilename = path.basename(captionData.filename);
+  logInfo(`Comparing caption filename: ${captionFilename} with image filename: ${filename}`);
+  
+  if (captionFilename !== filename) {
+    return false;
+  }
+  
+  // Found a caption for this image
+  logInfo(`Found caption for ${filename} in ${perspectiveType}`);
+  results.perspectives[perspectiveType] = {
+    config_name: captionData.config_name,
+    version: captionData.version,
+    model: captionData.model,
+    provider: captionData.provider,
+    content: captionData.parsed
+  };
+  
+  return true;
+}
+
+/**
+ * Reads and processes captions file
+ * 
+ * @param {string} captionsPath - Path to the captions file
+ * @param {string} filename - Target image filename
+ * @param {string} perspectiveType - Perspective type
+ * @param {string} batchFolder - Name of the batch folder
+ * @param {Object} results - Results object to update
+ * @returns {Promise<boolean>} Whether a caption was found
+ */
+async function processCaptionsFile(captionsPath, filename, perspectiveType, batchFolder, results) {
+  const fileStream = fs.createReadStream(captionsPath);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+  
+  // Process each line
+  for await (const line of rl) {
+    try {
+      const captionData = JSON.parse(line);
+      if (processCaptionLine(captionData, filename, perspectiveType, results)) {
+        return true;
+      }
+    } catch (error) {
+      logError(`Error parsing caption line in ${batchFolder}`, error);
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Process a batch folder to find captions for an image
  * 
  * @param {string} analysisPath - Path to the analysis folder
@@ -169,72 +279,16 @@ async function processBatchFolder(analysisPath, batchFolder, filename, results) 
     
     // Read job_info.json for metadata
     const jobInfoPathResult = securePath(joinPath(analysisPath, batchFolder, 'job_info.json'), WORKSPACE_PATH, { mustExist: false });
+    processJobInfo(jobInfoPathResult.path, batchFolder, results);
     
-    if (fs.existsSync(jobInfoPathResult.path)) {
-      try {
-        const jobInfo = JSON.parse(fs.readFileSync(jobInfoPathResult.path, 'utf8'));
-        logInfo(`Read job info for ${batchFolder}`, { 
-          completed_at: jobInfo.completed_at,
-          provider: jobInfo.provider,
-          model: jobInfo.model
-        });
-        
-        // Update metadata if not already set
-        if (!results.metadata.captioned_at && jobInfo.completed_at) {
-          results.metadata.captioned_at = jobInfo.completed_at;
-        }
-        
-        if (!results.metadata.provider && jobInfo.provider) {
-          results.metadata.provider = jobInfo.provider;
-        }
-        
-        if (!results.metadata.model && jobInfo.model) {
-          results.metadata.model = jobInfo.model;
-        }
-      } catch (error) {
-        logError(`Error parsing job info for ${batchFolder}`, error);
-      }
-    }
-    
-    // Read the captions file line by line to find the caption for this image
-    const fileStream = fs.createReadStream(captionsPathResult.path);
-    const rl = readline.createInterface({
-      input: fileStream,
-      crlfDelay: Infinity
-    });
-    
-    let captionFound = false;
-    
-    // Process each line
-    for await (const line of rl) {
-      try {
-        const captionData = JSON.parse(line);
-        
-        // Check if this caption is for our image
-        // The filename in the caption might be relative to a different base path
-        // So we check if the basename matches
-        const captionFilename = path.basename(captionData.filename);
-        logInfo(`Comparing caption filename: ${captionFilename} with image filename: ${filename}`);
-        
-        if (captionFilename === filename) {
-          // Found a caption for this image
-          logInfo(`Found caption for ${filename} in ${perspectiveType}`);
-          results.perspectives[perspectiveType] = {
-            config_name: captionData.config_name,
-            version: captionData.version,
-            model: captionData.model,
-            provider: captionData.provider,
-            content: captionData.parsed
-          };
-          
-          captionFound = true;
-          // Break the loop since we found the caption for this image
-          break;
-        }
-      } catch (error) {
-        logError(`Error parsing caption line in ${batchFolder}`, error);
-      }
-    }
+    // Process captions file
+    const captionFound = await processCaptionsFile(
+      captionsPathResult.path, 
+      filename, 
+      perspectiveType, 
+      batchFolder, 
+      results
+    );
     
     if (!captionFound) {
       logInfo(`No caption found for ${filename} in ${perspectiveType}`);

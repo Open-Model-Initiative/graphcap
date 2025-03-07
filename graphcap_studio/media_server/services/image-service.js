@@ -66,6 +66,112 @@ async function listImages(directory) {
 }
 
 /**
+ * Applies image operations using Sharp
+ * 
+ * @param {Object} image - Sharp image instance
+ * @param {Object} operations - Operations to perform
+ * @returns {Object} Modified Sharp image instance
+ */
+function applyImageOperations(image, operations) {
+  if (!operations) {
+    return image;
+  }
+  
+  let processedImage = image;
+  
+  // Apply crop if specified
+  if (operations.crop) {
+    const { left, top, width, height } = operations.crop;
+    processedImage = processedImage.extract({ left, top, width, height });
+  }
+  
+  // Apply rotation if specified
+  if (operations.rotate) {
+    processedImage = processedImage.rotate(operations.rotate);
+  }
+  
+  // Apply resize if specified
+  if (operations.resize) {
+    const { width, height } = operations.resize;
+    processedImage = processedImage.resize(width, height);
+  }
+  
+  // Apply flip if specified
+  if (operations.flip) {
+    processedImage = processedImage.flip();
+  }
+  
+  // Apply flop if specified
+  if (operations.flop) {
+    processedImage = processedImage.flop();
+  }
+  
+  return processedImage;
+}
+
+/**
+ * Determines the output path for a processed image
+ * 
+ * @param {string} fullPath - Full path to the original image
+ * @param {string} outputName - Optional output filename
+ * @param {boolean} overwrite - Whether to overwrite the original file
+ * @returns {Promise<string>} Path to save the processed image
+ */
+async function determineOutputPath(fullPath, outputName, overwrite) {
+  if (overwrite) {
+    return fullPath;
+  }
+  
+  const originalExt = getExtension(fullPath);
+  const originalName = getBasename(fullPath, originalExt);
+  
+  // Validate the output filename
+  let finalOutputName;
+  if (outputName) {
+    const outputNameResult = validateFilename(outputName);
+    finalOutputName = outputNameResult.isValid 
+      ? outputNameResult.sanitized 
+      : `${originalName}_edited${originalExt}`;
+  } else {
+    finalOutputName = `${originalName}_edited${originalExt}`;
+  }
+  
+  // Ensure the upload directory exists
+  ensureDir(uploadDir);
+  
+  // Create the output path
+  const outputPathResult = securePath(
+    joinPath(uploadDir, finalOutputName).replace(WORKSPACE_PATH, ''), 
+    WORKSPACE_PATH, 
+    { mustExist: false }
+  );
+  
+  if (!outputPathResult.isValid) {
+    throw new Error(`Invalid output path: ${outputPathResult.error}`);
+  }
+  
+  return outputPathResult.path;
+}
+
+/**
+ * Clears thumbnails for an image
+ * 
+ * @param {string} imagePath - Path to the image
+ * @returns {Promise<void>}
+ */
+async function clearThumbnails(imagePath) {
+  const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
+  const thumbnailPattern = joinPath(thumbnailsDir, `${imagePathHash}_*`);
+  const thumbnailFiles = await glob(thumbnailPattern);
+  
+  // Delete existing thumbnails
+  for (const thumbnailFile of thumbnailFiles) {
+    fs.unlinkSync(thumbnailFile);
+    logInfo(`Deleted thumbnail: ${thumbnailFile}`);
+  }
+}
+
+/**
  * Process an image (crop, rotate, etc.)
  * 
  * @param {string} imagePath - Path to the image
@@ -91,82 +197,18 @@ async function processImage(imagePath, operations, outputName, overwrite) {
     
     const fullPath = pathResult.path;
     
-    // Initialize Sharp with the input image
+    // Initialize Sharp with the input image and apply operations
     let image = sharp(fullPath);
-    
-    // Apply operations
-    if (operations) {
-      // Apply crop if specified
-      if (operations.crop) {
-        const { left, top, width, height } = operations.crop;
-        image = image.extract({ left, top, width, height });
-      }
-      
-      // Apply rotation if specified
-      if (operations.rotate) {
-        image = image.rotate(operations.rotate);
-      }
-      
-      // Apply resize if specified
-      if (operations.resize) {
-        const { width, height } = operations.resize;
-        image = image.resize(width, height);
-      }
-      
-      // Apply flip if specified
-      if (operations.flip) {
-        image = image.flip();
-      }
-      
-      // Apply flop if specified
-      if (operations.flop) {
-        image = image.flop();
-      }
-    }
+    image = applyImageOperations(image, operations);
     
     // Determine output path
-    let outputPath;
-    if (overwrite) {
-      outputPath = fullPath;
-    } else {
-      const originalExt = getExtension(fullPath);
-      const originalName = getBasename(fullPath, originalExt);
-      
-      // Validate the output filename
-      let finalOutputName;
-      if (outputName) {
-        const outputNameResult = validateFilename(outputName);
-        finalOutputName = outputNameResult.isValid ? outputNameResult.sanitized : `${originalName}_edited${originalExt}`;
-      } else {
-        finalOutputName = `${originalName}_edited${originalExt}`;
-      }
-      
-      // Ensure the upload directory exists
-      ensureDir(uploadDir);
-      
-      // Create the output path
-      const outputPathResult = securePath(joinPath(uploadDir, finalOutputName).replace(WORKSPACE_PATH, ''), WORKSPACE_PATH, { mustExist: false });
-      if (!outputPathResult.isValid) {
-        logError('Invalid output path', { outputName, error: outputPathResult.error });
-        throw new Error(`Invalid output path: ${outputPathResult.error}`);
-      }
-      
-      outputPath = outputPathResult.path;
-    }
+    const outputPath = await determineOutputPath(fullPath, outputName, overwrite);
     
     // Save the processed image
     await image.toFile(outputPath);
     
     // Clear thumbnails for this image
-    const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
-    const thumbnailPattern = joinPath(thumbnailsDir, `${imagePathHash}_*`);
-    const thumbnailFiles = await glob(thumbnailPattern);
-    
-    // Delete existing thumbnails
-    for (const thumbnailFile of thumbnailFiles) {
-      fs.unlinkSync(thumbnailFile);
-      logInfo(`Deleted thumbnail: ${thumbnailFile}`);
-    }
+    await clearThumbnails(imagePath);
     
     logInfo(`Image processed successfully: ${outputPath}`);
     

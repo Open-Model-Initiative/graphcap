@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Image } from '@/services/images';
 import { ImageViewer } from '../ImageViewer';
 import { 
@@ -68,11 +68,36 @@ export function CarouselViewer({
     onSelectImage: handleSelectImage
   });
 
-  // Use custom hook for keyboard and wheel navigation
-  const { handleWheel } = useCarouselControls({
+  // Use custom hook for keyboard navigation only
+  useCarouselControls({
     navigateByDelta,
     enabled: !isLoading && !isEmpty && images.length > 0
   });
+
+  // Reference to the main image container
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Set up wheel event listener with passive: false
+  useEffect(() => {
+    const enabled = !isLoading && !isEmpty && images.length > 0;
+    if (!enabled || !imageContainerRef.current) return;
+
+    const element = imageContainerRef.current;
+    
+    const handleWheelEvent = (e: WheelEvent) => {
+      // Determine direction (positive deltaY means scrolling down)
+      const delta = e.deltaY > 0 ? 1 : -1;
+      navigateByDelta(delta);
+      e.preventDefault();
+    };
+
+    // Add wheel event listener with passive: false option
+    element.addEventListener('wheel', handleWheelEvent, { passive: false });
+    
+    return () => {
+      element.removeEventListener('wheel', handleWheelEvent);
+    };
+  }, [navigateByDelta, isLoading, isEmpty, images.length]);
 
   // Use custom hook for thumbnail scrolling
   const thumbnailsRef = useThumbnailScroll({
@@ -102,12 +127,12 @@ export function CarouselViewer({
   }
 
   return (
-    <div 
-      className={`flex h-full w-full flex-col ${className}`}
-      onWheel={handleWheel}
-    >
-      {/* Main carousel image */}
-      <div className="flex-grow flex items-center justify-center p-6 relative overflow-hidden">
+    <div className={`flex h-full w-full flex-col ${className}`}>
+      {/* Main image display */}
+      <div 
+        ref={imageContainerRef}
+        className="flex-grow flex items-center justify-center p-6 relative overflow-hidden"
+      >
         {selectedImage && (
           <ImageViewer
             imagePath={selectedImage.path}

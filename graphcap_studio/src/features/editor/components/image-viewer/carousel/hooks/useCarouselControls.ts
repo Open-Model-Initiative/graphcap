@@ -1,28 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 
 interface UseCarouselControlsProps {
   navigateByDelta: (delta: number) => void;
   enabled?: boolean;
 }
 
-interface UseCarouselControlsResult {
-  handleWheel: (e: React.WheelEvent) => void;
-}
-
 /**
- * Custom hook for handling keyboard and wheel navigation in the carousel
+ * Custom hook for handling keyboard navigation in the carousel
  * 
- * This hook sets up event listeners for keyboard navigation and provides
- * a handler for wheel events to navigate through the carousel.
+ * This hook sets up event listeners for keyboard navigation.
  * 
  * @param props - The hook properties
- * @returns Handlers for wheel events
  */
 export function useCarouselControls({
   navigateByDelta,
   enabled = true
-}: UseCarouselControlsProps): UseCarouselControlsResult {
+}: UseCarouselControlsProps): void {
   // Handle keyboard navigation
   useEffect(() => {
     if (!enabled) return;
@@ -53,18 +47,4 @@ export function useCarouselControls({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [navigateByDelta, enabled]);
-
-  // Handle mouse wheel for carousel
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (!enabled) return;
-    
-    // Determine direction (positive deltaY means scrolling down)
-    const delta = e.deltaY > 0 ? 1 : -1;
-    navigateByDelta(delta);
-    e.preventDefault();
-  }, [navigateByDelta, enabled]);
-
-  return {
-    handleWheel
-  };
 } 

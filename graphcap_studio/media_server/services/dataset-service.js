@@ -22,6 +22,147 @@ const {
 const { WORKSPACE_PATH } = require('../config');
 
 /**
+ * Maps image files to structured image objects
+ * 
+ * @param {Array<string>} imageFiles - Array of image file paths
+ * @returns {Array<Object>} Array of image objects
+ */
+function mapImagesToObjects(imageFiles) {
+  return imageFiles.map(file => {
+    const relativePath = file.replace(WORKSPACE_PATH, '');
+    return {
+      path: relativePath,
+      name: getBasename(file),
+      directory: getDirname(relativePath),
+      url: `/api/images/view${relativePath}`
+    };
+  });
+}
+
+/**
+ * Processes images found directly in the datasets folder
+ * 
+ * @param {string} datasetsPath - Path to the datasets folder
+ * @returns {Promise<Array<Object>>} Array of dataset objects
+ */
+async function processRootImages(datasetsPath) {
+  const imageFiles = await glob(`${datasetsPath}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+  
+  if (imageFiles.length === 0) {
+    return [];
+  }
+  
+  logInfo(`Found ${imageFiles.length} images directly in datasets folder`);
+  const images = mapImagesToObjects(imageFiles);
+  
+  return [{ 
+    name: 'default', 
+    images 
+  }];
+}
+
+/**
+ * Processes a single local dataset subdirectory
+ * 
+ * @param {string} subdir - Subdirectory name
+ * @param {Array<Object>} datasets - Array to add dataset objects to
+ * @returns {Promise<void>}
+ */
+async function processLocalSubdirectory(subdir, datasets) {
+  // Validate the subdirectory name
+  const subdirNameResult = validateFilename(subdir);
+  if (!subdirNameResult.isValid) {
+    logError('Invalid subdirectory name', { subdir, error: subdirNameResult.error });
+    return;
+  }
+  
+  const subdirPathResult = securePath(`datasets/.local/${subdirNameResult.sanitized}`, WORKSPACE_PATH, { mustExist: false });
+  if (!subdirPathResult.isValid) {
+    logError('Invalid subdirectory path', { subdir, error: subdirPathResult.error });
+    return;
+  }
+  
+  logInfo(`Scanning local dataset: ${subdirPathResult.path}`);
+  
+  // Find all image files in this directory
+  const imageFiles = await glob(`${subdirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+  
+  const datasetObj = {
+    name: subdir,
+    images: imageFiles.length > 0 ? mapImagesToObjects(imageFiles) : []
+  };
+  
+  if (imageFiles.length > 0) {
+    logInfo(`Found ${imageFiles.length} images in dataset: ${subdir}`);
+  } else {
+    logInfo(`No images found in dataset: ${subdir}`);
+  }
+  
+  datasets.push(datasetObj);
+}
+
+/**
+ * Processes the .local directory and its subdirectories
+ * 
+ * @param {Array<Object>} datasets - Array to add dataset objects to
+ * @returns {Promise<void>}
+ */
+async function processLocalDirectory(datasets) {
+  const localDirResult = securePath('datasets/.local', WORKSPACE_PATH, { mustExist: false });
+  if (!localDirResult.isValid) {
+    return;
+  }
+  
+  const localDir = localDirResult.path;
+  if (!fs.existsSync(localDir)) {
+    return;
+  }
+  
+  logInfo(`Scanning .local directory: ${localDir}`);
+  
+  // Get all subdirectories in .local
+  const localSubdirs = fs.readdirSync(localDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+  
+  // Process each subdirectory as a dataset
+  for (const subdir of localSubdirs) {
+    await processLocalSubdirectory(subdir, datasets);
+  }
+}
+
+/**
+ * Processes a regular dataset directory
+ * 
+ * @param {string} dir - Directory name
+ * @param {Array<Object>} datasets - Array to add dataset objects to
+ * @returns {Promise<void>}
+ */
+async function processRegularDirectory(dir, datasets) {
+  const dirPathResult = securePath(`datasets/${dir}`, WORKSPACE_PATH, { mustExist: false });
+  if (!dirPathResult.isValid) {
+    logError('Invalid directory path', { dir, error: dirPathResult.error });
+    return;
+  }
+  
+  logInfo(`Scanning dataset: ${dirPathResult.path}`);
+  
+  // Find all image files in this directory
+  const imageFiles = await glob(`${dirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+  
+  if (imageFiles.length > 0) {
+    logInfo(`Found ${imageFiles.length} images in dataset: ${dir}`);
+    
+    const images = mapImagesToObjects(imageFiles);
+    
+    datasets.push({
+      name: dir,
+      images
+    });
+  }
+}
+
+/**
  * List all images in the datasets directory
  * 
  * @returns {Promise<Array>} Array of dataset objects with images
@@ -53,28 +194,7 @@ async function listDatasetImages() {
     
     // If no directories found, check if there are images directly in the datasets folder
     if (directories.length === 0) {
-      const imageFiles = await glob(`${datasetsPath}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
-      
-      if (imageFiles.length > 0) {
-        logInfo(`Found ${imageFiles.length} images directly in datasets folder`);
-        
-        const images = imageFiles.map(file => {
-          const relativePath = file.replace(WORKSPACE_PATH, '');
-          return {
-            path: relativePath,
-            name: getBasename(file),
-            directory: getDirname(relativePath),
-            url: `/api/images/view${relativePath}`
-          };
-        });
-        
-        return [{ 
-          name: 'default', 
-          images 
-        }];
-      }
-      
-      return [];
+      return await processRootImages(datasetsPath);
     }
     
     // Process each directory to find images
@@ -86,97 +206,11 @@ async function listDatasetImages() {
         continue;
       }
       
-      // If this is the .local directory, process its subdirectories as individual datasets
+      // Process directory based on type
       if (dir === '.local') {
-        const localDirResult = securePath('datasets/.local', WORKSPACE_PATH, { mustExist: false });
-        if (localDirResult.isValid) {
-          const localDir = localDirResult.path;
-          if (fs.existsSync(localDir)) {
-            logInfo(`Scanning .local directory: ${localDir}`);
-            
-            // Get all subdirectories in .local
-            const localSubdirs = fs.readdirSync(localDir, { withFileTypes: true })
-              .filter(dirent => dirent.isDirectory())
-              .map(dirent => dirent.name);
-            
-            // Process each subdirectory as a dataset
-            for (const subdir of localSubdirs) {
-              // Validate the subdirectory name
-              const subdirNameResult = validateFilename(subdir);
-              if (!subdirNameResult.isValid) {
-                logError('Invalid subdirectory name', { subdir, error: subdirNameResult.error });
-                continue;
-              }
-              
-              const subdirPathResult = securePath(`datasets/.local/${subdirNameResult.sanitized}`, WORKSPACE_PATH, { mustExist: false });
-              if (!subdirPathResult.isValid) {
-                logError('Invalid subdirectory path', { subdir, error: subdirPathResult.error });
-                continue;
-              }
-              
-              logInfo(`Scanning local dataset: ${subdirPathResult.path}`);
-              
-              // Find all image files in this directory
-              const imageFiles = await glob(`${subdirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
-              
-              if (imageFiles.length > 0) {
-                logInfo(`Found ${imageFiles.length} images in dataset: ${subdir}`);
-                
-                const images = imageFiles.map(file => {
-                  const relativePath = file.replace(WORKSPACE_PATH, '');
-                  return {
-                    path: relativePath,
-                    name: getBasename(file),
-                    directory: getDirname(relativePath),
-                    url: `/api/images/view${relativePath}`
-                  };
-                });
-                
-                datasets.push({
-                  name: subdir,
-                  images
-                });
-              } else {
-                logInfo(`No images found in dataset: ${subdir}`);
-                datasets.push({
-                  name: subdir,
-                  images: []
-                });
-              }
-            }
-          }
-        }
+        await processLocalDirectory(datasets);
       } else {
-        // Process regular dataset directory
-        const dirPathResult = securePath(`datasets/${dir}`, WORKSPACE_PATH, { mustExist: false });
-        if (!dirPathResult.isValid) {
-          logError('Invalid directory path', { dir, error: dirPathResult.error });
-          continue;
-        }
-        
-        logInfo(`Scanning dataset: ${dirPathResult.path}`);
-        
-        // Find all image files in this directory
-        const imageFiles = await glob(`${dirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
-        
-        if (imageFiles.length > 0) {
-          logInfo(`Found ${imageFiles.length} images in dataset: ${dir}`);
-          
-          const images = imageFiles.map(file => {
-            const relativePath = file.replace(WORKSPACE_PATH, '');
-            return {
-              path: relativePath,
-              name: getBasename(file),
-              directory: getDirname(relativePath),
-              url: `/api/images/view${relativePath}`
-            };
-          });
-          
-          datasets.push({
-            name: dir,
-            images
-          });
-        }
+        await processRegularDirectory(dir, datasets);
       }
     }
     
