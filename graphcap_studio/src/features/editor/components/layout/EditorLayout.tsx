@@ -134,11 +134,11 @@ export function EditorLayout({
       </div>
 
       {/* Navigation resizer */}
-      <hr
-        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0"
+      <button
+        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0 p-0"
         onMouseDown={handleNavResizerMouseDown}
-        aria-orientation="vertical"
         aria-label="Resize navigation panel"
+        type="button"
       />
 
       {/* Viewer panel */}
@@ -150,11 +150,11 @@ export function EditorLayout({
       </div>
 
       {/* Properties panel and resizer (conditionally rendered) */}
-      <hr
-        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0"
+      <button
+        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0 p-0"
         onMouseDown={handlePropsResizerMouseDown}
-        aria-orientation="vertical"
         aria-label="Resize properties panel"
+        type="button"
       />
 
       {/* Properties panel */}

@@ -77,7 +77,7 @@ export const captionsService = {
       return {
         image: {
           path: imagePath,
-          name: imagePath.split('/').pop() || '',
+          name: imagePath.split('/').pop() ?? '',
           directory: imagePath.split('/').slice(0, -1).join('/'),
           url: `/api/images/view${imagePath}`
         },
