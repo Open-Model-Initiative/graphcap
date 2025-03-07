@@ -1,0 +1,12 @@
+---
+description: Style Requirements for Project
+globs: 
+alwaysApply: true
+---
+<Warning>
+Below are list of constraints to adhere to based on project style requirements: 
+
+- Utilize readonly and immutable inputs to all ui components
+- Non-interactive elements should not be assigned mouse or keyboard event listeners.sonarqube(typescript:S6847)
+- Use <hr> instead of the "separator" role to ensure accessibility across all devices.
+</Warning>

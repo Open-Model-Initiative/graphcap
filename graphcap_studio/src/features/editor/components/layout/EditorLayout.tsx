@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
+import { Resizer, useResizer } from '../resizer';
 
 interface EditorLayoutProps {
   readonly navigation: React.ReactNode;
@@ -31,94 +32,25 @@ export function EditorLayout({
   minPropertiesWidth = 220,
   className = '',
 }: EditorLayoutProps) {
-  const [navigationWidth, setNavigationWidth] = useState(defaultNavigationWidth);
-  const [propertiesWidth, setPropertiesWidth] = useState(defaultPropertiesWidth);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [isResizingNav, setIsResizingNav] = useState(false);
-  const [isResizingProps, setIsResizingProps] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [startWidth, setStartWidth] = useState(0);
+  
+  // Use the resizer hook for navigation panel
+  const navResizer = useResizer({
+    defaultWidth: defaultNavigationWidth,
+    minWidth: minNavigationWidth,
+    containerRef,
+    direction: 'right',
+    maxWidthFn: (containerWidth) => containerWidth - minViewerWidth - minPropertiesWidth
+  });
 
-  // Update container width on resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerWidth(rect.width);
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
-  // Ensure navigation width doesn't exceed limits
-  useEffect(() => {
-    if (containerWidth > 0) {
-      const maxNavigationWidth = containerWidth - minViewerWidth - minPropertiesWidth;
-      if (navigationWidth > maxNavigationWidth) {
-        setNavigationWidth(Math.max(minNavigationWidth, maxNavigationWidth));
-      }
-    }
-  }, [containerWidth, navigationWidth, minNavigationWidth, minViewerWidth, minPropertiesWidth]);
-
-  // Ensure properties width doesn't exceed limits
-  useEffect(() => {
-    if (containerWidth > 0) {
-      const maxPropertiesWidth = containerWidth - minViewerWidth - navigationWidth;
-      if (propertiesWidth > maxPropertiesWidth) {
-        setPropertiesWidth(Math.max(minPropertiesWidth, maxPropertiesWidth));
-      }
-    }
-  }, [containerWidth, propertiesWidth, navigationWidth, minViewerWidth, minPropertiesWidth]);
-
-  // Handle mouse down for navigation resizer
-  const handleNavResizerMouseDown = (e: React.MouseEvent) => {
-    setIsResizingNav(true);
-    setStartX(e.clientX);
-    setStartWidth(navigationWidth);
-    e.preventDefault();
-  };
-
-  // Handle mouse down for properties resizer
-  const handlePropsResizerMouseDown = (e: React.MouseEvent) => {
-    setIsResizingProps(true);
-    setStartX(e.clientX);
-    setStartWidth(propertiesWidth);
-    e.preventDefault();
-  };
-
-  // Handle mouse move for resizing
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isResizingNav) {
-        const newWidth = Math.max(minNavigationWidth, startWidth + (e.clientX - startX));
-        const maxWidth = containerWidth - minViewerWidth - minPropertiesWidth;
-        setNavigationWidth(Math.min(newWidth, maxWidth));
-      } else if (isResizingProps) {
-        const newWidth = Math.max(minPropertiesWidth, startWidth - (e.clientX - startX));
-        const maxWidth = containerWidth - minViewerWidth - navigationWidth;
-        setPropertiesWidth(Math.min(newWidth, maxWidth));
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizingNav(false);
-      setIsResizingProps(false);
-    };
-
-    if (isResizingNav || isResizingProps) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingNav, isResizingProps, startX, startWidth, containerWidth, navigationWidth, propertiesWidth, minNavigationWidth, minViewerWidth, minPropertiesWidth]);
+  // Use the resizer hook for properties panel
+  const propsResizer = useResizer({
+    defaultWidth: defaultPropertiesWidth,
+    minWidth: minPropertiesWidth,
+    containerRef,
+    direction: 'left',
+    maxWidthFn: (containerWidth) => containerWidth - minViewerWidth - navResizer.width
+  });
 
   return (
     <div 
@@ -128,17 +60,19 @@ export function EditorLayout({
       {/* Navigation panel */}
       <div 
         className="h-full overflow-auto bg-gray-800"
-        style={{ width: `${navigationWidth}px`, flexShrink: 0 }}
+        style={{ width: `${navResizer.width}px`, flexShrink: 0 }}
       >
         {navigation}
       </div>
 
       {/* Navigation resizer */}
-      <button
-        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0 p-0"
-        onMouseDown={handleNavResizerMouseDown}
+      <Resizer 
+        onMouseDown={navResizer.handleResizerMouseDown}
         aria-label="Resize navigation panel"
-        type="button"
+        className="z-10"
+        hoverColor="bg-blue-500/30"
+        baseColor="bg-transparent"
+        width={2}
       />
 
       {/* Viewer panel */}
@@ -149,18 +83,20 @@ export function EditorLayout({
         {viewer}
       </div>
 
-      {/* Properties panel and resizer (conditionally rendered) */}
-      <button
-        className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors border-none m-0 p-0"
-        onMouseDown={handlePropsResizerMouseDown}
+      {/* Properties resizer */}
+      <Resizer
+        onMouseDown={propsResizer.handleResizerMouseDown}
         aria-label="Resize properties panel"
-        type="button"
+        className="z-10"
+        hoverColor="bg-blue-500/30"
+        baseColor="bg-transparent"
+        width={2}
       />
 
       {/* Properties panel */}
       <div 
         className="h-full overflow-auto bg-gray-800"
-        style={{ width: `${propertiesWidth}px`, flexShrink: 0 }}
+        style={{ width: `${propsResizer.width}px`, flexShrink: 0 }}
       >
         {properties}
       </div>
