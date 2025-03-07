@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ImageProperties } from '../image-properties';
-import { useEditorContext } from '../../context/EditorContext';
+import { ImageProperties } from '@/features/image-properties';
+import { Image } from '@/services/images';
 
 interface PropertiesContainerProps {
   readonly className?: string;
+  readonly selectedImage?: Image | null;
 }
 
 /**
  * A container component for the properties panel
  * 
  * This component renders the image properties and actions.
- * It uses the EditorContext to access the selected image and datasets.
+ * It accepts a selectedImage prop instead of using the EditorContext.
  */
 export function PropertiesContainer({
   className = '',
-}: PropertiesContainerProps) {
-  const { 
-    selectedImage
-  } = useEditorContext();
+  selectedImage = null,
+}: Readonly<PropertiesContainerProps>) {
 
   if (!selectedImage) {
     return (

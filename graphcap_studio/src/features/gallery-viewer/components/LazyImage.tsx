@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useRef, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { ImageViewer } from './ImageViewer';
+import { ImageViewer } from '../ImageViewer';
 
 interface LazyImageProps {
   readonly image: Image;
   readonly isSelected: boolean;
   readonly onSelect: (image: Image) => void;
-  readonly onEdit?: () => void;
-  readonly onAddToDataset?: () => void;
 }
 
 /**
@@ -30,8 +28,6 @@ export function LazyImage({
   image, 
   isSelected, 
   onSelect,
-  onEdit,
-  onAddToDataset
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);

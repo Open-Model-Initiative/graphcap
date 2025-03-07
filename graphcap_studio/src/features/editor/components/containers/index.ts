@@ -1,3 +1,2 @@
 // SPDX-License-Identifier: Apache-2.0
-export * from './ViewerContainer';
-export * from './PropertiesContainer'; 
+// This file is intentionally left empty as ViewerContainer has been moved to gallery-viewer

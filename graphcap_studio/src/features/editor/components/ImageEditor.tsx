@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { toast } from 'sonner';
 import { processImage, ImageProcessResponse, getImageUrl } from '@/services/images';
-import { ImageViewer } from './image-viewer';
+import { ImageViewer } from '../../gallery-viewer';
 
 interface ImageEditorProps {
   readonly imagePath: string;

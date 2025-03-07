@@ -1,29 +1,35 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { ImageGallery } from '../image-viewer';
+import { ViewMode } from '../components/ImageGallery';
 
-interface ViewerContainerProps {
-  readonly images: Image[];
-  readonly isLoading?: boolean;
-  readonly isEmpty?: boolean;
-  readonly className?: string;
+interface UseViewerContainerProps {
+  readonly images?: Image[];
+}
+
+interface UseViewerContainerResult {
+  readonly containerSize: { width: number; height: number };
+  readonly setContainerRef: (ref: HTMLDivElement | null) => void;
+  readonly thumbnailOptions: {
+    readonly minWidth: number;
+    readonly maxWidth: number;
+    readonly gap: number;
+  };
 }
 
 /**
- * A container component for the image viewer that handles responsive layout
+ * Custom hook for managing the ViewerContainer component
  * 
- * This component renders the ImageGallery component and handles responsive layout
- * adjustments for different screen sizes and zoom levels.
+ * This hook provides:
+ * - Container size tracking with ResizeObserver
+ * - Thumbnail size calculations based on container dimensions
+ * 
+ * @param props - Properties for the hook
+ * @returns Functions and state for the ViewerContainer
  */
-export function ViewerContainer({
-  images,
-  isLoading = false,
-  isEmpty = false,
-  className = '',
-}: ViewerContainerProps) {
+export function useViewerContainer({}: UseViewerContainerProps = {}): UseViewerContainerResult {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
+  const [containerRef, setContainerRefState] = useState<HTMLDivElement | null>(null);
 
   // Update container dimensions on resize
   useEffect(() => {
@@ -67,17 +73,9 @@ export function ViewerContainer({
     gap: Math.max(4, Math.min(12, Math.floor(containerSize.width / 200))), // Dynamic gap
   };
 
-  return (
-    <div 
-      ref={setContainerRef}
-      className={`h-full w-full overflow-hidden ${className}`}
-    >
-      <ImageGallery
-        images={images}
-        isLoading={isLoading}
-        isEmpty={isEmpty}
-        thumbnailOptions={thumbnailOptions}
-      />
-    </div>
-  );
+  return {
+    containerSize,
+    setContainerRef: setContainerRefState,
+    thumbnailOptions
+  };
 } 

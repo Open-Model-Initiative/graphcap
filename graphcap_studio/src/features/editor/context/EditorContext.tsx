@@ -3,18 +3,9 @@ import { createContext, useContext, useState, ReactNode, useCallback, useMemo } 
 import { Image, Dataset } from '@/services/images';
 
 /**
- * Types of view modes available in the editor
- */
-export type ViewMode = 'grid' | 'carousel';
-
-/**
  * Interface for the editor context state
  */
 interface EditorContextState {
-  // View mode state
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
-  
   // Image selection state
   selectedImage: Image | null;
   setSelectedImage: (image: Image | null) => void;
@@ -34,7 +25,6 @@ interface EditorContextState {
  */
 interface EditorContextProviderProps {
   readonly children: ReactNode;
-  readonly initialViewMode?: ViewMode;
   readonly dataset: Dataset | null;
   readonly onEditImage?: () => void;
   readonly onDownload?: () => void;
@@ -51,15 +41,11 @@ const EditorContext = createContext<EditorContextState | undefined>(undefined);
  */
 export function EditorContextProvider({ 
   children,
-  initialViewMode = 'grid',
   dataset = null,
   onEditImage,
   onDownload,
   onDelete
 }: EditorContextProviderProps) {
-  // View mode state
-  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-  
   // Image selection state
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   
@@ -69,58 +55,51 @@ export function EditorContextProvider({
   }, []);
   
   const handleEditImage = useCallback(() => {
-    if (onEditImage) {
+    if (selectedImage && onEditImage) {
       onEditImage();
     }
-  }, [onEditImage]);
+  }, [selectedImage, onEditImage]);
   
   const handleDownload = useCallback(() => {
-    if (onDownload) {
+    if (selectedImage && onDownload) {
       onDownload();
     }
-  }, [onDownload]);
+  }, [selectedImage, onDownload]);
   
   const handleDelete = useCallback(() => {
-    if (onDelete) {
+    if (selectedImage && onDelete) {
       onDelete();
     }
-  }, [onDelete]);
-
-  const value = useMemo(() => ({
-    // View mode
-    viewMode,
-    setViewMode,
-    
-    // Image selection
+  }, [selectedImage, onDelete]);
+  
+  // Create the context value
+  const contextValue = useMemo<EditorContextState>(() => ({
     selectedImage,
     setSelectedImage,
-    
-    // Dataset state
     dataset,
-    
-    // Action handlers
     handleSelectImage,
     handleEditImage,
     handleDownload,
     handleDelete
   }), [
-    viewMode, 
     selectedImage,
+    setSelectedImage,
     dataset,
-    handleSelectImage, 
-    handleEditImage, 
-    handleDownload, 
+    handleSelectImage,
+    handleEditImage,
+    handleDownload,
     handleDelete
   ]);
-
-  return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;
+  
+  return (
+    <EditorContext.Provider value={contextValue}>
+      {children}
+    </EditorContext.Provider>
+  );
 }
 
 /**
- * Hook for accessing the EditorContext
- * 
- * @returns The editor context state
- * @throws Error if used outside of EditorContextProvider
+ * Hook to access the editor context
  */
 export function useEditorContext() {
   const context = useContext(EditorContext);

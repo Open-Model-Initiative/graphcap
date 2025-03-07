@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
-import { EditorContextProvider } from '@/features/editor/context/EditorContext';
-import { DatasetContextProvider, useDatasetContext } from '@/features/datasets/context/DatasetContext';
+import { ReactNode, createContext, useContext, useMemo, useEffect } from 'react';
 import { useDatasets } from '@/features/datasets/hooks/useDatasets';
 import { Dataset, Image } from '@/services/images';
 

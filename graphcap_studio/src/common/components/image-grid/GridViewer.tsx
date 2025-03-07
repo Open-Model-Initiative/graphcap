@@ -2,9 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
-import { LazyImage } from '@/features/editor/components/image-viewer/LazyImage';
+import { LazyImage } from '@/features/gallery-viewer/components/LazyImage';
 import { LoadingSpinner, EmptyState } from '@/common/components/ui';
-import { useEditorContext } from '@/features/editor/context/EditorContext';
 
 interface GridViewerProps {
   readonly images: Image[];
@@ -13,6 +12,9 @@ interface GridViewerProps {
   readonly className?: string;
   readonly containerWidth?: number;
   readonly containerHeight?: number;
+  readonly selectedImage?: Image | null;
+  readonly onSelectImage: (image: Image) => void;
+  readonly onEditImage?: (image: Image) => void;
 }
 
 /**
@@ -31,6 +33,9 @@ interface GridViewerProps {
  * @param className - Additional CSS classes
  * @param containerWidth - Optional explicit container width
  * @param containerHeight - Optional explicit container height
+ * @param selectedImage - Currently selected image
+ * @param onSelectImage - Callback when an image is selected
+ * @param onEditImage - Callback when edit button is clicked
  */
 export function GridViewer({
   images,
@@ -38,14 +43,11 @@ export function GridViewer({
   isEmpty = false,
   className = '',
   containerWidth: externalWidth,
-  containerHeight: externalHeight
+  containerHeight: externalHeight,
+  selectedImage,
+  onSelectImage,
+  onEditImage
 }: GridViewerProps) {
-  const {
-    selectedImage,
-    handleSelectImage,
-    handleEditImage
-  } = useEditorContext();
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [itemSize, setItemSize] = useState(180); // Default item size
@@ -109,12 +111,11 @@ export function GridViewer({
         <LazyImage
           image={image}
           isSelected={isSelected}
-          onSelect={handleSelectImage}
-          onEdit={isSelected ? handleEditImage : undefined}
+          onSelect={onSelectImage}
         />
       </div>
     );
-  }, [images, columnCount, selectedImage, handleSelectImage, handleEditImage]);
+  }, [images, columnCount, selectedImage, onSelectImage, onEditImage]);
 
   // Show loading state
   if (isLoading) {

@@ -2,7 +2,5 @@
 
 export * from './useImageSelection';
 export * from './useImageEditor';
-export * from './useViewMode';
 export * from './useUploader';
-export * from './useViewModeManager';
 export * from './useImageActions'; 

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect } from 'react';
 import { EditorContainer } from '@/features/editor/containers/EditorContainer';
 import { GalleryContextProvider, useGalleryContext } from './GalleryContext';
 import { DatasetContextProvider } from '@/features/datasets/context/DatasetContext';
@@ -15,8 +14,6 @@ function GalleryContainerInner() {
     selectedSubfolder,
     datasets,
     currentDataset,
-    filteredImages,
-    isLoading,
     handleAddToDataset,
     handleCreateDataset,
     handleSelectDataset,
@@ -26,7 +23,7 @@ function GalleryContainerInner() {
   return (
     <DatasetContextProvider
       initialDatasets={datasets}
-      initialCurrentDataset={selectedDataset || ''}
+      initialCurrentDataset={selectedDataset ?? ''}
       initialSelectedSubfolder={selectedSubfolder}
       onAddToDataset={handleAddToDataset}
       onCreateDataset={handleCreateDataset}
@@ -36,7 +33,7 @@ function GalleryContainerInner() {
         <div className="h-full w-full overflow-hidden">
           <EditorContainer 
             dataset={currentDataset} 
-            directory={selectedSubfolder || undefined}
+            directory={selectedSubfolder ?? undefined}
             onUploadComplete={handleUploadComplete}
           />
         </div>
@@ -53,7 +50,7 @@ function GalleryContainerInner() {
  * 
  * @param initialDataset - Optional dataset ID to select initially
  */
-export function GalleryContainer({ initialDataset }: { initialDataset?: string }) {
+export function GalleryContainer({ initialDataset }: Readonly<{ initialDataset?: string }>) {
   return (
     <GalleryContextProvider initialDataset={initialDataset}>
       <GalleryContainerInner />

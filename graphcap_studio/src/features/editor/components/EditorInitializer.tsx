@@ -15,7 +15,9 @@ interface EditorInitializerProps {
  */
 export function EditorInitializer({ children }: EditorInitializerProps) {
   return (
-    <EditorContextProvider initialViewMode="grid">
+    <EditorContextProvider 
+      dataset={null}
+    >
       {children}
     </EditorContextProvider>
   );

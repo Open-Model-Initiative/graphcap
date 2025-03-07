@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef } from 'react';
 import { Image } from '@/services/images';
 import { ResponsiveImage } from '@/common/components/responsive-image';
 import { 
@@ -16,7 +15,6 @@ import {
   useWheelNavigation,
   useCarouselLayout
 } from './hooks';
-import { useEditorContext } from '@/features/editor/context/EditorContext';
 import styles from './CarouselViewer.module.css';
 
 interface CarouselViewerProps {
@@ -24,6 +22,8 @@ interface CarouselViewerProps {
   readonly isLoading?: boolean;
   readonly isEmpty?: boolean;
   readonly className?: string;
+  readonly selectedImage?: Image | null;
+  readonly onSelectImage: (image: Image) => void;
   readonly thumbnailOptions?: {
     readonly minWidth?: number;
     readonly maxWidth?: number;
@@ -39,19 +39,24 @@ interface CarouselViewerProps {
  * This component displays images in a carousel view with navigation controls
  * and thumbnails. It uses a sliding window approach to load only a subset of
  * images at a time, improving performance for large image collections.
+ * 
+ * @param images - Array of image objects to display
+ * @param isLoading - Whether the carousel is in loading state
+ * @param isEmpty - Whether there are no images to display
+ * @param className - Additional CSS classes
+ * @param selectedImage - Currently selected image
+ * @param onSelectImage - Callback when an image is selected
+ * @param thumbnailOptions - Optional configuration for thumbnail display
  */
 export function CarouselViewer({
   images,
   isLoading = false,
   isEmpty = false,
   className = '',
+  selectedImage,
+  onSelectImage,
   thumbnailOptions = {}
 }: Readonly<CarouselViewerProps>) {
-  const {
-    selectedImage,
-    handleSelectImage
-  } = useEditorContext();
-  
   const { 
     minWidth = 64, 
     maxWidth = 120, 
@@ -81,8 +86,8 @@ export function CarouselViewer({
     handleThumbnailSelect
   } = useCarouselNavigation({
     images,
-    selectedImage,
-    onSelectImage: handleSelectImage
+    selectedImage: selectedImage || null,
+    onSelectImage
   });
 
   // Use custom hook for keyboard navigation
