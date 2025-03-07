@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { useEditorContext } from '../../../context/EditorContext';
+import { useEditorContext } from '@/features/editor/context/EditorContext';
 
 export interface ImagePropertiesData {
   title: string;
@@ -18,7 +18,7 @@ export interface ImagePropertiesData {
  * It uses localStorage for persistence in the demo version.
  */
 export function useImageProperties(image: Image | null) {
-  const { datasets, currentDataset } = useEditorContext();
+  const { dataset } = useEditorContext();
   
   const [properties, setProperties] = useState<ImagePropertiesData>({
     title: '',
@@ -57,7 +57,8 @@ export function useImageProperties(image: Image | null) {
           metadata: {
             path: image.path,
             directory: image.directory,
-            url: image.url
+            url: image.url,
+            datasetName: dataset?.name ?? undefined
           }
         });
       }
@@ -67,7 +68,7 @@ export function useImageProperties(image: Image | null) {
       setError("Failed to load properties");
       setIsLoading(false);
     }
-  }, [image]);
+  }, [image, dataset]);
 
   const handlePropertyChange = (key: keyof ImagePropertiesData, value: any) => {
     setProperties(prev => ({
@@ -99,13 +100,6 @@ export function useImageProperties(image: Image | null) {
     // Save to localStorage for demo purposes
     localStorage.setItem(`image-props:${image.path}`, JSON.stringify(properties));
     setIsEditing(false);
-    
-    // In a real implementation, this would save the properties to the backend
-    console.log('Properties saved:', properties);
-  };
-
-  const toggleEditing = () => {
-    setIsEditing(!isEditing);
   };
 
   return {
@@ -114,13 +108,11 @@ export function useImageProperties(image: Image | null) {
     isEditing,
     isLoading,
     error,
-    datasets,
-    currentDataset,
-    setNewTag,
     handlePropertyChange,
     handleAddTag,
     handleRemoveTag,
-    handleSave,
-    toggleEditing
+    setNewTag,
+    setIsEditing,
+    handleSave
   };
 } 

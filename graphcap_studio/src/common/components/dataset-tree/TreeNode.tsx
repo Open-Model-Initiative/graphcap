@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 export interface TreeNodeProps {
   /** The label to display for the node */
@@ -16,6 +16,8 @@ export interface TreeNodeProps {
   readonly onClick?: () => void;
   /** Called when the expand/collapse button is clicked */
   readonly onToggleExpand?: () => void;
+  /** Optional custom component to wrap the node content (e.g., a Link) */
+  readonly wrapperComponent?: React.ComponentType<{ children: ReactNode; className: string }>;
 }
 
 /**
@@ -28,26 +30,17 @@ export function TreeNode({
   isExpanded = false,
   icon,
   onClick,
-  onToggleExpand
+  onToggleExpand,
+  wrapperComponent: WrapperComponent
 }: TreeNodeProps) {
-  return (
-    <div 
-      className={`flex cursor-pointer items-center rounded-md py-1.5 px-2 transition-colors duration-150 ${
-        isSelected 
-          ? 'bg-blue-800/60 text-blue-200 border border-blue-600/50' 
-          : 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
-      }`}
-      onClick={onClick}
-      role="treeitem"
-      aria-selected={isSelected}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onClick?.();
-          e.preventDefault();
-        }
-      }}
-    >
+  const nodeClassName = `flex cursor-pointer items-center rounded-md py-1.5 px-2 transition-colors duration-150 ${
+    isSelected 
+      ? 'bg-blue-800/60 text-blue-200 border border-blue-600/50' 
+      : 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
+  }`;
+
+  const nodeContent = (
+    <>
       {hasChildren ? (
         <button 
           className="mr-1.5 w-5 h-5 flex items-center justify-center bg-transparent border-0 p-0"
@@ -91,6 +84,32 @@ export function TreeNode({
       <span className="flex-1 truncate">
         {label}
       </span>
+    </>
+  );
+
+  if (WrapperComponent) {
+    return (
+      <WrapperComponent className={nodeClassName}>
+        {nodeContent}
+      </WrapperComponent>
+    );
+  }
+
+  return (
+    <div 
+      className={nodeClassName}
+      onClick={onClick}
+      role="treeitem"
+      aria-selected={isSelected}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick?.();
+          e.preventDefault();
+        }
+      }}
+    >
+      {nodeContent}
     </div>
   );
 } 

@@ -3,10 +3,10 @@
 
 // Main components
 export { ImageViewer } from './ImageViewer';
-export { GridViewer } from '../../../../common/components/image-grid/GridViewer';
+export { GridViewer } from '@/common/components/image-grid/GridViewer';
 export { ImageGallery } from './ImageGallery';
 export { LazyImage } from './LazyImage';
 export { CompactActionBar } from './CompactActionBar';
 
 // Carousel components
-export { CarouselViewer } from '../../../../common/components/image-carousel';
+export { CarouselViewer } from '@/common/components/image-carousel';

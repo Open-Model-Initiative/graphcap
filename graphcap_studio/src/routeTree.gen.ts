@@ -11,7 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as GalleryImport } from './routes/gallery'
+import { Route as GalleryImport } from './pages/gallery'
 import { Route as DebugImport } from './routes/debug'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'

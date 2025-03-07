@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TreeNode } from './TreeNode';
 import { TreeGroup } from './TreeGroup';
 import { TreeIcon, IconType } from './TreeIcon';
@@ -32,6 +32,8 @@ export interface TreeProps {
   readonly onToggleExpand?: (item: TreeItemData) => void;
   /** Optional class name to apply to the tree container */
   readonly className?: string;
+  /** Optional function to get a wrapper component for a tree item */
+  readonly getWrapperComponent?: (item: TreeItemData) => React.ComponentType<{ children: React.ReactNode; className: string }> | undefined;
 }
 
 /**
@@ -42,17 +44,18 @@ export function Tree({
   selectedItemId,
   onSelectItem,
   onToggleExpand,
-  className = ''
+  className = '',
+  getWrapperComponent
 }: TreeProps) {
   const renderTreeItem = (item: TreeItemData) => {
     const hasChildren = item.children && item.children.length > 0;
     const isSelected = item.id === selectedItemId;
     
-    // Sort children alphabetically if they exist
-    const sortedChildren = item.children 
+    // Sort children alphabetically
+    const sortedChildren = hasChildren && item.children
       ? [...item.children].sort((a, b) => a.name.localeCompare(b.name))
       : [];
-
+    
     return (
       <div key={item.id} className="group">
         <TreeNode
@@ -63,6 +66,7 @@ export function Tree({
           icon={<TreeIcon type={item.iconType ?? (hasChildren ? 'folder' : 'file')} />}
           onClick={() => onSelectItem?.(item)}
           onToggleExpand={() => onToggleExpand?.(item)}
+          wrapperComponent={getWrapperComponent ? getWrapperComponent(item) : undefined}
         />
         
         {hasChildren && (
@@ -75,7 +79,7 @@ export function Tree({
   };
 
   return (
-    <div className={`text-sm text-gray-300 space-y-1.5 p-1 ${className}`}>
+    <div className={`py-1 ${className}`} role="tree">
       {items.map(item => renderTreeItem(item))}
     </div>
   );

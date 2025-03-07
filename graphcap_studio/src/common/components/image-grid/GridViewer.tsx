@@ -2,9 +2,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
-import { LazyImage } from '../../../features/editor/components/image-viewer/LazyImage';
-import { LoadingSpinner, EmptyState } from '../../../features/editor/components/ui';
-import { useEditorContext } from '../../../features/editor/context/EditorContext';
+import { LazyImage } from '@/features/editor/components/image-viewer/LazyImage';
+import { LoadingSpinner, EmptyState } from '@/common/components/ui';
+import { useEditorContext } from '@/features/editor/context/EditorContext';
 
 interface GridViewerProps {
   readonly images: Image[];

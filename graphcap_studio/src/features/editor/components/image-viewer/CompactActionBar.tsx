@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
-import { useEditorContext } from '../../context/EditorContext';
+import { useSharedContext } from '@/common/hooks';
+import { Dataset } from '@/services/images';
 
 interface CompactActionBarProps {
   readonly totalImages: number;
@@ -20,6 +21,7 @@ export function CompactActionBar({
   currentIndex,
   className = ''
 }: CompactActionBarProps) {
+  // Get shared context that combines editor and dataset contexts
   const {
     selectedImage: image,
     datasets,
@@ -28,16 +30,16 @@ export function CompactActionBar({
     handleAddToDataset,
     handleDownload,
     handleDelete
-  } = useEditorContext();
+  } = useSharedContext();
   
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [showDatasetDropdown, setShowDatasetDropdown] = useState(false);
 
   // Reset selected dataset when datasets change
   useEffect(() => {
-    if (datasets.length > 0 && !selectedDataset) {
+    if (datasets && datasets.length > 0 && !selectedDataset) {
       // Default to first dataset that's not the current one
-      const defaultDataset = datasets.find(d => d.name !== currentDataset)?.name || datasets[0].name;
+      const defaultDataset = datasets.find((d: Dataset) => d.name !== currentDataset)?.name || datasets[0].name;
       setSelectedDataset(defaultDataset);
     }
   }, [datasets, currentDataset, selectedDataset]);
@@ -133,7 +135,7 @@ export function CompactActionBar({
         </button>
 
         {/* Add to dataset button with dropdown */}
-        {datasets.length > 0 && (
+        {datasets && datasets.length > 0 && (
           <div className="relative">
             <button
               onClick={(e) => {
@@ -174,8 +176,8 @@ export function CompactActionBar({
                   Add to dataset:
                 </div>
                 {datasets
-                  .filter((dataset) => dataset.name !== currentDataset)
-                  .map((dataset) => (
+                  .filter((dataset: Dataset) => dataset.name !== currentDataset)
+                  .map((dataset: Dataset) => (
                     <div
                       key={dataset.name}
                       className="flex items-center px-2 py-0.5 text-xs text-gray-300 hover:bg-gray-700"

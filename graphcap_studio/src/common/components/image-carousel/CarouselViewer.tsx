@@ -7,7 +7,7 @@ import {
   EmptyState, 
   NavigationButton, 
   ImageCounter
-} from '../../../features/editor/components/ui';
+} from '@/common/components/ui';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { 
   useCarouselNavigation, 
@@ -16,7 +16,7 @@ import {
   useWheelNavigation,
   useCarouselLayout
 } from './hooks';
-import { useEditorContext } from '../../../features/editor/context/EditorContext';
+import { useEditorContext } from '@/features/editor/context/EditorContext';
 import styles from './CarouselViewer.module.css';
 
 interface CarouselViewerProps {

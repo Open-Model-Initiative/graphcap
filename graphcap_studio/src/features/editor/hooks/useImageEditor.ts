@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Image } from '@/services/images';
-import { DATASET_QUERY_KEYS } from './useDatasets';
+import { DATASET_QUERY_KEYS } from '@/features/datasets/hooks/useDatasets';
 
 interface UseImageEditorProps {
   selectedDataset: string | null;

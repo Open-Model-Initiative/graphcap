@@ -8,12 +8,26 @@ import { Image, preloadImage } from '@/services/images';
  * This hook provides functionality for selecting and managing images
  * 
  * @param images - Array of images to select from
+ * @param initialSelectedImage - Optional initially selected image from context
+ * @param setContextSelectedImage - Optional function to update selected image in context
  * @returns Image selection functions and state
  */
-export function useImageSelection(images: Image[]) {
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+export function useImageSelection(
+  images: Image[], 
+  initialSelectedImage: Image | null = null,
+  setContextSelectedImage?: (image: Image | null) => void
+) {
+  const [selectedImage, setSelectedImageInternal] = useState<Image | null>(initialSelectedImage);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showProperties, setShowProperties] = useState(false);
+
+  // Sync with context if provided
+  const setSelectedImage = useCallback((image: Image | null) => {
+    setSelectedImageInternal(image);
+    if (setContextSelectedImage) {
+      setContextSelectedImage(image);
+    }
+  }, [setContextSelectedImage]);
 
   // Preload images for better performance
   const preloadImages = useCallback((imagesToPreload: Image[], count = 10) => {
@@ -45,6 +59,13 @@ export function useImageSelection(images: Image[]) {
     }
   }, [selectedImage, images]);
 
+  // Update selected image if initialSelectedImage changes
+  useEffect(() => {
+    if (initialSelectedImage !== selectedImage) {
+      setSelectedImageInternal(initialSelectedImage);
+    }
+  }, [initialSelectedImage, selectedImage]);
+
   /**
    * Handle image selection
    */
@@ -62,7 +83,7 @@ export function useImageSelection(images: Image[]) {
     
     // Show properties panel when an image is selected
     setShowProperties(true);
-  }, [images]);
+  }, [images, setSelectedImage]);
 
   /**
    * Toggle properties panel visibility

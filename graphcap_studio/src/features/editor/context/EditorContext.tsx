@@ -20,14 +20,10 @@ interface EditorContextState {
   setSelectedImage: (image: Image | null) => void;
   
   // Dataset state
-  datasets: Dataset[];
-  setDatasets: (datasets: Dataset[]) => void;
-  currentDataset: string;
-  setCurrentDataset: (dataset: string) => void;
+  dataset: Dataset | null;
   
   // Action handlers
   handleSelectImage: (image: Image) => void;
-  handleAddToDataset: (imagePath: string, targetDataset: string) => void;
   handleEditImage: () => void;
   handleDownload: () => void;
   handleDelete: () => void;
@@ -38,10 +34,8 @@ interface EditorContextState {
  */
 interface EditorContextProviderProps {
   readonly children: ReactNode;
-  readonly initialDatasets?: Dataset[];
-  readonly initialCurrentDataset?: string;
   readonly initialViewMode?: ViewMode;
-  readonly onAddToDataset?: (imagePath: string, targetDataset: string) => void;
+  readonly dataset: Dataset | null;
   readonly onEditImage?: () => void;
   readonly onDownload?: () => void;
   readonly onDelete?: () => void;
@@ -57,10 +51,8 @@ const EditorContext = createContext<EditorContextState | undefined>(undefined);
  */
 export function EditorContextProvider({ 
   children,
-  initialDatasets = [],
-  initialCurrentDataset = '',
   initialViewMode = 'grid',
-  onAddToDataset,
+  dataset = null,
   onEditImage,
   onDownload,
   onDelete
@@ -71,20 +63,10 @@ export function EditorContextProvider({
   // Image selection state
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   
-  // Dataset state
-  const [datasets, setDatasets] = useState<Dataset[]>(initialDatasets);
-  const [currentDataset, setCurrentDataset] = useState<string>(initialCurrentDataset);
-  
   // Action handlers
   const handleSelectImage = useCallback((image: Image) => {
     setSelectedImage(image);
   }, []);
-  
-  const handleAddToDataset = useCallback((imagePath: string, targetDataset: string) => {
-    if (onAddToDataset) {
-      onAddToDataset(imagePath, targetDataset);
-    }
-  }, [onAddToDataset]);
   
   const handleEditImage = useCallback(() => {
     if (onEditImage) {
@@ -113,25 +95,19 @@ export function EditorContextProvider({
     selectedImage,
     setSelectedImage,
     
-    // Dataset
-    datasets,
-    setDatasets,
-    currentDataset,
-    setCurrentDataset,
+    // Dataset state
+    dataset,
     
     // Action handlers
     handleSelectImage,
-    handleAddToDataset,
     handleEditImage,
     handleDownload,
     handleDelete
   }), [
     viewMode, 
-    selectedImage, 
-    datasets, 
-    currentDataset, 
+    selectedImage,
+    dataset,
     handleSelectImage, 
-    handleAddToDataset, 
     handleEditImage, 
     handleDownload, 
     handleDelete

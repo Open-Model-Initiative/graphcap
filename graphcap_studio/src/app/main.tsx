@@ -11,6 +11,7 @@ import './App.css'
 // Import the generated route tree
 import { routeTree } from '../routeTree.gen'
 import App from './App'
+import { AppContextProvider } from '../common/providers'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -33,8 +34,10 @@ if (!rootElement.innerHTML) {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <App>
-          <RouterProvider router={router} />
-          {/* <ReactQueryDevtools /> */}
+          <AppContextProvider>
+            <RouterProvider router={router} />
+            {/* <ReactQueryDevtools /> */}
+          </AppContextProvider>
         </App>
       </QueryClientProvider>
     </StrictMode>,

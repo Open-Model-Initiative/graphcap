@@ -1,19 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Image, Dataset } from "@/services/images";
 import { ImageEditor } from "../components/ImageEditor";
-import {
-  EditorContextProvider,
-  useEditorContext,
-} from "../context/EditorContext";
+import { useEditorContext, ViewMode } from "../context/EditorContext";
 import { EditorLayout } from "../components/layout";
-import { ImageViewerToggle } from "../components/ui";
+import { ViewerContainer, PropertiesContainer } from "../components/containers";
 import {
-  ViewerContainer,
-  NavigationContainer,
-  PropertiesContainer,
-} from "../components/containers";
-import {
-  useDatasets,
   useImageSelection,
   useImageEditor,
   useUploader,
@@ -21,107 +12,90 @@ import {
   useImageActions,
 } from "../hooks";
 import { ImageUploader } from "../components/ImageUploader";
+import { DatasetContainer } from "@/features/datasets";
+import { useEffect } from "react";
 
 interface EditorContainerProps {
   readonly directory?: string;
   readonly onClose?: () => void;
+  readonly dataset: Dataset | null;
+  readonly onUploadComplete?: () => void;
 }
 
 /**
  * A container component that integrates the image editor with the gallery
  */
-export function EditorContainer({ directory, onClose }: EditorContainerProps) {
-  // Use our custom hooks for data fetching and state management
-  const {
-    selectedDataset,
-    selectedSubfolder,
-    datasetsData,
-    currentDataset,
-    filteredImages,
-    isLoading,
-    setSelectedSubfolder,
-    handleDatasetChange,
-    handleCreateDataset,
-    handleAddToDataset,
-    handleUploadComplete,
-  } = useDatasets();
+export function EditorContainer({ 
+  directory, 
+  onClose, 
+  dataset, 
+  onUploadComplete 
+}: EditorContainerProps) {
+  // Get context from EditorContext
+  const { selectedImage, setSelectedImage } = useEditorContext();
+  
+  // Get images from the dataset
+  const images = dataset?.images || [];
+  
+  // Filter images by directory if provided
+  const filteredImages = directory 
+    ? images.filter(image => image.directory.includes(directory))
+    : images;
 
   const {
-    selectedImage,
+    selectedImage: selectedImageFromHook,
     handleSaveProperties,
-  } = useImageSelection(filteredImages);
+  } = useImageSelection(filteredImages, selectedImage, setSelectedImage);
 
   const {
     isEditing,
     handleEditImage: startEditing,
     handleSave,
     handleCancel,
-  } = useImageEditor({ selectedDataset });
+  } = useImageEditor({ selectedDataset: dataset?.name || '' });
 
   const { showUploader, setShowUploader, handleToggleUploader } = useUploader();
 
-  // Use our new custom hooks
+  // Use our custom hooks
   const { 
     handleEditImage, 
     handleDownload, 
     handleDelete, 
     handleUploadFinished 
   } = useImageActions({
-    selectedImage,
+    selectedImage: selectedImageFromHook,
     startEditing,
     onUploadComplete: () => {
-      handleUploadComplete();
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
       setShowUploader(false);
     }
   });
 
-  // Extract datasets array from datasetsData if available
-  const datasets = datasetsData?.datasets || [];
-  // Ensure currentDataset is a string
-  const currentDatasetStr =
-    typeof currentDataset === "string" ? currentDataset : "";
-  // Ensure selectedDataset is a string
-  const selectedDatasetStr =
-    typeof selectedDataset === "string" ? selectedDataset : "";
-
   return (
-    <EditorContextProvider
-      initialDatasets={datasets}
-      initialCurrentDataset={currentDatasetStr}
-      initialViewMode="grid"
-      onAddToDataset={handleAddToDataset}
-      onEditImage={handleEditImage}
-      onDownload={handleDownload}
-      onDelete={handleDelete}
-    >
-      <EditorContainerInner
-        directory={directory}
-        onClose={onClose}
-        filteredImages={filteredImages}
-        isLoading={isLoading}
-        isEmpty={filteredImages.length === 0}
-        isEditing={isEditing}
-        selectedImage={selectedImage}
-        showUploader={showUploader}
-        handleSave={handleSave}
-        handleCancel={handleCancel}
-        handleSaveProperties={handleSaveProperties}
-        handleToggleUploader={handleToggleUploader}
-        handleUploadFinished={handleUploadFinished}
-        selectedDataset={selectedDatasetStr}
-        selectedSubfolder={selectedSubfolder || ""}
-        setSelectedSubfolder={setSelectedSubfolder}
-        handleDatasetChange={handleDatasetChange}
-        handleCreateDataset={async (name: string) => handleCreateDataset(name)}
-        datasets={datasets}
-        handleEditImage={handleEditImage}
-        setShowUploader={setShowUploader}
-      />
-    </EditorContextProvider>
+    <EditorContainerInner
+      directory={directory}
+      onClose={onClose}
+      filteredImages={filteredImages}
+      isLoading={false}
+      isEmpty={filteredImages.length === 0}
+      isEditing={isEditing}
+      selectedImage={selectedImageFromHook}
+      showUploader={showUploader}
+      handleSave={handleSave}
+      handleCancel={handleCancel}
+      handleSaveProperties={handleSaveProperties}
+      handleToggleUploader={handleToggleUploader}
+      handleUploadFinished={handleUploadFinished}
+      handleEditImage={handleEditImage}
+      setShowUploader={setShowUploader}
+      selectedDatasetName={dataset?.name || ''}
+    />
   );
 }
 
-interface EditorContainerInnerProps extends EditorContainerProps {
+interface EditorContainerInnerProps extends Omit<EditorContainerProps, 'dataset' | 'onUploadComplete'> {
   readonly filteredImages: Image[];
   readonly isLoading: boolean;
   readonly isEmpty: boolean;
@@ -133,14 +107,9 @@ interface EditorContainerInnerProps extends EditorContainerProps {
   readonly handleSaveProperties: (metadata: Record<string, string>) => void;
   readonly handleToggleUploader: () => void;
   readonly handleUploadFinished: () => void;
-  readonly selectedDataset: string;
-  readonly selectedSubfolder: string;
-  readonly setSelectedSubfolder: (subfolder: string | null) => void;
-  readonly handleDatasetChange: (dataset: string) => void;
-  readonly handleCreateDataset: (name: string) => Promise<void>;
-  readonly datasets: Dataset[];
   readonly handleEditImage: () => void;
   readonly setShowUploader: (visible: boolean) => void;
+  readonly selectedDatasetName: string;
 }
 
 /**
@@ -160,14 +129,9 @@ function EditorContainerInner({
   handleSaveProperties,
   handleToggleUploader,
   handleUploadFinished,
-  selectedDataset,
-  selectedSubfolder,
-  setSelectedSubfolder,
-  handleDatasetChange,
-  handleCreateDataset,
-  datasets,
   handleEditImage,
   setShowUploader,
+  selectedDatasetName,
 }: EditorContainerInnerProps) {
   // Get viewMode and setViewMode from context
   const {
@@ -176,7 +140,7 @@ function EditorContainerInner({
     setSelectedImage: contextSetSelectedImage,
   } = useEditorContext();
 
-  // Use our new custom hook for view mode management
+  // Use our custom hook for view mode management
   const { 
     handleViewModeToggle 
   } = useViewModeManager({
@@ -189,25 +153,28 @@ function EditorContainerInner({
     setSelectedImage: contextSetSelectedImage
   });
 
+  // Toggle between grid and carousel view
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'grid' ? 'carousel' : 'grid');
+  };
+
   return (
     <div className="h-full w-full flex flex-col bg-gray-900 text-white">
       <EditorLayout
         navigation={
-          <NavigationContainer
-            datasets={datasets}
-            selectedDataset={selectedDataset}
-            selectedSubfolder={selectedSubfolder}
-            onSelectDataset={handleDatasetChange}
-            onSelectSubfolder={setSelectedSubfolder}
-            onCreateDataset={handleCreateDataset}
-          />
+          <DatasetContainer className="h-full" />
         }
         viewer={
           <div className="h-full w-full flex flex-col">
             <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
               <div className="flex items-center space-x-4">
                 <h4 className="text-xl font-semibold">Image Editor</h4>
-                <ImageViewerToggle onToggle={handleViewModeToggle} />
+                <button
+                  onClick={toggleViewMode}
+                  className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                >
+                  {viewMode === 'grid' ? 'Carousel View' : 'Grid View'}
+                </button>
               </div>
               <div className="flex items-center space-x-2">
                 <button
@@ -247,7 +214,7 @@ function EditorContainerInner({
               {showUploader && (
                 <div className="absolute inset-0 bg-gray-900/80 z-10 flex items-center justify-center p-8">
                   <ImageUploader
-                    datasetName={selectedDataset}
+                    datasetName={selectedDatasetName}
                     onUploadComplete={handleUploadFinished}
                     className="w-full"
                   />
