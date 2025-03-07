@@ -1,58 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getThumbnailUrl } from '@/services/images';
 
 interface UseResponsiveImageProps {
-  /**
-   * Path to the image file
-   */
   readonly imagePath: string;
-  
-  /**
-   * Optional aspect ratio to maintain (width/height)
-   */
   readonly aspectRatio?: number;
-  
-  /**
-   * Optional reference to the image element
-   */
-  readonly imageRef?: RefObject<HTMLImageElement>;
-  
-  /**
-   * Optional callback when image loads successfully
-   */
   readonly onLoad?: () => void;
-  
-  /**
-   * Optional callback when image fails to load
-   */
   readonly onError?: (error: Error) => void;
 }
 
 interface UseResponsiveImageResult {
-  /**
-   * Whether the image is currently loading
-   */
   readonly loading: boolean;
-  
-  /**
-   * Error object if image failed to load
-   */
   readonly error: Error | null;
-  
-  /**
-   * Generated srcset string for responsive images
-   */
   readonly srcSet: string;
-  
-  /**
-   * Handler for successful image load
-   */
   readonly handleLoad: () => void;
-  
-  /**
-   * Handler for image load error
-   */
   readonly handleError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
@@ -71,46 +32,48 @@ export function useResponsiveImage({
   imagePath,
   aspectRatio,
   onLoad,
-  onError
+  onError,
 }: UseResponsiveImageProps): UseResponsiveImageResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
-  // Reset loading state when image path changes
+
+  // Reset loading state when imagePath changes
   useEffect(() => {
     setLoading(true);
     setError(null);
   }, [imagePath]);
 
-  // Handle successful image load
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setLoading(false);
     onLoad?.();
-  };
+  }, [onLoad]);
 
-  // Handle image load error
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const errorMessage = `Failed to load image: ${imagePath}`;
-    const error = new Error(errorMessage);
-    setError(error);
-    setLoading(false);
-    onError?.(error);
-    console.error(errorMessage);
-  };
+  const handleError = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const err = new Error(`Failed to load image: ${imagePath}`);
+      setError(err);
+      setLoading(false);
+      onError?.(err);
+      console.error(err.message);
+    },
+    [imagePath, onError]
+  );
 
-  // Generate srcset with different sizes
-  const generateSrcSet = () => {
+  // Memoize the srcset string (default format, e.g., JPEG)
+  const srcSet = useMemo(() => {
     const widths = [200, 400, 800, 1200, 1600];
     return widths
-      .map(width => `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio || 1)))} ${width}w`)
+      .map(width =>
+        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)))} ${width}w`
+      )
       .join(', ');
-  };
+  }, [imagePath, aspectRatio]);
 
   return {
     loading,
     error,
-    srcSet: generateSrcSet(),
+    srcSet,
     handleLoad,
-    handleError
+    handleError,
   };
-} 
+}
