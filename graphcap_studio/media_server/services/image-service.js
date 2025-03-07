@@ -245,7 +245,7 @@ async function serveImage(imagePath, width, height) {
     
     // If the path already includes workspace, remove it to avoid duplication
     const cleanPath = isWorkspacePath 
-      ? normalizedPath.replace(/^workspace\/|\/workspace\//, '') 
+      ? normalizedPath.replace(/^(workspace\/|\/workspace\/)/, '') 
       : normalizedPath;
     
     logInfo(`Cleaned path for processing: ${cleanPath}`);
