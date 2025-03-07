@@ -47,6 +47,7 @@ async function processRootImages(datasetsPath) {
   const imageFiles = await glob(`${datasetsPath}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
   
   if (imageFiles.length === 0) {
+    logInfo('No images found directly in datasets folder');
     return [];
   }
   
@@ -82,8 +83,8 @@ async function processLocalSubdirectory(subdir, datasets) {
   
   logInfo(`Scanning local dataset: ${subdirPathResult.path}`);
   
-  // Find all image files in this directory
-  const imageFiles = await glob(`${subdirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+  // Find all image files in this directory and all subdirectories
+  const imageFiles = await glob(`${subdirPathResult.path}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
   
   const datasetObj = {
     name: subdir,
@@ -145,19 +146,21 @@ async function processRegularDirectory(dir, datasets) {
   
   logInfo(`Scanning dataset: ${dirPathResult.path}`);
   
-  // Find all image files in this directory
-  const imageFiles = await glob(`${dirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+  // Find all image files in this directory and all subdirectories
+  const imageFiles = await glob(`${dirPathResult.path}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
   
   if (imageFiles.length > 0) {
     logInfo(`Found ${imageFiles.length} images in dataset: ${dir}`);
-    
-    const images = mapImagesToObjects(imageFiles);
-    
-    datasets.push({
-      name: dir,
-      images
-    });
+  } else {
+    logInfo(`No images found in dataset: ${dir}`);
   }
+  
+  const images = imageFiles.length > 0 ? mapImagesToObjects(imageFiles) : [];
+  
+  datasets.push({
+    name: dir,
+    images
+  });
 }
 
 /**
@@ -190,14 +193,21 @@ async function listDatasetImages() {
     
     logInfo(`Found ${directories.length} dataset directories`, { directories });
     
-    // If no directories found, check if there are images directly in the datasets folder
+    // Initialize datasets array
+    const datasets = [];
+    
+    // Check if there are images directly in the datasets folder
+    const rootDatasets = await processRootImages(datasetsPath);
+    if (rootDatasets.length > 0) {
+      datasets.push(...rootDatasets);
+    }
+    
+    // If no directories found, return just the root datasets
     if (directories.length === 0) {
-      return await processRootImages(datasetsPath);
+      return datasets;
     }
     
     // Process each directory to find images
-    const datasets = [];
-    
     for (const dir of directories) {
       // Skip hidden directories except local
       if (dir.startsWith('.') && dir !== 'local') {
