@@ -9,10 +9,18 @@
 
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
 const { logInfo, logError } = require('../utils/logger');
 const { upload, handleMulterErrors } = require('../middleware/upload');
 const { listImages, processImage, serveImage } = require('../services/image-service');
 const { loadImageCaptions } = require('../services/caption-service');
+const { 
+  securePath, 
+  validateFilename, 
+  getBasename,
+  ensureDir 
+} = require('../utils/path-utils');
+const { WORKSPACE_PATH } = require('../config');
 
 /**
  * List all images in the workspace
@@ -106,29 +114,40 @@ router.post('/upload', handleMulterErrors, upload.single('image'), (req, res) =>
         });
       }
       
-      // Create dataset directory if it doesn't exist (in .local subdirectory)
-      const path = require('path');
-      const fs = require('fs');
-      const { WORKSPACE_PATH } = require('../config');
+      // Securely create dataset path
+      const datasetPathResult = securePath(`datasets/.local/${dataset}`, WORKSPACE_PATH, { createIfNotExist: true });
       
-      const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', dataset);
-      if (!fs.existsSync(datasetPath)) {
-        fs.mkdirSync(datasetPath, { recursive: true });
+      if (!datasetPathResult.isValid) {
+        logError('Invalid dataset path', { dataset, error: datasetPathResult.error });
+        return res.status(400).json({ error: 'Invalid dataset path' });
       }
       
-      // Move the file to the dataset directory
-      const fileName = path.basename(req.file.path);
-      const newPath = path.join(datasetPath, fileName);
+      // Get the filename from the uploaded file and validate it
+      const fileName = getBasename(req.file.path);
+      const fileNameResult = validateFilename(fileName);
+      
+      if (!fileNameResult.isValid) {
+        logError('Invalid filename', { fileName, error: fileNameResult.error });
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
+      
+      // Create the new path securely
+      const newPathResult = securePath(`datasets/.local/${dataset}/${fileNameResult.sanitized}`, WORKSPACE_PATH);
+      
+      if (!newPathResult.isValid) {
+        logError('Invalid new path', { path: newPathResult.path, error: newPathResult.error });
+        return res.status(400).json({ error: 'Invalid path for file' });
+      }
       
       // Ensure the target directory exists
-      fs.mkdirSync(path.dirname(newPath), { recursive: true });
+      ensureDir(datasetPathResult.path);
       
       // Move the file
-      fs.renameSync(req.file.path, newPath);
+      fs.renameSync(req.file.path, newPathResult.path);
       
       // Update paths
-      targetPath = newPath;
-      relativePath = `/datasets/.local/${dataset}/${fileName}`;
+      targetPath = newPathResult.path;
+      relativePath = newPathResult.relativePath;
       
       logInfo(`Image moved to dataset: ${dataset}`, { 
         originalPath: req.file.path,

@@ -11,7 +11,14 @@ const path = require('path');
 const fs = require('fs');
 const { glob } = require('glob');
 const { logInfo, logError } = require('../utils/logger');
-const { validatePath } = require('../utils/path-validator');
+const { 
+  securePath, 
+  validateFilename, 
+  getBasename, 
+  getDirname, 
+  joinPath,
+  ensureDir
+} = require('../utils/path-utils');
 const { WORKSPACE_PATH } = require('../config');
 
 /**
@@ -22,13 +29,13 @@ const { WORKSPACE_PATH } = require('../config');
 async function listDatasetImages() {
   try {
     // Validate the datasets path
-    const pathValidation = validatePath('datasets');
-    if (!pathValidation.isValid) {
-      logError('Invalid datasets path', { error: pathValidation.error });
-      throw new Error(pathValidation.error);
+    const pathResult = securePath('datasets', WORKSPACE_PATH, { mustExist: false });
+    if (!pathResult.isValid) {
+      logError('Invalid datasets path', { error: pathResult.error });
+      throw new Error(pathResult.error);
     }
     
-    const datasetsPath = pathValidation.path;
+    const datasetsPath = pathResult.path;
     logInfo(`Listing datasets from: ${datasetsPath}`);
     
     // Validate the datasets directory exists
@@ -55,8 +62,8 @@ async function listDatasetImages() {
           const relativePath = file.replace(WORKSPACE_PATH, '');
           return {
             path: relativePath,
-            name: path.basename(file),
-            directory: path.dirname(relativePath),
+            name: getBasename(file),
+            directory: getDirname(relativePath),
             url: `/api/images/view${relativePath}`
           };
         });
@@ -81,9 +88,9 @@ async function listDatasetImages() {
       
       // If this is the .local directory, process its subdirectories as individual datasets
       if (dir === '.local') {
-        const localDirValidation = validatePath('datasets/.local');
-        if (localDirValidation.isValid) {
-          const localDir = localDirValidation.path;
+        const localDirResult = securePath('datasets/.local', WORKSPACE_PATH, { mustExist: false });
+        if (localDirResult.isValid) {
+          const localDir = localDirResult.path;
           if (fs.existsSync(localDir)) {
             logInfo(`Scanning .local directory: ${localDir}`);
             
@@ -94,24 +101,33 @@ async function listDatasetImages() {
             
             // Process each subdirectory as a dataset
             for (const subdir of localSubdirs) {
-              const subdirPath = path.join(localDir, subdir);
-              logInfo(`Scanning local dataset: ${subdirPath}`);
+              // Validate the subdirectory name
+              const subdirNameResult = validateFilename(subdir);
+              if (!subdirNameResult.isValid) {
+                logError('Invalid subdirectory name', { subdir, error: subdirNameResult.error });
+                continue;
+              }
+              
+              const subdirPathResult = securePath(`datasets/.local/${subdirNameResult.sanitized}`, WORKSPACE_PATH, { mustExist: false });
+              if (!subdirPathResult.isValid) {
+                logError('Invalid subdirectory path', { subdir, error: subdirPathResult.error });
+                continue;
+              }
+              
+              logInfo(`Scanning local dataset: ${subdirPathResult.path}`);
               
               // Find all image files in this directory
-              const imageFiles = await glob(`${subdirPath}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
-                nodir: true,
-                ignore: ['**/node_modules/**', '**/.git/**'] 
-              });
-              
-              logInfo(`Found ${imageFiles.length} images in local dataset ${subdir}`);
+              const imageFiles = await glob(`${subdirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
               
               if (imageFiles.length > 0) {
+                logInfo(`Found ${imageFiles.length} images in dataset: ${subdir}`);
+                
                 const images = imageFiles.map(file => {
                   const relativePath = file.replace(WORKSPACE_PATH, '');
                   return {
                     path: relativePath,
-                    name: path.basename(file),
-                    directory: path.dirname(relativePath),
+                    name: getBasename(file),
+                    directory: getDirname(relativePath),
                     url: `/api/images/view${relativePath}`
                   };
                 });
@@ -120,50 +136,50 @@ async function listDatasetImages() {
                   name: subdir,
                   images
                 });
+              } else {
+                logInfo(`No images found in dataset: ${subdir}`);
+                datasets.push({
+                  name: subdir,
+                  images: []
+                });
               }
             }
           }
         }
-        continue; // Skip the rest of the loop for .local
-      }
-      
-      // Process regular dataset directory
-      const datasetPathValidation = validatePath(`datasets/${dir}`);
-      if (!datasetPathValidation.isValid) {
-        logError(`Invalid dataset directory: ${dir}`, { error: datasetPathValidation.error });
-        continue;
-      }
-      
-      const dirPath = datasetPathValidation.path;
-      logInfo(`Scanning directory: ${dirPath}`);
-      
-      // Find all image files in this directory
-      const imageFiles = await glob(`${dirPath}/**/*.{jpg,jpeg,png,gif,webp,svg}`, { 
-        nodir: true,
-        ignore: ['**/node_modules/**', '**/.git/**'] 
-      });
-      
-      logInfo(`Found ${imageFiles.length} images in ${dir}`);
-      
-      if (imageFiles.length > 0) {
-        const images = imageFiles.map(file => {
-          const relativePath = file.replace(WORKSPACE_PATH, '');
-          return {
-            path: relativePath,
-            name: path.basename(file),
-            directory: path.dirname(relativePath),
-            url: `/api/images/view${relativePath}`
-          };
-        });
+      } else {
+        // Process regular dataset directory
+        const dirPathResult = securePath(`datasets/${dir}`, WORKSPACE_PATH, { mustExist: false });
+        if (!dirPathResult.isValid) {
+          logError('Invalid directory path', { dir, error: dirPathResult.error });
+          continue;
+        }
         
-        datasets.push({
-          name: dir,
-          images
-        });
+        logInfo(`Scanning dataset: ${dirPathResult.path}`);
+        
+        // Find all image files in this directory
+        const imageFiles = await glob(`${dirPathResult.path}/*.{jpg,jpeg,png,gif,webp,svg}`, { nodir: true });
+        
+        if (imageFiles.length > 0) {
+          logInfo(`Found ${imageFiles.length} images in dataset: ${dir}`);
+          
+          const images = imageFiles.map(file => {
+            const relativePath = file.replace(WORKSPACE_PATH, '');
+            return {
+              path: relativePath,
+              name: getBasename(file),
+              directory: getDirname(relativePath),
+              url: `/api/images/view${relativePath}`
+            };
+          });
+          
+          datasets.push({
+            name: dir,
+            images
+          });
+        }
       }
     }
     
-    logInfo(`Returning ${datasets.length} datasets`);
     return datasets;
   } catch (error) {
     logError('Error listing dataset images', error);
@@ -174,36 +190,37 @@ async function listDatasetImages() {
 /**
  * Create a new dataset
  * 
- * @param {string} name - Name of the dataset to create
- * @returns {Promise<Object>} Success status and dataset path
+ * @param {string} name - Name of the dataset
+ * @returns {Promise<Object>} Created dataset information
  */
 async function createDataset(name) {
   try {
-    if (!name) {
+    // Validate dataset name
+    if (!name || typeof name !== 'string') {
       throw new Error('Dataset name is required');
     }
     
-    // Validate dataset name (alphanumeric, underscores, and hyphens only)
-    if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-      throw new Error('Dataset name can only contain letters, numbers, underscores, and hyphens');
+    // Sanitize dataset name
+    const nameResult = validateFilename(name);
+    if (!nameResult.isValid) {
+      throw new Error(`Invalid dataset name: ${nameResult.error}`);
     }
     
-    // Create dataset directory in the .local subdirectory
-    const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', name);
+    const sanitizedName = nameResult.sanitized;
     
-    // Check if dataset already exists
-    if (fs.existsSync(datasetPath)) {
-      throw new Error('Dataset already exists');
+    // Create the dataset path
+    const datasetPathResult = securePath(`datasets/.local/${sanitizedName}`, WORKSPACE_PATH, { createIfNotExist: true });
+    
+    if (!datasetPathResult.isValid) {
+      throw new Error(`Failed to create dataset path: ${datasetPathResult.error}`);
     }
     
-    // Create the directory
-    fs.mkdirSync(datasetPath, { recursive: true });
-    
-    logInfo(`Created dataset: ${name}`, { path: datasetPath });
+    logInfo(`Dataset created: ${sanitizedName} at ${datasetPathResult.path}`);
     
     return {
-      success: true,
-      path: `/datasets/.local/${name}`
+      name: sanitizedName,
+      path: datasetPathResult.relativePath,
+      images: []
     };
   } catch (error) {
     logError('Error creating dataset', error);
@@ -212,67 +229,61 @@ async function createDataset(name) {
 }
 
 /**
- * Add an existing image to a dataset
+ * Add an image to a dataset
  * 
- * @param {string} imagePath - Path of the image to add
- * @param {string} datasetName - Name of the dataset to add the image to
- * @returns {Promise<Object>} Success status and new image path
+ * @param {string} imagePath - Path to the image
+ * @param {string} datasetName - Name of the dataset
+ * @returns {Promise<Object>} Added image information
  */
 async function addImageToDataset(imagePath, datasetName) {
   try {
-    if (!imagePath || !datasetName) {
-      throw new Error('Image path and dataset name are required');
+    // Validate image path
+    const imagePathResult = securePath(imagePath, WORKSPACE_PATH, { mustExist: true });
+    if (!imagePathResult.isValid) {
+      throw new Error(`Invalid image path: ${imagePathResult.error}`);
     }
     
-    // Validate dataset name (alphanumeric, underscores, and hyphens only)
-    if (!/^[a-zA-Z0-9_-]+$/.test(datasetName)) {
-      throw new Error('Dataset name can only contain letters, numbers, underscores, and hyphens');
+    // Validate dataset name
+    const datasetNameResult = validateFilename(datasetName);
+    if (!datasetNameResult.isValid) {
+      throw new Error(`Invalid dataset name: ${datasetNameResult.error}`);
     }
     
-    // Validate the image path
-    const fullImagePath = path.join(WORKSPACE_PATH, imagePath.replace(/^\//, ''));
-    const pathValidation = validatePath(fullImagePath);
-    if (!pathValidation.isValid) {
-      throw new Error('Invalid image path');
-    }
-    
-    // Check if the image exists
-    if (!fs.existsSync(fullImagePath)) {
-      throw new Error('Image not found');
-    }
+    const sanitizedDatasetName = datasetNameResult.sanitized;
     
     // Check if the dataset exists
-    const datasetPath = path.join(WORKSPACE_PATH, 'datasets', '.local', datasetName);
-    if (!fs.existsSync(datasetPath)) {
-      throw new Error('Dataset not found');
+    const datasetPathResult = securePath(`datasets/.local/${sanitizedDatasetName}`, WORKSPACE_PATH, { mustExist: false });
+    if (!datasetPathResult.isValid) {
+      throw new Error(`Invalid dataset path: ${datasetPathResult.error}`);
     }
     
-    // Get the image filename
-    const imageName = path.basename(fullImagePath);
+    if (!fs.existsSync(datasetPathResult.path)) {
+      throw new Error(`Dataset not found: ${sanitizedDatasetName}`);
+    }
     
-    // Create the new path for the image in the dataset
-    const newImagePath = path.join(datasetPath, imageName);
+    // Get the image name
+    const imageName = getBasename(imagePathResult.path);
+    
+    // Create the new image path
+    const newImagePathResult = securePath(`datasets/.local/${sanitizedDatasetName}/${imageName}`, WORKSPACE_PATH, { mustExist: false });
+    if (!newImagePathResult.isValid) {
+      throw new Error(`Invalid new image path: ${newImagePathResult.error}`);
+    }
     
     // Check if the image already exists in the dataset
-    if (fs.existsSync(newImagePath)) {
-      throw new Error('Image already exists in the dataset');
+    if (fs.existsSync(newImagePathResult.path)) {
+      throw new Error(`Image already exists in dataset: ${imageName}`);
     }
     
     // Copy the image to the dataset
-    fs.copyFileSync(fullImagePath, newImagePath);
+    fs.copyFileSync(imagePathResult.path, newImagePathResult.path);
     
-    // Get the relative path for the response
-    const relativePath = `/datasets/.local/${datasetName}/${imageName}`;
-    
-    logInfo(`Image added to dataset: ${datasetName}`, {
-      originalPath: fullImagePath,
-      newPath: newImagePath
-    });
+    logInfo(`Image added to dataset: ${imageName} to ${sanitizedDatasetName}`);
     
     return {
-      success: true,
-      path: relativePath,
-      url: `/api/images/view${relativePath}`
+      name: imageName,
+      path: newImagePathResult.relativePath,
+      url: `/api/images/view${newImagePathResult.relativePath}`
     };
   } catch (error) {
     logError('Error adding image to dataset', error);

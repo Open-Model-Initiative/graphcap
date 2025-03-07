@@ -7,12 +7,12 @@
  * @module utils/thumbnail-generator
  */
 
-const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 const crypto = require('crypto');
 const { logInfo, logError } = require('./logger');
-const { thumbnailsDir } = require('../config');
+const { securePath, joinPath, ensureDir } = require('./path-utils');
+const { thumbnailsDir, WORKSPACE_PATH } = require('../config');
 
 /**
  * Generates a thumbnail for an image
@@ -46,13 +46,17 @@ async function generateThumbnail(imagePath, width, height) {
     // Create a safe filename with the hash and dimensions
     const thumbnailFilename = `${imagePathHash}_${parsedWidth}x${parsedHeight}.webp`;
     
-    // Securely join paths to prevent path traversal
-    const thumbnailPath = path.resolve(thumbnailsDir, thumbnailFilename);
+    // Ensure the thumbnails directory exists
+    ensureDir(thumbnailsDir);
     
-    // Verify the thumbnail path is within the thumbnails directory
-    if (!thumbnailPath.startsWith(path.resolve(thumbnailsDir))) {
-      throw new Error('Security error: Generated thumbnail path is outside the thumbnails directory');
+    // Securely create the thumbnail path
+    const thumbnailPathResult = securePath(joinPath(thumbnailsDir, thumbnailFilename).replace(WORKSPACE_PATH, ''), WORKSPACE_PATH, { mustExist: false });
+    
+    if (!thumbnailPathResult.isValid) {
+      throw new Error(`Invalid thumbnail path: ${thumbnailPathResult.error}`);
     }
+    
+    const thumbnailPath = thumbnailPathResult.path;
     
     // Check if thumbnail already exists
     if (fs.existsSync(thumbnailPath)) {

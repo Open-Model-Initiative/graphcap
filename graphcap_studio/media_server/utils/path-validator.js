@@ -6,10 +6,10 @@
  * to prevent path traversal attacks.
  * 
  * @module utils/path-validator
+ * @deprecated Use path-utils.js instead
  */
 
-const path = require('path');
-const { logError } = require('./logger');
+const { securePath } = require('./path-utils');
 const { WORKSPACE_PATH } = require('../config');
 
 /**
@@ -18,29 +18,17 @@ const { WORKSPACE_PATH } = require('../config');
  * @param {string} userPath - The user-provided path
  * @param {string} basePath - The base path that the final path must be within
  * @returns {Object} Object containing the validated path and success status
+ * @deprecated Use securePath from path-utils.js instead
  */
 function validatePath(userPath, basePath = WORKSPACE_PATH) {
-  try {
-    // Normalize the path to resolve any '..' or '.' segments
-    const normalizedPath = path.normalize(userPath).replace(/^(\.\.(\/|\\|$))+/, '');
-    
-    // Construct the full path
-    const fullPath = path.join(basePath, normalizedPath);
-    
-    // Ensure the path is within the allowed base path
-    if (!fullPath.startsWith(path.resolve(basePath))) {
-      return { 
-        isValid: false, 
-        path: null, 
-        error: 'Access denied: Path outside of allowed directory' 
-      };
-    }
-    
-    return { isValid: true, path: fullPath, error: null };
-  } catch (error) {
-    logError('Path validation error', error);
-    return { isValid: false, path: null, error: 'Invalid path' };
-  }
+  const result = securePath(userPath, basePath);
+  
+  // Return in the old format for backward compatibility
+  return {
+    isValid: result.isValid,
+    path: result.path,
+    error: result.error
+  };
 }
 
 module.exports = {

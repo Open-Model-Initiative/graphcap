@@ -12,7 +12,15 @@ const fs = require('fs');
 const sharp = require('sharp');
 const { glob } = require('glob');
 const { logInfo, logError } = require('../utils/logger');
-const { validatePath } = require('../utils/path-validator');
+const { 
+  securePath, 
+  validateFilename, 
+  getBasename, 
+  getDirname, 
+  getExtension,
+  joinPath,
+  ensureDir
+} = require('../utils/path-utils');
 const { generateThumbnail } = require('../utils/thumbnail-generator');
 const { WORKSPACE_PATH, uploadDir, thumbnailsDir } = require('../config');
 
@@ -25,13 +33,13 @@ const { WORKSPACE_PATH, uploadDir, thumbnailsDir } = require('../config');
 async function listImages(directory) {
   try {
     // Validate the path
-    const pathValidation = validatePath(directory);
-    if (!pathValidation.isValid) {
-      logError('Invalid directory path', { directory, error: pathValidation.error });
-      throw new Error(pathValidation.error);
+    const pathResult = securePath(directory, WORKSPACE_PATH, { mustExist: false });
+    if (!pathResult.isValid) {
+      logError('Invalid directory path', { directory, error: pathResult.error });
+      throw new Error(pathResult.error);
     }
     
-    const fullPath = pathValidation.path;
+    const fullPath = pathResult.path;
     logInfo(`Listing images in directory: ${directory}`, { fullPath });
     
     // Find all image files
@@ -44,8 +52,8 @@ async function listImages(directory) {
       const relativePath = file.replace(WORKSPACE_PATH, '');
       return {
         path: relativePath,
-        name: path.basename(file),
-        directory: path.dirname(relativePath),
+        name: getBasename(file),
+        directory: getDirname(relativePath),
         url: `/api/images/view${relativePath}`
       };
     });
@@ -75,19 +83,13 @@ async function processImage(imagePath, operations, outputName, overwrite) {
     }
     
     // Validate the path
-    const pathValidation = validatePath(imagePath);
-    if (!pathValidation.isValid) {
-      logError('Invalid image path', { imagePath, error: pathValidation.error });
-      throw new Error(pathValidation.error);
+    const pathResult = securePath(imagePath, WORKSPACE_PATH, { mustExist: true });
+    if (!pathResult.isValid) {
+      logError('Invalid image path', { imagePath, error: pathResult.error });
+      throw new Error(pathResult.error);
     }
     
-    const fullPath = pathValidation.path;
-    
-    // Check if file exists
-    if (!fs.existsSync(fullPath)) {
-      logError('Image not found', { fullPath });
-      throw new Error('Image not found');
-    }
+    const fullPath = pathResult.path;
     
     // Initialize Sharp with the input image
     let image = sharp(fullPath);
@@ -127,15 +129,29 @@ async function processImage(imagePath, operations, outputName, overwrite) {
     if (overwrite) {
       outputPath = fullPath;
     } else {
-      const originalExt = path.extname(fullPath);
-      const originalName = path.basename(fullPath, originalExt);
+      const originalExt = getExtension(fullPath);
+      const originalName = getBasename(fullPath, originalExt);
       
-      // Sanitize the output filename
-      const sanitizedOutputName = outputName 
-        ? outputName.replace(/[^a-zA-Z0-9_\-\.]/g, '_') 
-        : `${originalName}_edited${originalExt}`;
+      // Validate the output filename
+      let finalOutputName;
+      if (outputName) {
+        const outputNameResult = validateFilename(outputName);
+        finalOutputName = outputNameResult.isValid ? outputNameResult.sanitized : `${originalName}_edited${originalExt}`;
+      } else {
+        finalOutputName = `${originalName}_edited${originalExt}`;
+      }
       
-      outputPath = path.join(uploadDir, sanitizedOutputName);
+      // Ensure the upload directory exists
+      ensureDir(uploadDir);
+      
+      // Create the output path
+      const outputPathResult = securePath(joinPath(uploadDir, finalOutputName).replace(WORKSPACE_PATH, ''), WORKSPACE_PATH, { mustExist: false });
+      if (!outputPathResult.isValid) {
+        logError('Invalid output path', { outputName, error: outputPathResult.error });
+        throw new Error(`Invalid output path: ${outputPathResult.error}`);
+      }
+      
+      outputPath = outputPathResult.path;
     }
     
     // Save the processed image
@@ -143,7 +159,7 @@ async function processImage(imagePath, operations, outputName, overwrite) {
     
     // Clear thumbnails for this image
     const imagePathHash = Buffer.from(imagePath).toString('base64').replace(/[/+=]/g, '_');
-    const thumbnailPattern = path.join(thumbnailsDir, `${imagePathHash}_*`);
+    const thumbnailPattern = joinPath(thumbnailsDir, `${imagePathHash}_*`);
     const thumbnailFiles = await glob(thumbnailPattern);
     
     // Delete existing thumbnails
@@ -178,19 +194,13 @@ async function processImage(imagePath, operations, outputName, overwrite) {
 async function serveImage(imagePath, width, height) {
   try {
     // Validate the path
-    const pathValidation = validatePath(imagePath);
-    if (!pathValidation.isValid) {
-      logError('Invalid image path', { imagePath, error: pathValidation.error });
-      throw new Error(pathValidation.error);
+    const pathResult = securePath(imagePath, WORKSPACE_PATH, { mustExist: true });
+    if (!pathResult.isValid) {
+      logError('Invalid image path', { imagePath, error: pathResult.error });
+      throw new Error(pathResult.error);
     }
     
-    const fullPath = pathValidation.path;
-    
-    // Check if file exists
-    if (!fs.existsSync(fullPath)) {
-      logError('Image not found', { fullPath });
-      throw new Error('Image not found');
-    }
+    const fullPath = pathResult.path;
     
     // Check if thumbnail is requested
     if (width && height) {
