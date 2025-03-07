@@ -52,7 +52,7 @@ export function ResponsiveImage({
     const widths = [200, 400, 800, 1200, 1600];
     return widths
       .map(width =>
-        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio || 1)), 'avif')} ${width}w`
+        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)), 'avif')} ${width}w`
       )
       .join(', ');
   }, [imagePath, aspectRatio]);
@@ -61,7 +61,7 @@ export function ResponsiveImage({
     const widths = [200, 400, 800, 1200, 1600];
     return widths
       .map(width =>
-        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio || 1)), 'webp')} ${width}w`
+        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)), 'webp')} ${width}w`
       )
       .join(', ');
   }, [imagePath, aspectRatio]);

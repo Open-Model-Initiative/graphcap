@@ -231,31 +231,25 @@ async function processImage(imagePath, operations, outputName, overwrite) {
  * @param {string} imagePath - Path to the image
  * @param {number} width - Optional width for thumbnail
  * @param {number} height - Optional height for thumbnail
+ * @param {string} format - Optional format for image (default: 'webp')
  * @returns {Promise<Object>} Object with path to the image or thumbnail
  */
-async function serveImage(imagePath, width, height) {
+async function serveImage(imagePath, width, height, format) {
   try {
-    // Ensure imagePath is a string and normalize it
     const normalizedPath = String(imagePath || '').replace(/^\/+/, '');
-    
     logInfo(`Processing image path for serving: ${normalizedPath}`);
     
-    // Check if the path already includes the workspace path
-    const isWorkspacePath = normalizedPath.startsWith('workspace/') || normalizedPath.includes('/workspace/');
-    
-    // If the path already includes workspace, remove it to avoid duplication
-    const cleanPath = isWorkspacePath 
-      ? normalizedPath.replace(/^(workspace\/|\/workspace\/)/, '') 
+    const isWorkspacePath = normalizedPath.startsWith('workspace/') ||
+                            normalizedPath.includes('/workspace/');
+    const cleanPath = isWorkspacePath
+      ? normalizedPath.replace(/^(workspace\/|\/workspace\/)/, '')
       : normalizedPath;
     
     logInfo(`Cleaned path for processing: ${cleanPath}`);
     
-    // Validate the path
     const pathResult = securePath(cleanPath, WORKSPACE_PATH, { mustExist: true });
     if (!pathResult.isValid) {
-      // Try an alternative approach - maybe the path is already absolute
       const altPathResult = securePath(normalizedPath, WORKSPACE_PATH, { mustExist: true });
-      
       if (!altPathResult.isValid) {
         logError('Invalid image path', { 
           imagePath: normalizedPath, 
@@ -266,18 +260,15 @@ async function serveImage(imagePath, width, height) {
         throw new Error(`Invalid image path: ${pathResult.error}`);
       }
       
-      // Use the alternative path result
       const fullPath = altPathResult.path;
       logInfo(`Resolved image path (alternative): ${fullPath}`);
-      
-      // Continue with the rest of the function using the alternative path
-      return await processImageRequest(fullPath, width, height);
+      return await processImageRequest(fullPath, width, height, format);
     }
     
     const fullPath = pathResult.path;
     logInfo(`Resolved image path: ${fullPath}`);
     
-    return await processImageRequest(fullPath, width, height);
+    return await processImageRequest(fullPath, width, height, format);
   } catch (error) {
     logError('Error serving image', { 
       imagePath, 
@@ -288,35 +279,39 @@ async function serveImage(imagePath, width, height) {
   }
 }
 
+
 /**
  * Process an image request for thumbnails or original image
  * 
  * @param {string} fullPath - Full path to the image
  * @param {number} width - Optional width for thumbnail
  * @param {number} height - Optional height for thumbnail
+ * @param {string} format - Optional format for thumbnail (default: 'webp')
  * @returns {Promise<Object>} Object with path to the image or thumbnail
  */
-async function processImageRequest(fullPath, width, height) {
-  // Check if thumbnail is requested
+async function processImageRequest(fullPath, width, height, format = 'webp') {
   if (width && height) {
-    // Validate width and height are positive integers
     const parsedWidth = parseInt(width, 10);
     const parsedHeight = parseInt(height, 10);
     
-    if (isNaN(parsedWidth) || isNaN(parsedHeight) || parsedWidth <= 0 || parsedHeight <= 0) {
+    if (
+      isNaN(parsedWidth) ||
+      isNaN(parsedHeight) ||
+      parsedWidth <= 0 ||
+      parsedHeight <= 0
+    ) {
       throw new Error('Width and height must be positive integers');
     }
     
-    // Generate thumbnail
-    const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight);
+    const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight, format);
     logInfo(`Serving thumbnail: ${thumbnailPath}`);
     return { path: thumbnailPath, isThumbnail: true };
   }
   
-  // Serve the original file
   logInfo(`Serving original image: ${fullPath}`);
   return { path: fullPath, isThumbnail: false };
 }
+
 
 module.exports = {
   listImages,

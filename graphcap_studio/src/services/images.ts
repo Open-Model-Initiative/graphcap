@@ -195,44 +195,43 @@ export function getImageUrl(imagePath: string): string {
  * @param height - Desired height of the thumbnail
  * @returns URL for the thumbnail
  */
-export function getThumbnailUrl(imagePath: string, width = 200, height = 200): string {
-  const cacheKey = `${imagePath}_${width}x${height}`;
+export function getThumbnailUrl(
+  imagePath: string,
+  width = 200,
+  height = 200,
+  format?: string
+): string {
+  const fmt = format ?? 'webp';
+  const cacheKey = `${imagePath}_${width}x${height}_${fmt}`;
   
-  // Check if thumbnail URL is in cache
   if (thumbnailCache.has(cacheKey)) {
     return thumbnailCache.get(cacheKey)!;
   }
   
-  // Ensure the path starts with a slash and doesn't have duplicate slashes
   let normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   
-  // Check if the path needs the workspace prefix
-  // If the path doesn't start with /workspace and doesn't include datasets, add /workspace
-  if (!normalizedPath.startsWith('/workspace') && 
-      !normalizedPath.includes('/workspace/') && 
-      normalizedPath.includes('/datasets')) {
+  if (
+    !normalizedPath.startsWith('/workspace') &&
+    !normalizedPath.includes('/workspace/') &&
+    normalizedPath.includes('/datasets')
+  ) {
     console.log('Adding workspace prefix to path for thumbnail:', normalizedPath);
     normalizedPath = `/workspace${normalizedPath}`;
   }
   
-  // Add a cache-busting parameter to prevent CORS caching issues
   const cacheBuster = `_cb=${Date.now()}`;
-  
-  // Create a direct URL with width and height parameters
-  const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?width=${width}&height=${height}&${cacheBuster}`;
+  const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?width=${width}&height=${height}&format=${fmt}&${cacheBuster}`;
   
   console.log('Generated thumbnail URL:', url);
   
-  // Cache the thumbnail URL
   thumbnailCache.set(cacheKey, url);
-  
-  // Set cache expiration
   setTimeout(() => {
     thumbnailCache.delete(cacheKey);
   }, CACHE_EXPIRATION);
   
   return url;
 }
+
 
 /**
  * Preload an image to cache it in the browser

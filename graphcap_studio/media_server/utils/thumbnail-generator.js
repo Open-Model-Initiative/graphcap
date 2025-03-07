@@ -20,37 +20,38 @@ const { thumbnailsDir, WORKSPACE_PATH } = require('../config');
  * @param {string} imagePath - Path to the original image
  * @param {number} width - Desired width of the thumbnail
  * @param {number} height - Desired height of the thumbnail
+ * @param {string} format - Desired format of the thumbnail (default: 'webp')
  * @returns {Promise<string>} Path to the generated thumbnail
  */
-async function generateThumbnail(imagePath, width, height) {
+async function generateThumbnail(imagePath, width, height, format = 'webp') {
   try {
-    // Ensure imagePath is a string and already validated
-    if (typeof imagePath !== 'string') {
-      throw new Error('Invalid image path: must be a string');
-    }
-    
-    // Validate width and height are numbers
     const parsedWidth = parseInt(width, 10);
     const parsedHeight = parseInt(height, 10);
     
-    if (isNaN(parsedWidth) || isNaN(parsedHeight) || parsedWidth <= 0 || parsedHeight <= 0) {
+    if (
+      isNaN(parsedWidth) ||
+      isNaN(parsedHeight) ||
+      parsedWidth <= 0 ||
+      parsedHeight <= 0
+    ) {
       throw new Error('Invalid dimensions: width and height must be positive numbers');
     }
     
-    // Create a secure hash of the path and dimensions for the thumbnail filename
-    // Use crypto for a more secure hash
+    // Create a secure hash including the format so that different formats produce different filenames.
     const hash = crypto.createHash('sha256');
-    hash.update(imagePath + parsedWidth + 'x' + parsedHeight);
+    hash.update(imagePath + parsedWidth + 'x' + parsedHeight + format);
     const imagePathHash = hash.digest('hex');
     
-    // Create a safe filename with the hash and dimensions
-    const thumbnailFilename = `${imagePathHash}_${parsedWidth}x${parsedHeight}.webp`;
+    // Use the format for the file extension.
+    const thumbnailFilename = `${imagePathHash}_${parsedWidth}x${parsedHeight}.${format}`;
     
-    // Ensure the thumbnails directory exists
     ensureDir(thumbnailsDir);
     
-    // Securely create the thumbnail path
-    const thumbnailPathResult = securePath(joinPath(thumbnailsDir, thumbnailFilename).replace(WORKSPACE_PATH, ''), WORKSPACE_PATH, { mustExist: false });
+    const thumbnailPathResult = securePath(
+      joinPath(thumbnailsDir, thumbnailFilename).replace(WORKSPACE_PATH, ''),
+      WORKSPACE_PATH,
+      { mustExist: false }
+    );
     
     if (!thumbnailPathResult.isValid) {
       throw new Error(`Invalid thumbnail path: ${thumbnailPathResult.error}`);
@@ -58,22 +59,23 @@ async function generateThumbnail(imagePath, width, height) {
     
     const thumbnailPath = thumbnailPathResult.path;
     
-    // Check if thumbnail already exists
     if (fs.existsSync(thumbnailPath)) {
       logInfo(`Using existing thumbnail: ${thumbnailPath}`);
       return thumbnailPath;
     }
     
-    // Generate the thumbnail
-    logInfo(`Generating thumbnail for ${imagePath} at ${parsedWidth}x${parsedHeight}`);
+    logInfo(
+      `Generating thumbnail for ${imagePath} at ${parsedWidth}x${parsedHeight} in format ${format}`
+    );
+    
     await sharp(imagePath)
       .resize({
         width: parsedWidth,
         height: parsedHeight,
         fit: 'cover',
-        position: 'centre'
+        position: 'centre',
       })
-      .webp({ quality: 80 })
+      .toFormat(format, { quality: 80 })
       .toFile(thumbnailPath);
     
     return thumbnailPath;
@@ -82,6 +84,7 @@ async function generateThumbnail(imagePath, width, height) {
     throw error;
   }
 }
+
 
 module.exports = {
   generateThumbnail

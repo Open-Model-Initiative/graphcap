@@ -50,42 +50,36 @@ router.get('/view/*', async (req, res) => {
     const imagePath = req.params[0];
     const width = req.query.width;
     const height = req.query.height;
+    const format = req.query.format || 'webp';
     
-    // Log the original request path and query parameters
     logInfo(`Image view request received for: ${imagePath}`, { 
       width, 
       height,
+      format,
       originalUrl: req.originalUrl,
       query: req.query
     });
     
-    // Check if the path includes workspace
-    const hasWorkspace = imagePath.startsWith('workspace/') || imagePath.includes('/workspace/');
-    logInfo(`Path workspace check: ${hasWorkspace ? 'includes workspace' : 'no workspace prefix'}`);
+    const result = await serveImage(imagePath, width, height, format);
     
-    const result = await serveImage(imagePath, width, height);
-    
-    // Log successful image serving
     logInfo(`Serving image file: ${result.path}`, { 
       isThumbnail: result.isThumbnail,
       originalPath: imagePath,
       resolvedPath: result.path
     });
     
-    // Set CORS headers specifically for image files
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Vary', 'Origin');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache images for 1 hour
+    res.setHeader('Cache-Control', 'public, max-age=3600');
     
-    // Use sendFile with options to ensure proper delivery
     res.sendFile(result.path, {
       headers: {
         'Cross-Origin-Resource-Policy': 'cross-origin',
         'Access-Control-Allow-Origin': '*'
       },
       dotfiles: 'deny',
-      maxAge: 3600000 // 1 hour in milliseconds
+      maxAge: 3600000
     });
   } catch (error) {
     logError('Error serving image', { 
@@ -96,7 +90,6 @@ router.get('/view/*', async (req, res) => {
       query: req.query
     });
     
-    // Send a more descriptive error response
     res.status(404).json({ 
       error: 'Failed to load image', 
       path: req.params[0],
@@ -105,6 +98,7 @@ router.get('/view/*', async (req, res) => {
     });
   }
 });
+
 
 /**
  * Process an image (crop, rotate, etc.)
