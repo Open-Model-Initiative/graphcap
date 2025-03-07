@@ -2,18 +2,18 @@ FROM node:20-alpine
 
 # Install required packages for Sharp and other dependencies
 RUN apk add --no-cache \
+    bash \
     build-base \
-    g++ \
     cairo-dev \
-    jpeg-dev \
-    pango-dev \
+    curl \
+    g++ \
     giflib-dev \
-    pixman-dev \
-    pangomm-dev \
+    jpeg-dev \
     libjpeg-turbo-dev \
     libpng-dev \
-    bash \
-    curl
+    pango-dev \
+    pangomm-dev \
+    pixman-dev
 
 WORKDIR /app
 

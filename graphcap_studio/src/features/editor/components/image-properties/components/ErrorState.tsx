@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 interface ErrorStateProps {
-  message: string;
+  readonly message: string;
 }
 
 /**

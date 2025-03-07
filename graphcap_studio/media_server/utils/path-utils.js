@@ -49,7 +49,7 @@ function securePath(userPath, basePath = WORKSPACE_PATH, options = {}) {
     const normalizedBasePath = path.resolve(basePath);
     
     // Remove any leading slashes from user path to ensure it's treated as relative
-    const sanitizedUserPath = userPath.toString().replace(/^[\/\\]+/, '');
+    const sanitizedUserPath = userPath.toString().replace(/^[/\\]+/, '');
     
     // Join the base path with the sanitized user path
     let fullPath = path.join(normalizedBasePath, sanitizedUserPath);
@@ -157,9 +157,9 @@ function validateFilename(filename) {
   const basename = path.basename(filename);
   
   // Check for invalid characters
-  if (/[<>:"/\\|?*\u0000-\u001F]/.test(basename)) {
+  if (/[<>:"\/\\|?*\u0000-\u001F]/.test(basename)) {
     // Sanitize by replacing invalid characters
-    const sanitized = basename.replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_');
+    const sanitized = basename.replace(/[<>:"\/\\|?*\u0000-\u001F]/g, '_');
     return {
       isValid: false,
       sanitized,

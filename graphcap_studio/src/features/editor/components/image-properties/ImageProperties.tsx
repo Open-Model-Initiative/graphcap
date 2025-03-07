@@ -12,8 +12,8 @@ import {
 } from './components';
 
 interface ImagePropertiesProps {
-  image: Image;
-  onSave?: (properties: Record<string, any>) => void;
+  readonly image: Image;
+  readonly onSave?: (properties: Record<string, any>) => void;
 }
 
 type TabType = 'basic' | 'perspectives' | 'segments';

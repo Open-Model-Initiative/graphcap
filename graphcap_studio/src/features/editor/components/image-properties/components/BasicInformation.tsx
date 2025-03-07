@@ -2,15 +2,15 @@
 import { ImagePropertiesData } from '../hooks/useImageProperties';
 
 interface BasicInformationProps {
-  properties: ImagePropertiesData;
-  isEditing: boolean;
-  newTag: string;
-  onPropertyChange: (key: keyof ImagePropertiesData, value: any) => void;
-  onNewTagChange: (value: string) => void;
-  onAddTag: () => void;
-  onRemoveTag: (tag: string) => void;
-  onSave: () => void;
-  onToggleEdit: () => void;
+  readonly properties: ImagePropertiesData;
+  readonly isEditing: boolean;
+  readonly newTag: string;
+  readonly onPropertyChange: (key: keyof ImagePropertiesData, value: any) => void;
+  readonly onNewTagChange: (value: string) => void;
+  readonly onAddTag: () => void;
+  readonly onRemoveTag: (tag: string) => void;
+  readonly onSave: () => void;
+  readonly onToggleEdit: () => void;
 }
 
 /**

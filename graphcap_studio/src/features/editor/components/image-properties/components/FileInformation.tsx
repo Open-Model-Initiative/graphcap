@@ -2,7 +2,7 @@
 import { Image } from '@/services/images';
 
 interface FileInformationProps {
-  image: Image;
+  readonly image: Image;
 }
 
 /**

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 import { Image, Dataset } from '@/services/images';
 
 /**
@@ -37,14 +37,14 @@ interface EditorContextState {
  * Props for the EditorContextProvider component
  */
 interface EditorContextProviderProps {
-  children: ReactNode;
-  initialDatasets?: Dataset[];
-  initialCurrentDataset?: string;
-  initialViewMode?: ViewMode;
-  onAddToDataset?: (imagePath: string, targetDataset: string) => void;
-  onEditImage?: () => void;
-  onDownload?: () => void;
-  onDelete?: () => void;
+  readonly children: ReactNode;
+  readonly initialDatasets?: Dataset[];
+  readonly initialCurrentDataset?: string;
+  readonly initialViewMode?: ViewMode;
+  readonly onAddToDataset?: (imagePath: string, targetDataset: string) => void;
+  readonly onEditImage?: () => void;
+  readonly onDownload?: () => void;
+  readonly onDelete?: () => void;
 }
 
 /**
@@ -104,7 +104,7 @@ export function EditorContextProvider({
     }
   }, [onDelete]);
 
-  const value = {
+  const value = useMemo(() => ({
     // View mode
     viewMode,
     setViewMode,
@@ -125,7 +125,17 @@ export function EditorContextProvider({
     handleEditImage,
     handleDownload,
     handleDelete
-  };
+  }), [
+    viewMode, 
+    selectedImage, 
+    datasets, 
+    currentDataset, 
+    handleSelectImage, 
+    handleAddToDataset, 
+    handleEditImage, 
+    handleDownload, 
+    handleDelete
+  ]);
 
   return <EditorContext.Provider value={value}>{children}</EditorContext.Provider>;
 }

@@ -5,7 +5,7 @@ import { PerspectiveContent } from './perspectives/PerspectiveContent';
 import { usePerspectives, PerspectiveType } from '../hooks/usePerspectives';
 
 interface PerspectivesProps {
-  image: Image;
+  readonly image: Image;
 }
 
 // Perspective display information
@@ -97,7 +97,7 @@ export function Perspectives({ image }: PerspectivesProps) {
         </div>
       )}
       
-      {captions?.metadata && captions.metadata.captioned_at && (
+      {captions?.metadata?.captioned_at && (
         <div className="mb-4 p-2 bg-gray-700/50 rounded-md">
           <div className="text-xs text-gray-400 flex flex-wrap gap-x-4">
             <span>Generated: {formatDate(captions.metadata.captioned_at)}</span>
@@ -148,7 +148,8 @@ export function Perspectives({ image }: PerspectivesProps) {
  */
 function formatDate(dateString: string): string {
   // Check if the date is in the expected format
-  const match = dateString.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/);
+  const regex = /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/;
+  const match = regex.exec(dateString);
   if (!match) return dateString;
   
   const [, year, month, day, hour, minute, second] = match;

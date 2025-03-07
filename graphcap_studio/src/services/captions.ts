@@ -47,10 +47,10 @@ export const captionsService = {
       if (!response.ok) {
         // Check if the response is JSON
         const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        if (contentType?.includes('application/json')) {
           const errorData = await response.json();
           console.error('Error response from captions API:', errorData);
-          throw new Error(errorData.error || 'Failed to fetch captions');
+          throw new Error(errorData.error ?? 'Failed to fetch captions');
         } else {
           // Handle non-JSON error response
           const errorText = await response.text();
@@ -61,7 +61,7 @@ export const captionsService = {
       
       // Check if the response is JSON
       const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      if (!contentType?.includes('application/json')) {
         const responseText = await response.text();
         console.error('Unexpected non-JSON response:', responseText);
         throw new Error('Server returned non-JSON response');

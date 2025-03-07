@@ -35,7 +35,6 @@ export function LazyImage({
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const imageRef = useRef<HTMLButtonElement>(null);
 
   // Use Intersection Observer to detect when the image is in view

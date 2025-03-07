@@ -75,7 +75,7 @@ export function useDatasets() {
    */
   const handleDatasetChange = useCallback((datasetName: string, subfolder?: string) => {
     setSelectedDataset(datasetName);
-    setSelectedSubfolder(subfolder || null);
+    setSelectedSubfolder(subfolder ?? null);
   }, []);
 
   /**

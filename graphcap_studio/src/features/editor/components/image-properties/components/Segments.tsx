@@ -2,7 +2,7 @@
 import { Image } from '@/services/images';
 
 interface SegmentsProps {
-  image: Image;
+  readonly image: Image;
 }
 
 /**
