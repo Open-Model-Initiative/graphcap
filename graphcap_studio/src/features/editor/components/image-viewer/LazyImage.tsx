@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useRef, useEffect } from 'react';
-import { Image, getThumbnailUrl } from '@/services/images';
+import { Image } from '@/services/images';
 import { ImageViewer } from './ImageViewer';
 
 interface LazyImageProps {
-  image: Image;
-  isSelected: boolean;
-  onSelect: (image: Image) => void;
-  onEdit?: () => void;
-  onAddToDataset?: () => void;
+  readonly image: Image;
+  readonly isSelected: boolean;
+  readonly onSelect: (image: Image) => void;
+  readonly onEdit?: () => void;
+  readonly onAddToDataset?: () => void;
 }
 
 /**
@@ -36,7 +36,7 @@ export function LazyImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const imageRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLButtonElement>(null);
 
   // Use Intersection Observer to detect when the image is in view
   useEffect(() => {
@@ -65,26 +65,16 @@ export function LazyImage({
   }, []);
 
   return (
-    <div
+    <button
       ref={imageRef}
-      className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all hover:shadow-lg h-full w-full ${
+      className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all hover:shadow-lg h-full w-full text-left ${
         isSelected
           ? 'border-blue-500 shadow-md'
           : 'border-transparent hover:border-gray-600'
       }`}
       onClick={() => onSelect(image)}
-      role="button"
-      tabIndex={0}
       aria-label={`Select image ${image.name}`}
       aria-pressed={isSelected}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onSelect(image);
-          e.preventDefault();
-        }
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       style={{ display: 'flex', flexDirection: 'column' }}
     >
       {/* Image container with aspect ratio */}
@@ -126,6 +116,6 @@ export function LazyImage({
           </p>
         </div>
       </div>
-    </div>
+    </button>
   );
 } 

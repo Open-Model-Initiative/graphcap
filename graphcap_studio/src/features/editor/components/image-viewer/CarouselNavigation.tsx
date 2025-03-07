@@ -2,11 +2,11 @@
 import { Image } from '@/services/images';
 
 interface CarouselNavigationProps {
-  currentIndex: number;
-  totalImages: number;
-  onPrevious: () => void;
-  onNext: () => void;
-  className?: string;
+  readonly currentIndex: number;
+  readonly totalImages: number;
+  readonly onPrevious: () => void;
+  readonly onNext: () => void;
+  readonly className?: string;
 }
 
 /**

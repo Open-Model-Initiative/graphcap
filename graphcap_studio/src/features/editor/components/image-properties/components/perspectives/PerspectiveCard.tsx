@@ -2,14 +2,14 @@
 import { ReactNode, useState } from 'react';
 
 export interface PerspectiveCardProps {
-  title: string;
-  description: string;
-  type: string;
-  isActive?: boolean;
-  isGenerated?: boolean;
-  onGenerate?: () => void;
-  onSetActive?: () => void;
-  children?: ReactNode;
+  readonly title: string;
+  readonly description: string;
+  readonly type: string;
+  readonly isActive?: boolean;
+  readonly isGenerated?: boolean;
+  readonly onGenerate?: () => void;
+  readonly onSetActive?: () => void;
+  readonly children?: ReactNode;
 }
 
 /**
@@ -30,11 +30,9 @@ export function PerspectiveCard({
   return (
     <div className="rounded-lg bg-gray-700 overflow-hidden shadow-md border border-gray-600 transition-all duration-200">
       {/* Header */}
-      <div 
-        className={`p-3 ${isActive ? 'bg-blue-900/30' : ''} cursor-pointer`}
+      <button 
+        className={`p-3 ${isActive ? 'bg-blue-900/30' : ''} cursor-pointer w-full text-left`}
         onClick={() => setIsExpanded(!isExpanded)}
-        role="button"
-        tabIndex={0}
         aria-expanded={isExpanded}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -99,7 +97,7 @@ export function PerspectiveCard({
             )}
           </div>
         </div>
-      </div>
+      </button>
       
       {/* Content area - only shown when expanded */}
       {isExpanded && isGenerated && (

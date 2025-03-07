@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { getImageUrl } from '@/services/images';
 
 interface ImageViewerProps {
-  imagePath: string;
-  alt?: string;
-  className?: string;
-  onLoad?: () => void;
-  onError?: (error: Error) => void;
+  readonly imagePath: string;
+  readonly alt?: string;
+  readonly className?: string;
+  readonly onLoad?: () => void;
+  readonly onError?: (error: Error) => void;
 }
 
 /**

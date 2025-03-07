@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { useEditorContext } from '../../context/EditorContext';
 
 interface CompactActionBarProps {
-  totalImages: number;
-  currentIndex: number;
-  className?: string;
+  readonly totalImages: number;
+  readonly currentIndex: number;
+  readonly className?: string;
 }
 
 /**
@@ -142,6 +142,8 @@ export function CompactActionBar({
               }}
               className="rounded p-0.5 text-gray-400 hover:bg-gray-700 hover:text-white"
               title="Add to dataset"
+              aria-haspopup="true"
+              aria-expanded={showDatasetDropdown}
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -158,9 +160,15 @@ export function CompactActionBar({
               <div
                 className="absolute right-0 top-full z-10 mt-1 w-40 rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 text-xs"
                 onClick={(e) => e.stopPropagation()}
+                tabIndex={0}
                 role="menu"
                 aria-orientation="vertical"
                 aria-labelledby="dataset-menu-button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setShowDatasetDropdown(false);
+                  }
+                }}
               >
                 <div className="px-2 py-1 text-xs font-medium text-gray-400">
                   Add to dataset:

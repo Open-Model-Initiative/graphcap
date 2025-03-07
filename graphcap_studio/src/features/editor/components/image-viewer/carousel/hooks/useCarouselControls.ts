@@ -24,17 +24,11 @@ export function useCarouselControls({
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       switch (e.key) {
         case 'ArrowLeft':
-          navigateByDelta(-1);
-          e.preventDefault();
-          break;
-        case 'ArrowRight':
-          navigateByDelta(1);
-          e.preventDefault();
-          break;
         case 'ArrowUp':
           navigateByDelta(-1);
           e.preventDefault();
           break;
+        case 'ArrowRight':
         case 'ArrowDown':
           navigateByDelta(1);
           e.preventDefault();

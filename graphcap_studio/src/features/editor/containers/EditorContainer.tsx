@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Image, Dataset } from "@/services/images";
 import { ImageEditor } from "../components/ImageEditor";
@@ -20,6 +19,8 @@ import {
   useImageSelection,
   useImageEditor,
   useUploader,
+  useViewModeManager,
+  useImageActions,
 } from "../hooks";
 import { ImageUploader } from "../components/ImageUploader";
 
@@ -65,37 +66,20 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
 
   const { showUploader, setShowUploader, handleToggleUploader } = useUploader();
 
-  // Track previous view mode to restore uploader state when switching back to grid
-  const [wasUploaderVisible, setWasUploaderVisible] = useState(false);
-
-  // Adapter for handleEditImage to work with our component interface
-  const handleEditImage = () => {
-    if (selectedImage) {
-      startEditing(selectedImage);
+  // Use our new custom hooks
+  const { 
+    handleEditImage, 
+    handleDownload, 
+    handleDelete, 
+    handleUploadFinished 
+  } = useImageActions({
+    selectedImage,
+    startEditing,
+    onUploadComplete: () => {
+      handleUploadComplete();
+      setShowUploader(false);
     }
-  };
-
-  // Handle download action
-  const handleDownload = () => {
-    if (selectedImage) {
-      // Implementation for download
-      toast.success("Download started");
-    }
-  };
-
-  // Handle delete action
-  const handleDelete = () => {
-    if (selectedImage) {
-      // Implementation for delete
-      toast.success("Image deleted");
-    }
-  };
-
-  // Handle upload finished
-  const handleUploadFinished = () => {
-    handleUploadComplete();
-    setShowUploader(false);
-  };
+  });
 
   // Extract datasets array from datasetsData if available
   const datasets = datasetsData?.datasets || [];
@@ -137,8 +121,6 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
         handleCreateDataset={async (name: string) => handleCreateDataset(name)}
         datasets={datasets}
         handleEditImage={handleEditImage}
-        wasUploaderVisible={wasUploaderVisible}
-        setWasUploaderVisible={setWasUploaderVisible}
         setShowUploader={setShowUploader}
       />
     </EditorContextProvider>
@@ -164,8 +146,6 @@ interface EditorContainerInnerProps extends EditorContainerProps {
   handleCreateDataset: (name: string) => Promise<void>;
   datasets: Dataset[];
   handleEditImage: () => void;
-  wasUploaderVisible: boolean;
-  setWasUploaderVisible: (visible: boolean) => void;
   setShowUploader: (visible: boolean) => void;
 }
 
@@ -193,8 +173,6 @@ function EditorContainerInner({
   handleCreateDataset,
   datasets,
   handleEditImage,
-  wasUploaderVisible,
-  setWasUploaderVisible,
   setShowUploader,
 }: EditorContainerInnerProps) {
   // Get viewMode and setViewMode from context
@@ -204,59 +182,20 @@ function EditorContainerInner({
     setSelectedImage: contextSetSelectedImage,
   } = useEditorContext();
 
-  // Handle view mode changes to manage uploader visibility
-  useEffect(() => {
-    if (viewMode === "carousel" && showUploader) {
-      // Save the current uploader state and hide it
-      setWasUploaderVisible(true);
-      setShowUploader(false);
-    } else if (viewMode === "grid" && wasUploaderVisible) {
-      // Restore uploader state when switching back to grid
-      setShowUploader(true);
-      setWasUploaderVisible(false);
-    }
-  }, [
+  // Use our new custom hook for view mode management
+  const { 
+    wasUploaderVisible, 
+    setWasUploaderVisible, 
+    handleViewModeToggle 
+  } = useViewModeManager({
     viewMode,
+    setViewMode,
     showUploader,
-    wasUploaderVisible,
-    setWasUploaderVisible,
     setShowUploader,
-  ]);
-
-  // Ensure selected image is set when switching to carousel view
-  useEffect(() => {
-    if (
-      viewMode === "carousel" &&
-      filteredImages.length > 0 &&
-      !selectedImage
-    ) {
-      // If no image is selected in carousel view, select the first one
-      contextSetSelectedImage(filteredImages[0]);
-    }
-  }, [viewMode, filteredImages, selectedImage, contextSetSelectedImage]);
-
-  // Handle view mode toggle with additional logic
-  const handleViewModeToggle = (mode: ViewMode) => {
-    // Always update the context's viewMode
-    setViewMode(mode);
-
-    // If switching to carousel and we have a selected image, make sure it's visible
-    if (mode === "carousel") {
-      if (!selectedImage && filteredImages.length > 0) {
-        // If no image is selected, select the first one
-        contextSetSelectedImage(filteredImages[0]);
-      }
-    } else if (mode === "grid" && selectedImage) {
-      // When switching to grid, maintain the selected image
-
-      // Force a refresh of the selected image to ensure it's displayed correctly
-      const currentImage = selectedImage;
-      contextSetSelectedImage(null);
-      setTimeout(() => {
-        contextSetSelectedImage(currentImage);
-      }, 50);
-    }
-  };
+    filteredImages,
+    selectedImage,
+    setSelectedImage: contextSetSelectedImage
+  });
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-900 text-white">
@@ -296,7 +235,8 @@ function EditorContainerInner({
               </div>
             </div>
 
-            <div className="flex-grow overflow-hidden">
+            <div className="flex-grow relative">
+              {/* Main content area */}
               {isEditing && selectedImage ? (
                 <ImageEditor
                   imagePath={selectedImage.path}
@@ -310,20 +250,24 @@ function EditorContainerInner({
                   isEmpty={isEmpty}
                 />
               )}
+
+              {/* Image uploader overlay */}
+              {showUploader && (
+                <div className="absolute inset-0 bg-gray-900/80 z-10 flex items-center justify-center p-8">
+                  <ImageUploader
+                    datasetName={selectedDataset}
+                    onUploadComplete={handleUploadFinished}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
         }
-        properties={<PropertiesContainer />}
+        properties={
+          <PropertiesContainer className="h-full" />
+        }
       />
-
-      {/* Image uploader modal */}
-      {showUploader && (
-        <ImageUploader
-          datasetName={selectedDataset}
-          onUploadComplete={handleUploadFinished}
-          className="w-full"
-        />
-      )}
     </div>
   );
 }

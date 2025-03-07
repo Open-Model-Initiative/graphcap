@@ -2,9 +2,9 @@
 import { ReactNode } from 'react';
 
 export interface PerspectiveContentProps {
-  content: Record<string, any>;
-  type: string;
-  children?: ReactNode;
+  readonly content: Record<string, any>;
+  readonly type: string;
+  readonly children?: ReactNode;
 }
 
 /**
@@ -37,7 +37,7 @@ export function PerspectiveContent({ content, type, children }: PerspectiveConte
 }
 
 // Default content display for any perspective
-function DefaultContent({ content }: { content: Record<string, any> }) {
+function DefaultContent({ content }: { readonly content: Record<string, any> }) {
   return (
     <div className="space-y-2">
       {Object.entries(content).map(([key, value]) => (
@@ -53,7 +53,7 @@ function DefaultContent({ content }: { content: Record<string, any> }) {
 }
 
 // Graph Caption specific content
-function GraphCaptionContent({ content }: { content: Record<string, any> }) {
+function GraphCaptionContent({ content }: { readonly content: Record<string, any> }) {
   const { subjects = [], scene = {}, attributes = {}, tags = [] } = content;
 
   return (
@@ -65,7 +65,7 @@ function GraphCaptionContent({ content }: { content: Record<string, any> }) {
           <div className="flex flex-wrap gap-1">
             {tags.map((tag: string, index: number) => (
               <span 
-                key={index} 
+                key={`tag-${tag}-${index}`} 
                 className="inline-flex items-center rounded-full bg-blue-900/50 px-2 py-0.5 text-xs font-medium text-blue-200"
               >
                 {tag}
@@ -81,7 +81,7 @@ function GraphCaptionContent({ content }: { content: Record<string, any> }) {
           <h5 className="text-xs font-medium text-gray-300 mb-1">Subjects</h5>
           <div className="space-y-2">
             {subjects.map((subject: any, index: number) => (
-              <div key={index} className="p-2 bg-gray-700/50 rounded">
+              <div key={`subject-${subject.name || index}-${index}`} className="p-2 bg-gray-700/50 rounded">
                 <p className="text-sm text-gray-200">{subject.name || 'Unnamed'}</p>
                 {subject.description && (
                   <p className="text-xs text-gray-400 mt-1">{subject.description}</p>
@@ -123,7 +123,7 @@ function GraphCaptionContent({ content }: { content: Record<string, any> }) {
 }
 
 // Art Critic specific content
-function ArtCriticContent({ content }: { content: Record<string, any> }) {
+function ArtCriticContent({ content }: { readonly content: Record<string, any> }) {
   const { 
     artistic_style = '', 
     composition = '', 
@@ -181,7 +181,7 @@ function ArtCriticContent({ content }: { content: Record<string, any> }) {
 }
 
 // Storytelling specific content
-function StorytellingContent({ content }: { content: Record<string, any> }) {
+function StorytellingContent({ content }: { readonly content: Record<string, any> }) {
   const { 
     setting = '', 
     characters = [], 
@@ -205,7 +205,7 @@ function StorytellingContent({ content }: { content: Record<string, any> }) {
           <h5 className="text-xs font-medium text-gray-300 mb-1">Characters</h5>
           <div className="space-y-1">
             {characters.map((character: any, index: number) => (
-              <div key={index} className="p-1.5 bg-gray-700/50 rounded">
+              <div key={`character-${character.name || index}-${index}`} className="p-1.5 bg-gray-700/50 rounded">
                 <p className="text-sm text-gray-200">{character.name || 'Character ' + (index + 1)}</p>
                 {character.description && (
                   <p className="text-xs text-gray-400">{character.description}</p>
@@ -248,23 +248,18 @@ function StorytellingContent({ content }: { content: Record<string, any> }) {
 }
 
 // Poetic Metaphor specific content
-function PoeticContent({ content }: { content: Record<string, any> }) {
+function PoeticContent({ content }: { readonly content: Record<string, any> }) {
   const { 
     metaphor = '', 
     imagery = '', 
     symbolism = [], 
+    theme = '',
     mood = '',
-    poem = ''
+    verse = ''
   } = content;
 
   return (
     <div className="space-y-3">
-      {poem && (
-        <div className="p-3 bg-gray-700/50 rounded italic">
-          <p className="text-sm text-gray-200 whitespace-pre-wrap">{poem}</p>
-        </div>
-      )}
-      
       {metaphor && (
         <div>
           <h5 className="text-xs font-medium text-gray-300 mb-1">Metaphor</h5>
@@ -285,7 +280,7 @@ function PoeticContent({ content }: { content: Record<string, any> }) {
           <div className="flex flex-wrap gap-1">
             {symbolism.map((symbol: string, index: number) => (
               <span 
-                key={index} 
+                key={`symbol-${symbol}-${index}`} 
                 className="inline-flex items-center rounded-full bg-purple-900/50 px-2 py-0.5 text-xs font-medium text-purple-200"
               >
                 {symbol}
@@ -295,10 +290,24 @@ function PoeticContent({ content }: { content: Record<string, any> }) {
         </div>
       )}
       
+      {theme && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Theme</h5>
+          <p className="text-sm text-gray-400">{theme}</p>
+        </div>
+      )}
+      
       {mood && (
         <div>
           <h5 className="text-xs font-medium text-gray-300 mb-1">Mood</h5>
           <p className="text-sm text-gray-400">{mood}</p>
+        </div>
+      )}
+      
+      {verse && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Verse</h5>
+          <p className="text-sm text-gray-400 italic whitespace-pre-wrap">{verse}</p>
         </div>
       )}
     </div>
@@ -306,12 +315,14 @@ function PoeticContent({ content }: { content: Record<string, any> }) {
 }
 
 // Emotional Sentiment specific content
-function EmotionalContent({ content }: { content: Record<string, any> }) {
+function EmotionalContent({ content }: { readonly content: Record<string, any> }) {
   const { 
     primary_emotion = '', 
-    emotional_tone = '', 
+    secondary_emotions = [], 
     emotional_triggers = [], 
-    emotional_impact = ''
+    intensity = '',
+    emotional_arc = '',
+    viewer_response = ''
   } = content;
 
   return (
@@ -319,18 +330,23 @@ function EmotionalContent({ content }: { content: Record<string, any> }) {
       {primary_emotion && (
         <div>
           <h5 className="text-xs font-medium text-gray-300 mb-1">Primary Emotion</h5>
-          <div className="flex items-center">
-            <span className="inline-flex items-center rounded-full bg-pink-900/50 px-2 py-0.5 text-xs font-medium text-pink-200">
-              {primary_emotion}
-            </span>
-          </div>
+          <p className="text-sm text-gray-400">{primary_emotion}</p>
         </div>
       )}
       
-      {emotional_tone && (
+      {secondary_emotions && secondary_emotions.length > 0 && (
         <div>
-          <h5 className="text-xs font-medium text-gray-300 mb-1">Emotional Tone</h5>
-          <p className="text-sm text-gray-400">{emotional_tone}</p>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Secondary Emotions</h5>
+          <div className="flex flex-wrap gap-1">
+            {secondary_emotions.map((emotion: string, index: number) => (
+              <span 
+                key={`emotion-${emotion}-${index}`} 
+                className="inline-flex items-center rounded-full bg-red-900/50 px-2 py-0.5 text-xs font-medium text-red-200"
+              >
+                {emotion}
+              </span>
+            ))}
+          </div>
         </div>
       )}
       
@@ -339,7 +355,7 @@ function EmotionalContent({ content }: { content: Record<string, any> }) {
           <h5 className="text-xs font-medium text-gray-300 mb-1">Emotional Triggers</h5>
           <div className="space-y-1">
             {emotional_triggers.map((trigger: string, index: number) => (
-              <div key={index} className="p-1.5 bg-gray-700/50 rounded">
+              <div key={`trigger-${trigger}-${index}`} className="p-1.5 bg-gray-700/50 rounded">
                 <p className="text-sm text-gray-400">{trigger}</p>
               </div>
             ))}
@@ -347,10 +363,24 @@ function EmotionalContent({ content }: { content: Record<string, any> }) {
         </div>
       )}
       
-      {emotional_impact && (
+      {intensity && (
         <div>
-          <h5 className="text-xs font-medium text-gray-300 mb-1">Emotional Impact</h5>
-          <p className="text-sm text-gray-400">{emotional_impact}</p>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Intensity</h5>
+          <p className="text-sm text-gray-400">{intensity}</p>
+        </div>
+      )}
+      
+      {emotional_arc && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Emotional Arc</h5>
+          <p className="text-sm text-gray-400">{emotional_arc}</p>
+        </div>
+      )}
+      
+      {viewer_response && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Viewer Response</h5>
+          <p className="text-sm text-gray-400">{viewer_response}</p>
         </div>
       )}
     </div>
@@ -358,12 +388,14 @@ function EmotionalContent({ content }: { content: Record<string, any> }) {
 }
 
 // Out of Frame specific content
-function OutOfFrameContent({ content }: { content: Record<string, any> }) {
+function OutOfFrameContent({ content }: { readonly content: Record<string, any> }) {
   const { 
     beyond_frame = '', 
-    implied_narrative = '', 
     hidden_elements = [], 
-    extended_context = ''
+    implied_narrative = '', 
+    spatial_context = '',
+    temporal_context = '',
+    sensory_details = ''
   } = content;
 
   return (
@@ -375,19 +407,12 @@ function OutOfFrameContent({ content }: { content: Record<string, any> }) {
         </div>
       )}
       
-      {implied_narrative && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-300 mb-1">Implied Narrative</h5>
-          <p className="text-sm text-gray-400">{implied_narrative}</p>
-        </div>
-      )}
-      
       {hidden_elements && hidden_elements.length > 0 && (
         <div>
           <h5 className="text-xs font-medium text-gray-300 mb-1">Hidden Elements</h5>
           <div className="space-y-1">
             {hidden_elements.map((element: string, index: number) => (
-              <div key={index} className="p-1.5 bg-gray-700/50 rounded">
+              <div key={`element-${element}-${index}`} className="p-1.5 bg-gray-700/50 rounded">
                 <p className="text-sm text-gray-400">{element}</p>
               </div>
             ))}
@@ -395,10 +420,31 @@ function OutOfFrameContent({ content }: { content: Record<string, any> }) {
         </div>
       )}
       
-      {extended_context && (
+      {implied_narrative && (
         <div>
-          <h5 className="text-xs font-medium text-gray-300 mb-1">Extended Context</h5>
-          <p className="text-sm text-gray-400">{extended_context}</p>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Implied Narrative</h5>
+          <p className="text-sm text-gray-400">{implied_narrative}</p>
+        </div>
+      )}
+      
+      {spatial_context && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Spatial Context</h5>
+          <p className="text-sm text-gray-400">{spatial_context}</p>
+        </div>
+      )}
+      
+      {temporal_context && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Temporal Context</h5>
+          <p className="text-sm text-gray-400">{temporal_context}</p>
+        </div>
+      )}
+      
+      {sensory_details && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-300 mb-1">Sensory Details</h5>
+          <p className="text-sm text-gray-400">{sensory_details}</p>
         </div>
       )}
     </div>

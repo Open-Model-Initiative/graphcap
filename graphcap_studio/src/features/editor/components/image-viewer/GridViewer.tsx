@@ -7,12 +7,12 @@ import { LoadingSpinner, EmptyState } from '../ui';
 import { useEditorContext } from '../../context/EditorContext';
 
 interface GridViewerProps {
-  images: Image[];
-  isLoading?: boolean;
-  isEmpty?: boolean;
-  className?: string;
-  containerWidth?: number;
-  containerHeight?: number;
+  readonly images: Image[];
+  readonly isLoading?: boolean;
+  readonly isEmpty?: boolean;
+  readonly className?: string;
+  readonly containerWidth?: number;
+  readonly containerHeight?: number;
 }
 
 /**
@@ -57,8 +57,8 @@ export function GridViewer({
 
     const updateDimensions = () => {
       // Use external dimensions if provided, otherwise measure container
-      const width = externalWidth || (containerRef.current?.clientWidth || 0);
-      const height = externalHeight || (containerRef.current?.clientHeight || 0);
+      const width = externalWidth ?? (containerRef.current?.clientWidth ?? 0);
+      const height = externalHeight ?? (containerRef.current?.clientHeight ?? 0);
       
       setContainerSize({ width, height });
       

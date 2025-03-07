@@ -6,13 +6,13 @@ import { CarouselViewer } from './carousel';
 import { CompactActionBar } from './CompactActionBar';
 
 interface ImageGalleryProps {
-  images: Image[];
-  isLoading?: boolean;
-  isEmpty?: boolean;
-  thumbnailOptions?: {
-    minWidth?: number;
-    maxWidth?: number;
-    gap?: number;
+  readonly images: Image[];
+  readonly isLoading?: boolean;
+  readonly isEmpty?: boolean;
+  readonly thumbnailOptions?: {
+    readonly minWidth?: number;
+    readonly maxWidth?: number;
+    readonly gap?: number;
   };
 }
 
