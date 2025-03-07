@@ -22,7 +22,8 @@ const {
   ensureDir
 } = require('../utils/path-utils');
 const { generateThumbnail } = require('../utils/thumbnail-generator');
-const { WORKSPACE_PATH, uploadDir, thumbnailsDir } = require('../config');
+const { getOptimalImagePath, getWebpUrl } = require('../utils/image-utils');
+const { WORKSPACE_PATH, uploadDir, thumbnailsDir, webpCacheDir } = require('../config');
 
 /**
  * List all images in a directory
@@ -226,15 +227,16 @@ async function processImage(imagePath, operations, outputName, overwrite) {
 }
 
 /**
- * Serve an image or its thumbnail
+ * Serve an image, optionally as a thumbnail
  * 
  * @param {string} imagePath - Path to the image
  * @param {number} width - Optional width for thumbnail
  * @param {number} height - Optional height for thumbnail
- * @param {string} format - Optional format for image (default: 'webp')
+ * @param {string} format - Optional format for thumbnail (default: 'webp')
+ * @param {Object} req - Express request object for WebP detection
  * @returns {Promise<Object>} Object with path to the image or thumbnail
  */
-async function serveImage(imagePath, width, height, format) {
+async function serveImage(imagePath, width, height, format, req) {
   try {
     const normalizedPath = String(imagePath || '').replace(/^\/+/, '');
     logInfo(`Processing image path for serving: ${normalizedPath}`);
@@ -262,13 +264,13 @@ async function serveImage(imagePath, width, height, format) {
       
       const fullPath = altPathResult.path;
       logInfo(`Resolved image path (alternative): ${fullPath}`);
-      return await processImageRequest(fullPath, width, height, format);
+      return await processImageRequest(fullPath, width, height, format, req);
     }
     
     const fullPath = pathResult.path;
     logInfo(`Resolved image path: ${fullPath}`);
     
-    return await processImageRequest(fullPath, width, height, format);
+    return await processImageRequest(fullPath, width, height, format, req);
   } catch (error) {
     logError('Error serving image', { 
       imagePath, 
@@ -287,9 +289,10 @@ async function serveImage(imagePath, width, height, format) {
  * @param {number} width - Optional width for thumbnail
  * @param {number} height - Optional height for thumbnail
  * @param {string} format - Optional format for thumbnail (default: 'webp')
+ * @param {Object} req - Express request object for WebP detection
  * @returns {Promise<Object>} Object with path to the image or thumbnail
  */
-async function processImageRequest(fullPath, width, height, format = 'webp') {
+async function processImageRequest(fullPath, width, height, format = 'webp', req) {
   if (width && height) {
     const parsedWidth = parseInt(width, 10);
     const parsedHeight = parseInt(height, 10);
@@ -306,10 +309,29 @@ async function processImageRequest(fullPath, width, height, format = 'webp') {
     const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight, format);
     logInfo(`Serving thumbnail: ${thumbnailPath}`);
     return { path: thumbnailPath, isThumbnail: true };
+  } else {
+    // If no thumbnail is requested, check if a WebP version exists and use it if appropriate
+    if (req) {
+      const optimalPath = getOptimalImagePath(fullPath, req);
+      
+      // If the optimal path is in the WebP cache, return a URL to the WebP endpoint
+      if (optimalPath !== fullPath && optimalPath.includes(webpCacheDir)) {
+        const webpUrl = getWebpUrl(fullPath);
+        return { 
+          path: optimalPath, 
+          isThumbnail: false,
+          isWebp: true,
+          webpUrl
+        };
+      }
+      
+      if (optimalPath !== fullPath) {
+        logInfo(`Serving WebP version instead of original: ${optimalPath}`);
+      }
+      return { path: optimalPath, isThumbnail: false };
+    }
+    return { path: fullPath, isThumbnail: false };
   }
-  
-  logInfo(`Serving original image: ${fullPath}`);
-  return { path: fullPath, isThumbnail: false };
 }
 
 

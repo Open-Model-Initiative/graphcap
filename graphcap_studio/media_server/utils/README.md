@@ -98,4 +98,52 @@ The `path-validator.js` module is maintained for backward compatibility but uses
 2. **Validate filenames**: Use `validateFilename` for all user-provided filenames.
 3. **Use relative paths**: Always use paths relative to the workspace root.
 4. **Check return values**: Always check the `isValid` property of the result objects.
-5. **Handle errors gracefully**: Provide meaningful error messages to users. 
+5. **Handle errors gracefully**: Provide meaningful error messages to users.
+
+# Media Server Utilities
+
+This directory contains utility modules for the Graphcap Media Server.
+
+## Background WebP Generator
+
+The `background-webp-generator.js` module provides functionality to scan the workspace for images and generate WebP versions in the background to improve performance.
+
+### Features
+
+- Scans the workspace for images (jpg/jpeg/png) on server startup
+- Generates WebP versions of images that don't already have them
+- Stores WebP versions in a dedicated cache directory (`webp_cache`)
+- Maintains the same folder structure as the original images
+- Processes images in batches to avoid overwhelming the system
+- Logs progress and errors
+
+### How It Works
+
+1. When the server starts, it initiates a background process to scan the workspace for images
+2. For each image found, it checks if a WebP version already exists in the cache
+3. If no WebP version exists, it generates one using Sharp with a quality setting of 80%
+4. The WebP version is placed in the `webp_cache` directory with the same relative path as the original
+5. If the original image is modified, the WebP version will be regenerated on the next server start
+
+### Benefits
+
+- Improves performance by pre-generating optimized WebP artifacts
+- Reduces bandwidth usage by serving smaller WebP files to compatible browsers
+- Non-blocking implementation ensures server startup is not delayed
+- Keeps original dataset folders clean and uncluttered
+
+## Image Utilities
+
+The `image-utils.js` module provides utility functions for image processing and serving.
+
+### Features
+
+- `getOptimalImagePath`: Checks if a WebP version of an image exists in the cache and returns the appropriate path based on browser support
+
+### How It Works
+
+1. When a request for an image is received, the server checks if the browser supports WebP (via the Accept header)
+2. If WebP is supported and a WebP version of the requested image exists in the cache, the server returns the WebP version
+3. Otherwise, it returns the original image
+
+This approach ensures that browsers that support WebP receive the optimized version, while other browsers receive the original format. 

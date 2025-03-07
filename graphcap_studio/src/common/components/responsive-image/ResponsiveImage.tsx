@@ -47,16 +47,7 @@ export function ResponsiveImage({
     onError,
   });
 
-  // Memoize srcset strings for next-gen formats (assuming getThumbnailUrl accepts a format parameter)
-  const avifSrcSet = useMemo(() => {
-    const widths = [200, 400, 800, 1200, 1600];
-    return widths
-      .map(width =>
-        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)), 'avif')} ${width}w`
-      )
-      .join(', ');
-  }, [imagePath, aspectRatio]);
-
+  // Memoize srcset string for WebP format
   const webpSrcSet = useMemo(() => {
     const widths = [200, 400, 800, 1200, 1600];
     return widths
@@ -98,9 +89,8 @@ export function ResponsiveImage({
         </div>
       )}
 
-      {/* Picture element for modern formats */}
+      {/* Picture element for WebP format */}
       <picture>
-        <source type="image/avif" srcSet={avifSrcSet} sizes={sizes} />
         <source type="image/webp" srcSet={webpSrcSet} sizes={sizes} />
         <img
           ref={imageRef}

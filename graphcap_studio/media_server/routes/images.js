@@ -10,6 +10,7 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+const path = require('path');
 const { logInfo, logError } = require('../utils/logger');
 const { upload, handleMulterErrors } = require('../middleware/upload');
 const { listImages, processImage, serveImage } = require('../services/image-service');
@@ -21,6 +22,7 @@ const {
   ensureDir 
 } = require('../utils/path-utils');
 const { WORKSPACE_PATH } = require('../config');
+const { webpCacheDir } = require('../config');
 
 /**
  * List all images in the workspace
@@ -60,17 +62,25 @@ router.get('/view/*', async (req, res) => {
       query: req.query
     });
     
-    const result = await serveImage(imagePath, width, height, format);
+    // Pass the request object to serveImage for WebP detection
+    const result = await serveImage(imagePath, width, height, format, req);
     
     logInfo(`Serving image file: ${result.path}`, { 
       isThumbnail: result.isThumbnail,
       originalPath: imagePath,
-      resolvedPath: result.path
+      resolvedPath: result.path,
+      isWebp: result.isWebp || false
     });
+    
+    // If this is a WebP image from the cache, redirect to the WebP endpoint
+    if (result.isWebp && result.webpUrl) {
+      logInfo(`Redirecting to WebP URL: ${result.webpUrl}`);
+      return res.redirect(result.webpUrl);
+    }
     
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Vary', 'Origin');
+    res.setHeader('Vary', 'Origin, Accept');  // Add Accept to Vary header for proper caching
     res.setHeader('Cache-Control', 'public, max-age=3600');
     
     res.sendFile(result.path, {
@@ -78,7 +88,7 @@ router.get('/view/*', async (req, res) => {
         'Cross-Origin-Resource-Policy': 'cross-origin',
         'Access-Control-Allow-Origin': '*'
       },
-      dotfiles: 'deny',
+      dotfiles: 'allow',
       maxAge: 3600000
     });
   } catch (error) {
@@ -98,7 +108,6 @@ router.get('/view/*', async (req, res) => {
     });
   }
 });
-
 
 /**
  * Process an image (crop, rotate, etc.)
@@ -238,6 +247,58 @@ router.get('/captions', async (req, res) => {
   } catch (error) {
     logError('Error getting image captions', error);
     res.status(500).json({ error: 'Failed to get image captions' });
+  }
+});
+
+/**
+ * Serve a WebP image from the cache
+ * 
+ * @param {string} imagePath - Path to the WebP image in the cache
+ * @returns {File} The WebP image file
+ */
+router.get('/webp/*', async (req, res) => {
+  try {
+    const imagePath = req.params[0];
+    const fullPath = path.join(webpCacheDir, imagePath);
+    
+    logInfo(`WebP cache request received for: ${imagePath}`);
+    
+    // Validate the path to prevent directory traversal
+    const pathResult = securePath(fullPath, webpCacheDir, { mustExist: true });
+    if (!pathResult.isValid) {
+      logError('Invalid WebP cache path', { 
+        path: imagePath, 
+        error: pathResult.error
+      });
+      return res.status(404).json({ error: 'WebP image not found' });
+    }
+    
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Content-Type', 'image/webp');
+    
+    res.sendFile(pathResult.path, {
+      headers: {
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+        'Access-Control-Allow-Origin': '*'
+      },
+      dotfiles: 'allow',
+      maxAge: 3600000
+    });
+  } catch (error) {
+    logError('Error serving WebP image', { 
+      path: req.params[0], 
+      error: error.message,
+      stack: error.stack
+    });
+    
+    res.status(404).json({ 
+      error: 'Failed to load WebP image', 
+      path: req.params[0],
+      message: error.message
+    });
   }
 });
 

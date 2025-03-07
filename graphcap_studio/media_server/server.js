@@ -19,6 +19,11 @@ const server = app.listen(PORT, () => {
   logInfo(`Workspace path: ${WORKSPACE_PATH}`);
   logInfo(`Upload directory: ${uploadDir}`);
   logInfo(`Thumbnails directory: ${thumbnailsDir}`);
+  
+  // Import and run background WebP generation without blocking server startup
+  const { generateWebpArtifacts } = require('./utils/background-webp-generator');
+  logInfo('Starting background WebP generation process...');
+  generateWebpArtifacts();
 });
 
 // Handle graceful shutdown

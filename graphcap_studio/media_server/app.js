@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { logInfo } = require('./utils/logger');
 const { globalErrorHandler } = require('./middleware/error-handler');
-const { uploadDir, thumbnailsDir } = require('./config');
+const { uploadDir, thumbnailsDir, webpCacheDir } = require('./config');
 
 // Import routes
 const healthRoutes = require('./routes/health');
@@ -71,6 +71,20 @@ if (!fs.existsSync(thumbnailsDir)) {
   logInfo(`Creating thumbnails directory: ${thumbnailsDir}`);
   fs.mkdirSync(thumbnailsDir, { recursive: true });
 }
+
+if (!fs.existsSync(webpCacheDir)) {
+  logInfo(`Creating WebP cache directory: ${webpCacheDir}`);
+  fs.mkdirSync(webpCacheDir, { recursive: true });
+}
+
+// Configure Express to serve static files from the WebP cache directory
+// This is needed because Express doesn't serve files from directories starting with a dot by default
+app.use('/webp_cache', express.static(webpCacheDir, {
+  maxAge: 86400000, // Cache for 24 hours
+  immutable: true,  // Content is immutable until the maxAge
+  index: false,     // Disable directory listing
+  dotfiles: 'allow' // Allow serving files that begin with a dot
+}));
 
 // Routes
 app.use('/health', healthRoutes);

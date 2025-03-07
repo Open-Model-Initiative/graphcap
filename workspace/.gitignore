@@ -1,3 +1,5 @@
 logs/*
 thumbnails/*
 local
+webp_cache/*
+.webp_cache/*

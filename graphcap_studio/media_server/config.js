@@ -16,6 +16,7 @@ const WORKSPACE_PATH = process.env.WORKSPACE_PATH || '/workspace';
 // Derived paths
 const uploadDir = path.join(WORKSPACE_PATH, 'processed');
 const thumbnailsDir = path.join(WORKSPACE_PATH, 'thumbnails');
+const webpCacheDir = path.join(WORKSPACE_PATH, 'webp_cache');
 
 // File size limits
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB limit for uploads
@@ -26,6 +27,7 @@ module.exports = {
   WORKSPACE_PATH,
   uploadDir,
   thumbnailsDir,
+  webpCacheDir,
   FILE_SIZE_LIMIT,
   MAX_DIMENSION
 }; 

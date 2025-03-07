@@ -10,6 +10,7 @@ This service provides media processing capabilities for the Graphcap Studio appl
   - **Image Serving**: Serve images directly from the workspace
   - **Image Editing**: Process images (crop, rotate, resize, flip, flop)
   - **Image Upload**: Upload new images to the workspace
+  - **WebP Optimization**: Automatically generate WebP versions of images for improved performance
 
 - **Future Extensions**
   - **Video Processing**: Support for video editing and processing
@@ -42,7 +43,7 @@ Lists all images in the specified directory (or root if not specified).
 GET /api/images/view/path/to/image.jpg
 ```
 
-Serves the specified image.
+Serves the specified image. If the browser supports WebP and a WebP version of the image exists, the WebP version will be served automatically for improved performance.
 
 #### Process Image
 
@@ -86,6 +87,27 @@ Uploads a new image to the workspace.
 
 Form data:
 - `image`: The image file to upload
+
+## WebP Optimization
+
+The server includes a background WebP generator that automatically scans the workspace for images (jpg/jpeg/png) on startup and generates WebP versions in a dedicated cache directory (`webp_cache`). This process runs in the background and does not block server startup.
+
+Benefits of WebP optimization:
+- Smaller file sizes (typically 25-35% smaller than JPEG)
+- Faster loading times for users
+- Reduced bandwidth usage
+- Original dataset folders remain clean and uncluttered
+
+The server intelligently serves WebP images to browsers that support them while falling back to the original format for browsers that don't support WebP.
+
+### How It Works
+
+1. When the server starts, it scans the workspace for images
+2. For each image, it creates a WebP version in the `webp_cache` directory, maintaining the same folder structure as the original
+3. When a browser requests an image, the server checks if:
+   - The browser supports WebP (via the Accept header)
+   - A WebP version exists in the cache
+4. If both conditions are met, the server serves the WebP version; otherwise, it serves the original
 
 ## Development
 
