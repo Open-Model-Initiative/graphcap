@@ -38,6 +38,14 @@ export function TreeNode({
           : 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
       }`}
       onClick={onClick}
+      role="treeitem"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onClick?.();
+          e.preventDefault();
+        }
+      }}
     >
       {hasChildren ? (
         <div 
@@ -45,6 +53,17 @@ export function TreeNode({
           onClick={(e) => {
             e.stopPropagation();
             onToggleExpand?.();
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={isExpanded ? "Collapse" : "Expand"}
+          aria-expanded={isExpanded}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              onToggleExpand?.();
+              e.preventDefault();
+            }
           }}
         >
           <svg 

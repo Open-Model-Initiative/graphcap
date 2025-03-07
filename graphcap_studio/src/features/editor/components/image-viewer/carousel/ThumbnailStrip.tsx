@@ -82,6 +82,16 @@ export function ThumbnailStrip({
             height: `${thumbnailHeight}px` 
           }}
           onClick={() => onSelect(index)}
+          role="button"
+          tabIndex={0}
+          aria-label={`Select image ${image.name}`}
+          aria-pressed={index === selectedIndex}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              onSelect(index);
+              e.preventDefault();
+            }
+          }}
         >
           <img
             src={getThumbnailUrl(image.path, thumbnailWidth, thumbnailHeight)}

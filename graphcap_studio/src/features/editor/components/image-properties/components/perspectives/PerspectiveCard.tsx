@@ -33,6 +33,15 @@ export function PerspectiveCard({
       <div 
         className={`p-3 ${isActive ? 'bg-blue-900/30' : ''} cursor-pointer`}
         onClick={() => setIsExpanded(!isExpanded)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            setIsExpanded(!isExpanded);
+            e.preventDefault();
+          }
+        }}
       >
         <div className="flex items-center justify-between mb-1">
           <h4 className="text-sm font-medium text-gray-200 flex items-center">

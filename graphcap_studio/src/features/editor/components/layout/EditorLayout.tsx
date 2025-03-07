@@ -140,6 +140,19 @@ export function EditorLayout({
       <div
         className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors"
         onMouseDown={handleNavResizerMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize navigation panel"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') {
+            setNavigationWidth(prev => Math.max(prev - 10, minNavigationWidth));
+            e.preventDefault();
+          } else if (e.key === 'ArrowRight') {
+            setNavigationWidth(prev => prev + 10);
+            e.preventDefault();
+          }
+        }}
       />
 
       {/* Viewer panel */}
@@ -154,6 +167,19 @@ export function EditorLayout({
       <div
         className="h-full w-1 bg-gray-700 hover:bg-blue-500 cursor-col-resize transition-colors"
         onMouseDown={handlePropsResizerMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize properties panel"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') {
+            setPropertiesWidth(prev => prev + 10);
+            e.preventDefault();
+          } else if (e.key === 'ArrowRight') {
+            setPropertiesWidth(prev => Math.max(prev - 10, minPropertiesWidth));
+            e.preventDefault();
+          }
+        }}
       />
 
       {/* Properties panel */}

@@ -158,6 +158,9 @@ export function CompactActionBar({
               <div
                 className="absolute right-0 top-full z-10 mt-1 w-40 rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 text-xs"
                 onClick={(e) => e.stopPropagation()}
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="dataset-menu-button"
               >
                 <div className="px-2 py-1 text-xs font-medium text-gray-400">
                   Add to dataset:

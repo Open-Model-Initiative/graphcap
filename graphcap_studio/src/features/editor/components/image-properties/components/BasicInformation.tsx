@@ -42,10 +42,11 @@ export function BasicInformation({
       {isEditing ? (
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-300">
+            <label htmlFor="image-title" className="mb-1 block text-sm font-medium text-gray-300">
               Title
             </label>
             <input
+              id="image-title"
               type="text"
               value={properties.title}
               onChange={(e) => onPropertyChange('title', e.target.value)}
@@ -53,10 +54,11 @@ export function BasicInformation({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-300">
+            <label htmlFor="image-description" className="mb-1 block text-sm font-medium text-gray-300">
               Description
             </label>
             <textarea
+              id="image-description"
               value={properties.description}
               onChange={(e) => onPropertyChange('description', e.target.value)}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
@@ -64,10 +66,11 @@ export function BasicInformation({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-300">
+            <label htmlFor="image-rating" className="mb-1 block text-sm font-medium text-gray-300">
               Rating
             </label>
             <select
+              id="image-rating"
               value={properties.rating}
               onChange={(e) => onPropertyChange('rating', Number(e.target.value))}
               className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
@@ -81,11 +84,12 @@ export function BasicInformation({
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-300">
+            <label htmlFor="image-tags" className="mb-1 block text-sm font-medium text-gray-300">
               Tags
             </label>
             <div className="flex">
               <input
+                id="image-tags"
                 type="text"
                 value={newTag}
                 onChange={(e) => onNewTagChange(e.target.value)}

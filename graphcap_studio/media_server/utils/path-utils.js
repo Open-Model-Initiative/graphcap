@@ -157,9 +157,9 @@ function validateFilename(filename) {
   const basename = path.basename(filename);
   
   // Check for invalid characters
-  if (/[<>:"/\\|?*\x00-\x1F]/.test(basename)) {
+  if (/[<>:"/\\|?*\u0000-\u001F]/.test(basename)) {
     // Sanitize by replacing invalid characters
-    const sanitized = basename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+    const sanitized = basename.replace(/[<>:"/\\|?*\u0000-\u001F]/g, '_');
     return {
       isValid: false,
       sanitized,

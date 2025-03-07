@@ -73,6 +73,16 @@ export function LazyImage({
           : 'border-transparent hover:border-gray-600'
       }`}
       onClick={() => onSelect(image)}
+      role="button"
+      tabIndex={0}
+      aria-label={`Select image ${image.name}`}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onSelect(image);
+          e.preventDefault();
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{ display: 'flex', flexDirection: 'column' }}
