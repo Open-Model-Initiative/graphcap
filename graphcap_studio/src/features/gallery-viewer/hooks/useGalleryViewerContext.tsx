@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import  { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import  { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { Image } from '@/services/images';
 import { ViewMode, DEFAULT_VIEW_MODE } from '../components/ImageGallery';
 
@@ -18,11 +18,11 @@ interface GalleryViewerContextType {
 }
 
 interface GalleryViewerProviderProps {
-  children: ReactNode;
-  images: Image[];
-  initialViewMode?: ViewMode;
-  initialSelectedImage?: Image | null;
-  onImageSelected?: (image: Image) => void;
+  readonly children: ReactNode;
+  readonly images: Image[];
+  readonly initialViewMode?: ViewMode;
+  readonly initialSelectedImage?: Image | null;
+  readonly onImageSelected?: (image: Image) => void;
 }
 
 const GalleryViewerContext = createContext<GalleryViewerContextType | undefined>(undefined);
@@ -47,10 +47,10 @@ export function GalleryViewerProvider({
   initialViewMode = DEFAULT_VIEW_MODE,
   initialSelectedImage = null,
   onImageSelected
-}: GalleryViewerProviderProps) {
+}: Readonly<GalleryViewerProviderProps>) {
   // Internal state
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-  const [selectedImage, setSelectedImageInternal] = useState<Image | null>(initialSelectedImage);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(initialSelectedImage);
   
   // Derived values
   const totalImages = images.length;
@@ -59,8 +59,8 @@ export function GalleryViewerProvider({
     : -1;
   
   // Handle image selection with callback
-  const setSelectedImage = (image: Image | null) => {
-    setSelectedImageInternal(image);
+  const setSelectedImageInternal = (image: Image | null) => {
+    setSelectedImage(image);
     if (image && onImageSelected) {
       onImageSelected(image);
     }
@@ -74,18 +74,19 @@ export function GalleryViewerProvider({
       images.length > 0 && 
       (selectedImage === null || images.findIndex(img => img.path === selectedImage.path) === -1)
     ) {
-      setSelectedImage(images[0]);
+      setSelectedImageInternal(images[0]);
     }
-  }, [images, selectedImage, setSelectedImage]);
+  }, [images, selectedImage, setSelectedImageInternal]);
   
-  const contextValue: GalleryViewerContextType = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     viewMode,
     setViewMode,
     selectedImage,
-    setSelectedImage,
+    setSelectedImage: setSelectedImageInternal,
     currentIndex,
     totalImages
-  };
+  }), [viewMode, selectedImage, currentIndex, totalImages]);
   
   return (
     <GalleryViewerContext.Provider value={contextValue}>

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { useDatasets } from '../hooks/useDatasets';
 import { DatasetContextProvider } from '../context/DatasetContext';
 import { Dataset } from '@/services/images';
@@ -29,10 +29,13 @@ export function DatasetInitializer({ children }: DatasetInitializerProps) {
   // Extract datasets array from datasetsData if available
   const datasets = datasetsData?.datasets || [];
   
-  // Get the current dataset name as a string
-  const currentDataset = typeof selectedDataset === 'string' ? selectedDataset : 
-                        (selectedDataset && typeof selectedDataset === 'object' && 'name' in selectedDataset ? 
-                        (selectedDataset as Dataset).name : '');
+  // Determine the current dataset name
+  let currentDataset = '';
+  if (typeof selectedDataset === 'string') {
+    currentDataset = selectedDataset;
+  } else if (selectedDataset && typeof selectedDataset === 'object' && 'name' in selectedDataset) {
+    currentDataset = (selectedDataset as Dataset).name;
+  }
   
   // Show loading indicator while data is being fetched
   if (isLoading) {

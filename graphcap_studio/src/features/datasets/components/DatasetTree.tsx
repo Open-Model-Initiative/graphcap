@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Dataset, Image } from '@/services/images';
 import { Tree, TreeItemData } from '@/common/components/dataset-tree';
 import { DatasetLink } from './DatasetLink';
-import React from 'react';
+
 
 interface DatasetTreeProps {
   readonly datasets: Dataset[];
@@ -129,9 +129,7 @@ function createDatasetTreeItem(
  * @returns true if the item was found and updated, false otherwise
  */
 function updateItemExpanded(items: TreeItemData[], itemId: string): boolean {
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    
+  for (const item of items) {
     if (item.id === itemId) {
       // Toggle the expanded state
       item.isExpanded = !item.isExpanded;
@@ -148,6 +146,18 @@ function updateItemExpanded(items: TreeItemData[], itemId: string): boolean {
   return false;
 }
 
+// Move this function outside of the DatasetTree component
+const getWrapperComponent = (item: TreeItemData) => {
+  if (item.data?.isDatasetRoot) {
+    return ({ children, className }: { children: React.ReactNode; className: string }) => (
+      <DatasetLink datasetId={item.id} className={className}>
+        {children}
+      </DatasetLink>
+    );
+  }
+  return undefined;
+};
+
 /**
  * A component for displaying a hierarchical tree view of datasets and their subfolders
  * using the reusable Tree UI components
@@ -161,7 +171,7 @@ export function DatasetTree({
   const [treeItems, setTreeItems] = useState<TreeItemData[]>([]);
   
   // Calculate the selected item ID based on the selected dataset and subfolder
-  const selectedItemId = selectedSubfolder || (selectedDataset ? selectedDataset : undefined);
+  const selectedItemId = selectedSubfolder ?? (selectedDataset ?? undefined);
   
   // Update tree items when datasets or selection changes
   useEffect(() => {
@@ -210,16 +220,7 @@ export function DatasetTree({
       onSelectItem={handleSelectItem}
       onToggleExpand={handleToggleExpand}
       className="text-sm"
-      getWrapperComponent={(item: TreeItemData) => {
-        if (item.data?.isDatasetRoot) {
-          return ({ children, className }: { children: React.ReactNode; className: string }) => (
-            <DatasetLink datasetId={item.id} className={className}>
-              {children}
-            </DatasetLink>
-          );
-        }
-        return undefined;
-      }}
+      getWrapperComponent={getWrapperComponent}
     />
   );
 } 

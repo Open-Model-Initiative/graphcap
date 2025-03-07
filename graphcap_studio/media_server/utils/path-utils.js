@@ -159,9 +159,9 @@ function validateFilename(filename) {
   
   // Check for invalid characters - using explicit character class instead of control character range
   // This avoids issues with control character encoding in the source file
-  if (/[<>:"\/\\|?*]/.test(basename)) {
+  if (/[<>:"/\\|?*]/.test(basename)) {
     // Sanitize by replacing invalid characters
-    const sanitized = basename.replace(/[<>:"\/\\|?*]/g, '_');
+    const sanitized = basename.replace(/[<>:"/\\|?*]/g, '_');
     return {
       isValid: false,
       sanitized,
