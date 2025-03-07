@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Dataset, Image } from '@/services/images';
-import { Tree, TreeItemData } from '@/common/components/ui/tree';
+import { Tree, TreeItemData } from '@/common/components/dataset-tree';
 
 interface DatasetTreeProps {
   readonly datasets: Dataset[];

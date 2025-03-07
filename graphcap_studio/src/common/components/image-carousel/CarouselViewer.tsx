@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useRef } from 'react';
 import { Image } from '@/services/images';
-import { ResponsiveImage } from '@/common/components/ui/responsive-image';
+import { ResponsiveImage } from '@/common/components/responsive-image';
 import { 
   LoadingSpinner, 
   EmptyState, 
   NavigationButton, 
   ImageCounter
-} from '../../ui';
+} from '../../../features/editor/components/ui';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { 
   useCarouselNavigation, 
@@ -16,7 +16,7 @@ import {
   useWheelNavigation,
   useCarouselLayout
 } from './hooks';
-import { useEditorContext } from '../../../context/EditorContext';
+import { useEditorContext } from '../../../features/editor/context/EditorContext';
 import styles from './CarouselViewer.module.css';
 
 interface CarouselViewerProps {

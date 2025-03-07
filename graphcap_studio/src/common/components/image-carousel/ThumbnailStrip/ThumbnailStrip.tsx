@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
 import { Image } from '@/services/images';
-import { ThumbnailImage } from '@/common/components/ui/responsive-image';
+import { ThumbnailImage } from '@/common/components/responsive-image';
 import { useDynamicThumbnails } from '../hooks';
 import styles from './ThumbnailStrip.module.css';
 

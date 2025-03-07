@@ -1,2 +1,2 @@
 // SPDX-License-Identifier: Apache-2.0
-export * from './responsive-image';
+export * from '../responsive-image';

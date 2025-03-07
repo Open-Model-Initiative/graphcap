@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Image } from '@/services/images';
 import { useEditorContext } from '../../context/EditorContext';
-import { GridViewer } from './GridViewer';
-import { CarouselViewer } from './carousel';
+import { GridViewer } from '../../../../common/components/image-grid/GridViewer';
+import { CarouselViewer } from '../../../../common/components/image-carousel';
 import { CompactActionBar } from './CompactActionBar';
 
 interface ImageGalleryProps {
