@@ -10,6 +10,7 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
 const fs = require('fs');
 const path = require('path');
 const { logInfo } = require('./utils/logger');
@@ -24,10 +25,14 @@ const datasetsRoutes = require('./routes/datasets');
 // Initialize Express app
 const app = express();
 
+// Disable x-powered-by header to prevent information disclosure
+app.disable('x-powered-by');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+app.use(helmet());
 
 // Create required directories if they don't exist
 if (!fs.existsSync(uploadDir)) {
