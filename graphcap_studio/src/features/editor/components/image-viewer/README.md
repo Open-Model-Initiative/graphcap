@@ -1,6 +1,116 @@
 # Image Viewer Components
 
-This directory contains components for viewing, browsing, and interacting with images in the Graphcap Studio editor.
+This directory contains components for viewing and interacting with images in the Graphcap Studio application.
+
+## Components
+
+### ImageViewer
+
+A component for viewing individual images with loading and error states.
+
+```tsx
+import { ImageViewer } from '@/features/editor/components/image-viewer';
+
+function MyComponent() {
+  return (
+    <ImageViewer 
+      imagePath="/path/to/image.jpg"
+      alt="Description of image"
+      aspectRatio={16/9} // Optional
+      padding={16} // Optional
+      onLoad={() => console.log('Image loaded')}
+      onError={(error) => console.error('Image error', error)}
+    />
+  );
+}
+```
+
+#### Props
+
+- `imagePath` (required): Path to the image file
+- `alt` (optional): Alternative text for the image
+- `className` (optional): Additional CSS classes
+- `aspectRatio` (optional): Aspect ratio to maintain (width/height)
+- `padding` (optional): Padding to subtract from container dimensions
+- `onLoad` (optional): Callback when image loads successfully
+- `onError` (optional): Callback when image fails to load
+
+## Hooks
+
+### useImageViewerSize
+
+A custom hook to calculate optimal image viewer dimensions based on container size.
+
+```tsx
+import { useRef } from 'react';
+import { useImageViewerSize } from '@/features/editor/components/image-viewer/hooks';
+
+function MyComponent() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width, height, isCalculating } = useImageViewerSize({
+    containerRef,
+    aspectRatio: 16/9,
+    padding: 16
+  });
+
+  return (
+    <div ref={containerRef} style={{ height: '100%', width: '100%' }}>
+      <img 
+        src="/path/to/image.jpg"
+        alt="Description"
+        style={{
+          width: isCalculating ? 'auto' : `${width}px`,
+          height: isCalculating ? 'auto' : `${height}px`
+        }}
+      />
+    </div>
+  );
+}
+```
+
+#### Parameters
+
+- `containerRef` (required): Reference to the container element
+- `aspectRatio` (optional): Aspect ratio to maintain (width/height)
+- `padding` (optional): Padding to subtract from container dimensions
+
+#### Returns
+
+- `width`: Calculated optimal width
+- `height`: Calculated optimal height
+- `isCalculating`: Boolean indicating if dimensions are still being calculated
+
+## Layout Integration
+
+The image viewer components are designed to work seamlessly with the application's layout system. They automatically adjust to the available space between the header and footer.
+
+For optimal integration:
+
+1. Always place image viewers within the `MainLayout` component
+2. Avoid setting fixed heights on parent containers
+3. Use the `useImageViewerSize` hook for custom image rendering scenarios
+
+```tsx
+import { MainLayout } from '@/common/components/layout';
+import { ImageViewer } from '@/features/editor/components/image-viewer';
+
+function ImageViewerPage() {
+  return (
+    <MainLayout>
+      <div className="h-full w-full">
+        <ImageViewer imagePath="/path/to/image.jpg" />
+      </div>
+    </MainLayout>
+  );
+}
+```
+
+## CSS Modules
+
+The image viewer components use CSS modules to ensure styles are scoped and maintainable:
+
+- `ImageViewer.module.css`: Styles for the main image viewer component
+- Additional component-specific modules as needed
 
 ## Component Overview
 

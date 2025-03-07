@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
+import { useState, useCallback, memo } from 'react';
 import { Image, getThumbnailUrl } from '@/services/images';
-import { useThumbnailScroll, useDynamicThumbnails } from './hooks';
+import { useThumbnailScroll, useDynamicThumbnails } from '../hooks';
+import styles from './ThumbnailStrip.module.css';
 
 interface ThumbnailStripProps {
   readonly images: Image[];
@@ -21,7 +23,7 @@ interface ThumbnailStripProps {
  * click on thumbnails to navigate to specific images. The thumbnails
  * are dynamically sized based on the available container width.
  */
-export function ThumbnailStrip({
+function ThumbnailStripBase({
   images,
   selectedIndex,
   onSelect,
@@ -30,7 +32,12 @@ export function ThumbnailStrip({
   maxThumbnailWidth = 64,
   gap = 4,
   aspectRatio = 1
-}: ThumbnailStripProps) {
+}: Readonly<ThumbnailStripProps>) {
+  // Track loading state for each image
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
+    Object.fromEntries(images.map(img => [img.path, true]))
+  );
+
   // Use custom hook for dynamic thumbnail sizing
   const {
     containerRef,
@@ -62,20 +69,21 @@ export function ThumbnailStrip({
     }
   };
 
+  // Handle image load completion
+  const handleImageLoaded = useCallback((path: string) => {
+    setLoadingStates(prev => ({ ...prev, [path]: false }));
+  }, []);
+
   return (
     <div 
       ref={setRefs}
-      className={`flex overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 py-2 ${className}`}
+      className={`${styles.container} ${className}`}
       style={{ gap: `${calculatedGap}px` }}
     >
       {images.map((image, index) => (
         <button
           key={image.path}
-          className={`relative flex-shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-all ${
-            index === selectedIndex
-              ? 'border-blue-500 shadow-md'
-              : 'border-transparent hover:border-gray-600'
-          }`}
+          className={`${styles.thumbnailButton} ${index === selectedIndex ? styles.selected : ''}`}
           style={{ 
             width: `${thumbnailWidth}px`, 
             height: `${thumbnailHeight}px` 
@@ -87,15 +95,18 @@ export function ThumbnailStrip({
           <img
             src={getThumbnailUrl(image.path, thumbnailWidth, thumbnailHeight)}
             alt={image.name}
-            className="h-full w-full object-cover"
+            className={`${styles.thumbnailImage} ${loadingStates[image.path] ? styles.loading : ''}`}
             loading="lazy"
+            onLoad={() => handleImageLoaded(image.path)}
           />
-          {/* Add a subtle indicator for the selected thumbnail */}
           {index === selectedIndex && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500"></div>
+            <div className={styles.selectedIndicator}></div>
           )}
         </button>
       ))}
     </div>
   );
-} 
+}
+
+// Memoize the component to prevent unnecessary re-renders
+export const ThumbnailStrip = memo(ThumbnailStripBase); 

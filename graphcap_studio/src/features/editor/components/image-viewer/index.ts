@@ -6,7 +6,6 @@ export { ImageViewer } from './ImageViewer';
 export { GridViewer } from './GridViewer';
 export { ImageGallery } from './ImageGallery';
 export { LazyImage } from './LazyImage';
-export { CarouselNavigation } from './CarouselNavigation';
 export { CompactActionBar } from './CompactActionBar';
 
 // Carousel components

@@ -1,106 +1,123 @@
 # Carousel Components
 
-This directory contains components for the image carousel feature in Graphcap Studio.
+This directory contains components for the carousel view mode of the image viewer.
 
 ## Components
 
 ### CarouselViewer
 
-The main carousel component that displays images with sliding window pagination, navigation controls, and thumbnails.
-
-**Features:**
-- Displays images in a carousel view with sliding window pagination
-- Lazy loads images as the user navigates through the carousel
-- Provides keyboard navigation (arrow keys)
-- Supports mouse wheel navigation
-- Shows thumbnails for quick navigation between images
-- Supports dynamic thumbnail sizing based on available space
-
-### ThumbnailStrip
-
-A horizontal strip of thumbnails for navigating between images in the carousel.
-
-**Features:**
-- Displays thumbnails for the current visible window of images
-- Highlights the currently selected image
-- Automatically scrolls to keep the selected thumbnail in view
-- Dynamically adjusts thumbnail size based on available container width
-- Supports customizable minimum and maximum thumbnail sizes
-
-## Custom Hooks
-
-The carousel components use a set of custom hooks to separate logic from the view layer:
-
-### useCarouselNavigation
-
-Manages the state and logic for navigating through images in a carousel, using a sliding window approach.
-
-**Features:**
-- Tracks the current image index
-- Manages the visible window of images
-- Provides navigation functions (by index or delta)
-- Automatically adjusts the visible window as the user navigates
-
-### useCarouselControls
-
-Handles keyboard and wheel navigation for the carousel.
-
-**Features:**
-- Sets up keyboard event listeners for arrow key navigation
-- Provides a handler for wheel events
-- Can be enabled/disabled based on component state
-
-### useThumbnailScroll
-
-Manages scrolling the thumbnail strip to keep the selected thumbnail in view.
-
-**Features:**
-- Provides a ref to attach to the thumbnail container
-- Automatically scrolls to center the selected thumbnail
-- Handles smooth scrolling behavior
-
-### useDynamicThumbnails
-
-Calculates optimal thumbnail dimensions based on available container space.
-
-**Features:**
-- Dynamically adjusts thumbnail size based on container width
-- Determines the optimal number of visible thumbnails
-- Supports minimum and maximum thumbnail size constraints
-- Automatically recalculates on container resize
-
-## Usage
+The main component for viewing images in a carousel layout. It displays a large image in the center with navigation controls and a thumbnail strip at the bottom.
 
 ```tsx
-import { CarouselViewer } from './carousel';
+import { CarouselViewer } from '@/features/editor/components/image-viewer/carousel';
 
 function MyComponent() {
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
-  
   return (
-    <CarouselViewer
+    <CarouselViewer 
       images={images}
-      selectedImage={selectedImage}
-      onSelectImage={setSelectedImage}
-      onEditImage={handleEditImage}
-      onAddToDataset={handleAddToDataset}
-      isLoading={isLoading}
-      isEmpty={isEmpty}
+      isLoading={false}
+      isEmpty={false}
       thumbnailOptions={{
         minWidth: 64,
         maxWidth: 120,
-        gap: 8
+        gap: 8,
+        aspectRatio: 1
       }}
     />
   );
 }
 ```
 
-## Implementation Details
+### ThumbnailStrip
 
-- The carousel uses a sliding window approach to load only a subset of images at a time
-- As the user navigates, the window slides to include images before and after the current image
-- This approach improves performance for large image collections
-- The hook-based architecture separates logic from the view layer, making the code more maintainable
-- Each hook has a single responsibility, following the single responsibility principle
-- Thumbnails are dynamically sized based on available space, making the component responsive to different screen sizes and resizing 
+A horizontal strip of thumbnails for navigating between images. It is positioned at the bottom of the carousel viewer.
+
+```tsx
+import { ThumbnailStrip } from '@/features/editor/components/image-viewer/carousel/ThumbnailStrip';
+
+function MyComponent() {
+  return (
+    <ThumbnailStrip 
+      images={images}
+      selectedIndex={selectedIndex}
+      onSelect={handleSelect}
+      minThumbnailWidth={64}
+      maxThumbnailWidth={120}
+      gap={8}
+      aspectRatio={1}
+    />
+  );
+}
+```
+
+## Hooks
+
+### useCarouselLayout
+
+A custom hook to calculate and manage carousel layout dimensions. It handles calculating the available height for the image container, accounting for the thumbnail strip at the bottom.
+
+```tsx
+import { useCarouselLayout } from '@/features/editor/components/image-viewer/carousel/hooks';
+
+function MyComponent() {
+  const {
+    containerRef,
+    imageContainerRef,
+    thumbnailContainerRef,
+    imageContainerHeight,
+    isCalculating
+  } = useCarouselLayout({
+    thumbnailHeight: 96 // 6rem
+  });
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      <div 
+        ref={imageContainerRef}
+        style={{ height: isCalculating ? 'auto' : `${imageContainerHeight}px` }}
+      >
+        {/* Image content */}
+      </div>
+      <div ref={thumbnailContainerRef}>
+        {/* Thumbnail strip */}
+      </div>
+    </div>
+  );
+}
+```
+
+### useCarouselNavigation
+
+A custom hook for handling navigation between images in the carousel.
+
+### useCarouselControls
+
+A custom hook for handling keyboard navigation in the carousel.
+
+### useThumbnailScroll
+
+A custom hook for handling thumbnail scrolling in the carousel.
+
+### useDynamicThumbnails
+
+A custom hook for calculating thumbnail dimensions based on container width.
+
+### useWheelNavigation
+
+A custom hook for handling mouse wheel navigation in the carousel.
+
+## Layout Structure
+
+The carousel layout consists of two main sections:
+
+1. **Image Container**: Takes up most of the available space and displays the selected image
+2. **Thumbnail Strip**: Fixed height container at the bottom of the screen that displays thumbnails of all images
+
+The layout is responsive and adjusts to the available space. The thumbnail strip is always positioned at the bottom of the screen, and the image container adjusts its height accordingly.
+
+## CSS Modules
+
+The carousel components use CSS modules to ensure styles are scoped and maintainable:
+
+- `CarouselViewer.module.css`: Styles for the main carousel viewer component
+- `ThumbnailStrip.module.css`: Styles for the thumbnail strip component 

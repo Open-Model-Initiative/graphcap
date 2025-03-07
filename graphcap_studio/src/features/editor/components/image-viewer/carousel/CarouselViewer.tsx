@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, RefObject } from 'react';
 import { Image } from '@/services/images';
 import { ImageViewer } from '../ImageViewer';
 import { 
@@ -8,10 +8,16 @@ import {
   NavigationButton, 
   ImageCounter
 } from '../../ui';
-// Import ThumbnailStrip directly from the file to avoid circular dependencies
 import { ThumbnailStrip } from './ThumbnailStrip';
-import { useCarouselNavigation, useCarouselControls, useThumbnailScroll } from './hooks';
+import { 
+  useCarouselNavigation, 
+  useCarouselControls, 
+  useThumbnailScroll,
+  useWheelNavigation,
+  useCarouselLayout
+} from './hooks';
 import { useEditorContext } from '../../../context/EditorContext';
+import styles from './CarouselViewer.module.css';
 
 interface CarouselViewerProps {
   readonly images: Image[];
@@ -39,7 +45,7 @@ export function CarouselViewer({
   isEmpty = false,
   className = '',
   thumbnailOptions = {}
-}: CarouselViewerProps) {
+}: Readonly<CarouselViewerProps>) {
   const {
     selectedImage,
     handleSelectImage
@@ -51,6 +57,17 @@ export function CarouselViewer({
     gap = 8,
     aspectRatio = 1
   } = thumbnailOptions;
+
+  // Use custom hook for carousel layout
+  const {
+    containerRef,
+    imageContainerRef,
+    thumbnailContainerRef,
+    imageContainerHeight,
+    isCalculating
+  } = useCarouselLayout({
+    thumbnailHeight: 96 // 6rem
+  });
 
   // Use custom hook for carousel navigation
   const {
@@ -66,36 +83,18 @@ export function CarouselViewer({
     onSelectImage: handleSelectImage
   });
 
-  // Use custom hook for keyboard navigation only
+  // Use custom hook for keyboard navigation
   useCarouselControls({
     navigateByDelta,
     enabled: !isLoading && !isEmpty && images.length > 0
   });
 
-  // Reference to the main image container
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-
-  // Set up wheel event listener with passive: false
-  useEffect(() => {
-    const enabled = !isLoading && !isEmpty && images.length > 0;
-    if (!enabled || !imageContainerRef.current) return;
-
-    const element = imageContainerRef.current;
-    
-    const handleWheelEvent = (e: WheelEvent) => {
-      // Determine direction (positive deltaY means scrolling down)
-      const delta = e.deltaY > 0 ? 1 : -1;
-      navigateByDelta(delta);
-      e.preventDefault();
-    };
-
-    // Add wheel event listener with passive: false option
-    element.addEventListener('wheel', handleWheelEvent, { passive: false });
-    
-    return () => {
-      element.removeEventListener('wheel', handleWheelEvent);
-    };
-  }, [navigateByDelta, isLoading, isEmpty, images.length]);
+  // Use custom hook for wheel navigation
+  useWheelNavigation({
+    containerRef: imageContainerRef,
+    navigateByDelta,
+    enabled: !isLoading && !isEmpty && images.length > 0
+  });
 
   // Use custom hook for thumbnail scrolling
   const thumbnailsRef = useThumbnailScroll({
@@ -106,7 +105,7 @@ export function CarouselViewer({
   // Show loading state
   if (isLoading) {
     return (
-      <div className={`flex h-full w-full items-center justify-center ${className}`}>
+      <div className={`${styles.loadingContainer} ${className}`}>
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -115,7 +114,7 @@ export function CarouselViewer({
   // Show empty state
   if (isEmpty || images.length === 0) {
     return (
-      <div className={`flex h-full w-full items-center justify-center ${className}`}>
+      <div className={`${styles.emptyContainer} ${className}`}>
         <EmptyState
           title="No images found"
           description="Try selecting a different dataset or uploading new images."
@@ -125,17 +124,21 @@ export function CarouselViewer({
   }
 
   return (
-    <div className={`flex h-full w-full flex-col ${className}`}>
+    <div ref={containerRef} className={`${styles.container} ${className}`}>
       {/* Main image display */}
       <div 
         ref={imageContainerRef}
-        className="flex-grow flex items-center justify-center p-6 relative overflow-hidden"
+        className={styles.imageContainer}
+        style={{ 
+          height: isCalculating ? 'auto' : `${imageContainerHeight}px` 
+        }}
       >
         {selectedImage && (
           <ImageViewer
             imagePath={selectedImage.path}
             alt={selectedImage.name}
-            className="max-h-full max-w-full object-contain"
+            className={styles.image}
+            padding={16}
           />
         )}
         
@@ -154,16 +157,10 @@ export function CarouselViewer({
         </div>
       </div>
 
-      {/* Thumbnails row with navigation controls */}
-      <div className="h-24 border-t border-gray-700 bg-gray-800 flex items-center px-4 relative shrink-0">
-        {/* Previous button */}
-        <NavigationButton
-          direction="prev"
-          onClick={() => navigateByDelta(-1)}
-        />
-        
-        {/* Thumbnails container with counter */}
-        <div className="flex-1 mx-14 relative" ref={thumbnailsRef}>
+      {/* Thumbnails row - positioned absolutely at the bottom */}
+      <div ref={thumbnailContainerRef} className={styles.thumbnailContainer}>
+        {/* Thumbnails with counter */}
+        <div className={styles.thumbnailWrapper} ref={thumbnailsRef}>
           <ThumbnailStrip
             images={visibleImages}
             selectedIndex={selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0}
@@ -175,19 +172,13 @@ export function CarouselViewer({
           />
           
           {/* Navigation counter - centered below thumbnails */}
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 mt-1">
+          <div className={styles.counterContainer}>
             <ImageCounter
               currentIndex={currentIndex}
               totalImages={totalImages}
             />
           </div>
         </div>
-        
-        {/* Next button */}
-        <NavigationButton
-          direction="next"
-          onClick={() => navigateByDelta(1)}
-        />
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export function ImageViewerToggle({
   onToggle,
   className = '',
   disabled = false,
-}: ImageViewerToggleProps) {
+}: Readonly<ImageViewerToggleProps>) {
   const { viewMode, setViewMode } = useEditorContext();
   
   const handleToggle = (mode: ViewMode) => {

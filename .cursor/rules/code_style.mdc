@@ -5,8 +5,9 @@ alwaysApply: true
 ---
 <Warning>
 Below are list of constraints to adhere to based on project style requirements: 
-
+- useEffect, useRef, useCallback and other hook related items should always be implemented in custom hook files instead of inside components
 - Utilize readonly and immutable inputs to all ui components
 - Non-interactive elements should not be assigned mouse or keyboard event listeners.sonarqube(typescript:S6847)
 - Use <hr> instead of the "separator" role to ensure accessibility across all devices.
+- Do not utilize fixed pixel heights and widths that will not respond to variable screen size and resolution
 </Warning>

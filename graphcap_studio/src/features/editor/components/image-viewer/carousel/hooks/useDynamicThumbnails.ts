@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
 
 interface UseDynamicThumbnailsProps {
   totalCount: number;
@@ -10,7 +10,7 @@ interface UseDynamicThumbnailsProps {
 }
 
 interface UseDynamicThumbnailsResult {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement>;
   thumbnailWidth: number;
   thumbnailHeight: number;
   visibleCount: number;
@@ -35,7 +35,7 @@ export function useDynamicThumbnails({
   aspectRatio = 1
 }: UseDynamicThumbnailsProps): UseDynamicThumbnailsResult {
   // Reference for the container element
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null) as RefObject<HTMLDivElement>;
   
   // State for thumbnail dimensions
   const [thumbnailWidth, setThumbnailWidth] = useState(minThumbnailWidth);

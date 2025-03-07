@@ -1,4 +1,3 @@
-# SPDX-License-Identifier: Apache-2.0
 # Editor UI Components
 
 This directory contains reusable UI components for the editor feature.

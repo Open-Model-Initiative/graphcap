@@ -1,0 +1,78 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.image {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  transition: opacity 300ms;
+  width: auto;
+  height: auto;
+}
+
+.loading {
+  opacity: 0;
+}
+
+.loaded {
+  opacity: 1;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(31, 41, 55, 0.5);
+  z-index: 10;
+}
+
+.spinner {
+  height: 2rem;
+  width: 2rem;
+  animation: spin 1s linear infinite;
+  border-radius: 9999px;
+  border: 2px solid rgba(75, 85, 99, 1);
+  border-top-color: rgba(59, 130, 246, 1);
+}
+
+.errorOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(31, 41, 55, 0.8);
+  z-index: 10;
+  padding: 1rem;
+}
+
+.errorIcon {
+  width: 3rem;
+  height: 3rem;
+  color: rgba(239, 68, 68, 1);
+  margin-bottom: 0.5rem;
+}
+
+.errorMessage {
+  color: rgba(248, 113, 113, 1);
+  text-align: center;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} 

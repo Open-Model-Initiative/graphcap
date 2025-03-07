@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-export * from './CarouselViewer';
-export * from './ThumbnailStrip';
+export { CarouselViewer } from './CarouselViewer';
+export { Pagination } from './Pagination';
+export { ThumbnailStrip } from './ThumbnailStrip';
 export * from './hooks'; 

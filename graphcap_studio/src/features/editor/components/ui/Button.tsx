@@ -17,18 +17,20 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 /**
  * A reusable button component with different variants and sizes
  */
-export function Button({
-  children,
-  variant = 'primary',
-  size = 'md',
-  isFullWidth = false,
-  isLoading = false,
-  leftIcon,
-  rightIcon,
-  className = '',
-  disabled,
-  ...props
-}: ButtonProps) {
+export function Button(props: Readonly<ButtonProps>) {
+  const {
+    children,
+    variant = 'primary',
+    size = 'md',
+    isFullWidth = false,
+    isLoading = false,
+    leftIcon,
+    rightIcon,
+    className = '',
+    disabled,
+    ...rest
+  } = props;
+  
   // Base classes
   const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
   
@@ -68,7 +70,7 @@ export function Button({
     <button
       className={buttonClasses}
       disabled={disabled || isLoading}
-      {...props}
+      {...rest}
     >
       {isLoading && (
         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

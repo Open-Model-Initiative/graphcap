@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { useLayoutHeight } from './hooks'
+import styles from './MainLayout.module.css'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -8,30 +11,55 @@ interface MainLayoutProps {
   rightSidebar?: ReactNode
 }
 
-export function MainLayout({ children, leftSidebar, rightSidebar }: MainLayoutProps) {
-  // Calculate content padding based on visible sidebars
+/**
+ * Main layout component that provides a consistent structure with header, footer, and optional sidebars
+ * 
+ * This component handles:
+ * - Proper height calculations for the content area
+ * - Consistent header and footer placement
+ * - Optional left and right sidebars
+ * 
+ * @param children - The main content to display
+ * @param leftSidebar - Optional left sidebar content
+ * @param rightSidebar - Optional right sidebar content
+ */
+export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<MainLayoutProps>) {
+  const { 
+    containerRef, 
+    headerRef, 
+    contentRef, 
+    footerRef, 
+    contentHeight,
+    isCalculating 
+  } = useLayoutHeight();
+
+  // Determine content classes based on sidebar presence
   const contentClasses = `
-    flex-1 overflow-hidden
-    ${leftSidebar ? 'pl-64' : ''}
-    ${rightSidebar ? 'pr-64' : ''}
-  `
+    ${styles.content}
+    ${leftSidebar ? styles.contentWithLeftSidebar : ''}
+    ${rightSidebar ? styles.contentWithRightSidebar : ''}
+  `;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div ref={containerRef} className={styles.container}>
       {/* Header with fixed height */}
-      <div className="flex-shrink-0">
+      <div ref={headerRef} className={styles.header}>
         <Header />
       </div>
 
       {/* Main content area that takes remaining space */}
-      <main className={contentClasses}>
-        <div className="h-full">
+      <main 
+        ref={contentRef} 
+        className={contentClasses}
+        style={{ height: isCalculating ? 'auto' : `${contentHeight}px` }}
+      >
+        <div className={styles.contentInner}>
           {children}
         </div>
       </main>
       
       {/* Footer with fixed height */}
-      <div className="flex-shrink-0">
+      <div ref={footerRef} className={styles.footer}>
         <Footer />
       </div>
     </div>
