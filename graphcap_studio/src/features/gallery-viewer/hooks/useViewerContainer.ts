@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
-import { Image } from '@/services/images';
-import { ViewMode } from '../components/ImageGallery';
 
-interface UseViewerContainerProps {
-  readonly images?: Image[];
-}
+
+
 
 interface UseViewerContainerResult {
   readonly containerSize: { width: number; height: number };
@@ -27,9 +24,9 @@ interface UseViewerContainerResult {
  * @param props - Properties for the hook
  * @returns Functions and state for the ViewerContainer
  */
-export function useViewerContainer({}: UseViewerContainerProps = {}): UseViewerContainerResult {
+export function useViewerContainer(): UseViewerContainerResult {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [containerRef, setContainerRefState] = useState<HTMLDivElement | null>(null);
+  const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
 
   // Update container dimensions on resize
   useEffect(() => {
@@ -75,7 +72,7 @@ export function useViewerContainer({}: UseViewerContainerProps = {}): UseViewerC
 
   return {
     containerSize,
-    setContainerRef: setContainerRefState,
+    setContainerRef,
     thumbnailOptions
   };
 } 

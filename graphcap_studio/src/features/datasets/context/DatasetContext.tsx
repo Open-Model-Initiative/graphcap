@@ -34,7 +34,6 @@ interface DatasetContextProviderProps {
   readonly initialSelectedSubfolder?: string | null;
   readonly onAddToDataset?: (imagePath: string, targetDataset: string) => void;
   readonly onCreateDataset?: (name: string) => Promise<void>;
-  readonly onDatasetSelected?: (datasetId: string, subfolder?: string | null) => void;
 }
 
 /**
@@ -52,7 +51,6 @@ export function DatasetContextProvider({
   initialSelectedSubfolder = null,
   onAddToDataset,
   onCreateDataset,
-  onDatasetSelected
 }: DatasetContextProviderProps) {
   // Dataset state
   const [datasets, setDatasets] = useState<Dataset[]>(initialDatasets);
@@ -78,17 +76,6 @@ export function DatasetContextProvider({
   useEffect(() => {
     setSelectedSubfolder(initialSelectedSubfolder);
   }, [initialSelectedSubfolder]);
-  
-  // Handle dataset selection
-  const handleDatasetChange = useCallback((datasetId: string, subfolder?: string | null) => {
-    setCurrentDataset(datasetId);
-    setSelectedSubfolder(subfolder || null);
-    
-    // Notify parent component if callback is provided
-    if (onDatasetSelected) {
-      onDatasetSelected(datasetId, subfolder);
-    }
-  }, [onDatasetSelected]);
   
   // Action handlers
   const handleSelectImage = useCallback((image: Image) => {
