@@ -16,8 +16,6 @@ const {
   validateFilename, 
   getBasename, 
   getDirname, 
-  joinPath,
-  ensureDir
 } = require('../utils/path-utils');
 const { WORKSPACE_PATH } = require('../config');
 
@@ -76,7 +74,7 @@ async function processLocalSubdirectory(subdir, datasets) {
     return;
   }
   
-  const subdirPathResult = securePath(`datasets/.local/${subdirNameResult.sanitized}`, WORKSPACE_PATH, { mustExist: false });
+  const subdirPathResult = securePath(`datasets/local/${subdirNameResult.sanitized}`, WORKSPACE_PATH, { mustExist: false });
   if (!subdirPathResult.isValid) {
     logError('Invalid subdirectory path', { subdir, error: subdirPathResult.error });
     return;
@@ -102,13 +100,13 @@ async function processLocalSubdirectory(subdir, datasets) {
 }
 
 /**
- * Processes the .local directory and its subdirectories
+ * Processes the local directory and its subdirectories
  * 
  * @param {Array<Object>} datasets - Array to add dataset objects to
  * @returns {Promise<void>}
  */
 async function processLocalDirectory(datasets) {
-  const localDirResult = securePath('datasets/.local', WORKSPACE_PATH, { mustExist: false });
+  const localDirResult = securePath('datasets/local', WORKSPACE_PATH, { mustExist: false });
   if (!localDirResult.isValid) {
     return;
   }
@@ -118,9 +116,9 @@ async function processLocalDirectory(datasets) {
     return;
   }
   
-  logInfo(`Scanning .local directory: ${localDir}`);
+  logInfo(`Scanning local directory: ${localDir}`);
   
-  // Get all subdirectories in .local
+  // Get all subdirectories in local
   const localSubdirs = fs.readdirSync(localDir, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
@@ -201,13 +199,13 @@ async function listDatasetImages() {
     const datasets = [];
     
     for (const dir of directories) {
-      // Skip hidden directories except .local
-      if (dir.startsWith('.') && dir !== '.local') {
+      // Skip hidden directories except local
+      if (dir.startsWith('.') && dir !== 'local') {
         continue;
       }
       
       // Process directory based on type
-      if (dir === '.local') {
+      if (dir === 'local') {
         await processLocalDirectory(datasets);
       } else {
         await processRegularDirectory(dir, datasets);
@@ -243,7 +241,7 @@ async function createDataset(name) {
     const sanitizedName = nameResult.sanitized;
     
     // Create the dataset path
-    const datasetPathResult = securePath(`datasets/.local/${sanitizedName}`, WORKSPACE_PATH, { createIfNotExist: true });
+    const datasetPathResult = securePath(`datasets/local${sanitizedName}`, WORKSPACE_PATH, { createIfNotExist: true });
     
     if (!datasetPathResult.isValid) {
       throw new Error(`Failed to create dataset path: ${datasetPathResult.error}`);
@@ -286,7 +284,7 @@ async function addImageToDataset(imagePath, datasetName) {
     const sanitizedDatasetName = datasetNameResult.sanitized;
     
     // Check if the dataset exists
-    const datasetPathResult = securePath(`datasets/.local/${sanitizedDatasetName}`, WORKSPACE_PATH, { mustExist: false });
+    const datasetPathResult = securePath(`datasets/local${sanitizedDatasetName}`, WORKSPACE_PATH, { mustExist: false });
     if (!datasetPathResult.isValid) {
       throw new Error(`Invalid dataset path: ${datasetPathResult.error}`);
     }
@@ -299,7 +297,7 @@ async function addImageToDataset(imagePath, datasetName) {
     const imageName = getBasename(imagePathResult.path);
     
     // Create the new image path
-    const newImagePathResult = securePath(`datasets/.local/${sanitizedDatasetName}/${imageName}`, WORKSPACE_PATH, { mustExist: false });
+    const newImagePathResult = securePath(`datasets/local/${sanitizedDatasetName}/${imageName}`, WORKSPACE_PATH, { mustExist: false });
     if (!newImagePathResult.isValid) {
       throw new Error(`Invalid new image path: ${newImagePathResult.error}`);
     }

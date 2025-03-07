@@ -162,7 +162,7 @@ router.post('/upload', handleMulterErrors, upload.single('image'), (req, res) =>
       }
       
       // Securely create dataset path
-      const datasetPathResult = securePath(`datasets/.local/${dataset}`, WORKSPACE_PATH, { createIfNotExist: true });
+      const datasetPathResult = securePath(`datasets/local/${dataset}`, WORKSPACE_PATH, { createIfNotExist: true });
       
       if (!datasetPathResult.isValid) {
         logError('Invalid dataset path', { dataset, error: datasetPathResult.error });
@@ -179,7 +179,7 @@ router.post('/upload', handleMulterErrors, upload.single('image'), (req, res) =>
       }
       
       // Create the new path securely
-      const newPathResult = securePath(`datasets/.local/${dataset}/${fileNameResult.sanitized}`, WORKSPACE_PATH);
+      const newPathResult = securePath(`datasets/local/${dataset}/${fileNameResult.sanitized}`, WORKSPACE_PATH);
       
       if (!newPathResult.isValid) {
         logError('Invalid new path', { path: newPathResult.path, error: newPathResult.error });
