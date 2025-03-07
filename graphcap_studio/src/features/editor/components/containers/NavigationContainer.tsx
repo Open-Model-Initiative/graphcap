@@ -5,14 +5,14 @@ import { DatasetTree } from '../DatasetTree';
 import { CreateDatasetModal } from '../CreateDatasetModal';
 
 interface NavigationContainerProps {
-  datasets: Dataset[];
-  selectedDataset: string | null;
-  selectedSubfolder: string | null;
-  onSelectDataset: (datasetName: string) => void;
-  onSelectSubfolder: (subfolder: string | null) => void;
-  onCreateDataset: (name: string) => Promise<void>;
-  isLoading?: boolean;
-  className?: string;
+  readonly datasets: Dataset[];
+  readonly selectedDataset: string | null;
+  readonly selectedSubfolder: string | null;
+  readonly onSelectDataset: (datasetName: string) => void;
+  readonly onSelectSubfolder: (subfolder: string | null) => void;
+  readonly onCreateDataset: (name: string) => Promise<void>;
+  readonly isLoading?: boolean;
+  readonly className?: string;
 }
 
 /**

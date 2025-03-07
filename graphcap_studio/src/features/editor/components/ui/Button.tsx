@@ -5,13 +5,13 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  isFullWidth?: boolean;
-  isLoading?: boolean;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
+  readonly children: ReactNode;
+  readonly variant?: ButtonVariant;
+  readonly size?: ButtonSize;
+  readonly isFullWidth?: boolean;
+  readonly isLoading?: boolean;
+  readonly leftIcon?: ReactNode;
+  readonly rightIcon?: ReactNode;
 }
 
 /**

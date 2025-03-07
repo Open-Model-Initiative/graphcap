@@ -5,9 +5,9 @@ import { toast } from 'sonner';
 import { uploadImage } from '@/services/images';
 
 interface ImageUploaderProps {
-  datasetName: string;
-  onUploadComplete: () => void;
-  className?: string;
+  readonly datasetName: string;
+  readonly onUploadComplete: () => void;
+  readonly className?: string;
 }
 
 /**
@@ -145,28 +145,40 @@ export function ImageUploader({
       {isUploading && Object.keys(uploadProgress).length > 0 && (
         <div className="mt-4 space-y-2">
           <h3 className="text-sm font-medium text-gray-300">Uploading...</h3>
-          {Object.entries(uploadProgress).map(([fileName, progress]) => (
-            <div key={fileName} className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400 truncate max-w-[80%]">{fileName}</span>
-                <span className="text-xs text-gray-400">
-                  {progress === -1 ? 'Failed' : progress === 100 ? 'Complete' : `${progress}%`}
-                </span>
+          {Object.entries(uploadProgress).map(([fileName, progress]) => {
+            // Determine progress bar color based on status
+            let progressBarColor = 'bg-blue-500';
+            if (progress === -1) {
+              progressBarColor = 'bg-red-500';
+            } else if (progress === 100) {
+              progressBarColor = 'bg-green-500';
+            }
+            
+            // Determine progress text
+            let progressText = `${progress}%`;
+            if (progress === -1) {
+              progressText = 'Failed';
+            } else if (progress === 100) {
+              progressText = 'Complete';
+            }
+            
+            return (
+              <div key={fileName} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400 truncate max-w-[80%]">{fileName}</span>
+                  <span className="text-xs text-gray-400">
+                    {progressText}
+                  </span>
+                </div>
+                <div className="h-1 w-full rounded-full bg-gray-700">
+                  <div
+                    className={`h-1 rounded-full ${progressBarColor}`}
+                    style={{ width: `${progress === -1 ? 100 : progress}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-1 w-full rounded-full bg-gray-700">
-                <div
-                  className={`h-1 rounded-full ${
-                    progress === -1
-                      ? 'bg-red-500'
-                      : progress === 100
-                      ? 'bg-green-500'
-                      : 'bg-blue-500'
-                  }`}
-                  style={{ width: `${progress === -1 ? 100 : progress}%` }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

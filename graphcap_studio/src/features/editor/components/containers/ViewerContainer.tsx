@@ -2,13 +2,12 @@
 import { useState, useEffect } from 'react';
 import { Image } from '@/services/images';
 import { ImageGallery } from '../image-viewer';
-import { useEditorContext } from '../../context/EditorContext';
 
 interface ViewerContainerProps {
-  images: Image[];
-  isLoading?: boolean;
-  isEmpty?: boolean;
-  className?: string;
+  readonly images: Image[];
+  readonly isLoading?: boolean;
+  readonly isEmpty?: boolean;
+  readonly className?: string;
 }
 
 /**

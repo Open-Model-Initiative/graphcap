@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  color?: 'primary' | 'light' | 'dark';
-  className?: string;
+  readonly size?: 'sm' | 'md' | 'lg';
+  readonly color?: 'primary' | 'light' | 'dark';
+  readonly className?: string;
 }
 
 /**
@@ -29,12 +29,11 @@ export function LoadingSpinner({
   };
 
   return (
-    <div
+    <output
       className={`animate-spin rounded-full border-2 ${sizeMap[size]} ${colorMap[color]} ${className}`}
-      role="status"
       aria-label="Loading"
     >
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
-} 
+}

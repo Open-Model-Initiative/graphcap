@@ -3,19 +3,19 @@ import React from 'react';
 
 export interface TreeNodeProps {
   /** The label to display for the node */
-  label: string;
+  readonly label: string;
   /** Whether the node is currently selected */
-  isSelected?: boolean;
+  readonly isSelected?: boolean;
   /** Whether the node has children */
-  hasChildren?: boolean;
+  readonly hasChildren?: boolean;
   /** Whether the node is expanded (only relevant if hasChildren is true) */
-  isExpanded?: boolean;
+  readonly isExpanded?: boolean;
   /** Icon to display before the label */
-  icon?: React.ReactNode;
+  readonly icon?: React.ReactNode;
   /** Called when the node is clicked */
-  onClick?: () => void;
+  readonly onClick?: () => void;
   /** Called when the expand/collapse button is clicked */
-  onToggleExpand?: () => void;
+  readonly onToggleExpand?: () => void;
 }
 
 /**
@@ -39,6 +39,7 @@ export function TreeNode({
       }`}
       onClick={onClick}
       role="treeitem"
+      aria-selected={isSelected}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -48,14 +49,12 @@ export function TreeNode({
       }}
     >
       {hasChildren ? (
-        <div 
-          className="mr-1.5 w-5 h-5 flex items-center justify-center"
+        <button 
+          className="mr-1.5 w-5 h-5 flex items-center justify-center bg-transparent border-0 p-0"
           onClick={(e) => {
             e.stopPropagation();
             onToggleExpand?.();
           }}
-          role="button"
-          tabIndex={0}
           aria-label={isExpanded ? "Collapse" : "Expand"}
           aria-expanded={isExpanded}
           onKeyDown={(e) => {
@@ -82,7 +81,7 @@ export function TreeNode({
               strokeLinejoin="round"
             />
           </svg>
-        </div>
+        </button>
       ) : (
         <span className="mr-1.5 h-5 w-5" />
       )}

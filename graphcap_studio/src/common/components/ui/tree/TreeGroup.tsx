@@ -3,9 +3,9 @@ import React from 'react';
 
 export interface TreeGroupProps {
   /** Whether the group is expanded */
-  isExpanded: boolean;
+  readonly isExpanded: boolean;
   /** The children to render when expanded */
-  children: React.ReactNode;
+  readonly children: React.ReactNode;
 }
 
 /**

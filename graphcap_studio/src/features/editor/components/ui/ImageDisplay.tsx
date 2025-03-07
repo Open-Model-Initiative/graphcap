@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { Image, getImageUrl } from '@/services/images';
 
 interface ImageDisplayProps {
-  image: Image | null;
-  size?: 'small' | 'medium' | 'large' | 'custom';
-  customSize?: {
-    maxWidth?: string | number;
-    maxHeight?: string | number;
+  readonly image: Image | null;
+  readonly size?: 'small' | 'medium' | 'large' | 'custom';
+  readonly customSize?: {
+    readonly maxWidth?: string | number;
+    readonly maxHeight?: string | number;
   };
-  className?: string;
-  containerClassName?: string;
-  onLoad?: () => void;
-  onError?: (error: Error) => void;
+  readonly className?: string;
+  readonly containerClassName?: string;
+  readonly onLoad?: () => void;
+  readonly onError?: (error: Error) => void;
 }
 
 /**

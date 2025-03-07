@@ -23,15 +23,15 @@ export interface TreeItemData {
 
 export interface TreeProps {
   /** The items to display in the tree */
-  items: TreeItemData[];
+  readonly items: TreeItemData[];
   /** The currently selected item ID */
-  selectedItemId?: string;
+  readonly selectedItemId?: string;
   /** Called when an item is selected */
-  onSelectItem?: (item: TreeItemData) => void;
+  readonly onSelectItem?: (item: TreeItemData) => void;
   /** Called when an item's expanded state is toggled */
-  onToggleExpand?: (item: TreeItemData) => void;
+  readonly onToggleExpand?: (item: TreeItemData) => void;
   /** Optional class name to apply to the tree container */
-  className?: string;
+  readonly className?: string;
 }
 
 /**
@@ -60,7 +60,7 @@ export function Tree({
           isSelected={isSelected}
           hasChildren={hasChildren}
           isExpanded={item.isExpanded}
-          icon={<TreeIcon type={item.iconType || (hasChildren ? 'folder' : 'file')} />}
+          icon={<TreeIcon type={item.iconType ?? (hasChildren ? 'folder' : 'file')} />}
           onClick={() => onSelectItem?.(item)}
           onToggleExpand={() => onToggleExpand?.(item)}
         />

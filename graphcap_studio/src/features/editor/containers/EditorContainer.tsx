@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { toast } from "sonner";
 import { Image, Dataset } from "@/services/images";
 import { ImageEditor } from "../components/ImageEditor";
 import {
   EditorContextProvider,
-  ViewMode,
   useEditorContext,
 } from "../context/EditorContext";
 import { EditorLayout } from "../components/layout";
@@ -25,8 +23,8 @@ import {
 import { ImageUploader } from "../components/ImageUploader";
 
 interface EditorContainerProps {
-  directory?: string;
-  onClose?: () => void;
+  readonly directory?: string;
+  readonly onClose?: () => void;
 }
 
 /**
@@ -41,7 +39,6 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
     currentDataset,
     filteredImages,
     isLoading,
-    error,
     setSelectedSubfolder,
     handleDatasetChange,
     handleCreateDataset,
@@ -51,9 +48,6 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
 
   const {
     selectedImage,
-    carouselIndex,
-    setSelectedImage,
-    handleSelectImage,
     handleSaveProperties,
   } = useImageSelection(filteredImages);
 
@@ -128,25 +122,25 @@ export function EditorContainer({ directory, onClose }: EditorContainerProps) {
 }
 
 interface EditorContainerInnerProps extends EditorContainerProps {
-  filteredImages: Image[];
-  isLoading: boolean;
-  isEmpty: boolean;
-  isEditing: boolean;
-  selectedImage: Image | null;
-  showUploader: boolean;
-  handleSave: (editedImage: any) => void;
-  handleCancel: () => void;
-  handleSaveProperties: (metadata: Record<string, string>) => void;
-  handleToggleUploader: () => void;
-  handleUploadFinished: () => void;
-  selectedDataset: string;
-  selectedSubfolder: string;
-  setSelectedSubfolder: (subfolder: string | null) => void;
-  handleDatasetChange: (dataset: string) => void;
-  handleCreateDataset: (name: string) => Promise<void>;
-  datasets: Dataset[];
-  handleEditImage: () => void;
-  setShowUploader: (visible: boolean) => void;
+  readonly filteredImages: Image[];
+  readonly isLoading: boolean;
+  readonly isEmpty: boolean;
+  readonly isEditing: boolean;
+  readonly selectedImage: Image | null;
+  readonly showUploader: boolean;
+  readonly handleSave: (editedImage: any) => void;
+  readonly handleCancel: () => void;
+  readonly handleSaveProperties: (metadata: Record<string, string>) => void;
+  readonly handleToggleUploader: () => void;
+  readonly handleUploadFinished: () => void;
+  readonly selectedDataset: string;
+  readonly selectedSubfolder: string;
+  readonly setSelectedSubfolder: (subfolder: string | null) => void;
+  readonly handleDatasetChange: (dataset: string) => void;
+  readonly handleCreateDataset: (name: string) => Promise<void>;
+  readonly datasets: Dataset[];
+  readonly handleEditImage: () => void;
+  readonly setShowUploader: (visible: boolean) => void;
 }
 
 /**
@@ -184,8 +178,6 @@ function EditorContainerInner({
 
   // Use our new custom hook for view mode management
   const { 
-    wasUploaderVisible, 
-    setWasUploaderVisible, 
     handleViewModeToggle 
   } = useViewModeManager({
     viewMode,

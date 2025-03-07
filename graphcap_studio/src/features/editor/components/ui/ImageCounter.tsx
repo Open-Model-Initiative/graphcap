@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 interface ImageCounterProps {
-  currentIndex: number;
-  totalImages: number;
-  className?: string;
+  readonly currentIndex: number;
+  readonly totalImages: number;
+  readonly className?: string;
 }
 
 /**

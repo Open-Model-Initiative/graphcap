@@ -4,9 +4,9 @@ import { toast } from 'sonner';
 import { createDataset } from '@/services/images';
 
 interface CreateDatasetModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onDatasetCreated: (datasetName: string) => void;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onDatasetCreated: (datasetName: string) => void;
 }
 
 /**

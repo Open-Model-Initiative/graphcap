@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image } from '@/services/images';
 import { ImageViewer } from '../ImageViewer';
 import { 
@@ -14,15 +14,15 @@ import { useCarouselNavigation, useCarouselControls, useThumbnailScroll } from '
 import { useEditorContext } from '../../../context/EditorContext';
 
 interface CarouselViewerProps {
-  images: Image[];
-  isLoading?: boolean;
-  isEmpty?: boolean;
-  className?: string;
-  thumbnailOptions?: {
-    minWidth?: number;
-    maxWidth?: number;
-    gap?: number;
-    aspectRatio?: number;
+  readonly images: Image[];
+  readonly isLoading?: boolean;
+  readonly isEmpty?: boolean;
+  readonly className?: string;
+  readonly thumbnailOptions?: {
+    readonly minWidth?: number;
+    readonly maxWidth?: number;
+    readonly gap?: number;
+    readonly aspectRatio?: number;
   };
 }
 
@@ -42,8 +42,7 @@ export function CarouselViewer({
 }: CarouselViewerProps) {
   const {
     selectedImage,
-    handleSelectImage,
-    handleEditImage
+    handleSelectImage
   } = useEditorContext();
   
   const { 
@@ -59,7 +58,6 @@ export function CarouselViewer({
     visibleImages,
     visibleStartIndex,
     totalImages,
-    navigateToIndex,
     navigateByDelta,
     handleThumbnailSelect
   } = useCarouselNavigation({

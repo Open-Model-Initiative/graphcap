@@ -2,11 +2,11 @@
 import { ReactNode, ButtonHTMLAttributes } from 'react';
 
 interface NavigationButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  direction: 'prev' | 'next';
-  label?: string;
-  icon?: ReactNode;
-  position?: 'left' | 'right';
-  className?: string;
+  readonly direction: 'prev' | 'next';
+  readonly label?: string;
+  readonly icon?: ReactNode;
+  readonly position?: 'left' | 'right';
+  readonly className?: string;
 }
 
 /**
@@ -43,10 +43,10 @@ export function NavigationButton({
   return (
     <button
       className={`z-10 rounded-full bg-gray-700 p-2 text-white hover:bg-gray-600 ${positionClasses[position]} ${className}`}
-      aria-label={label || (direction === 'prev' ? 'Previous' : 'Next')}
+      aria-label={label ?? (direction === 'prev' ? 'Previous' : 'Next')}
       {...props}
     >
-      {icon || defaultIcons[direction]}
+      {icon ?? defaultIcons[direction]}
     </button>
   );
 } 

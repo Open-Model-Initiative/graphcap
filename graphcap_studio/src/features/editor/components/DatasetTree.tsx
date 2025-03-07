@@ -4,10 +4,10 @@ import { Dataset, Image } from '@/services/images';
 import { Tree, TreeItemData } from '@/common/components/ui/tree';
 
 interface DatasetTreeProps {
-  datasets: Dataset[];
-  selectedDataset: string | null;
-  selectedSubfolder: string | null;
-  onSelectNode: (datasetName: string, subfolder?: string) => void;
+  readonly datasets: Dataset[];
+  readonly selectedDataset: string | null;
+  readonly selectedSubfolder: string | null;
+  readonly onSelectNode: (datasetName: string, subfolder?: string) => void;
 }
 
 /**
@@ -163,7 +163,7 @@ export function DatasetTree({
   const handleSelectItem = (item: TreeItemData) => {
     const isDatasetRoot = item.path ? !item.path.includes('/') : true;
     onSelectNode(
-      isDatasetRoot ? item.name : selectedDataset || '',
+      isDatasetRoot ? item.name : selectedDataset ?? '',
       isDatasetRoot ? undefined : item.path
     );
   };
@@ -180,7 +180,7 @@ export function DatasetTree({
   return (
     <Tree
       items={treeItems}
-      selectedItemId={selectedSubfolder || selectedDataset || undefined}
+      selectedItemId={selectedSubfolder ?? selectedDataset ?? undefined}
       onSelectItem={handleSelectItem}
       onToggleExpand={handleToggleExpand}
       className="overflow-auto"

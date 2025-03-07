@@ -3,14 +3,14 @@ import { Image, getThumbnailUrl } from '@/services/images';
 import { useThumbnailScroll, useDynamicThumbnails } from './hooks';
 
 interface ThumbnailStripProps {
-  images: Image[];
-  selectedIndex: number;
-  onSelect: (index: number) => void;
-  className?: string;
-  minThumbnailWidth?: number;
-  maxThumbnailWidth?: number;
-  gap?: number;
-  aspectRatio?: number;
+  readonly images: Image[];
+  readonly selectedIndex: number;
+  readonly onSelect: (index: number) => void;
+  readonly className?: string;
+  readonly minThumbnailWidth?: number;
+  readonly maxThumbnailWidth?: number;
+  readonly gap?: number;
+  readonly aspectRatio?: number;
 }
 
 /**
@@ -36,7 +36,6 @@ export function ThumbnailStrip({
     containerRef,
     thumbnailWidth,
     thumbnailHeight,
-    visibleCount,
     gap: calculatedGap
   } = useDynamicThumbnails({
     totalCount: images.length,
@@ -70,7 +69,7 @@ export function ThumbnailStrip({
       style={{ gap: `${calculatedGap}px` }}
     >
       {images.map((image, index) => (
-        <div
+        <button
           key={image.path}
           className={`relative flex-shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-all ${
             index === selectedIndex
@@ -82,16 +81,8 @@ export function ThumbnailStrip({
             height: `${thumbnailHeight}px` 
           }}
           onClick={() => onSelect(index)}
-          role="button"
-          tabIndex={0}
           aria-label={`Select image ${image.name}`}
           aria-pressed={index === selectedIndex}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              onSelect(index);
-              e.preventDefault();
-            }
-          }}
         >
           <img
             src={getThumbnailUrl(image.path, thumbnailWidth, thumbnailHeight)}
@@ -103,7 +94,7 @@ export function ThumbnailStrip({
           {index === selectedIndex && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500"></div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );

@@ -3,12 +3,12 @@ import { ReactNode } from 'react';
 import { Button } from './Button';
 
 interface EmptyStateProps {
-  icon?: ReactNode;
-  title: string;
-  description?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  className?: string;
+  readonly icon?: ReactNode;
+  readonly title: string;
+  readonly description?: string;
+  readonly actionLabel?: string;
+  readonly onAction?: () => void;
+  readonly className?: string;
 }
 
 /**

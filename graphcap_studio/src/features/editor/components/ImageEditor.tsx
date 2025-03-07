@@ -5,9 +5,9 @@ import { processImage, ImageProcessResponse, getImageUrl } from '@/services/imag
 import { ImageViewer } from './image-viewer';
 
 interface ImageEditorProps {
-  imagePath: string;
-  onSave?: (result: ImageProcessResponse) => void;
-  onCancel?: () => void;
+  readonly imagePath: string;
+  readonly onSave?: (result: ImageProcessResponse) => void;
+  readonly onCancel?: () => void;
 }
 
 /**

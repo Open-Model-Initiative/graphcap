@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Image, Dataset } from '@/services/images';
 import { ImageProperties } from '../image-properties';
 import { useEditorContext } from '../../context/EditorContext';
 
 interface PropertiesContainerProps {
-  className?: string;
+  readonly className?: string;
 }
 
 /**
@@ -17,9 +16,7 @@ export function PropertiesContainer({
   className = '',
 }: PropertiesContainerProps) {
   const { 
-    selectedImage,
-    datasets,
-    currentDataset
+    selectedImage
   } = useEditorContext();
 
   if (!selectedImage) {

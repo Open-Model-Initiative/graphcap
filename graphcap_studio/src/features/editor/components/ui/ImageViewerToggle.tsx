@@ -2,9 +2,9 @@
 import { useEditorContext, ViewMode } from '../../context/EditorContext';
 
 interface ImageViewerToggleProps {
-  onToggle?: (mode: ViewMode) => void;
-  className?: string;
-  disabled?: boolean;
+  readonly onToggle?: (mode: ViewMode) => void;
+  readonly className?: string;
+  readonly disabled?: boolean;
 }
 
 /**
