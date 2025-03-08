@@ -1,25 +1,22 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { MainLayout } from '../common/components/layout'
+import { useFeatureFlag } from '../common/providers'
+
+/**
+ * RouterDevTools component that conditionally renders based on feature flag
+ */
+function RouterDevTools() {
+  const showRouterDevTools = useFeatureFlag('enableRouterDevTools');
+  
+  return showRouterDevTools ? <TanStackRouterDevtools /> : null;
+}
 
 export const Route = createRootRoute({
   component: () => (
-    <MainLayout
-      leftSidebar={
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900 dark:text-white">Navigation</h3>
-          {/* Add left sidebar content */}
-        </div>
-      }
-      rightSidebar={
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900 dark:text-white">Properties</h3>
-          {/* Add right sidebar content */}
-        </div>
-      }
-    >
+    <MainLayout>
       <Outlet />
-      {/* <TanStackRouterDevtools /> */}
+      <RouterDevTools />
     </MainLayout>
   ),
 }) 

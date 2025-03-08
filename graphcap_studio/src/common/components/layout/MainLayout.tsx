@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { Sidebar } from './Sidebar'
+import { useLayoutHeight } from './hooks'
+import styles from './MainLayout.module.css'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -9,28 +11,57 @@ interface MainLayoutProps {
   rightSidebar?: ReactNode
 }
 
-export function MainLayout({ children, leftSidebar, rightSidebar }: MainLayoutProps) {
-  // Calculate content padding based on visible sidebars
+/**
+ * Main layout component that provides a consistent structure with header, footer, and optional sidebars
+ * 
+ * This component handles:
+ * - Proper height calculations for the content area
+ * - Consistent header and footer placement
+ * - Optional left and right sidebars
+ * 
+ * @param children - The main content to display
+ * @param leftSidebar - Optional left sidebar content
+ * @param rightSidebar - Optional right sidebar content
+ */
+export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<MainLayoutProps>) {
+  const { 
+    containerRef, 
+    headerRef, 
+    contentRef, 
+    footerRef, 
+    contentHeight,
+    isCalculating 
+  } = useLayoutHeight();
+
+  // Determine content classes based on sidebar presence
   const contentClasses = `
-    min-h-screen pt-14 pb-12
-    ${leftSidebar ? 'pl-64' : ''}
-    ${rightSidebar ? 'pr-64' : ''}
-  `
+    ${styles.content}
+    ${leftSidebar ? styles.contentWithLeftSidebar : ''}
+    ${rightSidebar ? styles.contentWithRightSidebar : ''}
+  `;
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-950">
-      <Header />
-      
-      {leftSidebar && <Sidebar side="left">{leftSidebar}</Sidebar>}
-      {rightSidebar && <Sidebar side="right">{rightSidebar}</Sidebar>}
-      
-      <main className={contentClasses}>
-        <div className="h-full p-6">
+    <div ref={containerRef} className={styles.container}>
+      {/* Header with fixed height */}
+      <div ref={headerRef} className={styles.header}>
+        <Header />
+      </div>
+
+      {/* Main content area that takes remaining space */}
+      <main 
+        ref={contentRef} 
+        className={contentClasses}
+        style={{ height: isCalculating ? 'auto' : `${contentHeight}px` }}
+      >
+        <div className={styles.contentInner}>
           {children}
         </div>
       </main>
       
-      <Footer />
+      {/* Footer with fixed height */}
+      <div ref={footerRef} className={styles.footer}>
+        <Footer />
+      </div>
     </div>
   )
 } 

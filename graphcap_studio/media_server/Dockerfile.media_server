@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+FROM node:20-alpine
+
+# Install required packages for Sharp and other dependencies
+RUN apk add --no-cache \
+    bash \
+    build-base \
+    cairo-dev \
+    curl \
+    g++ \
+    giflib-dev \
+    jpeg-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    pango-dev \
+    pangomm-dev \
+    pixman-dev
+
+WORKDIR /app
+
+# Copy package files first
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install --ignore-scripts
+
+# Copy the rest of the application
+COPY . .
+
+# Create directory for processed media if it doesn't exist
+RUN mkdir -p /app/processed
+
+EXPOSE 32400
+
+# Use nodemon for development mode
+ENV NODE_ENV=development
+
+# Start the server with nodemon for hot reloading
+CMD ["npm", "run", "dev"] 

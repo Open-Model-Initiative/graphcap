@@ -1,72 +1,118 @@
 ---
 description: Unit, integration, and e2e tests
 globs: test/**
+alwaysApply: true
 ---
-# Test Overview
+## Test Overview
 
-Tests are split into three main categories:
+Our tests are divided into three primary categories:
 
-- `integration` tests: these are tests that test the interaction between components or services.
-- `e2e` tests: these are tests that test the entire application, including the user interface, backend, and external systems.
+- **Unit Tests:**  
+  Verify the smallest units of code (e.g., individual React components, utility functions, or Express route handlers) in isolation. These tests run quickly and provide immediate feedback during development.
 
-Unit tests should be able to run in any environment. To install test dependencies, run `uv pip install -e ./server[dev]`
+- **Integration Tests:**  
+  Validate interactions between modules or services. These tests ensure that components and services work together as expected, such as verifying that a CarouselViewer correctly integrates with a ThumbnailStrip.
 
-Integration tests need providers to be set up. Copy the `provider.example.config.toml` file to `provider.test.config.toml` into this directory and configure to include the providers you want to test.
+- **End-to-End (E2E) Tests:**  
+  Simulate real user scenarios by testing the entire application (from the UI through the backend and external systems). These tests are implemented using tools like Playwright and focus on critical user journeys.
 
-To run tests, cd into the `server` directory and run :
+---
 
-Unit test watch : `uv run ptw . -c pytest.ini -v -m "not integration"`
-Unit test : `uv run pytest -v -c pytest.ini -m "not integration"`
-Integration test : `uv run pytest -v -c pytest.ini`
-
-
-## Test Policy 
+## Test Policy
 
 ### Conventions
-- Tests should include a `GIVEN`, `WHEN`, `THEN` structure focusing on the behavior of the code under tested.
+
+#### 1. Structure and Readability
+- **GIVEN / WHEN / THEN Pattern:**  
+  Every test must clearly follow a **GIVEN / WHEN / THEN** structure.  
+  - **GIVEN:** Set up the initial state or props.  
+  - **WHEN:** Perform an action (e.g., click a button, press a key, or change props).  
+  - **THEN:** Assert the expected outcome.
+  
+  *Example:*
+  ```typescript
+  test('renders loading state correctly', () => {
+    // GIVEN a CarouselViewer in loading state
+    render(<CarouselViewer images={[]} isLoading onSelectImage={vi.fn()} />);
+    
+    // THEN it should display a loading spinner
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+  ```
+
+- **Self-Explanatory Names and Comments:**  
+  Test names and inline comments should describe the behavior under test so that future maintainers quickly understand what each test is validating.
+
+#### 2. Setup and Teardown
+- **Global Mocks:**  
+  Use common setup files (e.g., `setup.ts`) to configure global mocks such as `ResizeObserver` and `Element.scrollTo` that are used across many tests.
+  
+- **Before/After Hooks:**  
+  When necessary, use `beforeAll`, `beforeEach`, and `afterEach` hooks to configure and clean up test environments, ensuring that tests remain isolated.
+
+#### 3. Interaction and Accessibility
+- **Simulating User Interactions:**  
+  Always simulate user events using testing-library’s utilities (e.g., `fireEvent.click`, `fireEvent.keyDown`).  
+- **Accessible Components:**  
+  Ensure that interactive elements are rendered with appropriate roles, tab indices, and keyboard event listeners so that tests can validate both functionality and accessibility.
+
+#### 4. Type Safety and Assertions
+- **Minimal Type Assertions:**  
+  Avoid unnecessary type assertions. Tests should be written in a type-safe manner that mirrors how the component is used in production.
+- **Behavior Over Implementation:**  
+  Focus on what the component does (its behavior and public API) rather than its internal implementation details.
+
+---
+
+## Testing Categories
 
 ### Unit Tests
-**Purpose:** To test the smallest units of code, typically functions or methods, in isolation.
+**Purpose:**  
+Test individual functions or components in isolation.
 
-**When to Use:**
-- For complex algorithms, data transformations, or business logic
-- For utility functions or components that are reused throughout the application
-- When there's a clear "black box" input/output relationship
-- To drive development, especially when dealing with complex logic and a need for immediate feedback
-- When manually testing is too time consuming and frustrating
-- For any code that will cause a lot of manual testing to be repeated
-
-**Characteristics:** Fast to run, focused, and easy to maintain.
-
-**Avoid:**
-- Over-mocking dependencies, especially databases or external APIs. Focus on testing real code, the code that runs in production. If you are reaching for a mock, step back and determine if this should be an integration test instead.
-- Creating tests that are too tightly coupled to implementation details, or that will break with each refactoring. Test the functionality, not the implementation.
+**Guidelines:**
+- Co-locate tests with their source code in __tests__ directory.
+- Use real implementations where possible, mocking only external dependencies (e.g., network calls or browser APIs).
+- Follow the GIVEN/WHEN/THEN pattern to make tests clear and concise.
 
 ### Integration Tests
-**Purpose:** To test interactions between different components or modules within the application.
+**Purpose:**  
+Confirm that different parts of the application work together correctly.
 
-**When to Use:**
-- To verify that different services or components interact with each other correctly
-- To test interactions with real databases or external APIs
-- To test data flow through the application
-- When unit testing is insufficient to verify the correctness of a more complex interaction
-
-**Characteristics:** Slower than unit tests but verify higher-level interactions.
-
-**Avoid:**
-- Overly broad integration tests that try to test too much functionality at once
-- Duplicating logic that is already tested with unit tests
+**Guidelines:**
+- Use the same GIVEN/WHEN/THEN pattern as unit tests.
+- Validate interactions between components (e.g., CarouselViewer with ThumbnailStrip).
+- Simulate real user interactions and events.
+- Ensure that changes in one component propagate to others (e.g., updating the selected image updates the thumbnail’s selected state).
 
 ### End-to-End (E2E) Tests
-**Purpose:** To test the entire application, including the user interface, backend, and external systems.
+**Purpose:**  
+Simulate complete user journeys across the entire application stack.
 
-**When to Use:**
-- To verify the most critical user journeys
-- To ensure that changes to the different parts of the system haven't broken the whole application
-- To catch issues that may not be apparent in unit or integration tests
+**Guidelines:**
+- Use tools such as Playwright to drive tests in a real or containerized browser environment.
+- Focus on critical user flows rather than exhaustive coverage of every interaction.
+- Ensure that E2E tests complement rather than duplicate the coverage of unit and integration tests.
 
-**Characteristics:** Slowest to run and can be complex to maintain but are very valuable.
+---
 
-**Avoid:**
-- Too many end-to-end tests, because they can slow down the development process and make it difficult to pinpoint issues
-- End-to-end tests that duplicate integration or unit test coverage
+## Best Practices
+
+- **Keep Tests Independent:**  
+  Each test should set up its own environment and not rely on state from other tests.
+
+- **Avoid Over-Mocking:**  
+  Use actual implementations for internal logic; reserve mocks for external or unstable dependencies.
+
+- **Accessibility Focus:**  
+  Test for keyboard and screen reader accessibility by verifying proper roles, tab indices, and event responses.
+
+- **Consistent Patterns:**  
+  Use the same naming conventions, structure, and comment style across all tests. For example, when testing interactive elements like navigation buttons and image loading errors, always follow the same GIVEN/WHEN/THEN sequence and use descriptive labels (e.g., “Next image”, “Previous image”).
+
+- **Cleanup and Resource Management:**  
+  Always perform cleanup after tests (using utilities like `afterEach` from testing-library) to avoid residual DOM states affecting other tests.
+
+---
+
+This updated policy aligns with the patterns seen in the first set of tests (e.g., those for CarouselViewer) and ensures consistency across unit, integration, and E2E tests within the project.

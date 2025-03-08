@@ -1,0 +1,15 @@
+{
+  "verbose": true,
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "*.test.js"
+  ],
+  "watch": [
+    "server.js",
+    "*.js"
+  ],
+  "ext": "js,json",
+  "delay": "500",
+  "legacyWatch": true
+} 

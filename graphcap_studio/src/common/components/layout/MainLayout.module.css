@@ -1,0 +1,44 @@
+/* MainLayout.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-color, #f9fafb);
+}
+
+.header {
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.contentWithLeftSidebar {
+  padding-left: 16rem; /* 64 in tailwind units */
+}
+
+.contentWithRightSidebar {
+  padding-right: 16rem; /* 64 in tailwind units */
+}
+
+.contentInner {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+
+.footer {
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* Dark mode support */
+:global(.dark) .container {
+  --bg-color: #030712;
+} 
