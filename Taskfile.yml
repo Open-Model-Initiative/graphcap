@@ -42,6 +42,11 @@ tasks:
     cmds:
       - docker compose up --watch --build 
 
+  start:
+    desc: Start the Docker Compose services
+    cmds:
+      - docker compose --env-file ./workspace/config/.env up -d
+
   stop:
     desc: Stop the Docker Compose services
     cmds:

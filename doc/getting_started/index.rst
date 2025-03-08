@@ -29,7 +29,7 @@ Quick Start
 
    .. code-block:: bash
 
-      docker compose up
+      task start
 
 4. Visit ``localhost:32300`` to access the web interface
 
