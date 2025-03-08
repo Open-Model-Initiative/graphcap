@@ -11,7 +11,7 @@ import './App.css'
 // Import the generated route tree
 import { routeTree } from '../routeTree.gen'
 import App from './App'
-import { AppContextProvider } from '../common/providers'
+import { AppContextProvider, useFeatureFlag } from '../common/providers'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -26,6 +26,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
+/**
+ * DevTools wrapper component that conditionally renders dev tools based on feature flags
+ */
+function DevTools() {
+  const showReactQueryDevTools = useFeatureFlag('enableReactQueryDevTools');
+  
+  return showReactQueryDevTools ? <ReactQueryDevtools /> : null;
+}
+
 // Render the app
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
@@ -36,7 +45,7 @@ if (!rootElement.innerHTML) {
         <App>
           <AppContextProvider>
             <RouterProvider router={router} />
-            {/* <ReactQueryDevtools /> */}
+            <DevTools />
           </AppContextProvider>
         </App>
       </QueryClientProvider>
