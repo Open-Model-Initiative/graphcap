@@ -50,7 +50,7 @@ tasks:
   stop:
     desc: Stop the Docker Compose services
     cmds:
-      - docker compose down 
+      - docker compose --env-file ./workspace/config/.env down 
 
   setup:
     desc: Setup the project
