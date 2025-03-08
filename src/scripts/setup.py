@@ -13,7 +13,7 @@ from termcolor import cprint
 from .config_writer import write_toml_config
 
 console: Console = Console()
-dotenv_path = ".env"
+dotenv_path = "./workspace/config/.env"
 provider_config_path = "./workspace/config/provider.config.toml"
 load_dotenv(dotenv_path)
 
@@ -130,10 +130,19 @@ def get_provider_selections() -> tuple[bool, bool, bool, bool, bool]:
 
     return enable_hugging_face, enable_openai, enable_google, enable_vllm, enable_ollama
 
+def get_postgres_selections() -> tuple[str, str, str]:
+    """Collect user selections for what values to use for Postgres variables."""
+    console.print("\n[bold]Set the following values for the Postgres installation:[/]")
+    postgres_user_value = Prompt.ask("[bold blue]Postgres user?[/]", default="graphcap")
+    postgres_password_value = Prompt.ask("[bold blue]Postgres password?[/]", default="graphcap")
+    postgres_database_value = Prompt.ask("[bold blue]Postgres database name?[/]", default="graphcap")
 
-def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool]) -> Mapping[str, str | None]:
+    return postgres_user_value, postgres_password_value, postgres_database_value
+
+def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool], postgres: tuple[str, str, str]) -> Mapping[str, str | None]:
     """Collect environment variables based on enabled providers."""
     enable_hugging_face, enable_openai, enable_google, enable_vllm, enable_ollama = providers
+    postgres_user_value, postgres_password_value, postgres_database_value = postgres
 
     env_vars = {
         "HUGGING_FACE_HUB_TOKEN": check_env_var("HUGGING_FACE_HUB_TOKEN", enable_hugging_face),
@@ -141,6 +150,12 @@ def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool]) -> Map
         "GOOGLE_API_KEY": check_env_var("GOOGLE_API_KEY", enable_google),
         "VLLM_BASE_URL": check_env_var("VLLM_BASE_URL", enable_vllm),
         "OLLAMA_BASE_URL": check_env_var("OLLAMA_BASE_URL", enable_ollama),
+        "POSTGRES_USER": postgres_user_value,
+        "POSTGRES_PASSWORD": postgres_password_value,
+        "POSTGRES_DB": postgres_database_value,
+        "POSTGRES_HOST": "graphcap_postgres",
+        "POSTGRES_PORT": "5432",
+        "DEFAULT_PROVIDER_CONFIG": "./provider.config.toml",
     }
 
     # Special handling for vLLM base URL
@@ -156,7 +171,7 @@ def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool]) -> Map
 
 
 def save_env_configuration(env_vars: Mapping[str, str | None], providers: tuple[bool, bool, bool, bool, bool]) -> None:
-    """Save provider choices and API keys to .env file."""
+    """Save provider choices, postgres choices, and API keys to .env file."""
     enable_hugging_face, enable_openai, enable_google, enable_vllm, enable_ollama = providers
 
     provider_settings = {
@@ -190,9 +205,12 @@ def cli():
 
     # Get provider selections
     provider_selections = get_provider_selections()
+    
+    # Get postgres selections
+    postgres_selections = get_postgres_selections()
 
     # Collect environment variables
-    env_vars = collect_env_variables(provider_selections)
+    env_vars = collect_env_variables(provider_selections, postgres_selections)
 
     # Save configurations if allowed
     if overwrite_env:
