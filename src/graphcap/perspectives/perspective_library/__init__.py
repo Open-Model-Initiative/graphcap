@@ -23,7 +23,7 @@ from .out_of_frame import OutOfFrameProcessor
 from .poetic_metaphor import PoeticMetaphorProcessor
 from .storytelling import StorytellingCaptionProcessor
 from .synthesized_caption import SynthesizedCaptionProcessor
-
+from .temporarium import TemporariumCaptionProcessor
 def get_perspective(perspective_name: str, **kwargs):
     if perspective_name == "graph_caption":
         return GraphCaptionProcessor(**kwargs)
@@ -41,6 +41,8 @@ def get_perspective(perspective_name: str, **kwargs):
         return EmotionalSentimentProcessor(**kwargs)
     elif perspective_name == "synthesized_caption":
         return SynthesizedCaptionProcessor(**kwargs)
+    elif perspective_name == "temporarium":
+        return TemporariumCaptionProcessor(**kwargs)
     else:
         raise ValueError(f"Unknown perspective: {perspective_name}")
 
@@ -52,6 +54,7 @@ def get_perspective_list():
         "poetic_metaphor",
         "storytelling",
         "emotional_sentiment",
+        "temporarium",
     ]
 
 def get_synthesizer() -> SynthesizedCaptionProcessor:
@@ -65,6 +68,7 @@ __all__ = [
     "OutOfFrameProcessor",
     "PoeticMetaphorProcessor",
     "EmotionalSentimentProcessor",
+    "TemporariumCaptionProcessor",
     "get_perspective",
     "get_perspective_list",
     "get_synthesizer",
