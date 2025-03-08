@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { Dataset, Image } from '@/services/images';
 import { Tree, TreeItemData } from '@/common/components/dataset-tree';
 import { DatasetLink } from './DatasetLink';
-
+import { DeleteDatasetModal } from './DeleteDatasetModal';
+import { type TreeContextMenuAction } from '@/common/components/dataset-tree/TreeContextMenu';
 
 interface DatasetTreeProps {
   readonly datasets: Dataset[];
@@ -146,21 +147,8 @@ function updateItemExpanded(items: TreeItemData[], itemId: string): boolean {
   return false;
 }
 
-// Move this function outside of the DatasetTree component
-const getWrapperComponent = (item: TreeItemData) => {
-  if (item.data?.isDatasetRoot) {
-    return ({ children, className }: { children: React.ReactNode; className: string }) => (
-      <DatasetLink datasetId={item.id} className={className}>
-        {children}
-      </DatasetLink>
-    );
-  }
-  return undefined;
-};
-
 /**
- * A component for displaying a hierarchical tree view of datasets and their subfolders
- * using the reusable Tree UI components
+ * Component to render a dataset tree with delete functionality
  */
 export function DatasetTree({ 
   datasets, 
@@ -169,6 +157,8 @@ export function DatasetTree({
   onSelectNode 
 }: DatasetTreeProps) {
   const [treeItems, setTreeItems] = useState<TreeItemData[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null);
   
   // Calculate the selected item ID based on the selected dataset and subfolder
   const selectedItemId = selectedSubfolder ?? (selectedDataset ?? undefined);
@@ -190,9 +180,10 @@ export function DatasetTree({
   
   const handleSelectItem = (item: TreeItemData) => {
     if (item.path) {
-      // If this is a dataset root node, we'll let the DatasetLink handle navigation
+      // For dataset root nodes, the wrapper component handles the click
       if (item.data?.isDatasetRoot) {
-        onSelectNode(item.id, undefined);
+        // This is now handled in the wrapper component
+        return;
       } else {
         // For subfolders, use the existing behavior
         const datasetName = item.path.split('/')[2]; // Extract dataset name from path
@@ -213,14 +204,80 @@ export function DatasetTree({
     }
   };
   
+  const getWrapperComponent = (item: TreeItemData) => {
+    // If this is a dataset root node, wrap it with a DatasetLink
+    if (item.data?.isDatasetRoot) {
+      return (props: React.PropsWithChildren<{ 
+        children: React.ReactNode; 
+        className: string;
+        onClick?: (e: React.MouseEvent) => void;
+      }>) => (
+        <div 
+          className={`${props.className}`}
+          onClick={(e) => {
+            // Call the provided onClick handler if it exists
+            props.onClick?.(e);
+            
+            // Also handle our own navigation
+            const target = e.target as HTMLElement;
+            const isMenuClick = target.closest('button[aria-label="Open menu"]') || 
+                               target.closest('[role="menu"]');
+            
+            if (!isMenuClick) {
+              onSelectNode(item.name);
+            }
+          }}
+        >
+          {props.children}
+        </div>
+      );
+    }
+    
+    return undefined;
+  };
+  
+  const handleDatasetDeleted = () => {
+    // If the deleted dataset was selected, clear the selection
+    if (datasetToDelete === selectedDataset) {
+      onSelectNode('');
+    }
+    setDatasetToDelete(null);
+  };
+
+  // Define context menu actions
+  const contextMenuActions: TreeContextMenuAction[] = [
+    {
+      label: "Delete Dataset",
+      icon: "delete",
+      onClick: (item: TreeItemData) => {
+        if (item.data?.isDatasetRoot) {
+          setDatasetToDelete(item.name);
+          setDeleteModalOpen(true);
+        }
+      },
+      variant: "danger"
+    }
+  ];
+
   return (
-    <Tree
-      items={treeItems}
-      selectedItemId={selectedItemId}
-      onSelectItem={handleSelectItem}
-      onToggleExpand={handleToggleExpand}
-      className="text-sm"
-      getWrapperComponent={getWrapperComponent}
-    />
+    <>
+      <Tree
+        items={treeItems}
+        selectedItemId={selectedItemId}
+        onSelectItem={handleSelectItem}
+        onToggleExpand={handleToggleExpand}
+        getWrapperComponent={getWrapperComponent}
+        contextMenuActions={contextMenuActions}
+      />
+      
+      {deleteModalOpen && datasetToDelete && (
+        <DeleteDatasetModal
+          datasetName={datasetToDelete}
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onDatasetDeleted={handleDatasetDeleted}
+        />
+      )}
+    </>
   );
 } 

@@ -2,5 +2,4 @@
 
 export * from './useImageSelection';
 export * from './useImageEditor';
-export * from './useUploader';
 export * from './useImageActions'; 

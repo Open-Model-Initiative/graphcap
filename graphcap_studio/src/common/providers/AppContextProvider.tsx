@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react';
 import { DatasetInitializer } from '@/features/datasets';
-import { EditorInitializer } from '@/features/editor';
 import { FeatureFlagProvider } from './FeatureFlagProvider';
 
 interface AppContextProviderProps {
@@ -26,9 +25,7 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
   return (
     <FeatureFlagProvider>
       <DatasetInitializer>
-        <EditorInitializer>
           {children}
-        </EditorInitializer>
       </DatasetInitializer>
     </FeatureFlagProvider>
   );

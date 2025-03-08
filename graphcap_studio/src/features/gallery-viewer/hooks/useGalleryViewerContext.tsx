@@ -15,6 +15,12 @@ interface GalleryViewerContextType {
   // Derived values
   currentIndex: number;
   totalImages: number;
+
+  // Dataset information
+  datasetName: string;
+  
+  // Callbacks
+  onUploadComplete?: () => void;
 }
 
 interface GalleryViewerProviderProps {
@@ -23,6 +29,8 @@ interface GalleryViewerProviderProps {
   readonly initialViewMode?: ViewMode;
   readonly initialSelectedImage?: Image | null;
   readonly onImageSelected?: (image: Image) => void;
+  readonly datasetName: string;
+  readonly onUploadComplete?: () => void;
 }
 
 const GalleryViewerContext = createContext<GalleryViewerContextType | undefined>(undefined);
@@ -34,19 +42,25 @@ const GalleryViewerContext = createContext<GalleryViewerContextType | undefined>
  * - View mode (grid or carousel)
  * - Selected image
  * - Current index and total images
+ * - Dataset name for image uploads
+ * - Upload callbacks
  * 
  * @param children - Child components
  * @param images - Array of images to display
  * @param initialViewMode - Initial view mode, defaults to DEFAULT_VIEW_MODE
  * @param initialSelectedImage - Initial selected image
  * @param onImageSelected - Callback when an image is selected
+ * @param datasetName - Name of the dataset being viewed
+ * @param onUploadComplete - Callback when upload is complete
  */
 export function GalleryViewerProvider({
   children,
   images,
   initialViewMode = DEFAULT_VIEW_MODE,
   initialSelectedImage = null,
-  onImageSelected
+  onImageSelected,
+  datasetName,
+  onUploadComplete
 }: Readonly<GalleryViewerProviderProps>) {
   // Internal state
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -85,8 +99,10 @@ export function GalleryViewerProvider({
     selectedImage,
     setSelectedImage: setSelectedImageInternal,
     currentIndex,
-    totalImages
-  }), [viewMode, selectedImage, currentIndex, totalImages]);
+    totalImages,
+    datasetName,
+    onUploadComplete
+  }), [viewMode, selectedImage, currentIndex, totalImages, datasetName, onUploadComplete]);
   
   return (
     <GalleryViewerContext.Provider value={contextValue}>

@@ -3,7 +3,11 @@ import { memo } from 'react';
 import { Image } from '@/services/images';
 import { ThumbnailImage } from '@/common/components/responsive-image';
 import { useDynamicThumbnails } from '../hooks';
+import { Upload } from 'lucide-react';
+import { UploadDropzone } from '@/common/components/image-uploader';
 import styles from './ThumbnailStrip.module.css';
+import { ErrorBoundary } from '../ErrorBoundary';
+import { useImageCarouselContext } from '../ImageCarouselContext';
 
 interface ThumbnailStripProps {
   readonly images: Image[];
@@ -39,6 +43,9 @@ function ThumbnailStripBase({
   aspectRatio = 1,
   maxHeight = 70
 }: Readonly<ThumbnailStripProps>) {
+  // Get dataset name from context
+  const { datasetName, onUploadComplete} = useImageCarouselContext();
+  
   // Use custom hook for dynamic thumbnail sizing
   const {
     containerRef,
@@ -46,7 +53,7 @@ function ThumbnailStripBase({
     thumbnailHeight,
     gap: calculatedGap
   } = useDynamicThumbnails({
-    totalCount: images.length,
+    totalCount: images.length + 1, // Always add 1 for the upload button
     minThumbnailWidth,
     maxThumbnailWidth,
     gap,
@@ -89,6 +96,31 @@ function ThumbnailStripBase({
       role="tablist"
       aria-label="Image thumbnails"
     >
+      {/* Upload dropzone at the start of the thumbnail strip - ALWAYS SHOW IT */}
+      <div
+        style={{ 
+          width: `${thumbnailWidth}px`, 
+          height: `${thumbnailHeight}px`,
+          flexShrink: 0
+        }}
+        className={styles.uploadThumbnail}
+        role="button"
+        aria-label="Upload images"
+        tabIndex={0}
+        data-testid="upload-thumbnail"
+      >
+        <div className="h-full w-full flex items-center justify-center">
+          <ErrorBoundary fallback={<Upload className="text-gray-400" size={16} />}>
+            <UploadDropzone
+              datasetName={datasetName}
+              className="h-full w-full"
+              compact={true}
+              onUploadComplete={onUploadComplete}
+            />
+          </ErrorBoundary>
+        </div>
+      </div>
+
       {images.map((image, index) => (
         <div
           key={image.path}

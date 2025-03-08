@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Dataset, listDatasetImages, createDataset, addImageToDataset } from '@/services/images';
-
-// Query keys for caching
-export const DATASET_QUERY_KEYS = {
-  datasets: ['datasets'],
-  datasetImages: (datasetName: string) => ['datasets', datasetName, 'images'],
-};
+import { 
+  useListDatasets, 
+  useCreateDataset as useCreateDatasetMutation, 
+  useAddImageToDataset as useAddImageToDatasetMutation,
+  queryKeys
+} from '@/services/dataset';
+import type { Dataset } from '@/services/dataset';
+import { getQueryClient } from '@/common/utils/queryClient';
 
 /**
  * Custom hook for managing datasets
@@ -26,18 +27,19 @@ export function useDatasets() {
   // Get query client for prefetching and cache management
   const queryClient = useQueryClient();
 
-  // Fetch datasets with improved caching
+  // Fetch datasets with TanStack Query
   const { 
     data: datasetsData, 
     isLoading, 
     error,
     refetch 
-  } = useQuery({
-    queryKey: DATASET_QUERY_KEYS.datasets,
-    queryFn: listDatasetImages,
-    staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes
-    gcTime: 30 * 60 * 1000, // Cache data for 30 minutes (formerly cacheTime)
-  });
+  } = useListDatasets();
+
+  // Create dataset mutation
+  const createDatasetMutation = useCreateDatasetMutation();
+
+  // Add image to dataset mutation
+  const addImageToDatasetMutation = useAddImageToDatasetMutation();
 
   // Find the currently selected dataset
   const currentDataset = datasetsData?.datasets?.find(d => d.name === selectedDataset);
@@ -83,13 +85,7 @@ export function useDatasets() {
    */
   const handleCreateDataset = useCallback(async (name: string): Promise<void> => {
     try {
-      await createDataset(name);
-      
-      // Invalidate the datasets cache
-      queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasets });
-      
-      // Force an immediate refetch to ensure the UI updates
-      await queryClient.refetchQueries({ queryKey: DATASET_QUERY_KEYS.datasets });
+      await createDatasetMutation.mutateAsync(name);
       
       // Set the newly created dataset as the selected dataset
       setSelectedDataset(name);
@@ -101,7 +97,7 @@ export function useDatasets() {
       toast.error(`Failed to create dataset: ${(error as Error).message}`);
       throw error;
     }
-  }, [queryClient]);
+  }, [createDatasetMutation]);
 
   /**
    * Add an image to a dataset
@@ -110,43 +106,31 @@ export function useDatasets() {
     if (!imagePath || !targetDataset) return;
     
     try {
-      const result = await addImageToDataset(imagePath, targetDataset);
+      const result = await addImageToDatasetMutation.mutateAsync({ 
+        imagePath, 
+        datasetName: targetDataset 
+      });
       
       if (result.success) {
-        toast.success(result.message);
-        
-        // Invalidate queries to refresh the datasets
-        queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasets });
-        if (selectedDataset) {
-          queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasetImages(selectedDataset) });
-        }
-        queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasetImages(targetDataset) });
-        
-        // Force a refresh after a short delay
-        setTimeout(() => {
-          queryClient.refetchQueries({ queryKey: DATASET_QUERY_KEYS.datasets });
-        }, 500);
+        toast.success(result.message || `Image added to dataset ${targetDataset} successfully`);
       } else {
-        toast.error(result.message);
+        toast.error(result.message || 'Failed to add image to dataset');
       }
     } catch (error) {
-      toast.error('Failed to add image to dataset');
+      toast.error(`Failed to add image to dataset: ${(error as Error).message}`);
       console.error('Error adding image to dataset:', error);
     }
-  }, [queryClient, selectedDataset]);
+  }, [addImageToDatasetMutation]);
 
   /**
    * Handle upload completion
    */
   const handleUploadComplete = useCallback(() => {
-    // Invalidate both the datasets query and the specific dataset query to refresh the list
-    queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasets });
-    if (selectedDataset) {
-      queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasetImages(selectedDataset) });
-    }
+    // Get the shared query client
+    const sharedQueryClient = getQueryClient();
     
     // Force an immediate refresh to ensure the UI updates with newly uploaded images
-    queryClient.refetchQueries({ queryKey: DATASET_QUERY_KEYS.datasets })
+    sharedQueryClient.refetchQueries({ queryKey: queryKeys.datasetImages })
       .then(() => {
         // After refresh, identify new images and mark them as recently uploaded
         if (currentDataset?.images) {
@@ -164,7 +148,7 @@ export function useDatasets() {
           }, 5 * 60 * 1000);
         }
       });
-  }, [queryClient, selectedDataset, currentDataset, recentlyUploadedImages]);
+  }, [currentDataset, recentlyUploadedImages]);
 
   return {
     // State

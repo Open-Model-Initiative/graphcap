@@ -10,7 +10,7 @@
 const express = require('express');
 const router = express.Router();
 const { logInfo, logError } = require('../utils/logger');
-const { listDatasetImages, createDataset, addImageToDataset } = require('../services/dataset-service');
+const { listDatasetImages, createDataset, addImageToDataset, deleteDataset } = require('../services/dataset-service');
 
 /**
  * List all images in the datasets directory recursively
@@ -85,6 +85,34 @@ router.post('/add-image', async (req, res) => {
     }
     
     res.status(500).json({ error: 'Failed to add image to dataset' });
+  }
+});
+
+/**
+ * Delete a dataset
+ * 
+ * @param {string} req.params.name - Name of the dataset to delete
+ * @returns {Object} Success status and message
+ */
+router.delete('/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Dataset name is required' });
+    }
+    
+    const result = await deleteDataset(name);
+    res.json(result);
+  } catch (error) {
+    logError('Error deleting dataset', error);
+    
+    // Handle specific errors with appropriate status codes
+    if (error.message.includes('Dataset not found')) {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Failed to delete dataset' });
   }
 });
 

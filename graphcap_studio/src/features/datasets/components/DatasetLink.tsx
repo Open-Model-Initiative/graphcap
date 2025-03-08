@@ -9,6 +9,7 @@ interface DatasetLinkProps {
   readonly datasetId: string;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly onClick?: () => void;
 }
 
 /**
@@ -19,8 +20,9 @@ interface DatasetLinkProps {
  * @param datasetId - The ID of the dataset to link to
  * @param children - The content of the link
  * @param className - Optional CSS class name
+ * @param onClick - Optional click handler
  */
-export function DatasetLink({ datasetId, children, className }: DatasetLinkProps) {
+export function DatasetLink({ datasetId, children, className, onClick }: DatasetLinkProps) {
   // Create the path manually since we can't use the route directly
   const path = `/gallery/${datasetId}`;
   
@@ -32,6 +34,12 @@ export function DatasetLink({ datasetId, children, className }: DatasetLinkProps
         (e.target as HTMLElement).closest('button')) {
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+    
+    // Call the onClick handler if provided
+    if (onClick) {
+      onClick();
     }
   };
   

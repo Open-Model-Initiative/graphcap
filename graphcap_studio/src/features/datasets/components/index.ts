@@ -4,4 +4,5 @@ export * from './DatasetTree';
 export * from './CreateDatasetModal';
 export * from './DatasetContainer';
 export * from './DatasetInitializer';
-export * from './DatasetLink'; 
+export * from './DatasetLink';
+export * from './DeleteDatasetModal'; 

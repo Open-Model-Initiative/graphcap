@@ -87,8 +87,6 @@ export function EditorContextProvider({
     dataset,
     handleSelectImage,
     handleEditImage,
-    handleDownload,
-    handleDelete
   ]);
   
   return (

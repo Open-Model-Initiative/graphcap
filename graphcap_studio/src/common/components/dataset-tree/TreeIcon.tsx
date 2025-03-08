@@ -1,12 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-
-
-/**
- * The type of icon that can be displayed.
- * 
- * @typedef {'dataset' | 'folder' | 'file'} IconType
- */
-export type IconType = 'dataset' | 'folder' | 'file';
+import { IconType } from "./types";
 
 /**
  * Props for the TreeIcon component.
