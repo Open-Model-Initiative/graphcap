@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect } from 'react';
+import React from 'react';
 import { TreeNode } from './TreeNode';
 import { TreeGroup } from './TreeGroup';
 import { TreeIcon, IconType } from './TreeIcon';

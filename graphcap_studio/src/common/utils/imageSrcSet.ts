@@ -30,7 +30,7 @@ export function generateSrcSet(
     .map(width => {
       const height = calculateHeightFromAspectRatio(width, aspectRatio, 'generateSrcSet');
       // If height is undefined (no aspect ratio provided), pass 0 to signal "preserve original aspect ratio"
-      const heightParam = height !== undefined ? height : 0;
+      const heightParam = height ?? 0;
       return `${getUrlFn(imagePath, width, heightParam, format)} ${width}w`;
     })
     .join(', ');

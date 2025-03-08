@@ -17,13 +17,13 @@ export function useImageSelection(
   initialSelectedImage: Image | null = null,
   setContextSelectedImage?: (image: Image | null) => void
 ) {
-  const [selectedImage, setSelectedImageInternal] = useState<Image | null>(initialSelectedImage);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(initialSelectedImage);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [showProperties, setShowProperties] = useState(false);
 
   // Sync with context if provided
-  const setSelectedImage = useCallback((image: Image | null) => {
-    setSelectedImageInternal(image);
+  const setSelectedImageInternal = useCallback((image: Image | null) => {
+    setSelectedImage(image);
     if (setContextSelectedImage) {
       setContextSelectedImage(image);
     }
@@ -70,7 +70,7 @@ export function useImageSelection(
    * Handle image selection
    */
   const handleSelectImage = useCallback((image: Image) => {
-    setSelectedImage(image);
+    setSelectedImageInternal(image);
     
     // Find the index of the selected image for carousel view
     const index = images.findIndex(img => img.path === image.path);
@@ -83,7 +83,7 @@ export function useImageSelection(
     
     // Show properties panel when an image is selected
     setShowProperties(true);
-  }, [images, setSelectedImage]);
+  }, [images, setSelectedImageInternal]);
 
   /**
    * Toggle properties panel visibility
