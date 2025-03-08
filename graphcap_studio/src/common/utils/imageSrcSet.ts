@@ -8,6 +8,10 @@ import { calculateHeightFromAspectRatio } from './aspectRatio';
  * for use with responsive images. It handles calculating heights
  * based on aspect ratio and supports different image formats.
  * 
+ * When no aspect ratio is provided, it will preserve the original image's aspect ratio
+ * by passing 0 as the height parameter to the URL function, which should signal
+ * to the image service to maintain the original aspect ratio.
+ * 
  * @param imagePath - Path to the image
  * @param getUrlFn - Function that returns a URL for the given parameters
  * @param widths - Array of widths to generate srcSet entries for (default: [200, 400, 800, 1200, 1600])
@@ -25,7 +29,9 @@ export function generateSrcSet(
   return widths
     .map(width => {
       const height = calculateHeightFromAspectRatio(width, aspectRatio, 'generateSrcSet');
-      return `${getUrlFn(imagePath, width, height, format)} ${width}w`;
+      // If height is undefined (no aspect ratio provided), pass 0 to signal "preserve original aspect ratio"
+      const heightParam = height !== undefined ? height : 0;
+      return `${getUrlFn(imagePath, width, heightParam, format)} ${width}w`;
     })
     .join(', ');
 } 

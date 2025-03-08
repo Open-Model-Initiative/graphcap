@@ -19,31 +19,35 @@ const { thumbnailsDir, WORKSPACE_PATH } = require('../config');
  * 
  * @param {string} imagePath - Path to the original image
  * @param {number} width - Desired width of the thumbnail
- * @param {number} height - Desired height of the thumbnail
+ * @param {number|null} height - Desired height of the thumbnail, or null to maintain aspect ratio
  * @param {string} format - Desired format of the thumbnail (default: 'webp')
  * @returns {Promise<string>} Path to the generated thumbnail
  */
 async function generateThumbnail(imagePath, width, height, format = 'webp') {
   try {
     const parsedWidth = parseInt(width, 10);
-    const parsedHeight = parseInt(height, 10);
+    const parsedHeight = height !== null ? parseInt(height, 10) : null;
     
-    if (
-      isNaN(parsedWidth) ||
-      isNaN(parsedHeight) ||
-      parsedWidth <= 0 ||
-      parsedHeight <= 0
-    ) {
-      throw new Error('Invalid dimensions: width and height must be positive numbers');
+    // Validate width is a positive integer
+    if (isNaN(parsedWidth) || parsedWidth <= 0) {
+      throw new Error('Invalid dimensions: width must be a positive number');
+    }
+    
+    // If height is provided (not null), validate it's a positive integer
+    if (parsedHeight !== null && (isNaN(parsedHeight) || parsedHeight <= 0)) {
+      throw new Error('Invalid dimensions: height must be a positive number');
     }
     
     // Create a secure hash including the format so that different formats produce different filenames.
     const hash = crypto.createHash('sha256');
-    hash.update(imagePath + parsedWidth + 'x' + parsedHeight + format);
+    const dimensionString = parsedHeight !== null 
+      ? `${parsedWidth}x${parsedHeight}` 
+      : `${parsedWidth}xauto`;
+    hash.update(imagePath + dimensionString + format);
     const imagePathHash = hash.digest('hex');
     
     // Use the format for the file extension.
-    const thumbnailFilename = `${imagePathHash}_${parsedWidth}x${parsedHeight}.${format}`;
+    const thumbnailFilename = `${imagePathHash}_${dimensionString}.${format}`;
     
     ensureDir(thumbnailsDir);
     
@@ -67,7 +71,7 @@ async function generateThumbnail(imagePath, width, height, format = 'webp') {
     
     // Only log when generating new thumbnails
     logInfo(
-      `Generating thumbnail for ${imagePath} at ${parsedWidth}x${parsedHeight} in format ${format}`
+      `Generating thumbnail for ${imagePath} at ${dimensionString} in format ${format}`
     );
     
     // Optimize Sharp configuration for better performance
@@ -85,14 +89,25 @@ async function generateThumbnail(imagePath, width, height, format = 'webp') {
       avif: { quality: 80, effort: 4 } // Lower effort for faster encoding
     };
     
+    // Configure resize options based on whether height is provided
+    const resizeOptions = {
+      width: parsedWidth,
+      fastShrinkOnLoad: true // Faster resizing for large images
+    };
+    
+    // If height is provided, use it with 'cover' fit
+    if (parsedHeight !== null) {
+      resizeOptions.height = parsedHeight;
+      resizeOptions.fit = 'cover';
+      resizeOptions.position = 'centre';
+    } else {
+      // If height is null, maintain aspect ratio
+      resizeOptions.fit = 'inside';
+      resizeOptions.withoutEnlargement = true;
+    }
+    
     await sharp(imagePath, sharpOptions)
-      .resize({
-        width: parsedWidth,
-        height: parsedHeight,
-        fit: 'cover',
-        position: 'centre',
-        fastShrinkOnLoad: true // Faster resizing for large images
-      })
+      .resize(resizeOptions)
       .toFormat(format, formatOptions[format] || { quality: 80 })
       .toFile(thumbnailPath);
     

@@ -215,14 +215,12 @@ export function getThumbnailUrl(
     !normalizedPath.includes('/workspace/') &&
     normalizedPath.includes('/datasets')
   ) {
-    console.log('Adding workspace prefix to path for thumbnail:', normalizedPath);
     normalizedPath = `/workspace${normalizedPath}`;
   }
   
   const cacheBuster = `_cb=${Date.now()}`;
   const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?width=${width}&height=${height}&format=${fmt}&${cacheBuster}`;
   
-  console.log('Generated thumbnail URL:', url);
   
   thumbnailCache.set(cacheKey, url);
   setTimeout(() => {

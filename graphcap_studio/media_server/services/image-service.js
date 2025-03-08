@@ -313,7 +313,7 @@ async function serveImage(imagePath, width, height, format, req) {
       }
       
       const fullPath = altPathResult.path;
-      const result = await processImageRequest(fullPath, width, height, format, req);
+      const result = await processImageRequest(fullPath, width, height, req, format);
       
       // Cache the result
       addToCache(cacheKey, result);
@@ -322,7 +322,7 @@ async function serveImage(imagePath, width, height, format, req) {
     }
     
     const fullPath = pathResult.path;
-    const result = await processImageRequest(fullPath, width, height, format, req);
+    const result = await processImageRequest(fullPath, width, height, req, format);
     
     // Cache the result
     addToCache(cacheKey, result);
@@ -338,51 +338,54 @@ async function serveImage(imagePath, width, height, format, req) {
 }
 
 /**
- * Process an image request for thumbnails or original image
- * 
- * @param {string} fullPath - Full path to the image
- * @param {number} width - Optional width for thumbnail
- * @param {number} height - Optional height for thumbnail
- * @param {string} format - Optional format for thumbnail (default: 'webp')
- * @param {Object} req - Express request object for WebP detection
- * @returns {Promise<Object>} Object with path to the image or thumbnail
+ * Process an image request for thumbnails or original image.
+ *
+ * @param {string} fullPath - Full path to the image.
+ * @param {number} width - Optional width for thumbnail.
+ * @param {number} height - Optional height for thumbnail.
+ * @param {Object} req - Express request object for WebP detection.
+ * @param {string} format - Optional format for thumbnail (default: 'webp').
+ * @returns {Promise<Object>} Object with path to the image or thumbnail.
  */
-async function processImageRequest(fullPath, width, height, format = 'webp', req) {
-  if (width && height) {
-    const parsedWidth = parseInt(width, 10);
-    const parsedHeight = parseInt(height, 10);
-    
-    if (
-      isNaN(parsedWidth) ||
-      isNaN(parsedHeight) ||
-      parsedWidth <= 0 ||
-      parsedHeight <= 0
-    ) {
-      throw new Error('Width and height must be positive integers');
-    }
-    
-    const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight, format);
-    return { path: thumbnailPath, isThumbnail: true };
-  } else {
-    // If no thumbnail is requested, check if a WebP version exists and use it if appropriate
-    if (req) {
-      const optimalPath = getOptimalImagePath(fullPath, req);
-      
-      // If the optimal path is in the WebP cache, return a URL to the WebP endpoint
-      if (optimalPath !== fullPath && optimalPath.includes(webpCacheDir)) {
-        const webpUrl = getWebpUrl(fullPath);
-        return { 
-          path: optimalPath, 
-          isThumbnail: false,
-          isWebp: true,
-          webpUrl
-        };
-      }
-      
-      return { path: optimalPath, isThumbnail: false };
-    }
-    return { path: fullPath, isThumbnail: false };
+async function processImageRequest(fullPath, width, height, req, format = 'webp') {
+  if (width) {
+    return await processThumbnail(fullPath, width, height, format);
   }
+  return await processOriginal(fullPath, req);
+}
+
+async function processThumbnail(fullPath, width, height, format) {
+  const parsedWidth = parseInt(width, 10);
+  if (isNaN(parsedWidth) || parsedWidth <= 0) {
+    throw new Error('Width must be a positive integer');
+  }
+  
+  const parsedHeight = height ? parseInt(height, 10) : null;
+  if (parsedHeight !== null && (isNaN(parsedHeight) || parsedHeight < 0)) {
+    throw new Error('Height must be a non-negative integer');
+  }
+  
+  // If height is 0 or not provided, generate a thumbnail with preserved aspect ratio.
+  if (parsedHeight === 0 || parsedHeight === null) {
+    const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, null, format);
+    return { path: thumbnailPath, isThumbnail: true };
+  }
+  
+  // Both width and height are provided and valid.
+  const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight, format);
+  return { path: thumbnailPath, isThumbnail: true };
+}
+
+async function processOriginal(fullPath, req) {
+  if (req) {
+    const optimalPath = getOptimalImagePath(fullPath, req);
+    if (optimalPath !== fullPath && optimalPath.includes(webpCacheDir)) {
+      const webpUrl = getWebpUrl(fullPath);
+      return { path: optimalPath, isThumbnail: false, isWebp: true, webpUrl };
+    }
+    return { path: optimalPath, isThumbnail: false };
+  }
+  return { path: fullPath, isThumbnail: false };
 }
 
 module.exports = {

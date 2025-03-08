@@ -7,32 +7,38 @@
  * with logging to help track down issues.
  */
 
-// Enable detailed logging for aspect ratio calculations
-const DEBUG_ASPECT_RATIO = process.env.NODE_ENV === 'development';
+// Disable detailed logging for aspect ratio calculations
+// Set to true to re-enable logging if needed for debugging
+const DEBUG_ASPECT_RATIO = false;
+
+// Default aspect ratio is removed - we should preserve the original image's aspect ratio
 
 /**
  * Calculate height from width and aspect ratio
  * 
+ * When no aspect ratio is provided, this function will return undefined,
+ * indicating that the caller should preserve the original image's aspect ratio.
+ * 
  * @param width - The width value
  * @param aspectRatio - The aspect ratio (width/height)
  * @param source - Optional source identifier for logging
- * @returns The calculated height
+ * @returns The calculated height or undefined to preserve original aspect ratio
  */
 export function calculateHeightFromAspectRatio(
   width: number,
   aspectRatio: number | undefined,
   source?: string
-): number {
+): number | undefined {
   if (!aspectRatio) {
     if (DEBUG_ASPECT_RATIO) {
-      console.log(`[AspectRatio] ${source ?? 'Unknown'}: No aspect ratio provided, using width (${width}) as height`);
+      console.log(`[AspectRatio] ${source ?? 'Unknown'}: No aspect ratio provided, preserving original image aspect ratio`);
     }
-    return width;
+    return undefined; // Return undefined to indicate original aspect ratio should be preserved
   }
 
   if (aspectRatio <= 0) {
     console.warn(`[AspectRatio] ${source ?? 'Unknown'}: Invalid aspect ratio (${aspectRatio}), must be positive`);
-    return width;
+    return undefined; // Return undefined for invalid aspect ratios
   }
 
   const height = Math.round(width / aspectRatio);
@@ -47,26 +53,29 @@ export function calculateHeightFromAspectRatio(
 /**
  * Calculate width from height and aspect ratio
  * 
+ * When no aspect ratio is provided, this function will return undefined,
+ * indicating that the caller should preserve the original image's aspect ratio.
+ * 
  * @param height - The height value
  * @param aspectRatio - The aspect ratio (width/height)
  * @param source - Optional source identifier for logging
- * @returns The calculated width
+ * @returns The calculated width or undefined to preserve original aspect ratio
  */
 export function calculateWidthFromAspectRatio(
   height: number,
   aspectRatio: number | undefined,
   source?: string
-): number {
+): number | undefined {
   if (!aspectRatio) {
     if (DEBUG_ASPECT_RATIO) {
-      console.log(`[AspectRatio] ${source ?? 'Unknown'}: No aspect ratio provided, using height (${height}) as width`);
+      console.log(`[AspectRatio] ${source ?? 'Unknown'}: No aspect ratio provided, preserving original image aspect ratio`);
     }
-    return height;
+    return undefined; // Return undefined to indicate original aspect ratio should be preserved
   }
 
   if (aspectRatio <= 0) {
     console.warn(`[AspectRatio] ${source ?? 'Unknown'}: Invalid aspect ratio (${aspectRatio}), must be positive`);
-    return height;
+    return undefined; // Return undefined for invalid aspect ratios
   }
 
   const width = Math.round(height * aspectRatio);
@@ -80,6 +89,9 @@ export function calculateWidthFromAspectRatio(
 
 /**
  * Calculate dimensions that fit within a container while maintaining aspect ratio
+ * 
+ * When no aspect ratio is provided, this function will return the container dimensions,
+ * allowing the image to fill the container while preserving its original aspect ratio.
  * 
  * @param containerWidth - The container width
  * @param containerHeight - The container height
@@ -116,11 +128,17 @@ export function calculateFitDimensions(
   if (aspectRatio > containerRatio) {
     // Width constrained
     width = containerWidth;
-    height = calculateHeightFromAspectRatio(width, aspectRatio, `${source}-fit-width-constrained`);
+    const calculatedHeight = calculateHeightFromAspectRatio(width, aspectRatio, `${source}-fit-width-constrained`);
+    if (calculatedHeight !== undefined) {
+      height = calculatedHeight;
+    }
   } else {
     // Height constrained
     height = containerHeight;
-    width = calculateWidthFromAspectRatio(height, aspectRatio, `${source}-fit-height-constrained`);
+    const calculatedWidth = calculateWidthFromAspectRatio(height, aspectRatio, `${source}-fit-height-constrained`);
+    if (calculatedWidth !== undefined) {
+      width = calculatedWidth;
+    }
   }
 
   if (DEBUG_ASPECT_RATIO) {
