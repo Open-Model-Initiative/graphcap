@@ -109,6 +109,25 @@ The server intelligently serves WebP images to browsers that support them while 
    - A WebP version exists in the cache
 4. If both conditions are met, the server serves the WebP version; otherwise, it serves the original
 
+## Performance Optimizations
+
+### WebP Conversion with Worker Threads
+
+The media server uses Node.js worker threads via the [Piscina](https://github.com/piscinajs/piscina) library to offload CPU-intensive WebP conversion tasks from the main Express thread. This implementation:
+
+- Parallelizes image conversion across multiple CPU cores
+- Prevents blocking of the main event loop during image processing
+- Automatically scales based on available CPU resources
+- Implements a queue system to prevent memory overload
+
+The implementation consists of:
+
+1. A worker file (`utils/webp-worker.js`) that handles individual image conversions
+2. A thread pool manager in `utils/background-webp-generator.js` that distributes conversion tasks
+3. Batch processing with controlled concurrency to manage system resources
+
+This approach significantly improves server responsiveness during heavy image processing workloads.
+
 ## Development
 
 1. Install dependencies:
