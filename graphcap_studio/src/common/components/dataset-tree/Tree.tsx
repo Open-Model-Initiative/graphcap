@@ -8,7 +8,7 @@ import { TreeNode } from "./TreeNode"
 import { TreeGroup } from "./TreeGroup"
 import { TreeIcon } from "./TreeIcon"
 import { TreeProvider, useTreeContext } from "./TreeContext"
-import { TreeItemData, TreeContextMenuAction, IconType } from "./types"
+import { TreeItemData, TreeContextMenuAction } from "./types"
 
 /**
  * Props for the Tree component.
@@ -118,6 +118,7 @@ function TreeItemRenderer({ item }: TreeItemRendererProps) {
   const { state, selectItem, toggleExpand, getWrapperComponent, contextMenuActions } = useTreeContext()
   
   const hasChildren = item.children && item.children.length > 0
+  // Use the selectedItemId from the context state, which is derived from the route
   const isSelected = item.id === state.selectedItemId
   
   // Sort children alphabetically

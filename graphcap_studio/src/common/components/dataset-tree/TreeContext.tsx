@@ -10,12 +10,6 @@ import {
   TreeContextMenuAction 
 } from './types';
 
-// Initial state for the tree
-const initialTreeState: TreeState = {
-  items: [],
-  selectedItemId: undefined,
-  selectedItem: undefined,
-};
 
 // Create the context with a default value
 const TreeContext = createContext<TreeContextType | undefined>(undefined);
@@ -162,7 +156,7 @@ export function TreeProvider({
   getWrapperComponent,
   contextMenuActions = [],
   children,
-}: TreeProviderProps) {
+}: Readonly<TreeProviderProps>) {
   // Initialize the reducer with the provided items
   const [state, dispatch] = useReducer(treeReducer, {
     items,

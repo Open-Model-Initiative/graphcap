@@ -128,7 +128,20 @@ export function TreeNode({
 
   if (WrapperComponent) {
     return (
-      <div ref={nodeRef} className="relative" onContextMenu={handleContextMenu}>
+      <div 
+        ref={nodeRef} 
+        className="relative" 
+        onContextMenu={handleContextMenu}
+        role="treeitem"
+        aria-selected={isSelected}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleNodeClick(e as unknown as React.MouseEvent);
+          }
+        }}
+      >
         <WrapperComponent 
           className={nodeClassName}
           onClick={handleNodeClick}

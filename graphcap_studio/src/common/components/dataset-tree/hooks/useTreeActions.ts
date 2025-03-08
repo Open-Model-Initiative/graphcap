@@ -35,16 +35,18 @@ export function useTreeActions({
       label: 'Delete',
       icon: 'delete',
       variant: 'danger',
-      onClick: async (item: TreeItemData) => {
-        if (window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
-          const success = await onDeleteItem(item.id)
-          if (success) {
-            // If we're currently viewing the deleted item, navigate to the parent or home
-            if (window.location.pathname.includes(`/gallery/${item.id}`)) {
-              navigate({ to: '/' })
+      onClick: (item: TreeItemData) => {
+        void (async () => {
+          if (window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
+            const success = await onDeleteItem(item.id)
+            if (success) {
+              // If we're currently viewing the deleted item, navigate to the parent or home
+              if (window.location.pathname.includes(`/gallery/${item.id}`)) {
+                navigate({ to: '/' })
+              }
             }
           }
-        }
+        })();
       },
     })
 
@@ -53,8 +55,8 @@ export function useTreeActions({
       actions.push({
         label: 'Edit',
         icon: 'edit',
-        onClick: async (item: TreeItemData) => {
-          await onEditItem(item.id)
+        onClick: (item: TreeItemData) => {
+          void onEditItem(item.id);
         },
       })
     }

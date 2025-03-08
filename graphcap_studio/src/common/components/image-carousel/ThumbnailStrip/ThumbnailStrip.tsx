@@ -97,16 +97,16 @@ function ThumbnailStripBase({
       aria-label="Image thumbnails"
     >
       {/* Upload dropzone at the start of the thumbnail strip - ALWAYS SHOW IT */}
-      <div
+      <button
+        type="submit"
         style={{ 
-          width: `${thumbnailWidth}px`, 
+          width: `${thumbnailWidth * 2}px`, 
           height: `${thumbnailHeight}px`,
+          backgroundColor: 'transparent',
           flexShrink: 0
         }}
         className={styles.uploadThumbnail}
-        role="button"
         aria-label="Upload images"
-        tabIndex={0}
         data-testid="upload-thumbnail"
       >
         <div className="h-full w-full flex items-center justify-center">
@@ -119,7 +119,7 @@ function ThumbnailStripBase({
             />
           </ErrorBoundary>
         </div>
-      </div>
+      </button>
 
       {images.map((image, index) => (
         <div
