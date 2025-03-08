@@ -12,12 +12,13 @@ import './App.css'
 import { routeTree } from '../routeTree.gen'
 import App from './App'
 import { AppContextProvider, useFeatureFlag } from '../common/providers'
+import { getQueryClient } from '@/common/utils/queryClient'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
 
 // Create Query Client
-const queryClient = new QueryClient()
+const queryClient = getQueryClient()
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {

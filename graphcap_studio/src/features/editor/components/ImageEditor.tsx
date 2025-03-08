@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { toast } from 'sonner';
-import { processImage, ImageProcessResponse, getImageUrl } from '@/services/images';
+import { useProcessImage, ImageProcessResponse, getImageUrl } from '@/services/images';
 import { ImageViewer } from '../../gallery-viewer';
 
 interface ImageEditorProps {
@@ -21,6 +21,8 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const processImageMutation = useProcessImage();
+
   const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
@@ -33,14 +35,14 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 
     setIsSaving(true);
     try {
-      const result = await processImage({
+      const result = await processImageMutation.mutateAsync({
         imagePath,
         operations: {
           crop: {
-            left: croppedAreaPixels.x,
-            top: croppedAreaPixels.y,
-            width: croppedAreaPixels.width,
-            height: croppedAreaPixels.height,
+            left: Math.round(croppedAreaPixels.x),
+            top: Math.round(croppedAreaPixels.y),
+            width: Math.round(croppedAreaPixels.width),
+            height: Math.round(croppedAreaPixels.height),
           },
           rotate: rotation,
         },

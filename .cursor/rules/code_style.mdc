@@ -4,10 +4,79 @@ globs:
 alwaysApply: true
 ---
 <Warning>
-Below are list of constraints to adhere to based on project style requirements: 
-- useEffect, useRef, useCallback and other hook related items should always be implemented in custom hook files instead of inside components
-- Utilize readonly and immutable inputs to all ui components
-- Non-interactive elements should not be assigned mouse or keyboard event listeners.sonarqube(typescript:S6847) !important
-- Use <hr> instead of the "separator" role to ensure accessibility across all devices.
-- Do not utilize fixed pixel heights and widths that will not respond to variable screen size and resolution
+1. **Constants:**  
+   - Extract magic numbers/strings into constants.
+   - Centralize in a dedicated constants file.
+
+2. **Folder Structure:**  
+   - Organize by feature/purpose (components, hooks, utilities, constants, types).
+   - Be consistent and intuitive.
+
+3. **Reusable & Dumb Components:**  
+   - Split large components into small, focused pieces.
+   - Keep business logic out of presentational components.
+   - Use the children pattern to avoid prop drilling.
+
+4. **Minimal Markup:**  
+   - Avoid unnecessary wrappers; use React fragments (`<>…</>`).
+   - If layout styling is needed, wrap with a one-off container rather than embedding in a reusable component.
+
+5. **No Layout in Reusable Components:**  
+   - Reusable components (e.g., buttons, headings) should accept a `className` prop for one-off styling.
+   - Do not hardcode layout styles inside them.
+
+6. **TypeScript:**  
+   - Use strict TypeScript types for props, state, and functions.
+   - Use union types for limited values (e.g., `'primary' | 'secondary'`).
+
+7. **Event Handlers:**  
+   - Name props using the “onEvent” convention (e.g., `onAddTodo`).
+   - Use internal handler names like `handleAddTodo`.
+
+8. **State Updates:**  
+   - Wrap state updates in dedicated event handler functions.
+   - Use updater functions (`setState(prev => …)`) when new state depends on previous state.
+
+9. **Single Source of Truth:**  
+   - Track selected/active items by ID instead of the entire object.
+
+10. **URL as State:**  
+    - Store shareable state (filters, pagination) in the URL, not in component state.
+
+11. **useEffect Discipline:**  
+    - Keep each `useEffect` focused on one concern.
+    - Split effects if they manage unrelated tasks.
+
+12. **Data Fetching:**  
+    - Prefer React Query/SWR or Next.js data fetching methods over manual useEffect fetching.
+
+13. **Performance:**  
+    - Use `useMemo` for expensive calculations/objects.
+    - Use `useCallback` for functions passed as props.
+    - Wrap components in `React.memo` to avoid unnecessary renders.
+
+14. **Consolidate Related State:**  
+    - Use a single state object for related pieces of state where possible.
+
+15. **Custom Hooks & Utilities:**  
+    - Extract shared logic into custom hooks.
+    - Write utility functions for common tasks (e.g., string formatting).
+
+16. **Avoid Prop Drilling:**  
+    - Use context or children patterns instead of passing raw setter functions deeply.
+
+17. **Naming for Function Props:**  
+    - Expose custom events using “onEvent” props (e.g., `onAddTodo`), and use descriptive handler names internally (e.g., `handleAddTodo`).
+
+### Project Constraints (Reminders)
+
+- **Hooks:** Place all hook logic (useEffect, useRef, useCallback, etc.) in custom hook files.
+- **Immutability:** All UI component inputs must be readonly/immutable.
+- **Event Listeners:** Do not assign mouse or keyboard listeners to non-interactive elements.
+- **Accessibility:** Use `<hr>` instead of the "separator" role.
+- **Responsive Design:** Avoid fixed pixel heights/widths; design for responsiveness.
+
+---
+
+All new code must comply with these guidelines to ensure a modular, maintainable, and high-performing React codebase.
 </Warning>

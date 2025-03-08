@@ -36,6 +36,21 @@ vi.mock('@/common/components/responsive-image', () => ({
   ),
 }));
 
+// Mock the UploadDropzone component
+vi.mock('@/common/components/image-uploader', () => ({
+  UploadDropzone: ({ datasetName, compact }: { datasetName: string; compact?: boolean }) => (
+    <div data-testid="upload-dropzone" data-dataset={datasetName} data-compact={String(!!compact)}>
+      Upload Dropzone
+    </div>
+  ),
+}));
+
+// Mock the ImageCarouselContext
+vi.mock('../ImageCarouselContext', () => ({
+  ImageCarouselProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useImageCarouselContext: () => ({ datasetName: 'test-dataset' }),
+}));
+
 const preloadImageMock = imageServiceMock.preloadImage;
 
 // Sample test images
@@ -72,6 +87,7 @@ describe('CarouselViewer', () => {
         images={[]} 
         isLoading={true} 
         onSelectImage={vi.fn()}
+        datasetName="test-dataset"
       />
     );
     
@@ -87,11 +103,16 @@ describe('CarouselViewer', () => {
         images={[]} 
         isEmpty={true} 
         onSelectImage={vi.fn()}
+        datasetName="test-dataset"
       />
     );
     
     // THEN it should display the empty state message
     expect(screen.getByText('No images found')).toBeInTheDocument();
+    
+    // AND it should display the upload dropzone
+    expect(screen.getByTestId('upload-dropzone')).toBeInTheDocument();
+    expect(screen.getByTestId('upload-dropzone')).toHaveAttribute('data-dataset', 'test-dataset');
   });
 
   // Test the normal state with images
@@ -102,6 +123,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={vi.fn()}
+        datasetName="test-dataset"
       />
     );
     
@@ -114,6 +136,11 @@ describe('CarouselViewer', () => {
     
     // AND it should display the image counter
     expect(screen.getByText(/Image 1 of 3/)).toBeInTheDocument();
+    
+    // AND it should display the upload thumbnail in the thumbnail strip
+    expect(screen.getByTestId('upload-dropzone')).toBeInTheDocument();
+    expect(screen.getByTestId('upload-dropzone')).toHaveAttribute('data-dataset', 'test-dataset');
+    expect(screen.getByTestId('upload-dropzone')).toHaveAttribute('data-compact', 'true');
   });
 
   // Test navigation button interaction
@@ -125,6 +152,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -144,6 +172,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[1]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -164,6 +193,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -182,6 +212,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[1]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -200,6 +231,7 @@ describe('CarouselViewer', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={vi.fn()}
+        datasetName="test-dataset"
       />
     );
     

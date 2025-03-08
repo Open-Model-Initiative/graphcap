@@ -85,6 +85,7 @@ services:
       - VITE_API_URL=http://localhost:32100/api
       - VITE_WORKSPACE_PATH=/workspace/.local
       - VITE_MEDIA_SERVER_URL=http://localhost:32400
+      - VITE_DATASETS_PATH=/workspace/datasets
     networks:
       - graphcap
     depends_on:
@@ -103,6 +104,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=32400
       - WORKSPACE_PATH=/workspace
+      - DATASETS_PATH=/workspace/datasets
     develop:
       watch:
         - action: sync

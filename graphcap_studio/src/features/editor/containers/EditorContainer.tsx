@@ -2,22 +2,19 @@
 import { Dataset } from "@/services/images";
 import { ImageEditor } from "../components/ImageEditor";
 import { useEditorContext } from "../context/EditorContext";
-import { EditorLayout } from "../components/layout";
+import { EditorLayout } from "@/pages/gallery/GalleryLayout";
 import { ViewerContainer } from "@/features/gallery-viewer";
 import { PropertiesContainer } from "@/features/image-properties";
 import {
   useImageEditor,
-  useUploader,
   useImageActions,
 } from "../hooks";
-import { ImageUploader } from "../components/ImageUploader";
 import { DatasetContainer } from "@/features/datasets";
 
 interface EditorContainerProps {
   readonly directory?: string;
   readonly onClose?: () => void;
   readonly dataset: Dataset | null;
-  readonly onUploadComplete?: () => void;
 }
 
 /**
@@ -26,8 +23,7 @@ interface EditorContainerProps {
 export function EditorContainer({ 
   directory, 
   onClose, 
-  dataset, 
-  onUploadComplete 
+  dataset
 }: EditorContainerProps) {
   // Get context from EditorContext
   const { selectedImage, setSelectedImage } = useEditorContext();
@@ -40,22 +36,14 @@ export function EditorContainer({
     ? images.filter(img => img.directory === directory)
     : images;
   
-  // Use custom hooks for image editing, uploading, and actions
+  // Use custom hooks for image editing and actions
   const { isEditing, handleSave, handleCancel, handleEditImage: startEditing } = useImageEditor({
     selectedDataset: dataset?.name ?? null
   });
   
-  const { showUploader, setShowUploader, handleToggleUploader } = useUploader();
-  
-  const { handleEditImage, handleDownload, handleDelete, handleUploadFinished } = useImageActions({
+  const { handleEditImage, handleDownload, handleDelete } = useImageActions({
     selectedImage,
-    startEditing,
-    onUploadComplete: () => {
-      if (onUploadComplete) {
-        onUploadComplete();
-      }
-      setShowUploader(false);
-    }
+    startEditing
   });
   
   // Determine if the gallery is empty or loading
@@ -83,19 +71,9 @@ export function EditorContainer({
                 />
               ) : (
                 <>
-                  {/* Image uploader overlay */}
-                  {showUploader && (
-                    <div className="absolute inset-0 z-10 bg-gray-900/80 flex items-center justify-center">
-                      <ImageUploader
-                        datasetName={selectedDatasetName}
-                        onUploadComplete={handleUploadFinished}
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-                  
                   {/* Image gallery */}
                   <ViewerContainer
+                    datasetName={selectedDatasetName}
                     images={filteredImages}
                     isLoading={isLoading}
                     isEmpty={isEmpty}
@@ -109,7 +87,6 @@ export function EditorContainer({
                     onDownload={handleDownload}
                     onDelete={handleDelete}
                     title="Image Editor"
-                    onUpload={handleToggleUploader}
                     onClose={onClose}
                   />
                 </>

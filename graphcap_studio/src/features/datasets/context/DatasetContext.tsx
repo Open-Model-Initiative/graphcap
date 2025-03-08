@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
-import { Image, Dataset } from '@/services/images';
+import { Image } from '@/services/images';
+import { Dataset } from '@/services/dataset';
+import { useCreateDataset, useAddImageToDataset } from '@/services/dataset';
+import { getQueryClient } from '@/common/utils/queryClient';
+import { toast } from 'sonner';
 
 /**
  * Interface for the dataset context state
@@ -60,6 +64,10 @@ export function DatasetContextProvider({
   // Image selection state
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   
+  // Get mutations from dataset service
+  const createDatasetMutation = useCreateDataset();
+  const addImageToDatasetMutation = useAddImageToDataset();
+  
   // Update datasets when initialDatasets changes
   useEffect(() => {
     setDatasets(initialDatasets);
@@ -82,17 +90,50 @@ export function DatasetContextProvider({
     setSelectedImage(image);
   }, []);
   
-  const handleAddToDataset = useCallback((imagePath: string, targetDataset: string) => {
-    if (onAddToDataset) {
-      onAddToDataset(imagePath, targetDataset);
+  const handleAddToDataset = useCallback(async (imagePath: string, targetDataset: string) => {
+    if (!imagePath || !targetDataset) return;
+    
+    try {
+      // Use the provided handler if available
+      if (onAddToDataset) {
+        onAddToDataset(imagePath, targetDataset);
+        return;
+      }
+      
+      // Otherwise use the mutation from dataset service
+      const result = await addImageToDatasetMutation.mutateAsync({ 
+        imagePath, 
+        datasetName: targetDataset 
+      });
+      
+      if (result.success) {
+        toast.success(result.message || `Image added to dataset ${targetDataset} successfully`);
+      } else {
+        toast.error(result.message || 'Failed to add image to dataset');
+      }
+    } catch (error) {
+      toast.error(`Failed to add image to dataset: ${(error as Error).message}`);
+      console.error('Error adding image to dataset:', error);
     }
-  }, [onAddToDataset]);
+  }, [onAddToDataset, addImageToDatasetMutation]);
   
   const handleCreateDataset = useCallback(async (name: string): Promise<void> => {
-    if (onCreateDataset) {
-      await onCreateDataset(name);
+    try {
+      // Use the provided handler if available
+      if (onCreateDataset) {
+        await onCreateDataset(name);
+        return;
+      }
+      
+      // Otherwise use the mutation from dataset service
+      await createDatasetMutation.mutateAsync(name);
+      toast.success(`Created dataset ${name}`);
+    } catch (error) {
+      console.error('Failed to create dataset:', error);
+      toast.error(`Failed to create dataset: ${(error as Error).message}`);
+      throw error;
     }
-  }, [onCreateDataset]);
+  }, [onCreateDataset, createDatasetMutation]);
 
   const value = useMemo(() => ({
     // Dataset state

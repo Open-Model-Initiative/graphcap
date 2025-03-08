@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { z } from 'zod';
+import { 
+  useMutation, 
+  useQuery, 
+  useQueryClient
+} from '@tanstack/react-query';
+import { getQueryClient } from '../common/utils/queryClient';
 
 /**
  * Image service for interacting with the Graphcap Media Server
@@ -13,9 +19,11 @@ import { z } from 'zod';
 // Define the base URL for the media server API
 // Use localhost instead of container name for browser access
 const MEDIA_SERVER_URL = import.meta.env.VITE_MEDIA_SERVER_URL?.replace('graphcap_media_server', 'localhost') ?? 'http://localhost:32400';
+const DATASETS_PATH = import.meta.env.VITE_DATASETS_PATH ?? '/workspace/datasets';
 
 // Log the media server URL for debugging
 console.log('Media Server URL:', MEDIA_SERVER_URL);
+console.log('Datasets Path:', DATASETS_PATH);
 
 // Define the image schema
 export const ImageSchema = z.object({
@@ -91,57 +99,82 @@ const thumbnailCache = new Map<string, string>();
 // Cache expiration time (30 minutes)
 const CACHE_EXPIRATION = 30 * 60 * 1000;
 
+// Query keys for TanStack Query
+export const queryKeys = {
+  images: ['images'] as const,
+  imagesByDirectory: (directory?: string) => [...queryKeys.images, directory] as const,
+  datasets: ['datasets'] as const,
+  datasetImages: ['datasets', 'images'] as const,
+};
+
+// Helper function to create a query client
+const getClient = () => getQueryClient();
+
 /**
- * List all images in the workspace
+ * React hook for listing images using TanStack Query
  * 
  * @param directory - Optional directory path
- * @returns Promise with the list of images
+ * @returns Query result with the list of images
  */
-export async function listImages(directory?: string): Promise<ImageListResponse> {
-  console.log('Listing images from directory:', directory);
-  const url = new URL(`${MEDIA_SERVER_URL}/api/images`);
-  if (directory) {
-    url.searchParams.append('directory', directory);
-  }
-  
-  console.log('Fetching from URL:', url.toString());
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Error response:', errorText);
-    throw new Error(`Failed to list images: ${response.statusText}`);
-  }
-  
-  const data = await response.json();
-  console.log('Received data:', data);
-  return ImageListResponseSchema.parse(data);
+export function useListImages(directory?: string) {
+  return useQuery({
+    queryKey: queryKeys.imagesByDirectory(directory),
+    queryFn: async () => {
+      console.log('Listing images from directory:', directory);
+      
+      const url = new URL(`${MEDIA_SERVER_URL}/api/images`);
+      if (directory) {
+        url.searchParams.append('directory', directory);
+      }
+      
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to list images: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Received data:', data);
+      return ImageListResponseSchema.parse(data);
+    },
+    meta: {
+      errorMessage: 'Failed to load images'
+    }
+  });
 }
 
 /**
- * List all images in the datasets directory, grouped by dataset
+ * React hook for listing dataset images using TanStack Query
  * 
- * @returns Promise with the list of datasets and their images
+ * @returns Query result with the list of datasets and their images
  */
-export async function listDatasetImages(): Promise<DatasetListResponse> {
-  console.log('Listing dataset images');
-  const url = new URL(`${MEDIA_SERVER_URL}/api/datasets/images`);
-  
-  console.log('Fetching from URL:', url.toString());
-  try {
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`Failed to list dataset images: ${response.statusText}`);
+export function useListDatasetImages() {
+  return useQuery({
+    queryKey: queryKeys.datasetImages,
+    queryFn: async () => {
+      console.log('Listing dataset images');
+      
+      try {
+        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(`Failed to list dataset images: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Received datasets data:', data);
+        return DatasetListResponseSchema.parse(data);
+      } catch (error) {
+        console.error('Error fetching dataset images:', error);
+        throw error;
+      }
+    },
+    meta: {
+      errorMessage: 'Failed to load dataset images'
     }
-    
-    const data = await response.json();
-    console.log('Received datasets data:', data);
-    return DatasetListResponseSchema.parse(data);
-  } catch (error) {
-    console.error('Error fetching dataset images:', error);
-    throw error;
-  }
+  });
 }
 
 /**
@@ -163,7 +196,7 @@ export function getImageUrl(imagePath: string): string {
   // If the path doesn't start with /workspace and doesn't include datasets, add /workspace
   if (!normalizedPath.startsWith('/workspace') && 
       !normalizedPath.includes('/workspace/') && 
-      normalizedPath.includes('/datasets')) {
+      normalizedPath.includes(DATASETS_PATH)) {
     console.log('Adding workspace prefix to path:', normalizedPath);
     normalizedPath = `/workspace${normalizedPath}`;
   }
@@ -213,7 +246,7 @@ export function getThumbnailUrl(
   if (
     !normalizedPath.startsWith('/workspace') &&
     !normalizedPath.includes('/workspace/') &&
-    normalizedPath.includes('/datasets')
+    normalizedPath.includes(DATASETS_PATH)
   ) {
     normalizedPath = `/workspace${normalizedPath}`;
   }
@@ -247,157 +280,263 @@ export function preloadImage(imagePath: string, size: 'thumbnail' | 'full' = 'th
 }
 
 /**
- * Process an image
+ * React hook for processing an image using TanStack Query
  * 
- * @param request - Image process request
- * @returns Promise with the processed image response
+ * @returns Mutation result for processing an image
  */
-export async function processImage(request: ImageProcessRequest): Promise<ImageProcessResponse> {
-  console.log('Processing image:', request);
-  const response = await fetch(`${MEDIA_SERVER_URL}/api/images/process`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
+export function useProcessImage() {
+  const queryClient = useQueryClient();
   
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Error response:', errorText);
-    throw new Error(`Failed to process image: ${response.statusText}`);
-  }
-  
-  const data = await response.json();
-  console.log('Processed image result:', data);
-  
-  // Clear caches for this image path to ensure fresh data
-  const imagePath = request.imagePath;
-  imageUrlCache.delete(imagePath);
-  
-  // Clear all thumbnail cache entries for this image
-  for (const key of thumbnailCache.keys()) {
-    if (key.startsWith(imagePath + '_')) {
-      thumbnailCache.delete(key);
-    }
-  }
-  
-  return ImageProcessResponseSchema.parse(data);
-}
-
-/**
- * Create a new dataset
- * 
- * @param name - Name of the dataset to create
- * @returns Promise that resolves when the dataset is created
- */
-export async function createDataset(name: string): Promise<void> {
-  console.log('Creating dataset:', name);
-  const url = new URL(`${MEDIA_SERVER_URL}/api/datasets/create`);
-  
-  try {
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name }),
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
+  return useMutation({
+    mutationFn: async (request: ImageProcessRequest) => {
+      console.log('Processing image:', request);
       
-      // Handle specific error cases
-      if (response.status === 409) {
-        throw new Error(`Dataset "${name}" already exists (409)`);
-      } else {
-        throw new Error(`Failed to create dataset: ${response.statusText}`);
+      const response = await fetch(`${MEDIA_SERVER_URL}/api/images/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to process image: ${response.statusText}`);
       }
+      
+      const data = await response.json();
+      console.log('Processed image result:', data);
+      
+      // Clear caches for this image path to ensure fresh data
+      const imagePath = request.imagePath;
+      imageUrlCache.delete(imagePath);
+      
+      // Clear all thumbnail cache entries for this image
+      for (const key of thumbnailCache.keys()) {
+        if (key.startsWith(imagePath + '_')) {
+          thumbnailCache.delete(key);
+        }
+      }
+      
+      return ImageProcessResponseSchema.parse(data);
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.images });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+    },
+    meta: {
+      errorMessage: 'Failed to process image'
     }
-    
-    console.log('Dataset created successfully:', name);
-  } catch (error) {
-    console.error('Error creating dataset:', error);
-    throw error;
-  }
-}
-
-/**
- * Upload an image
- * 
- * @param file - The image file to upload
- * @param datasetName - Optional dataset name to upload to
- * @returns Promise with the uploaded image response
- */
-export async function uploadImage(file: File, datasetName?: string): Promise<ImageProcessResponse> {
-  console.log('Uploading image:', file.name, datasetName ? `to dataset: ${datasetName}` : '');
-  
-  const formData = new FormData();
-  formData.append('image', file);
-  
-  // If dataset name is provided, add it to the form data
-  if (datasetName) {
-    formData.append('dataset', datasetName);
-  }
-  
-  const response = await fetch(`${MEDIA_SERVER_URL}/api/images/upload`, {
-    method: 'POST',
-    body: formData,
   });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Error response:', errorText);
-    throw new Error(`Failed to upload image: ${response.statusText}`);
-  }
-  
-  const data = await response.json();
-  console.log('Upload result:', data);
-  
-  return ImageProcessResponseSchema.parse(data);
 }
 
 /**
- * Add an existing image to a dataset
+ * React hook for creating a dataset using TanStack Query
  * 
- * @param imagePath - Path of the image to add
- * @param datasetName - Name of the dataset to add the image to
- * @returns Promise with the result of the operation
+ * @returns Mutation result for creating a dataset
  */
-export async function addImageToDataset(imagePath: string, datasetName: string): Promise<{ success: boolean; message: string }> {
-  console.log('Adding image to dataset:', imagePath, 'to dataset:', datasetName);
+export function useCreateDataset() {
+  const queryClient = useQueryClient();
   
-  try {
-    const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/add-image`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        imagePath, 
-        datasetName 
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`Failed to add image to dataset: ${response.statusText}`);
+  return useMutation({
+    mutationFn: async (name: string) => {
+      console.log('Creating dataset:', name);
+      
+      try {
+        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          
+          // Handle specific error cases
+          if (response.status === 409) {
+            throw new Error(`Dataset "${name}" already exists (409)`);
+          } else {
+            throw new Error(`Failed to create dataset: ${response.statusText}`);
+          }
+        }
+        
+        console.log('Dataset created successfully:', name);
+      } catch (error) {
+        console.error('Error creating dataset:', error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      // Invalidate datasets query to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+    },
+    meta: {
+      errorMessage: 'Failed to create dataset'
     }
-    
-    const result = await response.json();
-    console.log('Add image to dataset result:', result);
-    
-    return { 
-      success: true, 
-      message: `Image added to dataset ${datasetName} successfully` 
-    };
-  } catch (error) {
-    console.error('Error adding image to dataset:', error);
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
-  }
+  });
+}
+
+/**
+ * React hook for uploading an image using TanStack Query
+ * 
+ * @returns Mutation result for uploading an image
+ */
+export function useUploadImage() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ file, datasetName }: { file: File; datasetName?: string }) => {
+      console.log('Uploading image:', file.name, datasetName ? `to dataset: ${datasetName}` : '');
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // If dataset name is provided, add it to the form data
+      if (datasetName) {
+        formData.append('dataset', datasetName);
+        
+        // Ensure we're using the correct datasets path
+        const targetPath = `${DATASETS_PATH}/${datasetName}`;
+        formData.append('targetPath', targetPath);
+      }
+      
+      const response = await fetch(`${MEDIA_SERVER_URL}/api/images/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to upload image: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Upload result:', data);
+      
+      return ImageProcessResponseSchema.parse(data);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.images });
+      
+      // If uploaded to a dataset, invalidate dataset queries
+      if (variables.datasetName) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+      }
+    },
+    meta: {
+      errorMessage: 'Failed to upload image'
+    }
+  });
+}
+
+/**
+ * React hook for adding an image to a dataset using TanStack Query
+ * 
+ * @returns Mutation result for adding an image to a dataset
+ */
+export function useAddImageToDataset() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ imagePath, datasetName }: { imagePath: string; datasetName: string }) => {
+      console.log('Adding image to dataset:', imagePath, 'to dataset:', datasetName);
+      
+      try {
+        // Ensure we're using the correct datasets path
+        const targetDatasetPath = `${DATASETS_PATH}/${datasetName}`;
+        
+        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/add-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            imagePath, 
+            datasetName,
+            targetPath: targetDatasetPath
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(`Failed to add image to dataset: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Add image to dataset result:', data);
+        
+        return { 
+          success: true, 
+          message: `Image added to dataset ${datasetName} successfully` 
+        };
+      } catch (error) {
+        console.error('Error adding image to dataset:', error);
+        return { 
+          success: false, 
+          message: error instanceof Error ? error.message : 'Unknown error occurred' 
+        };
+      }
+    },
+    onSuccess: () => {
+      // Invalidate dataset queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+    },
+    meta: {
+      errorMessage: 'Failed to add image to dataset'
+    }
+  });
+}
+
+/**
+ * Prefetch images data to populate the query cache
+ * 
+ * @param directory - Optional directory to prefetch images from
+ */
+export async function prefetchImages(directory?: string): Promise<void> {
+  const queryClient = getClient();
+  await queryClient.prefetchQuery({
+    queryKey: queryKeys.imagesByDirectory(directory),
+    queryFn: async () => {
+      const url = new URL(`${MEDIA_SERVER_URL}/api/images`);
+      if (directory) {
+        url.searchParams.append('directory', directory);
+      }
+      
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`Failed to list images: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return ImageListResponseSchema.parse(data);
+    }
+  });
+}
+
+/**
+ * Prefetch dataset images data to populate the query cache
+ */
+export async function prefetchDatasetImages(): Promise<void> {
+  const queryClient = getClient();
+  await queryClient.prefetchQuery({
+    queryKey: queryKeys.datasetImages,
+    queryFn: async () => {
+      const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
+      if (!response.ok) {
+        throw new Error(`Failed to list dataset images: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return DatasetListResponseSchema.parse(data);
+    }
+  });
 } 

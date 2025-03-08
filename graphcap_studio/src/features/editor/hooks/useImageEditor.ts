@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Image } from '@/services/images';
-import { DATASET_QUERY_KEYS } from '@/features/datasets/hooks/useDatasets';
+import { queryKeys } from '@/services/dataset';
 
 interface UseImageEditorProps {
   selectedDataset: string | null;
@@ -41,7 +41,8 @@ export function useImageEditor({ selectedDataset }: UseImageEditorProps) {
     
     // Invalidate cache for this dataset to refresh the images
     if (selectedDataset) {
-      queryClient.invalidateQueries({ queryKey: DATASET_QUERY_KEYS.datasetImages(selectedDataset) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasetByName(selectedDataset) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
     }
   }, [queryClient, selectedDataset]);
 

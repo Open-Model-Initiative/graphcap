@@ -251,7 +251,7 @@ async function createDataset(name) {
     const sanitizedName = nameResult.sanitized;
     
     // Create the dataset path
-    const datasetPathResult = securePath(`datasets/local${sanitizedName}`, WORKSPACE_PATH, { createIfNotExist: true });
+    const datasetPathResult = securePath(`datasets/local/${sanitizedName}`, WORKSPACE_PATH, { createIfNotExist: true });
     
     if (!datasetPathResult.isValid) {
       throw new Error(`Failed to create dataset path: ${datasetPathResult.error}`);
@@ -260,6 +260,7 @@ async function createDataset(name) {
     logInfo(`Dataset created: ${sanitizedName} at ${datasetPathResult.path}`);
     
     return {
+      success: true,
       name: sanitizedName,
       path: datasetPathResult.relativePath,
       images: []
@@ -294,7 +295,7 @@ async function addImageToDataset(imagePath, datasetName) {
     const sanitizedDatasetName = datasetNameResult.sanitized;
     
     // Check if the dataset exists
-    const datasetPathResult = securePath(`datasets/local${sanitizedDatasetName}`, WORKSPACE_PATH, { mustExist: false });
+    const datasetPathResult = securePath(`datasets/local/${sanitizedDatasetName}`, WORKSPACE_PATH, { mustExist: false });
     if (!datasetPathResult.isValid) {
       throw new Error(`Invalid dataset path: ${datasetPathResult.error}`);
     }
@@ -323,6 +324,7 @@ async function addImageToDataset(imagePath, datasetName) {
     logInfo(`Image added to dataset: ${imageName} to ${sanitizedDatasetName}`);
     
     return {
+      success: true,
       name: imageName,
       path: newImagePathResult.relativePath,
       url: `/api/images/view${newImagePathResult.relativePath}`
@@ -333,8 +335,57 @@ async function addImageToDataset(imagePath, datasetName) {
   }
 }
 
+/**
+ * Delete a dataset
+ * 
+ * @param {string} name - Name of the dataset to delete
+ * @returns {Promise<Object>} Success status and message
+ */
+async function deleteDataset(name) {
+  try {
+    // Validate dataset name
+    if (!name || typeof name !== 'string') {
+      throw new Error('Dataset name is required');
+    }
+    
+    // Sanitize dataset name
+    const nameResult = validateFilename(name);
+    if (!nameResult.isValid) {
+      throw new Error(`Invalid dataset name: ${nameResult.error}`);
+    }
+    
+    const sanitizedName = nameResult.sanitized;
+    
+    // Get the dataset path
+    const datasetPathResult = securePath(`datasets/local/${sanitizedName}`, WORKSPACE_PATH, { mustExist: true });
+    
+    if (!datasetPathResult.isValid) {
+      throw new Error(`Invalid dataset path: ${datasetPathResult.error}`);
+    }
+    
+    // Check if the dataset exists
+    if (!fs.existsSync(datasetPathResult.path)) {
+      throw new Error(`Dataset not found: ${sanitizedName}`);
+    }
+    
+    // Delete the dataset directory and all its contents
+    fs.rmSync(datasetPathResult.path, { recursive: true, force: true });
+    
+    logInfo(`Dataset deleted: ${sanitizedName} at ${datasetPathResult.path}`);
+    
+    return {
+      success: true,
+      message: `Dataset "${sanitizedName}" deleted successfully`
+    };
+  } catch (error) {
+    logError('Error deleting dataset', error);
+    throw error;
+  }
+}
+
 module.exports = {
   listDatasetImages,
   createDataset,
-  addImageToDataset
+  addImageToDataset,
+  deleteDataset
 }; 

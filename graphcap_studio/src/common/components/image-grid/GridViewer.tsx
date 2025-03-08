@@ -4,6 +4,7 @@ import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
 import { LazyImage } from '@/common/components/image-grid/LazyImage';
 import { LoadingSpinner, EmptyState } from '@/common/ui';
+import { UploadDropzone } from '../image-uploader';
 
 /**
  * Props for the image renderer component
@@ -26,6 +27,7 @@ interface GridViewerProps {
   readonly selectedImage?: Image | null;
   readonly onSelectImage: (image: Image) => void;
   readonly onEditImage?: (image: Image) => void;
+  readonly datasetName?: string;
   /**
    * Optional custom component to render individual images
    * If not provided, a default img element will be used
@@ -54,6 +56,7 @@ interface GridViewerProps {
  * @param onSelectImage - Callback when an image is selected
  * @param onEditImage - Callback when edit button is clicked
  * @param ImageComponent - Optional custom component to render individual images
+ * @param datasetName - Name of the dataset to upload images to
  */
 export function GridViewer({
   images,
@@ -65,7 +68,8 @@ export function GridViewer({
   selectedImage,
   onSelectImage,
   onEditImage,
-  ImageComponent
+  ImageComponent,
+  datasetName
 }: GridViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -153,6 +157,10 @@ export function GridViewer({
         <EmptyState
           title="No images found"
           description="Try selecting a different dataset or uploading new images."
+        />
+        <UploadDropzone
+          datasetName={datasetName}
+          onUploadComplete={() => {}}
         />
       </div>
     );

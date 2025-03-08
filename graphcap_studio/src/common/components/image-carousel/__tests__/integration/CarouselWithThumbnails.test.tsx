@@ -36,6 +36,21 @@ vi.mock('@/common/components/responsive-image', () => ({
   ),
 }));
 
+// Mock the UploadDropzone component
+vi.mock('@/common/components/image-uploader', () => ({
+  UploadDropzone: ({ datasetName, compact }: { datasetName: string; compact?: boolean }) => (
+    <div data-testid="upload-dropzone" data-dataset={datasetName} data-compact={String(!!compact)}>
+      Upload Dropzone
+    </div>
+  ),
+}));
+
+// Mock the ImageCarouselContext
+vi.mock('../../ImageCarouselContext', () => ({
+  ImageCarouselProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useImageCarouselContext: () => ({ datasetName: 'test-dataset' }),
+}));
+
 const preloadImageMock = imageServiceMock.preloadImage;
 
 // Sample test images
@@ -74,12 +89,18 @@ describe('CarouselViewer with ThumbnailStrip Integration', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
     // It should display the main image and thumbnails
     expect(screen.getByTestId('responsive-image')).toBeInTheDocument();
     expect(screen.getAllByTestId('thumbnail-image').length).toBeGreaterThan(0);
+    
+    // It should display the upload dropzone
+    expect(screen.getByTestId('upload-dropzone')).toBeInTheDocument();
+    expect(screen.getByTestId('upload-dropzone')).toHaveAttribute('data-dataset', 'test-dataset');
+    expect(screen.getByTestId('upload-dropzone')).toHaveAttribute('data-compact', 'true');
     
     // Clicking a thumbnail should call onSelectImage with the corresponding image
     const thumbnails = screen.getAllByTestId('thumbnail-image');
@@ -115,6 +136,7 @@ describe('CarouselViewer with ThumbnailStrip Integration', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -128,6 +150,7 @@ describe('CarouselViewer with ThumbnailStrip Integration', () => {
         images={mockImages} 
         selectedImage={mockImages[2]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     
@@ -146,6 +169,7 @@ describe('CarouselViewer with ThumbnailStrip Integration', () => {
         images={mockImages} 
         selectedImage={mockImages[0]} 
         onSelectImage={onSelectImage}
+        datasetName="test-dataset"
       />
     );
     

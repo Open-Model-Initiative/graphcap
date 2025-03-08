@@ -21,6 +21,7 @@ interface TreeChevronProps {
  * @returns {JSX.Element} The rendered chevron component.
  */
 export function TreeChevron({ isExpanded, onClick }: TreeChevronProps) {
+  
   // Handle the click event and make sure to stop propagation
   const handleClick = (e: React.MouseEvent) => {
     // Prevent the event from bubbling up to parent elements
@@ -31,10 +32,18 @@ export function TreeChevron({ isExpanded, onClick }: TreeChevronProps) {
     onClick?.(e)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.stopPropagation()
+      e.preventDefault()
+      onClick?.(e)
+    }
+  }
+
   return (
     <button
       type="button" // Explicitly set button type to prevent form submission
-      className="mr-1.5 w-5 h-5 flex items-center justify-center bg-transparent border-0 p-0 opacity-70 hover:opacity-100 transition-opacity duration-150 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded-sm"
+      className="tree-chevron mr-1.5 w-5 h-5 flex items-center justify-center bg-transparent border-0 p-0 opacity-70 hover:opacity-100 transition-opacity duration-150 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded-sm"
       onClick={handleClick}
       onMouseDown={(e) => {
         // Also prevent mousedown from triggering parent events
@@ -42,13 +51,7 @@ export function TreeChevron({ isExpanded, onClick }: TreeChevronProps) {
       }}
       aria-label={isExpanded ? "Collapse" : "Expand"}
       aria-expanded={isExpanded}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.stopPropagation()
-          e.preventDefault()
-          onClick?.(e)
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       {/* Using a simple HTML/CSS triangle instead of SVG for better compatibility */}
       <div

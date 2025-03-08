@@ -22,6 +22,8 @@ interface ViewerContainerProps {
   readonly title?: string;
   readonly onUpload?: () => void;
   readonly onClose?: () => void;
+  readonly datasetName: string;
+  readonly onUploadComplete?: () => void;
 }
 
 /**
@@ -47,6 +49,8 @@ interface ViewerContainerProps {
  * @param title - Title to display in the header bar
  * @param onUpload - Callback when upload button is clicked
  * @param onClose - Callback when close button is clicked
+ * @param datasetName - Name of the dataset being viewed
+ * @param onUploadComplete - Callback when upload is complete
  */
 export function ViewerContainer({
   images,
@@ -64,9 +68,11 @@ export function ViewerContainer({
   title = 'Image Viewer',
   onUpload,
   onClose,
+  datasetName,
+  onUploadComplete,
 }: ViewerContainerProps) {
   // Use our custom hook for container management
-  const { setContainerRef, thumbnailOptions } = useViewerContainer({});
+  const { setContainerRef, thumbnailOptions } = useViewerContainer();
 
   return (
     <GalleryViewerProvider
@@ -74,6 +80,8 @@ export function ViewerContainer({
       initialViewMode={initialViewMode}
       initialSelectedImage={selectedImage}
       onImageSelected={onImageSelected}
+      datasetName={datasetName}
+      onUploadComplete={onUploadComplete}
     >
       <div 
         ref={setContainerRef}

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useRef } from 'react';
-import { Resizer, useResizer } from '../resizer';
+import { Resizer, useResizer } from './resizer';
 
 interface EditorLayoutProps {
   readonly navigation: React.ReactNode;

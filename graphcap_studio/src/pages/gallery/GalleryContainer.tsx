@@ -17,7 +17,6 @@ function GalleryContainerInner() {
     handleAddToDataset,
     handleCreateDataset,
     handleSelectDataset,
-    handleUploadComplete,
   } = useGalleryContext();
 
   return (
@@ -34,7 +33,6 @@ function GalleryContainerInner() {
           <EditorContainer 
             dataset={currentDataset} 
             directory={selectedSubfolder ?? undefined}
-            onUploadComplete={handleUploadComplete}
           />
         </div>
       </EditorContextProvider>
