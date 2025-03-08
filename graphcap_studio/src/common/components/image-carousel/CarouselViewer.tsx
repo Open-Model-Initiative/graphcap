@@ -169,6 +169,7 @@ export function CarouselViewer({
               objectFit="contain"
               priority={true} // Main image is high priority
               sizes="(max-width: 768px) 100vw, 80vw"
+              forceContainerAspect={false} // Don't force aspect ratio for main gallery view
             />
           </div>
         )}

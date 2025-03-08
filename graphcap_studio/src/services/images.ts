@@ -12,7 +12,7 @@ import { z } from 'zod';
 
 // Define the base URL for the media server API
 // Use localhost instead of container name for browser access
-const MEDIA_SERVER_URL = import.meta.env.VITE_MEDIA_SERVER_URL?.replace('graphcap_media_server', 'localhost') || 'http://localhost:32400';
+const MEDIA_SERVER_URL = import.meta.env.VITE_MEDIA_SERVER_URL?.replace('graphcap_media_server', 'localhost') ?? 'http://localhost:32400';
 
 // Log the media server URL for debugging
 console.log('Media Server URL:', MEDIA_SERVER_URL);

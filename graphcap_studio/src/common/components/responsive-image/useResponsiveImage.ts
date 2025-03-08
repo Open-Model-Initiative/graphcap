@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getThumbnailUrl } from '@/services/images';
+import { generateSrcSet } from '@/common/utils/imageSrcSet';
 
 interface UseResponsiveImageProps {
   readonly imagePath: string;
@@ -61,12 +62,7 @@ export function useResponsiveImage({
 
   // Memoize the srcset string (default format, e.g., JPEG)
   const srcSet = useMemo(() => {
-    const widths = [200, 400, 800, 1200, 1600];
-    return widths
-      .map(width =>
-        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)))} ${width}w`
-      )
-      .join(', ');
+    return generateSrcSet(imagePath, getThumbnailUrl, undefined, aspectRatio);
   }, [imagePath, aspectRatio]);
 
   return {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
+import { calculateHeightFromAspectRatio, calculateWidthFromAspectRatio } from '@/common/utils/aspectRatio';
 
 interface UseDynamicThumbnailsProps {
   totalCount: number;
@@ -41,7 +42,9 @@ export function useDynamicThumbnails({
   
   // State for thumbnail dimensions
   const [thumbnailWidth, setThumbnailWidth] = useState(minThumbnailWidth);
-  const [thumbnailHeight, setThumbnailHeight] = useState(minThumbnailWidth / aspectRatio);
+  const [thumbnailHeight, setThumbnailHeight] = useState(
+    calculateHeightFromAspectRatio(minThumbnailWidth, aspectRatio, 'useDynamicThumbnails-init')
+  );
   const [visibleCount, setVisibleCount] = useState(0);
   
   // Calculate the optimal thumbnail size based on container width
@@ -54,7 +57,11 @@ export function useDynamicThumbnails({
     const maxThumbnailHeight = maxHeight;
     
     // Calculate the maximum width based on the height constraint and aspect ratio
-    const heightConstrainedWidth = Math.floor(maxThumbnailHeight * aspectRatio);
+    const heightConstrainedWidth = calculateWidthFromAspectRatio(
+      maxThumbnailHeight, 
+      aspectRatio, 
+      'useDynamicThumbnails-heightConstrained'
+    );
     
     // Use the smaller of the height-constrained width and the maxThumbnailWidth
     const effectiveMaxWidth = Math.min(heightConstrainedWidth, maxThumbnailWidth);
@@ -87,7 +94,11 @@ export function useDynamicThumbnails({
     );
     
     // Calculate height based on aspect ratio
-    const calculatedHeight = Math.floor(boundedWidth / aspectRatio);
+    const calculatedHeight = calculateHeightFromAspectRatio(
+      boundedWidth, 
+      aspectRatio, 
+      'useDynamicThumbnails-final'
+    );
     
     // Ensure height doesn't exceed max height
     const boundedHeight = Math.min(calculatedHeight, maxThumbnailHeight);

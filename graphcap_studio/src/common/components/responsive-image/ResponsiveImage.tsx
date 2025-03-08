@@ -2,6 +2,8 @@
 import { useRef, useMemo } from 'react';
 import { getImageUrl, getThumbnailUrl } from '@/services/images';
 import { useResponsiveImage } from './useResponsiveImage';
+import { generateSrcSet } from '@/common/utils/imageSrcSet';
+import { formatAspectRatioForCSS } from '@/common/utils/aspectRatio';
 
 interface ResponsiveImageProps {
   readonly imagePath: string;
@@ -13,6 +15,7 @@ interface ResponsiveImageProps {
   readonly sizes?: string;
   readonly onLoad?: () => void;
   readonly onError?: (error: Error) => void;
+  readonly forceContainerAspect?: boolean;
 }
 
 /**
@@ -24,8 +27,13 @@ interface ResponsiveImageProps {
  * - Proper aspect ratio preservation
  * - Loading states with placeholders
  * - Error handling
+ * - Optional container aspect ratio enforcement
  * 
  * Based on best practices from: https://www.builder.io/blog/fast-images
+ * 
+ * @param forceContainerAspect - When true, forces the container to maintain the specified aspect ratio.
+ *                              When false, the container sizes naturally based on content.
+ *                              Default: true for thumbnails, false recommended for gallery view.
  */
 export function ResponsiveImage({
   imagePath,
@@ -37,6 +45,7 @@ export function ResponsiveImage({
   sizes = '(max-width: 768px) 100vw, 50vw',
   onLoad,
   onError,
+  forceContainerAspect = true,
 }: ResponsiveImageProps) {
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -49,18 +58,16 @@ export function ResponsiveImage({
 
   // Memoize srcset string for WebP format
   const webpSrcSet = useMemo(() => {
-    const widths = [200, 400, 800, 1200, 1600];
-    return widths
-      .map(width =>
-        `${getThumbnailUrl(imagePath, width, Math.round(width / (aspectRatio ?? 1)), 'webp')} ${width}w`
-      )
-      .join(', ');
+    return generateSrcSet(imagePath, getThumbnailUrl, undefined, aspectRatio, 'webp');
   }, [imagePath, aspectRatio]);
+
+  // Format aspect ratio for CSS
+  const cssAspectRatio = forceContainerAspect ? formatAspectRatioForCSS(aspectRatio) : undefined;
 
   return (
     <div
       className={`relative overflow-hidden ${className}`}
-      style={{ aspectRatio: aspectRatio ? `${aspectRatio}` : undefined }}
+      style={cssAspectRatio ? { aspectRatio: cssAspectRatio } : undefined}
     >
       {/* Loading placeholder */}
       {loading && (

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, RefObject } from 'react';
+import { calculateFitDimensions } from '@/common/utils/aspectRatio';
 
 interface UseImageViewerSizeProps {
   containerRef: RefObject<HTMLElement | null>;
@@ -46,23 +47,13 @@ export function useImageViewerSize({
         const containerWidth = containerRef.current.clientWidth - (padding * 2);
         const containerHeight = containerRef.current.clientHeight - (padding * 2);
         
-        let width = containerWidth;
-        let height = containerHeight;
-        
-        // If aspect ratio is provided, maintain it while fitting within container
-        if (aspectRatio) {
-          const containerRatio = containerWidth / containerHeight;
-          
-          if (aspectRatio > containerRatio) {
-            // Width constrained
-            width = containerWidth;
-            height = width / aspectRatio;
-          } else {
-            // Height constrained
-            height = containerHeight;
-            width = height * aspectRatio;
-          }
-        }
+        // Calculate dimensions that fit within the container while maintaining aspect ratio
+        const { width, height } = calculateFitDimensions(
+          containerWidth, 
+          containerHeight, 
+          aspectRatio,
+          'useImageViewerSize'
+        );
         
         setDimensions({ width, height });
       }

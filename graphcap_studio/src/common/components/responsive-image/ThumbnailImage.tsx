@@ -43,6 +43,7 @@ export function ThumbnailImage({
         sizes="150px" // Thumbnails are typically small
         objectFit="cover"
         priority={false}
+        forceContainerAspect={true}
       />
     </button>
   );
