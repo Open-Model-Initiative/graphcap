@@ -60,22 +60,40 @@ async function generateThumbnail(imagePath, width, height, format = 'webp') {
     const thumbnailPath = thumbnailPathResult.path;
     
     if (fs.existsSync(thumbnailPath)) {
-      logInfo(`Using existing thumbnail: ${thumbnailPath}`);
+      // Only log when debugging is needed
+      // logInfo(`Using existing thumbnail: ${thumbnailPath}`);
       return thumbnailPath;
     }
     
+    // Only log when generating new thumbnails
     logInfo(
       `Generating thumbnail for ${imagePath} at ${parsedWidth}x${parsedHeight} in format ${format}`
     );
     
-    await sharp(imagePath)
+    // Optimize Sharp configuration for better performance
+    const sharpOptions = {
+      failOn: 'none', // Don't fail on warnings
+      limitInputPixels: 268402689, // 16384 x 16384 pixels
+      sequentialRead: true // Sequential read for better memory usage
+    };
+    
+    // Format-specific options
+    const formatOptions = {
+      webp: { quality: 80, effort: 4 }, // Lower effort for faster encoding
+      jpeg: { quality: 80, progressive: true, optimizeScans: true },
+      png: { compressionLevel: 6, adaptiveFiltering: true }, // Balance between speed and size
+      avif: { quality: 80, effort: 4 } // Lower effort for faster encoding
+    };
+    
+    await sharp(imagePath, sharpOptions)
       .resize({
         width: parsedWidth,
         height: parsedHeight,
         fit: 'cover',
         position: 'centre',
+        fastShrinkOnLoad: true // Faster resizing for large images
       })
-      .toFormat(format, { quality: 80 })
+      .toFormat(format, formatOptions[format] || { quality: 80 })
       .toFile(thumbnailPath);
     
     return thumbnailPath;

@@ -25,6 +25,52 @@ const { generateThumbnail } = require('../utils/thumbnail-generator');
 const { getOptimalImagePath, getWebpUrl } = require('../utils/image-utils');
 const { WORKSPACE_PATH, uploadDir, thumbnailsDir, webpCacheDir } = require('../config');
 
+// In-memory cache for frequently accessed images
+// This helps reduce disk I/O for commonly viewed images
+const imagePathCache = new Map();
+const CACHE_SIZE_LIMIT = 100; // Maximum number of entries in the cache
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+/**
+ * Adds an entry to the in-memory cache with TTL
+ * 
+ * @param {string} key - Cache key
+ * @param {any} value - Value to cache
+ */
+function addToCache(key, value) {
+  // If cache is full, remove the oldest entry
+  if (imagePathCache.size >= CACHE_SIZE_LIMIT) {
+    const oldestKey = imagePathCache.keys().next().value;
+    imagePathCache.delete(oldestKey);
+  }
+  
+  // Add the new entry with expiration
+  imagePathCache.set(key, {
+    value,
+    expires: Date.now() + CACHE_TTL
+  });
+}
+
+/**
+ * Gets an entry from the in-memory cache if it exists and hasn't expired
+ * 
+ * @param {string} key - Cache key
+ * @returns {any|null} Cached value or null if not found or expired
+ */
+function getFromCache(key) {
+  const entry = imagePathCache.get(key);
+  
+  if (!entry) return null;
+  
+  // Check if the entry has expired
+  if (entry.expires < Date.now()) {
+    imagePathCache.delete(key);
+    return null;
+  }
+  
+  return entry.value;
+}
+
 /**
  * List all images in a directory
  * 
@@ -239,7 +285,15 @@ async function processImage(imagePath, operations, outputName, overwrite) {
 async function serveImage(imagePath, width, height, format, req) {
   try {
     const normalizedPath = String(imagePath || '').replace(/^\/+/, '');
-    logInfo(`Processing image path for serving: ${normalizedPath}`);
+    
+    // Create a cache key based on the request parameters
+    const cacheKey = `${normalizedPath}_${width || 'orig'}_${height || 'orig'}_${format || 'orig'}`;
+    
+    // Check if the result is in the cache
+    const cachedResult = getFromCache(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
     
     const isWorkspacePath = normalizedPath.startsWith('workspace/') ||
                             normalizedPath.includes('/workspace/');
@@ -247,40 +301,41 @@ async function serveImage(imagePath, width, height, format, req) {
       ? normalizedPath.replace(/^(workspace\/|\/workspace\/)/, '')
       : normalizedPath;
     
-    logInfo(`Cleaned path for processing: ${cleanPath}`);
-    
     const pathResult = securePath(cleanPath, WORKSPACE_PATH, { mustExist: true });
     if (!pathResult.isValid) {
       const altPathResult = securePath(normalizedPath, WORKSPACE_PATH, { mustExist: true });
       if (!altPathResult.isValid) {
         logError('Invalid image path', { 
           imagePath: normalizedPath, 
-          cleanPath,
-          error: pathResult.error,
-          fullPath: pathResult.path
+          error: pathResult.error
         });
         throw new Error(`Invalid image path: ${pathResult.error}`);
       }
       
       const fullPath = altPathResult.path;
-      logInfo(`Resolved image path (alternative): ${fullPath}`);
-      return await processImageRequest(fullPath, width, height, format, req);
+      const result = await processImageRequest(fullPath, width, height, format, req);
+      
+      // Cache the result
+      addToCache(cacheKey, result);
+      
+      return result;
     }
     
     const fullPath = pathResult.path;
-    logInfo(`Resolved image path: ${fullPath}`);
+    const result = await processImageRequest(fullPath, width, height, format, req);
     
-    return await processImageRequest(fullPath, width, height, format, req);
+    // Cache the result
+    addToCache(cacheKey, result);
+    
+    return result;
   } catch (error) {
     logError('Error serving image', { 
       imagePath, 
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
     throw error;
   }
 }
-
 
 /**
  * Process an image request for thumbnails or original image
@@ -307,7 +362,6 @@ async function processImageRequest(fullPath, width, height, format = 'webp', req
     }
     
     const thumbnailPath = await generateThumbnail(fullPath, parsedWidth, parsedHeight, format);
-    logInfo(`Serving thumbnail: ${thumbnailPath}`);
     return { path: thumbnailPath, isThumbnail: true };
   } else {
     // If no thumbnail is requested, check if a WebP version exists and use it if appropriate
@@ -325,15 +379,11 @@ async function processImageRequest(fullPath, width, height, format = 'webp', req
         };
       }
       
-      if (optimalPath !== fullPath) {
-        logInfo(`Serving WebP version instead of original: ${optimalPath}`);
-      }
       return { path: optimalPath, isThumbnail: false };
     }
     return { path: fullPath, isThumbnail: false };
   }
 }
-
 
 module.exports = {
   listImages,

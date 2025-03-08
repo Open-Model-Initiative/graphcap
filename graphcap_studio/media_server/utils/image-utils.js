@@ -20,14 +20,23 @@ const { WORKSPACE_PATH } = require('../config');
  * @returns {string} URL for the WebP image
  */
 function getWebpUrl(imagePath) {
-  // Get the path relative to the workspace
-  const relativePath = path.relative(WORKSPACE_PATH, imagePath);
-  
-  // Replace the extension with .webp
-  const relativeWebpPath = relativePath.replace(path.extname(relativePath), '.webp');
-  
-  // Return the URL for the WebP image
-  return `/api/images/webp/${relativeWebpPath}`;
+  try {
+    // Get the path relative to the workspace
+    const relativePath = path.relative(WORKSPACE_PATH, imagePath);
+    
+    // Replace the extension with .webp
+    const relativeWebpPath = relativePath.replace(path.extname(relativePath), '.webp');
+    
+    // Ensure the path doesn't have workspace in it to avoid duplication
+    const cleanPath = relativeWebpPath.replace(/^(workspace\/|\/workspace\/)/, '');
+    
+    // Return the URL for the WebP image
+    return `/api/images/webp/${cleanPath}`;
+  } catch (error) {
+    logError('Error generating WebP URL', error);
+    // Return a fallback URL that will likely 404, but won't crash the app
+    return `/api/images/webp/error`;
+  }
 }
 
 /**
@@ -53,7 +62,8 @@ function getOptimalImagePath(imagePath, req) {
       // Check if a WebP version exists in the cache
       const webpPath = getWebpCachePath(imagePath);
       if (fs.existsSync(webpPath)) {
-        logInfo(`Using WebP version for ${imagePath}`);
+        // Only log when debugging is needed
+        // logInfo(`Using WebP version for ${imagePath}`);
         return webpPath;
       }
     }

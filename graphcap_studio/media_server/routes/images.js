@@ -54,58 +54,53 @@ router.get('/view/*', async (req, res) => {
     const height = req.query.height;
     const format = req.query.format || 'webp';
     
-    logInfo(`Image view request received for: ${imagePath}`, { 
-      width, 
-      height,
-      format,
-      originalUrl: req.originalUrl,
-      query: req.query
-    });
+    // Reduce logging to minimal information
+    logInfo(`Image view request for: ${imagePath.split('/').pop()}`);
     
     // Pass the request object to serveImage for WebP detection
     const result = await serveImage(imagePath, width, height, format, req);
     
-    logInfo(`Serving image file: ${result.path}`, { 
-      isThumbnail: result.isThumbnail,
-      originalPath: imagePath,
-      resolvedPath: result.path,
-      isWebp: result.isWebp || false
-    });
+    // Reduce logging
     
     // If this is a WebP image from the cache, redirect to the WebP endpoint
     if (result.isWebp && result.webpUrl) {
-      logInfo(`Redirecting to WebP URL: ${result.webpUrl}`);
       return res.redirect(result.webpUrl);
     }
     
+    // Improve caching headers
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Vary', 'Origin, Accept');  // Add Accept to Vary header for proper caching
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    // Increase cache duration for better performance
+    const cacheMaxAge = 86400; // 24 hours in seconds
+    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, immutable`);
+    
+    // Add ETag support for conditional requests
+    const etag = `W/"${imagePath}-${width || 'orig'}-${height || 'orig'}-${format}"`;
+    res.setHeader('ETag', etag);
+    
+    // Check if client has a valid cached version
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end(); // Not Modified
+    }
     
     res.sendFile(result.path, {
       headers: {
         'Cross-Origin-Resource-Policy': 'cross-origin',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': `public, max-age=${cacheMaxAge}, immutable`,
+        'ETag': etag
       },
       dotfiles: 'allow',
-      maxAge: 3600000
+      maxAge: cacheMaxAge * 1000 // Convert to milliseconds for sendFile
     });
   } catch (error) {
     logError('Error serving image', { 
       path: req.params[0], 
-      error: error.message,
-      stack: error.stack,
-      originalUrl: req.originalUrl,
-      query: req.query
+      error: error.message
     });
-    
-    res.status(404).json({ 
-      error: 'Failed to load image', 
-      path: req.params[0],
-      message: error.message,
-      originalUrl: req.originalUrl
-    });
+    res.status(500).json({ error: 'Failed to serve image' });
   }
 });
 
@@ -259,12 +254,20 @@ router.get('/captions', async (req, res) => {
 router.get('/webp/*', async (req, res) => {
   try {
     const imagePath = req.params[0];
-    const fullPath = path.join(webpCacheDir, imagePath);
+    
+    // Don't join with webpCacheDir here, as it might cause path duplication
+    // Instead, use securePath to validate and resolve the path
     
     logInfo(`WebP cache request received for: ${imagePath}`);
     
     // Validate the path to prevent directory traversal
-    const pathResult = securePath(fullPath, webpCacheDir, { mustExist: true });
+    // Use WORKSPACE_PATH as the base to ensure consistent path resolution
+    const pathResult = securePath(
+      path.join('webp_cache', imagePath), 
+      WORKSPACE_PATH, 
+      { mustExist: true }
+    );
+    
     if (!pathResult.isValid) {
       logError('Invalid WebP cache path', { 
         path: imagePath, 
@@ -273,32 +276,42 @@ router.get('/webp/*', async (req, res) => {
       return res.status(404).json({ error: 'WebP image not found' });
     }
     
+    // Improve caching headers
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Vary', 'Origin, Accept');
+    
+    // Increase cache duration for better performance
+    const cacheMaxAge = 86400; // 24 hours in seconds
+    res.setHeader('Cache-Control', `public, max-age=${cacheMaxAge}, immutable`);
     res.setHeader('Content-Type', 'image/webp');
+    
+    // Add ETag support for conditional requests
+    const etag = `W/"${imagePath}"`;
+    res.setHeader('ETag', etag);
+    
+    // Check if client has a valid cached version
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end(); // Not Modified
+    }
     
     res.sendFile(pathResult.path, {
       headers: {
         'Cross-Origin-Resource-Policy': 'cross-origin',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': `public, max-age=${cacheMaxAge}, immutable`,
+        'ETag': etag
       },
       dotfiles: 'allow',
-      maxAge: 3600000
+      maxAge: cacheMaxAge * 1000 // Convert to milliseconds for sendFile
     });
   } catch (error) {
     logError('Error serving WebP image', { 
       path: req.params[0], 
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
     
-    res.status(404).json({ 
-      error: 'Failed to load WebP image', 
-      path: req.params[0],
-      message: error.message
-    });
+    res.status(404).json({ error: 'WebP image not found' });
   }
 });
 

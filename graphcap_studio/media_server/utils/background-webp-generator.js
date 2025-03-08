@@ -55,11 +55,11 @@ async function generateWebpArtifactForImage(imagePath) {
       const webpStat = fs.statSync(targetPath);
       
       if (originalStat.mtime <= webpStat.mtime) {
-        logInfo(`WebP artifact already exists and is up-to-date for ${imagePath}`);
+        // Skip logging to improve performance
         return;
       }
       
-      logInfo(`Original image is newer than WebP artifact, regenerating for ${imagePath}`);
+      // Skip logging to improve performance
     } else {
       // Ensure the target directory exists
       const targetDir = path.dirname(targetPath);
@@ -68,11 +68,26 @@ async function generateWebpArtifactForImage(imagePath) {
       }
     }
     
+    // Only log when generating new WebP artifacts
     logInfo(`Generating WebP artifact for ${imagePath}`);
-    await sharp(imagePath)
-      .toFormat('webp', { quality: 80 })
+    
+    // Optimize Sharp configuration for better performance
+    const sharpOptions = {
+      failOn: 'none', // Don't fail on warnings
+      limitInputPixels: 268402689, // 16384 x 16384 pixels
+      sequentialRead: true // Sequential read for better memory usage
+    };
+    
+    await sharp(imagePath, sharpOptions)
+      .toFormat('webp', { 
+        quality: 80,
+        effort: 4, // Lower effort for faster encoding
+        alphaQuality: 80,
+        lossless: false
+      })
       .toFile(targetPath);
-    logInfo(`Generated WebP artifact at ${targetPath}`);
+      
+    // Skip logging to improve performance
   } catch (error) {
     logError(`Error generating WebP artifact for ${imagePath}`, error);
   }
@@ -91,13 +106,20 @@ async function generateWebpArtifacts() {
     logInfo(`Found ${images.length} images to check for WebP artifacts`);
 
     // Generate WebP versions concurrently with a limit to avoid overwhelming the system
-    const concurrencyLimit = 5; // Process 5 images at a time
+    const concurrencyLimit = 3; // Process 3 images at a time to reduce memory usage
     
     // Process images in batches to control concurrency
     for (let i = 0; i < images.length; i += concurrencyLimit) {
       const batch = images.slice(i, i + concurrencyLimit);
       await Promise.allSettled(batch.map(imagePath => generateWebpArtifactForImage(imagePath)));
-      logInfo(`Processed batch ${Math.floor(i/concurrencyLimit) + 1} of ${Math.ceil(images.length/concurrencyLimit)}`);
+      
+      // Log progress less frequently to reduce overhead
+      if (i % (concurrencyLimit * 5) === 0) {
+        logInfo(`Processed batch ${Math.floor(i/concurrencyLimit) + 1} of ${Math.ceil(images.length/concurrencyLimit)}`);
+      }
+      
+      // Add a small delay between batches to allow garbage collection
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     logInfo('Background WebP generation completed.');

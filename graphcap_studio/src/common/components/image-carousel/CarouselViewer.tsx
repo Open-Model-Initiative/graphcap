@@ -13,7 +13,8 @@ import {
   useCarouselControls, 
   useThumbnailScroll,
   useWheelNavigation,
-  useCarouselLayout
+  useCarouselLayout,
+  useImagePreloader
 } from './hooks';
 import styles from './CarouselViewer.module.css';
 
@@ -31,6 +32,10 @@ interface CarouselViewerProps {
     readonly aspectRatio?: number;
     readonly maxHeight?: number;
   };
+  readonly preloadOptions?: {
+    readonly enabled?: boolean;
+    readonly preloadCount?: number;
+  };
 }
 
 /**
@@ -47,6 +52,7 @@ interface CarouselViewerProps {
  * @param selectedImage - Currently selected image
  * @param onSelectImage - Callback when an image is selected
  * @param thumbnailOptions - Optional configuration for thumbnail display
+ * @param preloadOptions - Optional configuration for image preloading
  */
 export function CarouselViewer({
   images,
@@ -55,7 +61,8 @@ export function CarouselViewer({
   className = '',
   selectedImage,
   onSelectImage,
-  thumbnailOptions = {}
+  thumbnailOptions = {},
+  preloadOptions = {}
 }: Readonly<CarouselViewerProps>) {
   const { 
     minWidth = 64, 
@@ -64,6 +71,11 @@ export function CarouselViewer({
     aspectRatio = 1,
     maxHeight = 70
   } = thumbnailOptions;
+
+  const {
+    enabled: preloadEnabled = true,
+    preloadCount = 2
+  } = preloadOptions;
 
   // Use custom hook for carousel layout
   const {
@@ -107,6 +119,14 @@ export function CarouselViewer({
   const thumbnailsRef = useThumbnailScroll({
     selectedIndex: selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0,
     totalCount: visibleImages.length
+  });
+
+  // Use custom hook for image preloading
+  useImagePreloader({
+    images,
+    currentIndex,
+    preloadCount,
+    enabled: preloadEnabled && !isLoading && !isEmpty && images.length > 0
   });
 
   // Show loading state
