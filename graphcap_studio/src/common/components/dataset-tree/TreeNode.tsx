@@ -1,27 +1,39 @@
-// SPDX-License-Identifier: Apache-2.0
-import React, { ReactNode } from 'react';
+"use client"
 
+// SPDX-License-Identifier: Apache-2.0
+import type React from "react"
+import type { ReactNode } from "react"
+import { TreeChevron } from "./TreeChevron"
+
+/**
+ * Props for the TreeNode component.
+ * 
+ * @interface TreeNodeProps
+ * @property {string} label - The label to display for the node.
+ * @property {boolean} [isSelected] - Whether the node is currently selected.
+ * @property {boolean} [hasChildren] - Whether the node has children.
+ * @property {boolean} [isExpanded] - Whether the node is expanded (only relevant if hasChildren is true).
+ * @property {React.ReactNode} [icon] - Icon to display before the label.
+ * @property {() => void} [onClick] - Called when the node is clicked.
+ * @property {() => void} [onToggleExpand] - Called when the expand/collapse button is clicked.
+ * @property {React.ComponentType<{ children: ReactNode; className: string }>} [wrapperComponent] - Optional custom component to wrap the node content (e.g., a Link).
+ */
 export interface TreeNodeProps {
-  /** The label to display for the node */
-  readonly label: string;
-  /** Whether the node is currently selected */
-  readonly isSelected?: boolean;
-  /** Whether the node has children */
-  readonly hasChildren?: boolean;
-  /** Whether the node is expanded (only relevant if hasChildren is true) */
-  readonly isExpanded?: boolean;
-  /** Icon to display before the label */
-  readonly icon?: React.ReactNode;
-  /** Called when the node is clicked */
-  readonly onClick?: () => void;
-  /** Called when the expand/collapse button is clicked */
-  readonly onToggleExpand?: () => void;
-  /** Optional custom component to wrap the node content (e.g., a Link) */
-  readonly wrapperComponent?: React.ComponentType<{ children: ReactNode; className: string }>;
+  readonly label: string
+  readonly isSelected?: boolean
+  readonly hasChildren?: boolean
+  readonly isExpanded?: boolean
+  readonly icon?: React.ReactNode
+  readonly onClick?: () => void
+  readonly onToggleExpand?: () => void
+  readonly wrapperComponent?: React.ComponentType<{ children: ReactNode; className: string }>
 }
 
 /**
- * A component that renders a single node in a tree view
+ * A component that renders a single node in a tree view.
+ * 
+ * @param {TreeNodeProps} props - The props for the TreeNode component.
+ * @returns {JSX.Element} The rendered tree node component.
  */
 export function TreeNode({
   label,
@@ -31,85 +43,52 @@ export function TreeNode({
   icon,
   onClick,
   onToggleExpand,
-  wrapperComponent: WrapperComponent
+  wrapperComponent: WrapperComponent,
 }: TreeNodeProps) {
-  const nodeClassName = `flex cursor-pointer items-center rounded-md py-1.5 px-2 transition-colors duration-150 ${
-    isSelected 
-      ? 'bg-blue-800/60 text-blue-200 border border-blue-600/50' 
-      : 'text-gray-300 hover:bg-gray-700/80 hover:text-gray-100'
-  }`;
+  const nodeClassName = `flex cursor-pointer items-center rounded-md py-1.5 px-2 transition-all duration-150 ${
+    isSelected
+      ? "bg-blue-900/70 text-blue-100 border border-blue-500/60 shadow-sm shadow-blue-900/20"
+      : "text-gray-200 hover:bg-gray-800/90 hover:text-gray-50 hover:shadow-sm"
+  }`
+
+  const handleChevronClick = () => {
+    onToggleExpand?.()
+  }
 
   const nodeContent = (
     <>
       {hasChildren ? (
-        <button 
-          className="mr-1.5 w-5 h-5 flex items-center justify-center bg-transparent border-0 p-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleExpand?.();
-          }}
-          aria-label={isExpanded ? "Collapse" : "Expand"}
-          aria-expanded={isExpanded}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.stopPropagation();
-              onToggleExpand?.();
-              e.preventDefault();
-            }
-          }}
-        >
-          <svg 
-            width="16" 
-            height="16" 
-            viewBox="0 0 16 16" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-          >
-            <path 
-              d="M6 12L10 8L6 4" 
-              stroke="#9CA3AF" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        <TreeChevron isExpanded={isExpanded} onClick={handleChevronClick} />
       ) : (
         <span className="mr-1.5 h-5 w-5" />
       )}
-      
+
       {icon && <span className="mr-2">{icon}</span>}
 
-      <span className="flex-1 truncate">
-        {label}
-      </span>
+      <span className="flex-1 truncate font-medium">{label}</span>
     </>
-  );
+  )
 
   if (WrapperComponent) {
-    return (
-      <WrapperComponent className={nodeClassName}>
-        {nodeContent}
-      </WrapperComponent>
-    );
+    return <WrapperComponent className={nodeClassName}>{nodeContent}</WrapperComponent>
   }
 
   return (
-    <div 
+    <div
       className={nodeClassName}
       onClick={onClick}
       role="treeitem"
       aria-selected={isSelected}
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onClick?.();
-          e.preventDefault();
+        if (e.key === "Enter" || e.key === " ") {
+          onClick?.()
+          e.preventDefault()
         }
       }}
     >
       {nodeContent}
     </div>
-  );
-} 
+  )
+}
+

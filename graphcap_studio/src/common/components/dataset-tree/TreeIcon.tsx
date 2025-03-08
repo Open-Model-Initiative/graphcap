@@ -1,27 +1,41 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
 
+
+/**
+ * The type of icon that can be displayed.
+ * 
+ * @typedef {'dataset' | 'folder' | 'file'} IconType
+ */
 export type IconType = 'dataset' | 'folder' | 'file';
 
+/**
+ * Props for the TreeIcon component.
+ * 
+ * @interface TreeIconProps
+ * @property {IconType} type - The type of icon to display.
+ * @property {string} [colorClass] - Optional custom color class to apply to the icon.
+ */
 export interface TreeIconProps {
-  /** The type of icon to display */
   readonly type: IconType;
-  /** Optional custom color class to apply to the icon */
   readonly colorClass?: string;
 }
 
 /**
- * A component that renders different types of icons for tree nodes
+ * A component that renders different types of icons for tree nodes.
+ * 
+ * @param {TreeIconProps} props - The props for the TreeIcon component.
+ * @returns {JSX.Element} The rendered icon component.
  */
 export function TreeIcon({ type, colorClass }: TreeIconProps) {
+  // Update the getDefaultColorClass function to use more vibrant colors
   const getDefaultColorClass = () => {
     switch (type) {
       case 'dataset':
-        return 'text-yellow-300';
+        return 'text-amber-400';
       case 'folder':
-        return 'text-blue-300';
+        return 'text-blue-400';
       case 'file':
-        return 'text-gray-400';
+        return 'text-slate-300';
       default:
         return 'text-gray-300';
     }
@@ -59,14 +73,15 @@ export function TreeIcon({ type, colorClass }: TreeIconProps) {
   };
 
   return (
+    // Update the SVG element to add a subtle transition effect
     <svg
-      className={`h-5 w-5 ${finalColorClass}`}
+      className={`h-5 w-5 ${finalColorClass} transition-colors duration-200`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.75"
     >
       {renderIconPath()}
     </svg>
   );
-} 
+}
