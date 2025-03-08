@@ -23,7 +23,7 @@ interface UseImagePreloaderProps {
 export function useImagePreloader({
   images,
   currentIndex,
-  preloadCount = 2,
+  preloadCount = 20,
   enabled = true
 }: UseImagePreloaderProps): void {
   // Use a ref to track which images we've already preloaded
@@ -77,7 +77,7 @@ export function useImagePreloader({
     preloadQueue.forEach(({ index, priority }, queueIndex) => {
       setTimeout(() => {
         preloadImageAtIndex(index, priority);
-      }, queueIndex * 50); // Stagger by 50ms per image
+      }, queueIndex * 5); // Stagger by 5ms per image
     });
     
     // Clean up the preloaded images set when the component unmounts
