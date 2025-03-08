@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Dataset, Image } from '@/services/images';
-import { Tree, TreeItemData } from '@/common/components/dataset-tree';
-import { DatasetLink } from './DatasetLink';
+import { Tree, TreeItemData, TreeContextMenuAction } from '@/common/components/dataset-tree';
 import { DeleteDatasetModal } from './DeleteDatasetModal';
-import { type TreeContextMenuAction } from '@/common/components/dataset-tree/TreeContextMenu';
 
 interface DatasetTreeProps {
   readonly datasets: Dataset[];
@@ -148,6 +146,72 @@ function updateItemExpanded(items: TreeItemData[], itemId: string): boolean {
 }
 
 /**
+ * Wrapper component for dataset root nodes
+ */
+interface DatasetNodeWrapperProps {
+  readonly children: React.ReactNode;
+  readonly className: string;
+  readonly onClick?: (e: React.MouseEvent) => void;
+  readonly datasetName: string;
+  readonly onSelectDataset: (datasetName: string) => void;
+}
+
+function DatasetNodeWrapper({ 
+  children, 
+  className, 
+  onClick, 
+  datasetName, 
+  onSelectDataset 
+}: DatasetNodeWrapperProps) {
+  return (
+    <button 
+      className={`${className} text-left w-full`}
+      onClick={(e) => {
+        // Call the provided onClick handler if it exists
+        onClick?.(e);
+        
+        // Also handle our own navigation
+        const target = e.target as HTMLElement;
+        const isMenuClick = target.closest('button[aria-label="Open menu"]') || 
+                           target.closest('[role="menu"]');
+        
+        if (!isMenuClick) {
+          onSelectDataset(datasetName);
+        }
+      }}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Creates a wrapper component for a tree item
+ */
+function createTreeItemWrapper(datasetName: string, onSelectDataset: (datasetName: string) => void) {
+  return function TreeItemWrapperComponent({ 
+    children, 
+    className,
+    onClick
+  }: { 
+    children: React.ReactNode; 
+    className: string;
+    onClick?: (e: React.MouseEvent) => void;
+  }) {
+    return (
+      <DatasetNodeWrapper
+        children={children}
+        className={className}
+        onClick={onClick}
+        datasetName={datasetName}
+        onSelectDataset={onSelectDataset}
+      />
+    );
+  };
+}
+
+/**
  * Component to render a dataset tree with delete functionality
  */
 export function DatasetTree({ 
@@ -205,32 +269,9 @@ export function DatasetTree({
   };
   
   const getWrapperComponent = (item: TreeItemData) => {
-    // If this is a dataset root node, wrap it with a DatasetLink
+    // If this is a dataset root node, create a wrapper component
     if (item.data?.isDatasetRoot) {
-      return (props: React.PropsWithChildren<{ 
-        children: React.ReactNode; 
-        className: string;
-        onClick?: (e: React.MouseEvent) => void;
-      }>) => (
-        <div 
-          className={`${props.className}`}
-          onClick={(e) => {
-            // Call the provided onClick handler if it exists
-            props.onClick?.(e);
-            
-            // Also handle our own navigation
-            const target = e.target as HTMLElement;
-            const isMenuClick = target.closest('button[aria-label="Open menu"]') || 
-                               target.closest('[role="menu"]');
-            
-            if (!isMenuClick) {
-              onSelectNode(item.name);
-            }
-          }}
-        >
-          {props.children}
-        </div>
-      );
+      return createTreeItemWrapper(item.name, onSelectNode);
     }
     
     return undefined;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createContext, useContext, ReactNode, useState, useCallback } from 'react';
-import { Image } from '@/services/images';
+import { createContext, useContext, ReactNode, useMemo } from 'react';
 
 interface ImageCarouselContextType {
   // Dataset information
@@ -14,9 +13,9 @@ interface ImageCarouselContextType {
 const ImageCarouselContext = createContext<ImageCarouselContextType | null>(null);
 
 interface ImageCarouselProviderProps {
-  children: ReactNode;
-  datasetName: string;
-  onUploadComplete?: () => void;
+  readonly children: ReactNode;
+  readonly datasetName: string;
+  readonly onUploadComplete?: () => void;
 }
 
 /**
@@ -32,12 +31,14 @@ export function ImageCarouselProvider({
   datasetName,
   onUploadComplete
 }: ImageCarouselProviderProps) {
+  const contextValue = useMemo(() => ({
+    datasetName,
+    onUploadComplete,
+  }), [datasetName, onUploadComplete]);
+
   return (
     <ImageCarouselContext.Provider 
-      value={{ 
-        datasetName,
-        onUploadComplete,
-      }}
+      value={contextValue}
     >
       {children}
     </ImageCarouselContext.Provider>

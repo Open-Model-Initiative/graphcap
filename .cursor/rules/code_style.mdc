@@ -4,10 +4,6 @@ globs:
 alwaysApply: true
 ---
 <Warning>
-Below is a concise set of additional code guidelines that integrate the 17 best practices:
-
----
-
 1. **Constants:**  
    - Extract magic numbers/strings into constants.
    - Centralize in a dedicated constants file.
@@ -71,8 +67,6 @@ Below is a concise set of additional code guidelines that integrate the 17 best 
 
 17. **Naming for Function Props:**  
     - Expose custom events using “onEvent” props (e.g., `onAddTodo`), and use descriptive handler names internally (e.g., `handleAddTodo`).
-
----
 
 ### Project Constraints (Reminders)
 
