@@ -64,7 +64,7 @@ export function useDynamicThumbnails({
     );
     
     // Use the smaller of the height-constrained width and the maxThumbnailWidth
-    const effectiveMaxWidth = Math.min(heightConstrainedWidth, maxThumbnailWidth);
+    const effectiveMaxWidth = Math.min(heightConstrainedWidth ?? 0, maxThumbnailWidth ?? 0);
     
     // Calculate how many thumbnails can fit at minimum size
     const maxPossibleCount = Math.floor((containerWidth + gap) / (minThumbnailWidth + gap));
@@ -101,7 +101,7 @@ export function useDynamicThumbnails({
     );
     
     // Ensure height doesn't exceed max height
-    const boundedHeight = Math.min(calculatedHeight, maxThumbnailHeight);
+    const boundedHeight = Math.min(calculatedHeight ?? 0, maxHeight ?? 0);
     
     // Update state
     setThumbnailWidth(boundedWidth);
@@ -134,9 +134,9 @@ export function useDynamicThumbnails({
   
   return {
     containerRef,
-    thumbnailWidth,
-    thumbnailHeight,
-    visibleCount,
+    thumbnailWidth: thumbnailWidth ?? 0,
+    thumbnailHeight: thumbnailHeight ?? 0,
+    visibleCount: visibleCount ?? 0,
     gap
   };
 } 

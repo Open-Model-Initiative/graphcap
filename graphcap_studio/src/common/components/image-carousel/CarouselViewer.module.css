@@ -77,4 +77,52 @@
   width: 100%;
   align-items: center;
   justify-content: center;
+}
+
+/* New styles for navigation buttons */
+.navigationButtonContainer {
+  position: absolute;
+  inset-y: 0;
+  display: flex;
+  align-items: center;
+}
+
+.navigationButtonLeft {
+  left: 0;
+}
+
+.navigationButtonRight {
+  right: 0;
+}
+
+/* Image wrapper styles */
+.imageWrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Error state styles */
+.errorContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(243, 244, 246, 1);
+  color: rgba(107, 114, 128, 1);
+}
+
+.errorContent {
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Dark mode support for error container */
+@media (prefers-color-scheme: dark) {
+  .errorContainer {
+    background-color: rgba(31, 41, 55, 1);
+    color: rgba(156, 163, 175, 1);
+  }
 } 

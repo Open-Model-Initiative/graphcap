@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from '@/services/images';
+import { useState } from 'react';
+import { Image, preloadImage } from '@/services/images';
 import { ResponsiveImage } from '@/common/components/responsive-image';
 import { 
   LoadingSpinner, 
@@ -7,7 +8,9 @@ import {
   NavigationButton, 
   ImageCounter
 } from '@/common/ui';
+import { ImageOff } from 'lucide-react';
 import { ThumbnailStrip } from './ThumbnailStrip';
+import { ErrorBoundary } from './ErrorBoundary';
 import { 
   useCarouselNavigation, 
   useCarouselControls, 
@@ -35,6 +38,7 @@ interface CarouselViewerProps {
   readonly preloadOptions?: {
     readonly enabled?: boolean;
     readonly preloadCount?: number;
+    readonly maxConcurrentPreloads?: number;
   };
 }
 
@@ -74,8 +78,12 @@ export function CarouselViewer({
 
   const {
     enabled: preloadEnabled = true,
-    preloadCount = 2
+    preloadCount = 2,
+    maxConcurrentPreloads = 3
   } = preloadOptions;
+
+  // State for image loading error
+  const [imageLoadError, setImageLoadError] = useState<boolean>(false);
 
   // Use custom hook for carousel layout
   const {
@@ -126,8 +134,18 @@ export function CarouselViewer({
     images,
     currentIndex,
     preloadCount,
-    enabled: preloadEnabled && !isLoading && !isEmpty && images.length > 0
+    enabled: preloadEnabled && !isLoading && !isEmpty && images.length > 0,
+    maxConcurrentPreloads
   });
+
+  // Handle retry when image fails to load
+  const handleRetry = () => {
+    if (selectedImage) {
+      setImageLoadError(false);
+      // Attempt to reload the image
+      preloadImage(selectedImage.path, 'full');
+    }
+  };
 
   // Show loading state
   if (isLoading) {
@@ -151,69 +169,121 @@ export function CarouselViewer({
   }
 
   return (
-    <div ref={containerRef} className={`${styles.container} ${className}`}>
-      {/* Main image display */}
-      <div 
-        ref={imageContainerRef}
-        className={styles.imageContainer}
-        style={{ 
-          height: isCalculating ? 'auto' : `${imageContainerHeight}px` 
-        }}
+    <ErrorBoundary>
+      <section 
+        ref={containerRef} 
+        className={`${styles.container} ${className}`}
+        aria-label="Image carousel"
       >
-        {selectedImage && (
-          <div className="relative h-full w-full p-4">
-            <ResponsiveImage
-              imagePath={selectedImage.path}
-              alt={selectedImage.name}
-              className="h-full w-full"
-              objectFit="contain"
-              priority={true} // Main image is high priority
-              sizes="(max-width: 768px) 100vw, 80vw"
-              forceContainerAspect={false} // Don't force aspect ratio for main gallery view
-            />
-          </div>
-        )}
-        
-        {/* Navigation buttons */}
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <NavigationButton
-            direction="prev"
-            onClick={() => navigateByDelta(-1)}
-          />
-        </div>
-        <div className="absolute inset-y-0 right-0 flex items-center">
-          <NavigationButton
-            direction="next"
-            onClick={() => navigateByDelta(1)}
-          />
-        </div>
-      </div>
-
-      {/* Thumbnails row - positioned absolutely at the bottom */}
-      <div ref={thumbnailContainerRef} className={styles.thumbnailContainer}>
-        {/* Thumbnails with counter */}
-        <div className={styles.thumbnailWrapper} ref={thumbnailsRef}>
-          <ThumbnailStrip
-            images={visibleImages}
-            selectedIndex={selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0}
-            onSelect={handleThumbnailSelect}
-            minThumbnailWidth={minWidth}
-            maxThumbnailWidth={maxWidth}
-            gap={gap}
-            aspectRatio={aspectRatio}
-            maxHeight={maxHeight}
-            className="w-full"
-          />
+        {/* Main image display */}
+        <div 
+          ref={imageContainerRef}
+          className={styles.imageContainer}
+          style={{ 
+            height: isCalculating ? 'auto' : `${imageContainerHeight}px` 
+          }}
+        >
+          {selectedImage && (
+            <div className={styles.imageWrapper}>
+              <ResponsiveImage
+                imagePath={selectedImage.path}
+                alt={selectedImage.name}
+                className="h-full w-full"
+                objectFit="contain"
+                priority={true} // Main image is high priority
+                sizes="(max-width: 768px) 100vw, 80vw"
+                forceContainerAspect={false} // Don't force aspect ratio for main gallery view
+                onError={() => setImageLoadError(true)}
+                aria-labelledby="carousel-image-label"
+              />
+              
+              {/* Hidden label for screen readers */}
+              <span id="carousel-image-label" className="sr-only">
+                {selectedImage.name} - Image {currentIndex + 1} of {totalImages}
+              </span>
+              
+              {/* Show error state if image fails to load */}
+              {imageLoadError && (
+                <div className={styles.errorContainer}>
+                  <div className={styles.errorContent}>
+                    <ImageOff className="h-12 w-12 mx-auto text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Failed to load image</p>
+                    <button 
+                      className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
+                      onClick={handleRetry}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
-          {/* Navigation counter - centered below thumbnails */}
-          <div className={styles.counterContainer}>
-            <ImageCounter
-              currentIndex={currentIndex}
-              totalImages={totalImages}
+          {/* Navigation buttons */}
+          <div className={`${styles.navigationButtonContainer} ${styles.navigationButtonLeft}`}>
+            <NavigationButton
+              direction="prev"
+              onClick={() => navigateByDelta(-1)}
+              aria-label="Previous image"
+              aria-controls="carousel-image-label"
+              aria-disabled={images.length <= 1}
+            />
+          </div>
+          <div className={`${styles.navigationButtonContainer} ${styles.navigationButtonRight}`}>
+            <NavigationButton
+              direction="next"
+              onClick={() => navigateByDelta(1)}
+              aria-label="Next image"
+              aria-controls="carousel-image-label"
+              aria-disabled={images.length <= 1}
             />
           </div>
         </div>
-      </div>
-    </div>
+
+        {/* Skip navigation link for keyboard users */}
+        <button 
+          className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:p-2 focus:bg-white focus:text-black"
+          onClick={() => {
+            // Find and focus the first interactive element after the carousel
+            const carousel = containerRef.current;
+            if (carousel) {
+              const nextFocusableElement = carousel.nextElementSibling?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+              if (nextFocusableElement instanceof HTMLElement) {
+                nextFocusableElement.focus();
+              }
+            }
+          }}
+        >
+          Skip carousel navigation
+        </button>
+
+        {/* Thumbnails row - positioned absolutely at the bottom */}
+        <div ref={thumbnailContainerRef} className={styles.thumbnailContainer}>
+          {/* Thumbnails with counter */}
+          <div className={styles.thumbnailWrapper} ref={thumbnailsRef}>
+            <ThumbnailStrip
+              images={visibleImages}
+              selectedIndex={selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0}
+              onSelect={handleThumbnailSelect}
+              minThumbnailWidth={minWidth}
+              maxThumbnailWidth={maxWidth}
+              gap={gap}
+              aspectRatio={aspectRatio}
+              maxHeight={maxHeight}
+              className="w-full"
+            />
+            
+            {/* Navigation counter - centered below thumbnails */}
+            <div className={styles.counterContainer}>
+              <ImageCounter
+                currentIndex={currentIndex + 1} // Display 1-based index to users
+                totalImages={totalImages}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+    </ErrorBoundary>
   );
 } 

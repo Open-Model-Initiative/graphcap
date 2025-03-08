@@ -7,56 +7,38 @@ interface UseImagePreloaderProps {
   readonly currentIndex: number;
   readonly preloadCount?: number;
   readonly enabled?: boolean;
+  readonly maxConcurrentPreloads?: number;
 }
 
 /**
  * Custom hook for preloading images in a carousel
  * 
  * This hook preloads a specified number of images before and after the current image
- * to improve the user experience when navigating through the carousel.
+ * to improve the user experience when navigating through the carousel. It limits
+ * the number of concurrent preloads to avoid overwhelming the browser.
  * 
  * @param images - Array of images in the carousel
  * @param currentIndex - Index of the currently displayed image
  * @param preloadCount - Number of images to preload before and after the current image (default: 2)
  * @param enabled - Whether preloading is enabled (default: true)
+ * @param maxConcurrentPreloads - Maximum number of concurrent image preloads (default: 3)
  */
 export function useImagePreloader({
   images,
   currentIndex,
   preloadCount = 20,
-  enabled = true
+  enabled = true,
+  maxConcurrentPreloads = 3
 }: UseImagePreloaderProps): void {
   // Use a ref to track which images we've already preloaded
   // This persists across renders and prevents unnecessary preloading
   const preloadedImagesRef = useRef<Set<string>>(new Set());
+  // Use a ref to track active preloads
+  const activePreloadsRef = useRef<number>(0);
   
   useEffect(() => {
     if (!enabled || images.length === 0) return;
     
-    // Function to preload an image if it exists and hasn't been preloaded yet
-    const preloadImageAtIndex = (index: number, priority: 'high' | 'low' = 'low') => {
-      if (index >= 0 && index < images.length) {
-        const imagePath = images[index].path;
-        if (!preloadedImagesRef.current.has(imagePath)) {
-          // For high priority images (next/prev), preload both thumbnail and full
-          if (priority === 'high') {
-            // Preload thumbnail first for quick display
-            preloadImage(imagePath, 'thumbnail');
-            
-            // Then preload the full image with a slight delay to prioritize nearby thumbnails
-            setTimeout(() => {
-              preloadImage(imagePath, 'full');
-            }, 100);
-          } else {
-            // For low priority images, just preload thumbnails
-            preloadImage(imagePath, 'thumbnail');
-          }
-          
-          preloadedImagesRef.current.add(imagePath);
-        }
-      }
-    };
-
     // Create a queue of images to preload in order of priority
     const preloadQueue: Array<{ index: number; priority: 'high' | 'low' }> = [];
     
@@ -73,16 +55,60 @@ export function useImagePreloader({
       preloadQueue.push({ index: currentIndex - i, priority: 'low' });
     }
     
-    // Process the queue with staggered timing to avoid overwhelming the browser
-    preloadQueue.forEach(({ index, priority }, queueIndex) => {
-      setTimeout(() => {
-        preloadImageAtIndex(index, priority);
-      }, queueIndex * 5); // Stagger by 5ms per image
-    });
+    // Function to preload the next image in the queue
+    const preloadNext = () => {
+      if (preloadQueue.length === 0 || activePreloadsRef.current >= maxConcurrentPreloads) return;
+      
+      const { index, priority } = preloadQueue.shift()!;
+      if (index >= 0 && index < images.length) {
+        const imagePath = images[index].path;
+        if (!preloadedImagesRef.current.has(imagePath)) {
+          activePreloadsRef.current += 1;
+          
+          // For high priority images (next/prev), preload both thumbnail and full
+          if (priority === 'high') {
+            // Preload thumbnail first for quick display
+            preloadImage(imagePath, 'thumbnail');
+            
+            // Then preload the full image with a slight delay
+            setTimeout(() => {
+              preloadImage(imagePath, 'full');
+              
+              // Mark as complete and try next image
+              preloadedImagesRef.current.add(imagePath);
+              activePreloadsRef.current -= 1;
+              preloadNext();
+            }, 100);
+          } else {
+            // For low priority images, just preload thumbnails
+            preloadImage(imagePath, 'thumbnail');
+            
+            // Mark as complete and try next image
+            setTimeout(() => {
+              preloadedImagesRef.current.add(imagePath);
+              activePreloadsRef.current -= 1;
+              preloadNext();
+            }, 50);
+          }
+        } else {
+          // Already preloaded, try the next one
+          preloadNext();
+        }
+      } else {
+        // Invalid index, try the next one
+        preloadNext();
+      }
+    };
+    
+    // Start preloading up to maxConcurrentPreloads images
+    for (let i = 0; i < maxConcurrentPreloads; i++) {
+      preloadNext();
+    }
     
     // Clean up the preloaded images set when the component unmounts
     return () => {
       preloadedImagesRef.current.clear();
+      activePreloadsRef.current = 0;
     };
-  }, [images, currentIndex, preloadCount, enabled]);
+  }, [images, currentIndex, preloadCount, enabled, maxConcurrentPreloads]);
 } 

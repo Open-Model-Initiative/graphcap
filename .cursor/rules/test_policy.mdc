@@ -1,72 +1,103 @@
 ---
 description: Unit, integration, and e2e tests
 globs: test/**
+alwaysApply: true
 ---
 # Test Overview
 
-Tests are split into three main categories:
+Our tests are divided into three primary categories:
 
-- `integration` tests: these are tests that test the interaction between components or services.
-- `e2e` tests: these are tests that test the entire application, including the user interface, backend, and external systems.
+- **Unit Tests:**  
+  Test the smallest units of code (e.g. individual React components, utility functions, or Express route handlers) in isolation. These tests run quickly and are designed to work in any environment.
 
-Unit tests should be able to run in any environment. To install test dependencies, run `uv pip install -e ./server[dev]`
+- **Integration Tests:**  
+  Verify interactions between modules or services within the application. For example, these tests might ensure that your Express API correctly interacts with a database or that your React components integrate well with shared providers.
 
-Integration tests need providers to be set up. Copy the `provider.example.config.toml` file to `provider.test.config.toml` into this directory and configure to include the providers you want to test.
-
-To run tests, cd into the `server` directory and run :
-
-Unit test watch : `uv run ptw . -c pytest.ini -v -m "not integration"`
-Unit test : `uv run pytest -v -c pytest.ini -m "not integration"`
-Integration test : `uv run pytest -v -c pytest.ini`
+- **End-to-End (E2E) Tests:**  
+  Simulate real user scenarios by testing the entire application—from the user interface (React) through the backend (Express) and any external systems. These tests are implemented using Playwright and provide confidence that critical user journeys function as expected.
 
 
-## Test Policy 
+## Test Policy
 
 ### Conventions
-- Tests should include a `GIVEN`, `WHEN`, `THEN` structure focusing on the behavior of the code under tested.
+- **Structure:**  
+  Every test should clearly follow a **GIVEN / WHEN / THEN** pattern. This ensures that the test focuses on the behavior of the code under test rather than on internal implementation details.
+  
+- **Readability:**  
+  Write tests so that they are self-explanatory. Future maintainers should quickly grasp what the test is validating.
 
 ### Unit Tests
-**Purpose:** To test the smallest units of code, typically functions or methods, in isolation.
+**Purpose:**  
+To verify the smallest units of functionality in isolation.
 
 **When to Use:**
-- For complex algorithms, data transformations, or business logic
-- For utility functions or components that are reused throughout the application
-- When there's a clear "black box" input/output relationship
-- To drive development, especially when dealing with complex logic and a need for immediate feedback
-- When manually testing is too time consuming and frustrating
-- For any code that will cause a lot of manual testing to be repeated
+- For testing complex algorithms, data transformations, and business logic.
+- For validating utility functions or shared components in React and Express.
+- When the input/output relationship is clear and can be tested as a “black box.”
+- To provide immediate feedback during development, reducing the need for manual testing.
 
-**Characteristics:** Fast to run, focused, and easy to maintain.
+**Characteristics:**  
+- Fast, focused, and reliable.
+- Co-located with the source code to keep the component and its tests together—ideal for exporting mini programs or standalone components.
 
 **Avoid:**
-- Over-mocking dependencies, especially databases or external APIs. Focus on testing real code, the code that runs in production. If you are reaching for a mock, step back and determine if this should be an integration test instead.
-- Creating tests that are too tightly coupled to implementation details, or that will break with each refactoring. Test the functionality, not the implementation.
+- Over-mocking dependencies, such as databases or external APIs. Instead, test with real code as much as possible.
+- Tightly coupling tests to implementation details. Focus on the outcome, not the process.
 
 ### Integration Tests
-**Purpose:** To test interactions between different components or modules within the application.
+**Purpose:**  
+To confirm that different parts of the application (e.g. React components with context providers or Express API endpoints with a live database) work together as expected.
 
 **When to Use:**
-- To verify that different services or components interact with each other correctly
-- To test interactions with real databases or external APIs
-- To test data flow through the application
-- When unit testing is insufficient to verify the correctness of a more complex interaction
+- To verify interactions between services or components.
+- To test end-to-end data flow through the application (e.g. a POST request in Express updating the database and reflecting changes in a React component).
+- When unit tests alone cannot confirm the behavior of a composite operation.
 
-**Characteristics:** Slower than unit tests but verify higher-level interactions.
+**Characteristics:**  
+- Slower than unit tests, as they might require starting a local database or spinning up other service containers.
+- Ensure that real integrations (e.g. network calls, database operations) function as expected.
 
 **Avoid:**
-- Overly broad integration tests that try to test too much functionality at once
-- Duplicating logic that is already tested with unit tests
+- Overly broad tests that cover too much functionality at once.
+- Duplicating scenarios that are already tested by unit tests.
 
 ### End-to-End (E2E) Tests
-**Purpose:** To test the entire application, including the user interface, backend, and external systems.
+**Purpose:**  
+To simulate user scenarios and validate that the entire application (UI, backend, external systems) functions correctly.
 
 **When to Use:**
-- To verify the most critical user journeys
-- To ensure that changes to the different parts of the system haven't broken the whole application
-- To catch issues that may not be apparent in unit or integration tests
+- To validate the most critical user journeys.
+- To ensure that changes to one part of the system do not break the overall application.
+- To catch issues that might not be evident in lower-level tests.
 
-**Characteristics:** Slowest to run and can be complex to maintain but are very valuable.
+**Characteristics:**  
+- Slowest to run due to full-stack execution.
+- Can be complex to maintain, but are extremely valuable for catching real-world issues.
 
 **Avoid:**
-- Too many end-to-end tests, because they can slow down the development process and make it difficult to pinpoint issues
-- End-to-end tests that duplicate integration or unit test coverage
+- An excessive number of E2E tests that could slow down development.
+- Duplication of coverage already provided by unit or integration tests. Focus on the critical paths only.
+
+---
+
+## React + Express Specific Considerations
+
+- **Co-located Tests for React Components:**  
+  Each React component should have its test file (e.g. `MyComponent.jsx` alongside `MyComponent.test.jsx`). This makes it easier to flatten and export each component as an independent mini program.
+
+- **Express Backend Tests:**  
+  Write tests for Express routes and middleware as unit tests when testing logic in isolation, or as integration tests when verifying behavior with a live database or external API. Co-locate tests with related modules where practical.
+
+- **Shared Providers & Contexts:**  
+  For integration tests, ensure that any shared state (like React context providers or Express middleware stacks) is configured similarly to production. This might involve setting up temporary instances of services (via Docker containers) or configuring test-specific environment variables.
+
+- **CI/CD and Docker:**  
+  Our CI/CD (via GitHub Actions) runs tests inside Docker containers to match our production environment. Ensure your CI configuration:
+  - Spins up necessary services (e.g., test databases) before running integration tests.
+  - Runs unit tests quickly using Vitest and defers slower E2E tests to separate jobs.
+  - Caches dependencies (using pnpm’s cache) to speed up builds.
+
+- **Avoid Over-Mocking:**  
+  Where possible, use real services and components to validate functionality. Reserve mocking for boundaries where external systems are involved (e.g. third-party APIs).
+
+---

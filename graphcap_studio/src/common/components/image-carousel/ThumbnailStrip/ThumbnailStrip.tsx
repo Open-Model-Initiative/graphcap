@@ -24,6 +24,9 @@ interface ThumbnailStripProps {
  * highlighting the currently selected image and allowing users to
  * click on thumbnails to navigate to specific images. The thumbnails
  * are dynamically sized based on the available container width.
+ * 
+ * The component is accessible, with proper ARIA attributes for screen readers
+ * and keyboard navigation support.
  */
 function ThumbnailStripBase({
   images,
@@ -51,25 +54,59 @@ function ThumbnailStripBase({
     maxHeight
   });
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect(index);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextIndex = (index + 1) % images.length;
+      onSelect(nextIndex);
+      // Focus the next thumbnail
+      const nextThumbnail = document.getElementById(`thumbnail-${nextIndex}`);
+      if (nextThumbnail) {
+        nextThumbnail.focus();
+      }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevIndex = (index - 1 + images.length) % images.length;
+      onSelect(prevIndex);
+      // Focus the previous thumbnail
+      const prevThumbnail = document.getElementById(`thumbnail-${prevIndex}`);
+      if (prevThumbnail) {
+        prevThumbnail.focus();
+      }
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
       className={`${styles.container} ${className}`}
       style={{ gap: `${calculatedGap}px` }}
       data-testid="thumbnail-strip"
+      role="tablist"
+      aria-label="Image thumbnails"
     >
       {images.map((image, index) => (
         <div
           key={image.path}
+          id={`thumbnail-${index}`}
           style={{ 
             width: `${thumbnailWidth}px`, 
             height: `${thumbnailHeight}px`,
             flexShrink: 0
           }}
+          role="tab"
+          aria-selected={index === selectedIndex}
+          aria-controls="carousel-image"
+          tabIndex={index === selectedIndex ? 0 : -1}
+          onKeyDown={(e) => handleKeyDown(e, index)}
         >
           <ThumbnailImage
             imagePath={image.path}
-            alt={image.name}
+            alt={`Thumbnail for ${image.name}`}
             isSelected={index === selectedIndex}
             aspectRatio={aspectRatio}
             className="h-full w-full"
