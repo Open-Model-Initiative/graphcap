@@ -88,9 +88,6 @@ if (dirResult.isValid) {
 }
 ```
 
-## Backward Compatibility
-
-The `path-validator.js` module is maintained for backward compatibility but uses the new `securePath` function internally. It is recommended to use the new `path-utils.js` module for new code.
 
 ## Best Practices
 
