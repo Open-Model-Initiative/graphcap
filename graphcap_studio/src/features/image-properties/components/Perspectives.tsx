@@ -3,6 +3,7 @@ import { Image } from '@/services/images';
 import { PerspectiveCard } from './perspectives/PerspectiveCard';
 import { PerspectiveContent } from './perspectives/PerspectiveContent';
 import { usePerspectives, PerspectiveType } from '../hooks/usePerspectives';
+import { FeatureStub } from '@/common/components/feature-stub';
 
 interface PerspectivesProps {
   readonly image: Image;
@@ -73,23 +74,32 @@ export function Perspectives({ image }: PerspectivesProps) {
     'synthesized_caption'
   ];
 
+  const isUnderConstruction = true;
+
   return (
     <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium text-gray-200">Perspectives</h3>
-        <div className="flex items-center space-x-2">
-          {isLoading && (
-            <span className="text-xs text-gray-400">Loading...</span>
-          )}
-          <button 
-            className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-            onClick={generateAllPerspectives}
-            disabled={isLoading}
-          >
-            Generate All
-          </button>
+      {isUnderConstruction ? (
+        <FeatureStub 
+          featureName="Perspectives Feature" 
+          description="This feature is currently under construction. Please check back later."
+        />
+      ) : (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-medium text-gray-200">Perspectives</h3>
+          <div className="flex items-center space-x-2">
+            {isLoading && (
+              <span className="text-xs text-gray-400">Loading...</span>
+            )}
+            <button 
+              className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              onClick={generateAllPerspectives}
+              disabled={isLoading}
+            >
+              Generate All
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       
       {error && (
         <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-md text-red-200 text-sm">
