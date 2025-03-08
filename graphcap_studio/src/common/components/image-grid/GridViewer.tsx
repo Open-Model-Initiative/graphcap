@@ -2,8 +2,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
-import { LazyImage } from '@/features/gallery-viewer/components/LazyImage';
+import { LazyImage } from '@/common/components/image-grid/LazyImage';
 import { LoadingSpinner, EmptyState } from '@/common/ui';
+
+/**
+ * Props for the image renderer component
+ */
+interface ImageRendererProps {
+  readonly imagePath: string;
+  readonly alt?: string;
+  readonly className?: string;
+  readonly onLoad?: () => void;
+  readonly onError?: (error: Error) => void;
+}
 
 interface GridViewerProps {
   readonly images: Image[];
@@ -15,6 +26,11 @@ interface GridViewerProps {
   readonly selectedImage?: Image | null;
   readonly onSelectImage: (image: Image) => void;
   readonly onEditImage?: (image: Image) => void;
+  /**
+   * Optional custom component to render individual images
+   * If not provided, a default img element will be used
+   */
+  readonly ImageComponent?: React.ComponentType<ImageRendererProps>;
 }
 
 /**
@@ -26,6 +42,7 @@ interface GridViewerProps {
  * - Loading and empty states
  * - Selection handling
  * - Automatic resizing with ResizeObserver
+ * - Customizable image rendering via ImageComponent prop
  * 
  * @param images - Array of image objects to display
  * @param isLoading - Whether the grid is in loading state
@@ -36,6 +53,7 @@ interface GridViewerProps {
  * @param selectedImage - Currently selected image
  * @param onSelectImage - Callback when an image is selected
  * @param onEditImage - Callback when edit button is clicked
+ * @param ImageComponent - Optional custom component to render individual images
  */
 export function GridViewer({
   images,
@@ -46,7 +64,8 @@ export function GridViewer({
   containerHeight: externalHeight,
   selectedImage,
   onSelectImage,
-  onEditImage
+  onEditImage,
+  ImageComponent
 }: GridViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -107,15 +126,16 @@ export function GridViewer({
     const isSelected = selectedImage?.path === image.path;
     
     return (
-      <div style={style} className="p-2">
+      <div style={style} className="p-2" key={`${rowIndex}-${columnIndex}`}>
         <LazyImage
           image={image}
           isSelected={isSelected}
           onSelect={onSelectImage}
+          ImageComponent={ImageComponent}
         />
       </div>
     );
-  }, [images, columnCount, selectedImage, onSelectImage, onEditImage]);
+  }, [images, columnCount, selectedImage, onSelectImage, onEditImage, ImageComponent]);
 
   // Show loading state
   if (isLoading) {

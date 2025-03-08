@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { memo, useRef, useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { Image } from '@/services/images';
 import { ThumbnailImage } from '@/common/components/responsive-image';

@@ -7,8 +7,8 @@
  */
 
 export class TestResizeObserver {
-  private callback: ResizeObserverCallback;
-  private elements: Set<Element> = new Set();
+  private readonly callback: ResizeObserverCallback;
+  private readonly elements: Set<Element> = new Set();
   
   constructor(callback: ResizeObserverCallback) {
     this.callback = callback;

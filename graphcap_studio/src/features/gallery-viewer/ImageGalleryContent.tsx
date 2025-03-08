@@ -4,6 +4,7 @@ import { GridViewer } from '@/common/components/image-grid/GridViewer';
 import { CarouselViewer } from '@/common/components/image-carousel';
 import { CompactActionBar } from './components/CompactActionBar';
 import { useGalleryViewerContext } from './hooks';
+import { ImageViewer } from './ImageViewer';
 
 interface ImageGalleryContentProps {
   readonly images: Image[];
@@ -79,6 +80,7 @@ export function ImageGalleryContent({
             selectedImage={selectedImage}
             onSelectImage={setSelectedImage}
             onEditImage={onEditImage}
+            ImageComponent={ImageViewer}
             className="h-full w-full"
           />
         ) : (

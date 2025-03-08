@@ -1,12 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useRef, useEffect } from 'react';
 import { Image } from '@/services/images';
-import { ImageViewer } from '../ImageViewer';
+
+/**
+ * Props for the default image renderer component
+ */
+interface ImageRendererProps {
+  readonly imagePath: string;
+  readonly alt?: string;
+  readonly className?: string;
+  readonly onLoad?: () => void;
+  readonly onError?: (error: Error) => void;
+}
 
 interface LazyImageProps {
   readonly image: Image;
   readonly isSelected: boolean;
   readonly onSelect: (image: Image) => void;
+  /**
+   * Optional custom component to render the image
+   * If not provided, a default img element will be used
+   */
+  readonly ImageComponent?: React.ComponentType<ImageRendererProps>;
 }
 
 /**
@@ -17,17 +32,18 @@ interface LazyImageProps {
  * - Loading states with placeholders
  * - Selection state visual feedback
  * - Hover effects for image information
+ * - Customizable image rendering via ImageComponent prop
  * 
  * @param image - The image object to display
  * @param isSelected - Whether this image is currently selected
  * @param onSelect - Callback when the image is selected
- * @param onEdit - Optional callback for edit action
- * @param onAddToDataset - Optional callback for adding to dataset
+ * @param ImageComponent - Optional custom component to render the image
  */
 export function LazyImage({ 
   image, 
   isSelected, 
   onSelect,
+  ImageComponent
 }: LazyImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -83,20 +99,33 @@ export function LazyImage({
               </div>
             )}
             
-            {/* Use ImageViewer component */}
+            {/* Render image using provided component or fallback to default img */}
             <div className={`absolute inset-0 transition-opacity duration-300 ${
               isLoaded ? 'opacity-100' : 'opacity-0'
             }`}>
-              <ImageViewer
-                imagePath={image.path}
-                alt={image.name}
-                className="h-full w-full object-cover"
-                onLoad={() => setIsLoaded(true)}
-                onError={(error) => {
-                  console.error(`Failed to load image: ${image.path}`, error);
-                  setIsLoaded(true);
-                }}
-              />
+              {ImageComponent ? (
+                <ImageComponent
+                  imagePath={image.path}
+                  alt={image.name}
+                  className="h-full w-full object-cover"
+                  onLoad={() => setIsLoaded(true)}
+                  onError={(error) => {
+                    console.error(`Failed to load image: ${image.path}`, error);
+                    setIsLoaded(true);
+                  }}
+                />
+              ) : (
+                <img
+                  src={image.path}
+                  alt={image.name}
+                  className="h-full w-full object-cover"
+                  onLoad={() => setIsLoaded(true)}
+                  onError={(error) => {
+                    console.error(`Failed to load image: ${image.path}`, error);
+                    setIsLoaded(true);
+                  }}
+                />
+              )}
             </div>
           </>
         ) : (
