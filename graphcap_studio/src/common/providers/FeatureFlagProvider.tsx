@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, createContext, useContext, useState } from 'react';
+import { ReactNode, createContext, useContext, useState, useMemo } from 'react';
 
 /**
  * Interface defining all available feature flags in the application
@@ -71,13 +71,14 @@ export function FeatureFlagProvider({
     }));
   };
 
+  // Wrap the value in useMemo
+  const value = useMemo(() => ({
+    featureFlags,
+    toggleFeatureFlag,
+  }), [featureFlags]);
+
   return (
-    <FeatureFlagContext.Provider
-      value={{
-        featureFlags,
-        toggleFeatureFlag,
-      }}
-    >
+    <FeatureFlagContext.Provider value={value}>
       {children}
     </FeatureFlagContext.Provider>
   );

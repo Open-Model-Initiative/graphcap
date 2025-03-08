@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
 import { LazyImage } from '@/features/gallery-viewer/components/LazyImage';
-import { LoadingSpinner, EmptyState } from '@/common/components/ui';
+import { LoadingSpinner, EmptyState } from '@/common/ui';
 
 interface GridViewerProps {
   readonly images: Image[];

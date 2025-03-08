@@ -6,7 +6,7 @@ import {
   EmptyState, 
   NavigationButton, 
   ImageCounter
-} from '@/common/components/ui';
+} from '@/common/ui';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { 
   useCarouselNavigation, 
