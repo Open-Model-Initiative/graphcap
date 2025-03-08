@@ -25,8 +25,8 @@ vi.mock('@/common/components/responsive-image', () => ({
   ),
 }));
 
-// Sample test images
-const mockImages: Partial<Image>[] = [
+// Sample test images typed as full Image objects
+const mockImages: Image[] = [
   { path: '/images/image1.jpg', name: 'Image 1', directory: 'test', url: 'test-url' },
   { path: '/images/image2.jpg', name: 'Image 2', directory: 'test', url: 'test-url' },
   { path: '/images/image3.jpg', name: 'Image 3', directory: 'test', url: 'test-url' },
@@ -42,8 +42,8 @@ describe('ThumbnailStrip', () => {
       disconnect = vi.fn();
     }
 
-    // Assign the mock to the global object
-    global.ResizeObserver = ResizeObserverMock as any;
+    // Assign the mock to the global object without an unnecessary type assertion
+    global.ResizeObserver = ResizeObserverMock;
     
     // Mock Element.scrollTo
     Element.prototype.scrollTo = function(_x: number, _y: number) {
@@ -59,7 +59,7 @@ describe('ThumbnailStrip', () => {
     // WHEN the component is rendered
     render(
       <ThumbnailStrip 
-        images={mockImages as Image[]} 
+        images={mockImages} 
         selectedIndex={selectedIndex} 
         onSelect={onSelect}
       />
@@ -78,7 +78,7 @@ describe('ThumbnailStrip', () => {
     // WHEN the component is rendered
     render(
       <ThumbnailStrip 
-        images={mockImages as Image[]} 
+        images={mockImages} 
         selectedIndex={selectedIndex} 
         onSelect={onSelect}
       />
@@ -99,7 +99,7 @@ describe('ThumbnailStrip', () => {
     // WHEN the component is rendered
     render(
       <ThumbnailStrip 
-        images={mockImages as Image[]} 
+        images={mockImages} 
         selectedIndex={selectedIndex} 
         onSelect={onSelect}
       />
@@ -132,7 +132,7 @@ describe('ThumbnailStrip', () => {
     // WHEN the component is rendered
     const { container } = render(
       <ThumbnailStrip 
-        images={mockImages as Image[]} 
+        images={mockImages} 
         selectedIndex={selectedIndex} 
         onSelect={onSelect}
       />
@@ -172,7 +172,7 @@ describe('ThumbnailStrip', () => {
     // WHEN the component is rendered
     const { container } = render(
       <ThumbnailStrip 
-        images={mockImages as Image[]} 
+        images={mockImages} 
         selectedIndex={selectedIndex} 
         onSelect={onSelect}
       />
@@ -188,4 +188,4 @@ describe('ThumbnailStrip', () => {
     // THEN it should call onSelect with the index of the thumbnail
     expect(onSelect).toHaveBeenCalledWith(0);
   });
-}); 
+});
