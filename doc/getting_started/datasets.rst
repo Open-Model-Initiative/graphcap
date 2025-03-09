@@ -65,3 +65,21 @@ There are also controls at the bottom of the Image Editor for Zoom and Rotate. Z
 4. To cancel your changes or save your changes, click the ``Cancel`` or ``Save`` buttons, respectively.
 
 5. Click the ``Close`` button to exit out of the space and return to the Gallery.
+
+Adding to Other Datasets
+------------------------
+
+Follow these steps if you want to save an image from one dataset into another dataset.
+
+1. In the dataset with images you want to add, select an image.
+
+2. On the top right of the Image Editor, click the "plus" icon. A small modal will appear with a list of all the other datasets that you have. 
+
+3. Click on the dataset you wish to save the image, and click the ``Add`` button.
+
+Downloading Images from Datasets
+--------------------------------
+
+1. In the dataset with images you want to save, select an image.
+
+2. On the top right of the Image Editor, click the "download" icon. 
