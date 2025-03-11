@@ -47,7 +47,10 @@ function FileTreeItemComponent({
       style={{ 
         marginLeft: `${level * INDENTATION_SIZE}px`,
         textAlign: 'left',
-        width: '100%'
+        width: '100%',
+        background: 'transparent',
+        border: 'none',
+        padding: 0
       }}
       aria-expanded={item.type === 'directory' ? isExpanded : undefined}
       role={item.type === 'directory' ? 'treeitem' : undefined}

@@ -22,6 +22,7 @@ export function FeatureFlagsPanel() {
           <div key={flagName} className="flex items-center justify-between">
             <label 
               htmlFor={`flag-${flagName}`}
+              id={`label-${flagName}`}
               className="text-sm font-medium cursor-pointer text-gray-800 dark:text-gray-200"
             >
               {formatFlagName(flagName)}
@@ -32,6 +33,7 @@ export function FeatureFlagsPanel() {
               onClick={() => toggleFeatureFlag(flagName)}
               role="switch"
               aria-checked={isEnabled}
+              aria-labelledby={`label-${flagName}`}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
