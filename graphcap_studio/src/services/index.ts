@@ -17,3 +17,13 @@ export {
   checkServerHealthById
 } from './serverConnections';
 
+// File browser
+export {
+  useBrowseDirectory,
+  useBrowseMultipleDirectories,
+  prefetchDirectory,
+  invalidateDirectory,
+  getFileUrl,
+  downloadFile
+} from './fileBrowser';
+

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
+import { FILE_EXTENSIONS, FILE_ICONS } from './constants';
+import { getFileExtension } from './utils';
 
 interface FileIconProps {
   fileName: string;
@@ -19,42 +21,41 @@ interface FileIconProps {
 export function FileIcon({ fileName, isDirectory, isExpanded = false, className = '' }: FileIconProps) {
   const fileExtension = useMemo(() => {
     if (isDirectory) return 'dir';
-    const parts = fileName.split('.');
-    return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+    return getFileExtension(fileName);
   }, [fileName, isDirectory]);
 
   const iconForFileType = useMemo(() => {
     if (isDirectory) {
-      return isExpanded ? '📂' : '📁';
+      return isExpanded ? FILE_ICONS.DIRECTORY.OPEN : FILE_ICONS.DIRECTORY.CLOSED;
     }
 
     // Image files
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
-      return '🖼️';
+    if (FILE_EXTENSIONS.IMAGE.includes(fileExtension)) {
+      return FILE_ICONS.FILE.IMAGE;
     }
 
     // Document files
-    if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'md', 'markdown'].includes(fileExtension)) {
-      return '📄';
+    if (FILE_EXTENSIONS.DOCUMENT.includes(fileExtension)) {
+      return FILE_ICONS.FILE.DOCUMENT;
     }
 
     // Data files
-    if (['json', 'csv', 'xml', 'yaml', 'yml'].includes(fileExtension)) {
-      return '📊';
+    if (FILE_EXTENSIONS.DATA.includes(fileExtension)) {
+      return FILE_ICONS.FILE.DATA;
     }
 
     // Code files
-    if (['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'html', 'css', 'scss'].includes(fileExtension)) {
-      return '📝';
+    if (FILE_EXTENSIONS.CODE.includes(fileExtension)) {
+      return FILE_ICONS.FILE.CODE;
     }
 
     // Archive files
-    if (['zip', 'rar', 'tar', 'gz', '7z'].includes(fileExtension)) {
-      return '🗄️';
+    if (FILE_EXTENSIONS.ARCHIVE.includes(fileExtension)) {
+      return FILE_ICONS.FILE.ARCHIVE;
     }
 
     // Default file icon
-    return '📄';
+    return FILE_ICONS.FILE.DEFAULT;
   }, [fileExtension, isDirectory, isExpanded]);
 
   return (

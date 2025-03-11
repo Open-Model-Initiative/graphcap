@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState, useCallback, useEffect } from 'react';
-import { FileItem } from '../components/file-browser/FileBrowserPanel';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { FileItem } from '../components/file-browser/types';
+import { 
+  useBrowseDirectory, 
+  useBrowseMultipleDirectories, 
+  invalidateDirectory 
+} from '../../services/fileBrowser';
 
-interface FetchDirectoryResult {
-  success: boolean;
-  path: string;
-  contents: FileItem[];
-  error?: string;
+// State interface for the hook
+interface FileBrowserState {
+  currentPath: string;
+  expandedDirs: Set<string>;
+  selectedFile: string | null;
 }
-
-interface DirectoryCache {
-  [path: string]: FileItem[];
-}
-
-// Get the Media Server URL from environment variables
-const MEDIA_SERVER_URL = import.meta.env.VITE_MEDIA_SERVER_URL?.replace('graphcap_media_server', 'localhost') ?? 'http://localhost:32400';
 
 /**
  * Custom hook for file browser functionality
@@ -22,78 +20,89 @@ const MEDIA_SERVER_URL = import.meta.env.VITE_MEDIA_SERVER_URL?.replace('graphca
  * This hook provides functions to browse the workspace directory.
  */
 export function useFileBrowser() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPath, setCurrentPath] = useState('/');
-  const [rawFiles, setRawFiles] = useState<FileItem[]>([]);
-  const [processedFiles, setProcessedFiles] = useState<FileItem[]>([]);
-  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set(['']));
-  const [directoryCache, setDirectoryCache] = useState<DirectoryCache>({});
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  // Use a single state object for related state
+  const [state, setState] = useState<FileBrowserState>({
+    currentPath: '/',
+    expandedDirs: new Set(['']),
+    selectedFile: null
+  });
+  
+  const { 
+    currentPath, 
+    expandedDirs, 
+    selectedFile 
+  } = state;
 
-  /**
-   * Fetch directory contents from the server
-   */
-  const fetchDirectory = useCallback(async (path: string = '/'): Promise<FetchDirectoryResult> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Check cache first
-      if (directoryCache[path]) {
-        return {
-          success: true,
-          path,
-          contents: directoryCache[path]
-        };
+  // Use Tanstack Query to fetch directory contents for the current path
+  const { 
+    data: currentDirData, 
+    isLoading: isCurrentDirLoading, 
+    error: currentDirError,
+    refetch: refetchCurrentDir
+  } = useBrowseDirectory(currentPath);
+
+  // Get array of expanded directory paths (excluding the current path)
+  const expandedDirPaths = useMemo(() => {
+    return Array.from(expandedDirs)
+      .filter(path => path !== '' && path !== currentPath);
+  }, [expandedDirs, currentPath]);
+
+  // Fetch data for all expanded directories
+  const expandedDirsQueries = useBrowseMultipleDirectories(expandedDirPaths);
+
+  // Combine current directory data with expanded directories data
+  const processedFiles = useMemo(() => {
+    // Start with the current directory files
+    const baseFiles = currentDirData?.contents || [];
+    
+    // Create a map of directory ID to its contents
+    const dirContentsMap = new Map<string, FileItem[]>();
+    
+    // Add expanded directories data to the map
+    expandedDirsQueries.forEach(query => {
+      if (query.data?.success && query.data.path) {
+        dirContentsMap.set(query.data.path, query.data.contents);
       }
-      
-      const response = await fetch(`${MEDIA_SERVER_URL}/api/files/browse?path=${encodeURIComponent(path)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch directory contents');
-      }
-      
-      // Update cache
-      setDirectoryCache(prev => ({
-        ...prev,
-        [path]: data.contents
-      }));
-      
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(errorMessage);
-      return {
-        success: false,
-        path: path,
-        contents: [],
-        error: errorMessage
-      };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [directoryCache]);
+    });
+    
+    // Function to recursively process files and add children
+    const processFiles = (files: FileItem[]): FileItem[] => {
+      return files.map(file => {
+        // If it's a directory and it's expanded, add its children
+        if (file.type === 'directory' && expandedDirs.has(file.id)) {
+          const children = dirContentsMap.get(file.id) || [];
+          return {
+            ...file,
+            children: processFiles(children)
+          };
+        }
+        
+        return file;
+      });
+    };
+    
+    return processFiles(baseFiles);
+  }, [currentDirData, expandedDirsQueries, expandedDirs]);
+
+  // Determine overall loading state and error
+  const isLoading = isCurrentDirLoading || expandedDirsQueries.some(query => query.isLoading);
+  const error = currentDirError 
+    ? (currentDirError as Error).message 
+    : expandedDirsQueries.find(query => query.error)?.error 
+      ? (expandedDirsQueries.find(query => query.error)?.error as Error).message 
+      : null;
 
   /**
    * Load directory contents
    */
   const loadDirectory = useCallback(async (path: string = '/') => {
-    const result = await fetchDirectory(path);
+    setState(prev => ({
+      ...prev,
+      currentPath: path
+    }));
     
-    if (result.success) {
-      setCurrentPath(result.path);
-      setRawFiles(result.contents);
-    }
-    
-    return result.success;
-  }, [fetchDirectory]);
+    return true;
+  }, []);
 
   /**
    * Navigate to a parent directory
@@ -115,82 +124,49 @@ export function useFileBrowser() {
     const isExpanded = expandedDirs.has(id);
     
     // Update expanded directories
-    setExpandedDirs(prev => {
-      const newSet = new Set(prev);
+    setState(prev => {
+      const newExpandedDirs = new Set(prev.expandedDirs);
+      
       if (isExpanded) {
-        newSet.delete(id);
+        newExpandedDirs.delete(id);
       } else {
-        newSet.add(id);
-        
-        // Load directory contents if not already loaded
-        if (!directoryCache[id]) {
-          fetchDirectory(id);
-        }
+        newExpandedDirs.add(id);
       }
-      return newSet;
+      
+      return {
+        ...prev,
+        expandedDirs: newExpandedDirs
+      };
     });
-  }, [expandedDirs, directoryCache, fetchDirectory]);
+  }, [expandedDirs]);
 
   /**
    * Select a file
    */
   const selectFile = useCallback((id: string) => {
-    setSelectedFile(id);
+    setState(prev => ({
+      ...prev,
+      selectedFile: id
+    }));
   }, []);
 
   /**
-   * Refresh the current directory and clear cache
+   * Refresh the current directory
    */
   const refreshDirectory = useCallback(async () => {
-    // Clear cache for current path
-    setDirectoryCache(prev => {
-      const newCache = { ...prev };
-      delete newCache[currentPath];
-      return newCache;
+    // Invalidate the cache for the current path
+    invalidateDirectory(currentPath);
+    
+    // Invalidate the cache for all expanded directories
+    expandedDirPaths.forEach(path => {
+      invalidateDirectory(path);
     });
     
-    return loadDirectory(currentPath);
-  }, [loadDirectory, currentPath]);
-
-  /**
-   * Build a nested file tree from flat file list
-   */
-  const buildFileTree = useCallback((fileList: FileItem[]): FileItem[] => {
-    // Create a map of directories
-    const dirMap: { [id: string]: FileItem } = {};
+    // Refetch the data
+    await refetchCurrentDir();
     
-    // Create a copy of the file list to avoid mutating the original
-    const result: FileItem[] = [];
-    
-    // First pass: create all directories and files
-    fileList.forEach(item => {
-      // Add to the result array
-      result.push(item);
-      
-      // If it's a directory, add to the directory map
-      if (item.type === 'directory') {
-        dirMap[item.id] = item;
-        
-        // Initialize children array if not already present
-        if (!item.children) {
-          item.children = [];
-        }
-        
-        // If this directory is expanded and we have cached contents, add them as children
-        if (expandedDirs.has(item.id) && directoryCache[item.id]) {
-          item.children = directoryCache[item.id];
-        }
-      }
-    });
-    
-    return result;
-  }, [expandedDirs, directoryCache]);
-
-  // Process files into a tree structure whenever raw files or cache changes
-  useEffect(() => {
-    const processedFiles = buildFileTree(rawFiles);
-    setProcessedFiles(processedFiles);
-  }, [rawFiles, directoryCache, expandedDirs, buildFileTree]);
+    return true;
+  }, [currentPath, expandedDirPaths, refetchCurrentDir]);
 
   // Initial load
   useEffect(() => {
