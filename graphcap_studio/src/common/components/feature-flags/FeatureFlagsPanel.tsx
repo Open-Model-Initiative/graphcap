@@ -30,6 +30,15 @@ export function FeatureFlagsPanel() {
             <div 
               className="relative inline-block w-10 align-middle select-none cursor-pointer" 
               onClick={() => toggleFeatureFlag(flagName)}
+              role="switch"
+              aria-checked={isEnabled}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleFeatureFlag(flagName);
+                }
+              }}
             >
               <input
                 type="checkbox"

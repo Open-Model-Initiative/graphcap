@@ -84,13 +84,14 @@ export function useFileBrowser() {
     return processFiles(baseFiles);
   }, [currentDirData, expandedDirsQueries, expandedDirs]);
 
-  // Determine overall loading state and error
   const isLoading = isCurrentDirLoading || expandedDirsQueries.some(query => query.isLoading);
-  const error = currentDirError 
-    ? (currentDirError as Error).message 
-    : expandedDirsQueries.find(query => query.error)?.error 
-      ? (expandedDirsQueries.find(query => query.error)?.error as Error).message 
-      : null;
+  
+  const currentDirErrorMessage = currentDirError ? currentDirError.message : null;
+  
+  const queryWithError = expandedDirsQueries.find(query => query.error);
+  const expandedDirErrorMessage = queryWithError?.error ? queryWithError.error.message : null;
+  
+  const error = currentDirErrorMessage ?? expandedDirErrorMessage;
 
   /**
    * Load directory contents

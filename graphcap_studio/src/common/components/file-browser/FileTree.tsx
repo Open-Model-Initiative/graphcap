@@ -27,7 +27,7 @@ function FileTreeComponent({
   expandedDirs,
   selectedFile,
   onItemClick
-}: FileTreeProps) {
+}: Readonly<FileTreeProps>) {
   const renderFileTree = useCallback((items: FileItem[], level = 0) => {
     return items.map(item => (
       <div key={item.id}>
@@ -47,24 +47,41 @@ function FileTreeComponent({
     ));
   }, [expandedDirs, selectedFile, onItemClick]);
 
+  // Render loading state
+  const renderLoading = () => (
+    <div className="flex justify-center items-center py-4">
+      <span className="animate-spin mr-2" aria-hidden="true">⟳</span> 
+      <span>Loading...</span>
+    </div>
+  );
+
+  // Render empty state
+  const renderEmpty = () => (
+    <div className="py-4 text-center text-gray-500 dark:text-gray-400">
+      No files found
+    </div>
+  );
+
+  // Determine content to render based on state
+  const renderContent = () => {
+    if (isLoading) {
+      return renderLoading();
+    }
+    
+    if (files.length === 0) {
+      return renderEmpty();
+    }
+    
+    return renderFileTree(files);
+  };
+
   return (
     <div className={CSS_CLASSES.CONTAINER.BORDER}>
       <div className={CSS_CLASSES.CONTAINER.HEADER}>
         Files
       </div>
       <div className={CSS_CLASSES.CONTAINER.CONTENT}>
-        {isLoading ? (
-          <div className="flex justify-center items-center py-4">
-            <span className="animate-spin mr-2" aria-hidden="true">⟳</span> 
-            <span>Loading...</span>
-          </div>
-        ) : files.length === 0 ? (
-          <div className="py-4 text-center text-gray-500 dark:text-gray-400">
-            No files found
-          </div>
-        ) : (
-          renderFileTree(files)
-        )}
+        {renderContent()}
       </div>
     </div>
   );

@@ -164,8 +164,8 @@ function DatasetNodeWrapper({
   onSelectDataset 
 }: DatasetNodeWrapperProps) {
   return (
-    <div 
-      className={`${className} text-left w-full cursor-pointer`}
+    <button 
+      className={`${className} text-left w-full cursor-pointer border-none bg-transparent p-0 m-0`}
       onClick={(e) => {
         // Call the provided onClick handler if it exists
         onClick?.(e);
@@ -179,8 +179,6 @@ function DatasetNodeWrapper({
           onSelectDataset(datasetName);
         }
       }}
-      role="button"
-      tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -189,7 +187,7 @@ function DatasetNodeWrapper({
       }}
     >
       {children}
-    </div>
+    </button>
   );
 }
 

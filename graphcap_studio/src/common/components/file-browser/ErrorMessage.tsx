@@ -11,7 +11,7 @@ interface ErrorMessageProps {
  * 
  * @param message - The error message to display
  */
-function ErrorMessageComponent({ message }: ErrorMessageProps) {
+function ErrorMessageComponent({ message }: Readonly<ErrorMessageProps>) {
   if (!message) return null;
   
   return (

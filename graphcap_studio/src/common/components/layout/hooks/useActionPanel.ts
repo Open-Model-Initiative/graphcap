@@ -66,7 +66,6 @@ interface UseActionPanelResult {
  * @returns Panel state and actions
  */
 export function useActionPanel({
-  side,
   defaultExpanded = false,
   expandedWidth = 256,
   collapsedWidth = 40

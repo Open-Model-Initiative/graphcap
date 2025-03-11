@@ -93,7 +93,7 @@ export function ActionPanel({
   
   // Track the active section
   const [activeSection, setActiveSection] = useState<string>(
-    defaultActiveSection || (sections.length > 0 ? sections[0].id : '')
+    defaultActiveSection ?? (sections.length > 0 ? sections[0].id : '')
   );
   
   // Memoize the section change handler to prevent unnecessary re-renders

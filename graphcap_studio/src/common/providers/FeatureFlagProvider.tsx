@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, createContext, useContext, useState, useMemo, useEffect } from 'react';
+import { ReactNode, createContext, useContext, useState, useMemo } from 'react';
 
 /**
  * Interface defining all available feature flags in the application

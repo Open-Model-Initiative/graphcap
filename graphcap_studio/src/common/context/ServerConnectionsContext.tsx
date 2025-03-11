@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { useServerConnections } from '../hooks';
 import { ServerConnection } from '../types';
 
@@ -26,7 +26,7 @@ interface ServerConnectionsProviderProps {
 /**
  * Provider component for server connections context
  */
-export function ServerConnectionsProvider({ children }: ServerConnectionsProviderProps) {
+export function ServerConnectionsProvider({ children }: Readonly<ServerConnectionsProviderProps>) {
   const serverConnections = useServerConnections();
   
   return (

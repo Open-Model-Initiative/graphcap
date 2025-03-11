@@ -11,7 +11,7 @@ interface FilePathBreadcrumbProps {
  * 
  * @param path - The current directory path
  */
-function FilePathBreadcrumbComponent({ path }: FilePathBreadcrumbProps) {
+function FilePathBreadcrumbComponent({ path }: Readonly<FilePathBreadcrumbProps>) {
   return (
     <div className={CSS_CLASSES.PATH.CONTAINER}>
       <span className="font-medium">Path:</span> {path}

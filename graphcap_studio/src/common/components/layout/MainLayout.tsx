@@ -44,17 +44,21 @@ export function MainLayout({
     isCalculating 
   } = useLayoutHeight();
 
-  // Initialize action panel hooks if panels are provided
-  const leftPanel = leftActionPanel ? useActionPanel({ 
+  // Always initialize action panel hooks, but only use them if panels are provided
+  const leftPanelHook = useActionPanel({ 
     side: 'left',
     collapsedWidth: 40
-  }) : null;
+  });
   
-  const rightPanel = rightActionPanel ? useActionPanel({ 
+  const rightPanelHook = useActionPanel({ 
     side: 'right',
-    expandedWidth: 300,
+    expandedWidth: 500,
     collapsedWidth: 40
-  }) : null;
+  });
+  
+  // Use the hooks conditionally based on whether panels are provided
+  const leftPanel = leftActionPanel ? leftPanelHook : null;
+  const rightPanel = rightActionPanel ? rightPanelHook : null;
   
   // Track if panels are rendered to avoid layout shifts
   const [panelsReady, setPanelsReady] = useState(false);
@@ -65,8 +69,8 @@ export function MainLayout({
   }, []);
 
   // Calculate content padding based on panel states
-  const leftPadding = leftPanel?.isExpanded ? leftPanel.width : (leftPanel?.width || 0);
-  const rightPadding = rightPanel?.isExpanded ? rightPanel.width : (rightPanel?.width || 0);
+  const leftPadding = leftPanel?.isExpanded ? leftPanel.width : (leftPanel?.width ?? 0);
+  const rightPadding = rightPanel?.isExpanded ? rightPanel.width : (rightPanel?.width ?? 0);
 
   // Determine content classes based on sidebar presence
   const contentClasses = `

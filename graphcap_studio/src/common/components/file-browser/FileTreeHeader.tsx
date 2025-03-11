@@ -22,7 +22,7 @@ function FileTreeHeaderComponent({
   isLoading,
   onNavigateUp,
   onRefresh
-}: FileTreeHeaderProps) {
+}: Readonly<FileTreeHeaderProps>) {
   return (
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center">

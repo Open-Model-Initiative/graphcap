@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { memo } from 'react';
+import { memo, KeyboardEvent } from 'react';
 import { FileItem } from './types';
 import { FileIcon } from './FileIcon';
 import { CSS_CLASSES, INDENTATION_SIZE } from './constants';
@@ -28,14 +28,30 @@ function FileTreeItemComponent({
   isSelected,
   isExpanded,
   onItemClick
-}: FileTreeItemProps) {
+}: Readonly<FileTreeItemProps>) {
   const itemClasses = `${CSS_CLASSES.ITEM.BASE} ${isSelected ? CSS_CLASSES.ITEM.SELECTED : ''}`;
   
+  // Handle keyboard events for accessibility
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onItemClick(item);
+    }
+  };
+  
   return (
-    <div 
+    <button 
       className={itemClasses}
       onClick={() => onItemClick(item)}
-      style={{ marginLeft: `${level * INDENTATION_SIZE}px` }}
+      onKeyDown={handleKeyDown}
+      style={{ 
+        marginLeft: `${level * INDENTATION_SIZE}px`,
+        textAlign: 'left',
+        width: '100%'
+      }}
+      aria-expanded={item.type === 'directory' ? isExpanded : undefined}
+      role={item.type === 'directory' ? 'treeitem' : undefined}
+      aria-selected={isSelected}
     >
       <span className="mr-1">
         <FileIcon 
@@ -53,7 +69,7 @@ function FileTreeItemComponent({
           </>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 

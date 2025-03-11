@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import { CONNECTION_STATUS } from '../constants';
 
 /**
  * Server connection type representing a connection to a server

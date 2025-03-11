@@ -18,7 +18,7 @@ interface FileIconProps {
  * @param isExpanded - Whether the directory is expanded (only applicable for directories)
  * @param className - Additional CSS classes
  */
-export function FileIcon({ fileName, isDirectory, isExpanded = false, className = '' }: FileIconProps) {
+export function FileIcon({ fileName, isDirectory, isExpanded = false, className = '' }: Readonly<FileIconProps>) {
   const fileExtension = useMemo(() => {
     if (isDirectory) return 'dir';
     return getFileExtension(fileName);

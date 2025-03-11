@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
+// React import removed as it's not used
 
 interface IconProps {
   className?: string;
@@ -8,7 +8,7 @@ interface IconProps {
 /**
  * Feature flag icon
  */
-export function FlagIcon({ className = '' }: IconProps) {
+export function FlagIcon({ className = '' }: Readonly<IconProps>) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -31,7 +31,7 @@ export function FlagIcon({ className = '' }: IconProps) {
 /**
  * Server connection icon
  */
-export function ServerIcon({ className = '' }: IconProps) {
+export function ServerIcon({ className = '' }: Readonly<IconProps>) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -56,7 +56,7 @@ export function ServerIcon({ className = '' }: IconProps) {
 /**
  * File browser icon
  */
-export function FolderIcon({ className = '' }: IconProps) {
+export function FolderIcon({ className = '' }: Readonly<IconProps>) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -78,7 +78,7 @@ export function FolderIcon({ className = '' }: IconProps) {
 /**
  * Settings icon
  */
-export function SettingsIcon({ className = '' }: IconProps) {
+export function SettingsIcon({ className = '' }: Readonly<IconProps>) {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
