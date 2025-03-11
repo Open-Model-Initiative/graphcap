@@ -28,10 +28,3 @@ tasks:
     cmds:
       - uv run python ./graphcap/main.py export-dataset ../datasets/os_img/output.jsonl --name "gc-os-img" --description "Example gc dataset" --push-to-hub --use-hf-urls
 
-  db:reset:
-    desc: Reset the database by removing the PostgreSQL volume
-    cmds:
-      - docker compose -f config/docker-compose.yml down
-      - docker volume rm graphcap_graphcap_server_db || true
-      - docker compose -f config/docker-compose.yml up -d gcap_postgres
-      - echo "Database volume has been reset. The database will be recreated on next startup."
