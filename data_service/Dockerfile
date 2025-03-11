@@ -14,17 +14,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 RUN bun install
 
 # Copy source code
 COPY . .
 
 # Build and verify
-RUN chmod +x /app/entrypoint.sh && \
-    mkdir -p dist && \
-    bun run build && \
-    ls -la dist/
+RUN chmod +x /app/entrypoint.sh 
+
 
 # Expose ports
 EXPOSE 32550

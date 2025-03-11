@@ -1,7 +1,34 @@
-node_modules
-dist
-.env
-.env.example
+# Version control
 .git
 .gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+dist
+
+# Environment files
+.env*
+*.env
+
+# Development files
+*.log
+.vscode
+.idea
+*.md
+!README.md
+
+# Test files
+__tests__
+*.test.*
+*.spec.*
+
+# Other
+.DS_Store
+*.swp
+*.swo
+.editorconfig
+.eslintrc*
+.prettierrc*
+coverage
 
