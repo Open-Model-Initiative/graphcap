@@ -1,6 +1,9 @@
 version: "3"
 dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
+includes:
+  data: ./data_service/Taskfile.data.yml
+
 tasks:
   build:
     cmds:

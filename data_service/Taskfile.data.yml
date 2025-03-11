@@ -1,0 +1,68 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Start the data service container with watch mode
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up graphcap_data_service --watch --build
+
+  start:
+    desc: Start the data service container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up -d graphcap_data_service
+
+  stop:
+    desc: Stop the data service container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env stop graphcap_data_service
+
+  logs:
+    desc: View logs for the data service container
+    cmds:
+      - docker compose -f ./docker-compose.yml logs -f graphcap_data_service
+
+  rebuild:
+    desc: Rebuild and restart the data service container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env build graphcap_data_service
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up -d --force-recreate graphcap_data_service
+
+  migrate:
+    desc: Run database migrations
+    cmds:
+      - docker compose -f ./docker-compose.yml exec graphcap_data_service bun run migrate
+
+  seed:
+    desc: Seed the database with initial data
+    cmds:
+      - docker compose -f ./docker-compose.yml exec graphcap_data_service bun run seed
+
+  studio:
+    desc: Start Drizzle Kit Studio for database management
+    cmds:
+      - docker compose -f ./docker-compose.yml exec graphcap_data_service bun run studio
+
+  generate:
+    desc: Generate Drizzle ORM schema files
+    cmds:
+      - docker compose -f ./docker-compose.yml exec graphcap_data_service bun run generate
+
+  local-dev:
+    desc: Run the data service locally with Bun
+    cmds:
+      - bun run dev
+
+  local-build:
+    desc: Build the data service locally
+    cmds:
+      - bun run build
+
+  local-start:
+    desc: Start the built data service locally
+    cmds:
+      - bun run start
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - bun install 
