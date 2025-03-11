@@ -9,11 +9,15 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import * as handlers from '../controllers/providers';
 import { providerSchema, providerCreateSchema, providerUpdateSchema, providerApiKeySchema } from '../schemas/providers';
+import { commonResponses, notFoundResponse, invalidRequestResponse, successResponse } from '../schemas/common';
 
 // Create a new OpenAPI router
 const router = new OpenAPIHono();
 
-// Get all providers
+// Common response schemas
+const errorResponse = z.object({ error: z.string() });
+
+// Route definitions
 const getAllProvidersRoute = createRoute({
   method: 'get',
   path: '/',
@@ -29,20 +33,10 @@ const getAllProvidersRoute = createRoute({
         },
       },
     },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...commonResponses,
   },
 });
 
-// Get provider by ID
 const getProviderRoute = createRoute({
   method: 'get',
   path: '/{id}',
@@ -63,30 +57,11 @@ const getProviderRoute = createRoute({
         },
       },
     },
-    404: {
-      description: 'Provider not found',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...notFoundResponse,
+    ...commonResponses,
   },
 });
 
-// Create provider
 const createProviderRoute = createRoute({
   method: 'post',
   path: '/',
@@ -111,30 +86,11 @@ const createProviderRoute = createRoute({
         },
       },
     },
-    400: {
-      description: 'Invalid request',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...invalidRequestResponse,
+    ...commonResponses,
   },
 });
 
-// Update provider
 const updateProviderRoute = createRoute({
   method: 'put',
   path: '/{id}',
@@ -162,40 +118,12 @@ const updateProviderRoute = createRoute({
         },
       },
     },
-    404: {
-      description: 'Provider not found',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    400: {
-      description: 'Invalid request',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...notFoundResponse,
+    ...invalidRequestResponse,
+    ...commonResponses,
   },
 });
 
-// Delete provider
 const deleteProviderRoute = createRoute({
   method: 'delete',
   path: '/{id}',
@@ -212,37 +140,15 @@ const deleteProviderRoute = createRoute({
       description: 'Provider deleted successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
+          schema: successResponse,
         },
       },
     },
-    404: {
-      description: 'Provider not found',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...notFoundResponse,
+    ...commonResponses,
   },
 });
 
-// Update provider API key
 const updateProviderApiKeyRoute = createRoute({
   method: 'put',
   path: '/{id}/api-key',
@@ -266,43 +172,13 @@ const updateProviderApiKeyRoute = createRoute({
       description: 'API key updated successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean(),
-            message: z.string(),
-          }),
+          schema: successResponse,
         },
       },
     },
-    404: {
-      description: 'Provider not found',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    400: {
-      description: 'Invalid request',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: 'Server error',
-      content: {
-        'application/json': {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
+    ...notFoundResponse,
+    ...invalidRequestResponse,
+    ...commonResponses,
   },
 });
 
