@@ -96,7 +96,7 @@ app.add_middleware(
 app.include_router(main_router, prefix="/api/v1")
 
 
-@app.get("/health")
+@app.get("/api/v1/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy"}

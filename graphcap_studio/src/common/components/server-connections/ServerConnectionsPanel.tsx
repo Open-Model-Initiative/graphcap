@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useServerConnections } from '../../hooks';
+import { memo } from 'react';
+import { useServerConnectionsContext } from '../../context/ServerConnectionsContext';
 import { ServerConnectionsPanelProps } from '../../types';
 import { ServerConnectionItem } from './ServerConnectionItem';
 
@@ -9,20 +10,22 @@ import { ServerConnectionItem } from './ServerConnectionItem';
  * This component displays server connection statuses and controls
  * for the Media Server and GraphCap Server.
  */
-export function ServerConnectionsPanel({ className = '' }: ServerConnectionsPanelProps) {
-  const { connections, handleConnect, handleDisconnect, handleUrlChange } = useServerConnections();
+export const ServerConnectionsPanel = memo(function ServerConnectionsPanel({ 
+  className = '' 
+}: ServerConnectionsPanelProps) {
+  const { connections } = useServerConnectionsContext();
   
   return (
-    <div className={`space-y-6 ${className}`}>
-      {connections.map(connection => (
-        <ServerConnectionItem
-          key={connection.id}
-          connection={connection}
-          onConnect={handleConnect}
-          onDisconnect={handleDisconnect}
-          onUrlChange={handleUrlChange}
-        />
-      ))}
+    <div className={`w-full max-w-xs overflow-auto ${className}`}>
+      <h2 className="text-base font-semibold mb-4 text-gray-900 dark:text-gray-100">Server Connections</h2>
+      <div className="space-y-4">
+        {connections.map(connection => (
+          <ServerConnectionItem
+            key={connection.id}
+            connectionId={connection.id}
+          />
+        ))}
+      </div>
     </div>
   );
-} 
+}); 

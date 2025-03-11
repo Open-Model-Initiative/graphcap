@@ -21,6 +21,7 @@ const { uploadDir, thumbnailsDir, webpCacheDir } = require('./config');
 const healthRoutes = require('./routes/health');
 const imagesRoutes = require('./routes/images');
 const datasetsRoutes = require('./routes/datasets');
+const filesRoutes = require('./routes/files');
 
 // Initialize Express app
 const app = express();
@@ -90,6 +91,7 @@ app.use('/webp_cache', express.static(webpCacheDir, {
 app.use('/health', healthRoutes);
 app.use('/api/images', imagesRoutes);
 app.use('/api/datasets', datasetsRoutes);
+app.use('/api/files', filesRoutes);
 
 // Global error handler - must be defined after all routes
 app.use(globalErrorHandler);
