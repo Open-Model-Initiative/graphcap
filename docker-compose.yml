@@ -30,7 +30,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "35432:5432"
+      - "35433:5432"
     volumes:
       - graphcap_server_db:/var/lib/postgresql/data
     healthcheck:

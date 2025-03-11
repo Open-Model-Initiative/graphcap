@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Assets and ops for basic text captioning."""
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List
 
 import dagster as dg
 import pandas as pd
-from graphcap.perspectives.perspective_library import get_perspective, get_synthesizer
+from graphcap.perspectives import get_perspective, get_synthesizer
 
 from ..common.logging import write_caption_results
 from ..perspectives.jobs.config import PerspectivePipelineConfig
@@ -35,7 +35,7 @@ async def perspective_caption(
 
     # Get enabled perspectives
     enabled_perspectives = [
-        name for name, enabled in perspective_config.enabled_perspectives.items() 
+        name for name, enabled in perspective_config.enabled_perspectives.items()
         if enabled
     ]
     context.log.info(f"Processing enabled perspectives: {enabled_perspectives}")
@@ -164,7 +164,7 @@ def caption_output_files(
     run_dir.mkdir(parents=True, exist_ok=True)
     # Get enabled perspectives
     enabled_perspectives = [
-        name for name, enabled in perspective_pipeline_run_config.perspective.enabled_perspectives.items() 
+        name for name, enabled in perspective_pipeline_run_config.perspective.enabled_perspectives.items()
         if enabled
     ]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

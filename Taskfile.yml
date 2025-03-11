@@ -40,7 +40,7 @@ tasks:
   dev:
     desc: Start the Docker Compose services in watch mode
     cmds:
-      - docker compose up --watch --build 
+      - docker compose --env-file ./workspace/config/.env up --watch --build 
 
   start:
     desc: Start the Docker Compose services

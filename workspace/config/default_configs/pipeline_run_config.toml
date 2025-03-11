@@ -32,5 +32,6 @@ out_of_frame = true
 poetic_metaphor = true
 storytelling = true
 emotional_sentiment = true
+temporarium = true
 custom_caption = false
-synthesized_caption = true
+synthesized_caption = false
