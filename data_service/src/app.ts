@@ -16,6 +16,7 @@ import { apiReference } from '@scalar/hono-api-reference';
 import { env } from './env';
 import { logger } from './utils/logger';
 import { providerRoutes } from './api/routes/providers';
+import { checkDatabaseConnection } from './db/init';
 
 // Create OpenAPI Hono app
 const app = new OpenAPIHono();
@@ -72,8 +73,69 @@ app.openapi(healthCheckRoute, (c) => {
   });
 });
 
-// API routes
-app.route(`${env.API_PREFIX}/providers`, providerRoutes);
+// Database health check endpoint
+const dbHealthCheckRoute = createRoute({
+  method: 'get',
+  path: '/health/db',
+  tags: ['System'],
+  summary: 'Database health check endpoint',
+  description: 'Returns the health status of the database connection',
+  responses: {
+    200: {
+      description: 'Database is healthy',
+      content: {
+        'application/json': {
+          schema: z.object({
+            status: z.string(),
+            database: z.string(),
+            timestamp: z.string(),
+          }),
+        },
+      },
+    },
+    500: {
+      description: 'Database connection failed',
+      content: {
+        'application/json': {
+          schema: z.object({
+            status: z.string(),
+            error: z.string(),
+            timestamp: z.string(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+app.openapi(dbHealthCheckRoute, async (c) => {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    
+    if (isConnected) {
+      return c.json({
+        status: 'ok',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      return c.json({
+        status: 'error',
+        error: 'Database connection failed',
+        timestamp: new Date().toISOString(),
+      }, 500);
+    }
+  } catch (error) {
+    return c.json({
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown database error',
+      timestamp: new Date().toISOString(),
+    }, 500);
+  }
+});
+
+// API routes with v1 prefix
+app.route(`${env.API_PREFIX}/v1/providers`, providerRoutes);
 
 // OpenAPI documentation
 app.doc('openapi', {

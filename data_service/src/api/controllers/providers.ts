@@ -31,8 +31,18 @@ export const getProviders = async (c: Context) => {
     logger.debug({ count: allProviders.length }, 'Providers fetched successfully');
     return c.json(allProviders);
   } catch (error) {
-    logger.error({ error }, 'Error fetching providers');
-    return c.json({ error: 'Failed to fetch providers' }, 500);
+    // Log the full error details for debugging
+    logger.error({ 
+      error, 
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, 'Error fetching providers');
+    
+    // Return a more informative error response
+    return c.json({ 
+      error: 'Failed to fetch providers',
+      message: error instanceof Error ? error.message : 'Unknown database error'
+    }, 500);
   }
 };
 

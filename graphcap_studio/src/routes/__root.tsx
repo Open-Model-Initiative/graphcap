@@ -5,7 +5,8 @@ import { useFeatureFlag } from '../common/providers'
 import { FeatureFlagsPanel } from '../common/components/feature-flags'
 import { ServerConnectionsPanel } from '../common/components/server-connections'
 import { FileBrowserPanel } from '../common/components/file-browser'
-import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon } from '../common/components/icons'
+import { ProvidersPanel } from '../common/components/providers'
+import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon } from '../common/components/icons'
 
 /**
  * RouterDevTools component that conditionally renders based on feature flag
@@ -30,6 +31,12 @@ function LeftActionPanel() {
           title: 'Feature Flags',
           icon: <FlagIcon />,
           content: <FeatureFlagsPanel />
+        },
+        {
+          id: 'providers',
+          title: 'Providers',
+          icon: <ProviderIcon />,
+          content: <ProvidersPanel />
         },
         {
           id: 'settings',

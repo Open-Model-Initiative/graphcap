@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { pgTable, serial, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 /**
  * Providers table schema
@@ -19,6 +20,14 @@ export const providers = pgTable('providers', {
 });
 
 /**
+ * Define relations for providers table
+ */
+export const providersRelations = relations(providers, ({ many }) => ({
+  models: many(providerModels),
+  rateLimits: many(providerRateLimits),
+}));
+
+/**
  * Provider models table schema
  * Stores models associated with each provider
  */
@@ -32,6 +41,16 @@ export const providerModels = pgTable('provider_models', {
 });
 
 /**
+ * Define relations for provider models table
+ */
+export const providerModelsRelations = relations(providerModels, ({ one }) => ({
+  provider: one(providers, {
+    fields: [providerModels.providerId],
+    references: [providers.id],
+  }),
+}));
+
+/**
  * Provider rate limits table schema
  * Stores rate limit configurations for providers
  */
@@ -42,4 +61,14 @@ export const providerRateLimits = pgTable('provider_rate_limits', {
   tokensPerMinute: integer('tokens_per_minute'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-}); 
+});
+
+/**
+ * Define relations for provider rate limits table
+ */
+export const providerRateLimitsRelations = relations(providerRateLimits, ({ one }) => ({
+  provider: one(providers, {
+    fields: [providerRateLimits.providerId],
+    references: [providers.id],
+  }),
+})); 
