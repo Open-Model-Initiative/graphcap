@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { DatasetInitializer } from '@/features/datasets';
 import { FeatureFlagProvider } from './FeatureFlagProvider';
+import { ServerConnectionsProvider } from '../context';
 
 interface AppContextProviderProps {
   readonly children: ReactNode;
@@ -24,9 +25,11 @@ interface AppContextProviderProps {
 export function AppContextProvider({ children }: AppContextProviderProps) {
   return (
     <FeatureFlagProvider>
-      <DatasetInitializer>
-          {children}
-      </DatasetInitializer>
+      <ServerConnectionsProvider>
+        <DatasetInitializer>
+            {children}
+        </DatasetInitializer>
+      </ServerConnectionsProvider>
     </FeatureFlagProvider>
   );
 } 

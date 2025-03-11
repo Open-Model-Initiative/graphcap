@@ -18,6 +18,11 @@ const defaultFeatureFlags: FeatureFlags = {
 };
 
 /**
+ * Storage key for feature flags in localStorage
+ */
+const FEATURE_FLAGS_STORAGE_KEY = 'graphcap-feature-flags';
+
+/**
  * Context interface for feature flags
  */
 interface FeatureFlagContextType {
@@ -32,6 +37,34 @@ const FeatureFlagContext = createContext<FeatureFlagContextType>({
   featureFlags: defaultFeatureFlags,
   toggleFeatureFlag: () => {},
 });
+
+/**
+ * Load feature flags from localStorage
+ * 
+ * @returns Saved feature flags or empty object if none exist
+ */
+function loadFeatureFlagsFromStorage(): Partial<FeatureFlags> {
+  try {
+    const savedFlags = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY);
+    return savedFlags ? JSON.parse(savedFlags) : {};
+  } catch (error) {
+    console.error('Failed to load feature flags from localStorage:', error);
+    return {};
+  }
+}
+
+/**
+ * Save feature flags to localStorage
+ * 
+ * @param flags - The feature flags to save
+ */
+function saveFeatureFlagsToStorage(flags: FeatureFlags): void {
+  try {
+    localStorage.setItem(FEATURE_FLAGS_STORAGE_KEY, JSON.stringify(flags));
+  } catch (error) {
+    console.error('Failed to save feature flags to localStorage:', error);
+  }
+}
 
 /**
  * Props for the FeatureFlagProvider component
@@ -54,9 +87,14 @@ export function FeatureFlagProvider({
   children, 
   initialFlags = {} 
 }: FeatureFlagProviderProps) {
-  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
-    ...defaultFeatureFlags,
-    ...initialFlags,
+  // Initialize state from localStorage, then apply defaults and any initialFlags
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(() => {
+    const storedFlags = loadFeatureFlagsFromStorage();
+    return {
+      ...defaultFeatureFlags,
+      ...storedFlags,
+      ...initialFlags,
+    };
   });
 
   /**
@@ -65,10 +103,17 @@ export function FeatureFlagProvider({
    * @param flagName - The name of the flag to toggle
    */
   const toggleFeatureFlag = (flagName: keyof FeatureFlags) => {
-    setFeatureFlags((prevFlags) => ({
-      ...prevFlags,
-      [flagName]: !prevFlags[flagName],
-    }));
+    setFeatureFlags((prevFlags) => {
+      const newFlags = {
+        ...prevFlags,
+        [flagName]: !prevFlags[flagName],
+      };
+      
+      // Save to localStorage
+      saveFeatureFlagsToStorage(newFlags);
+      
+      return newFlags;
+    });
   };
 
   // Wrap the value in useMemo

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect, useState, useRef, RefObject } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface UseLayoutHeightResult {
-  containerRef: RefObject<HTMLDivElement>;
-  headerRef: RefObject<HTMLDivElement>;
-  contentRef: RefObject<HTMLDivElement>;
-  footerRef: RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement>;
+  headerRef: React.RefObject<HTMLDivElement>;
+  contentRef: React.RefObject<HTMLDivElement>;
+  footerRef: React.RefObject<HTMLDivElement>;
   contentHeight: number;
   isCalculating: boolean;
 }
@@ -21,6 +21,7 @@ interface UseLayoutHeightResult {
  * @returns Object containing refs and calculated heights
  */
 export function useLayoutHeight(): UseLayoutHeightResult {
+  // Create refs for layout elements
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -29,23 +30,24 @@ export function useLayoutHeight(): UseLayoutHeightResult {
   const [contentHeight, setContentHeight] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState<boolean>(true);
 
-  useEffect(() => {
-    const calculateHeights = () => {
-      setIsCalculating(true);
+  // Memoize the calculation function to prevent unnecessary re-renders
+  const calculateHeights = useCallback(() => {
+    setIsCalculating(true);
+    
+    if (containerRef.current && headerRef.current && footerRef.current) {
+      const containerHeight = containerRef.current.clientHeight;
+      const headerHeight = headerRef.current.clientHeight;
+      const footerHeight = footerRef.current.clientHeight;
       
-      if (containerRef.current && headerRef.current && footerRef.current) {
-        const containerHeight = containerRef.current.clientHeight;
-        const headerHeight = headerRef.current.clientHeight;
-        const footerHeight = footerRef.current.clientHeight;
-        
-        // Calculate available content height
-        const availableHeight = containerHeight - headerHeight - footerHeight;
-        setContentHeight(availableHeight);
-      }
-      
-      setIsCalculating(false);
-    };
+      // Calculate available content height
+      const availableHeight = containerHeight - headerHeight - footerHeight;
+      setContentHeight(availableHeight);
+    }
+    
+    setIsCalculating(false);
+  }, []);
 
+  useEffect(() => {
     // Initial calculation
     calculateHeights();
     
@@ -56,7 +58,7 @@ export function useLayoutHeight(): UseLayoutHeightResult {
     return () => {
       window.removeEventListener('resize', calculateHeights);
     };
-  }, []);
+  }, [calculateHeights]);
 
   return {
     containerRef,
@@ -65,5 +67,5 @@ export function useLayoutHeight(): UseLayoutHeightResult {
     footerRef,
     contentHeight,
     isCalculating
-  };
+  } as UseLayoutHeightResult;
 } 
