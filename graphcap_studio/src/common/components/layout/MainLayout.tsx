@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { useLayoutHeight } from './hooks'
+import { useLayoutHeight, useActionPanel } from './hooks'
 import styles from './MainLayout.module.css'
 
 interface MainLayoutProps {
   children: ReactNode
   leftSidebar?: ReactNode
   rightSidebar?: ReactNode
+  leftActionPanel?: ReactNode
+  rightActionPanel?: ReactNode
 }
 
 /**
@@ -18,12 +20,21 @@ interface MainLayoutProps {
  * - Proper height calculations for the content area
  * - Consistent header and footer placement
  * - Optional left and right sidebars
+ * - Optional collapsible action panels on left and right sides
  * 
  * @param children - The main content to display
  * @param leftSidebar - Optional left sidebar content
  * @param rightSidebar - Optional right sidebar content
+ * @param leftActionPanel - Optional left action panel content
+ * @param rightActionPanel - Optional right action panel content
  */
-export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<MainLayoutProps>) {
+export function MainLayout({ 
+  children, 
+  leftSidebar, 
+  rightSidebar,
+  leftActionPanel,
+  rightActionPanel
+}: Readonly<MainLayoutProps>) {
   const { 
     containerRef, 
     headerRef, 
@@ -32,6 +43,30 @@ export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<Mai
     contentHeight,
     isCalculating 
   } = useLayoutHeight();
+
+  // Initialize action panel hooks if panels are provided
+  const leftPanel = leftActionPanel ? useActionPanel({ 
+    side: 'left',
+    collapsedWidth: 40
+  }) : null;
+  
+  const rightPanel = rightActionPanel ? useActionPanel({ 
+    side: 'right',
+    expandedWidth: 300,
+    collapsedWidth: 40
+  }) : null;
+  
+  // Track if panels are rendered to avoid layout shifts
+  const [panelsReady, setPanelsReady] = useState(false);
+  
+  // Set panels as ready after initial render
+  useEffect(() => {
+    setPanelsReady(true);
+  }, []);
+
+  // Calculate content padding based on panel states
+  const leftPadding = leftPanel?.isExpanded ? leftPanel.width : (leftPanel?.width || 0);
+  const rightPadding = rightPanel?.isExpanded ? rightPanel.width : (rightPanel?.width || 0);
 
   // Determine content classes based on sidebar presence
   const contentClasses = `
@@ -51,7 +86,12 @@ export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<Mai
       <main 
         ref={contentRef} 
         className={contentClasses}
-        style={{ height: isCalculating ? 'auto' : `${contentHeight}px` }}
+        style={{ 
+          height: isCalculating ? 'auto' : `${contentHeight}px`,
+          paddingLeft: panelsReady && leftPanel ? `${leftPadding}px` : undefined,
+          paddingRight: panelsReady && rightPanel ? `${rightPadding}px` : undefined,
+          transition: 'padding 0.3s ease-in-out'
+        }}
       >
         <div className={styles.contentInner}>
           {children}
@@ -62,6 +102,10 @@ export function MainLayout({ children, leftSidebar, rightSidebar }: Readonly<Mai
       <div ref={footerRef} className={styles.footer}>
         <Footer />
       </div>
+
+      {/* Render action panels */}
+      {leftActionPanel && panelsReady && leftActionPanel}
+      {rightActionPanel && panelsReady && rightActionPanel}
     </div>
   )
 } 
