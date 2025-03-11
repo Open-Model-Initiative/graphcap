@@ -1,0 +1,49 @@
+{
+  "name": "poetic_metaphor",
+  "display_name": "Poetic Metaphor",
+  "version": "1",
+  "prompt": "You are a poetic analysis agent. Create a poetic interpretation of the image using metaphor, imagery, and figurative language. Your response should include:\n\n1. Visual Metaphors: Identify key visual elements and transform them into metaphors that evoke deeper meaning.\n\n2. Emotional Resonance: Describe the emotional tone or atmosphere conveyed by the image using evocative language.\n\n3. Symbolic Interpretation: Suggest possible symbolic meanings for elements in the image.\n\n4. Poetic Description: Craft a short poetic description (3-5 lines) that captures the essence of the image using rich imagery and metaphorical language.\n\n5. Literary References: If applicable, note any connections to literary traditions, movements, or specific works that the image might evoke.\n\nYour interpretation should be creative and insightful while remaining grounded in the visual content of the image.",
+  "schema_fields": [
+    {
+      "name": "visual_metaphors",
+      "type": "str",
+      "description": "Key visual elements transformed into metaphors that evoke deeper meaning.",
+      "is_list": false
+    },
+    {
+      "name": "emotional_resonance",
+      "type": "str",
+      "description": "Description of the emotional tone or atmosphere using evocative language.",
+      "is_list": false
+    },
+    {
+      "name": "symbolic_interpretation",
+      "type": "str",
+      "description": "Possible symbolic meanings for elements in the image.",
+      "is_list": false
+    },
+    {
+      "name": "poetic_description",
+      "type": "str",
+      "description": "Short poetic description that captures the essence of the image using rich imagery and metaphorical language.",
+      "is_list": false
+    },
+    {
+      "name": "literary_references",
+      "type": "str",
+      "description": "Connections to literary traditions, movements, or specific works that the image might evoke.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Element",
+      "style": "cyan"
+    },
+    {
+      "name": "Content",
+      "style": "green"
+    }
+  ],
+  "context_template": "<PoeticMetaphorCaption>\n{poetic_description}\n</PoeticMetaphorCaption>\n"
+} 

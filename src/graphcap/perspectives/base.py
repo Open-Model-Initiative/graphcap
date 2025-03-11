@@ -12,7 +12,7 @@ from typing import Any, Dict
 from pydantic import BaseModel
 from rich.table import Table
 
-from ..base_caption import BaseCaptionProcessor
+from .base_caption import BaseCaptionProcessor
 
 
 class PerspectiveData(BaseModel):

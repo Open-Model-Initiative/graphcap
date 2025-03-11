@@ -27,11 +27,11 @@ global_context = "You are a captioning perspective."
 
 [perspective.enabled]
 graph_caption = true
-art_critic = true
-out_of_frame = true
-poetic_metaphor = true
-storytelling = true
-emotional_sentiment = true
-temporarium = true
+art_critic = false
+out_of_frame = false
+poetic_metaphor = false
+storytelling = false
+emotional_sentiment = false
+temporarium = false
 custom_caption = false
 synthesized_caption = false

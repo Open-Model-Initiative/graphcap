@@ -189,7 +189,7 @@ class BaseCaptionProcessor(ABC):
         max_tokens: Optional[int] = 4096,
         temperature: Optional[float] = 0.8,
         top_p: Optional[float] = 0.9,
-        max_concurrent: Optional[int] = 4,
+        max_concurrent: Optional[int] = 1,
         repetition_penalty: Optional[float] = 1.15,
         output_dir: Optional[Path] = None,
         store_logs: bool = False,

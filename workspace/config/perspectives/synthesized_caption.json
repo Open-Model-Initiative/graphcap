@@ -1,0 +1,43 @@
+{
+  "name": "synthesized_caption",
+  "display_name": "Synthesized Caption",
+  "version": "1",
+  "prompt": "You are a synthesis agent. Create a comprehensive caption that integrates insights from multiple perspectives on this image. Your response should include:\n\n1. Integrated Description: Provide a cohesive description that combines the most important elements from different analytical perspectives.\n\n2. Key Insights: Highlight the most significant insights about the image, drawing from formal analysis, emotional tone, narrative elements, and other perspectives.\n\n3. Contextual Significance: Explain the broader significance or meaning of the image based on the combined perspectives.\n\n4. Synthesis Tags: Generate a set of tags that represent the most important themes and elements identified across all perspectives.\n\nYour synthesis should be well-balanced, drawing from objective analysis, emotional resonance, narrative elements, and artistic qualities to create a rich, multifaceted understanding of the image.",
+  "schema_fields": [
+    {
+      "name": "integrated_description",
+      "type": "str",
+      "description": "Cohesive description that combines the most important elements from different analytical perspectives.",
+      "is_list": false
+    },
+    {
+      "name": "key_insights",
+      "type": "str",
+      "description": "Most significant insights about the image, drawing from formal analysis, emotional tone, narrative elements, and other perspectives.",
+      "is_list": true
+    },
+    {
+      "name": "contextual_significance",
+      "type": "str",
+      "description": "Explanation of the broader significance or meaning of the image based on the combined perspectives.",
+      "is_list": false
+    },
+    {
+      "name": "synthesis_tags",
+      "type": "str",
+      "description": "Set of tags that represent the most important themes and elements identified across all perspectives.",
+      "is_list": true
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Component",
+      "style": "cyan"
+    },
+    {
+      "name": "Content",
+      "style": "green"
+    }
+  ],
+  "context_template": "<SynthesizedCaption>\n{integrated_description}\n\nTags: {synthesis_tags}\n</SynthesizedCaption>\n"
+} 
