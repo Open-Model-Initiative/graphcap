@@ -35,7 +35,7 @@ tasks:
   seed:
     desc: Seed the database with initial data
     cmds:
-      - docker compose -f ./docker-compose.yml exec graphcap_data_service bun run seed
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env exec graphcap_data_service bun run seed
 
   studio:
     desc: Start Drizzle Kit Studio for database management

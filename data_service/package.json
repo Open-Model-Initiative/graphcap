@@ -11,7 +11,7 @@
     "migrate": "drizzle-kit migrate",
     "generate": "drizzle-kit generate",
     "studio": "drizzle-kit studio --port 32501",
-    "seed": "bun run src/db/seed/providers.ts",
+    "seed": "bun run src/db/seed/index.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
     "test": "bun test"

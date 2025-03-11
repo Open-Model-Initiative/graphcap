@@ -70,27 +70,18 @@ export async function seedProviders() {
           tokens_per_minute: 4000000
         }
       },
-      "openrouter": {
-        kind: "openrouter",
-        environment: "cloud",
-        env_var: "OPENROUTER_API_KEY",
-        base_url: "https://openrouter.ai/api/v1",
-        models: [
-          "minimax/minimax-01",
-          "qwen/qvq-72b-preview",
-          "qwen/qvq-32b-preview",
-          "qwen/qvq-1.5b-preview",
-          "google/gemini-2.0-flash-exp:free",
-          "mistralai/pixtral-large-2411",
-          "meta-llama/llama-3.2-90b-vision-instruct:free",
-          "qwen/qwen-2-vl-72b-instruct"
-        ]
-      },
       "ollama": {
         kind: "ollama",
         environment: "local",
         env_var: "CUSTOM_PROVIDER_1_KEY",
         base_url: "http://localhost:11434",
+        fetch_models: true
+      },
+      "vllm": {
+        kind: "vllm",
+        environment: "local",
+        env_var: "CUSTOM_PROVIDER_1_KEY",
+        base_url: "http://localhost:12434",
         fetch_models: true
       }
     };
@@ -135,5 +126,6 @@ export async function seedProviders() {
     }
   } catch (error) {
     logger.error('Error seeding providers:', error);
+    throw error; // Re-throw to let the main seed script handle it
   }
 }
