@@ -35,9 +35,10 @@ services:
       - graphcap_server_db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - graphcap
 
@@ -52,10 +53,10 @@ services:
       - "32200:32200"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32200"]
-      interval: 10s
-      timeout: 5s
+      interval: 5m
+      timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     volumes:
       - ./.local/logs/graphcap_studio:/workspace/logs
       - ./workspace:/workspace
@@ -118,10 +119,10 @@ services:
           path: ./graphcap_studio/media_server/package.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 5m
+      timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     networks:
       - graphcap
 

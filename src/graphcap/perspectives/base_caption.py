@@ -404,7 +404,7 @@ class BaseCaptionProcessor(ABC):
             Dict[str, Any]: Flattened dictionary for tabular representation
         """
         pass
-    
+
     @abstractmethod
     def to_context(self, caption_data: Dict[str, Any]) -> Dict[str, Any]:
         """
