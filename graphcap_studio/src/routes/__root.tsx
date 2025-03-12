@@ -25,6 +25,7 @@ function LeftActionPanel() {
     <ActionPanel 
       side="left" 
       defaultExpanded={false}
+      expandedWidth={350}
       sections={[
         {
           id: 'feature-flags',
@@ -57,6 +58,7 @@ function RightActionPanel() {
     <ActionPanel 
       side="right"
       defaultExpanded={false}
+      expandedWidth={350}
       sections={[
         {
           id: 'server-connections',
