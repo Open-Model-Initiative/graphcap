@@ -23,7 +23,7 @@ if (import.meta.main) {
     .then(() => {
       // Use Bun's serve method with error handling
       try {
-        const server = Bun.serve({
+        Bun.serve({
           fetch: app.fetch,
           port: port,
           development: env.NODE_ENV === 'development',

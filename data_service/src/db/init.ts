@@ -17,7 +17,7 @@ import { sql } from 'drizzle-orm';
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     // Execute a simple query to check if the database is accessible
-    const result = await db.execute(sql`SELECT 1 as connected`);
+    await db.execute(sql`SELECT 1 as connected`);
     // If we get here without an error, the connection is successful
     return true;
   } catch (error) {
