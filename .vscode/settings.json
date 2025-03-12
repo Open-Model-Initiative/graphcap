@@ -2,5 +2,16 @@
     "sonarlint.connectedMode.project": {
         "connectionId": "open-model-initiative",
         "projectKey": "Open-Model-Initiative_graphcap"
-    }
+    },
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 35433,
+            "driver": "PostgreSQL",
+            "name": "graphcap_pg",
+            "database": "graphcap",
+            "username": "graphcap"
+        }
+    ]
 }

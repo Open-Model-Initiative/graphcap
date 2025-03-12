@@ -1,43 +1,55 @@
 {
   "name": "synthesized_caption",
   "display_name": "Synthesized Caption",
-  "version": "1",
-  "prompt": "You are a synthesis agent. Create a comprehensive caption that integrates insights from multiple perspectives on this image. Your response should include:\n\n1. Integrated Description: Provide a cohesive description that combines the most important elements from different analytical perspectives.\n\n2. Key Insights: Highlight the most significant insights about the image, drawing from formal analysis, emotional tone, narrative elements, and other perspectives.\n\n3. Contextual Significance: Explain the broader significance or meaning of the image based on the combined perspectives.\n\n4. Synthesis Tags: Generate a set of tags that represent the most important themes and elements identified across all perspectives.\n\nYour synthesis should be well-balanced, drawing from objective analysis, emotional resonance, narrative elements, and artistic qualities to create a rich, multifaceted understanding of the image.",
-  "schema_fields": [
-    {
-      "name": "integrated_description",
-      "type": "str",
-      "description": "Cohesive description that combines the most important elements from different analytical perspectives.",
-      "is_list": false
-    },
-    {
-      "name": "key_insights",
-      "type": "str",
-      "description": "Most significant insights about the image, drawing from formal analysis, emotional tone, narrative elements, and other perspectives.",
-      "is_list": true
-    },
-    {
-      "name": "contextual_significance",
-      "type": "str",
-      "description": "Explanation of the broader significance or meaning of the image based on the combined perspectives.",
-      "is_list": false
-    },
-    {
-      "name": "synthesis_tags",
-      "type": "str",
-      "description": "Set of tags that represent the most important themes and elements identified across all perspectives.",
-      "is_list": true
-    }
-  ],
-  "table_columns": [
-    {
-      "name": "Component",
-      "style": "cyan"
-    },
-    {
-      "name": "Content",
-      "style": "green"
-    }
-  ],
-  "context_template": "<SynthesizedCaption>\n{integrated_description}\n\nTags: {synthesis_tags}\n</SynthesizedCaption>\n"
-} 
+  "version": "2",
+  "prompt": "You are a synthesis agent. Create a comprehensive caption that integrates insights from multiple perspectives on this image. Your response should include the following components, structured in careful, sequential order to build logically upon each other:\n\n1. Synthesis Tags: Start with a set of tags identifying the most important themes and analytical elements across all perspectives.\n\n2. Short Caption: Provide a concise, engaging single-sentence caption (max 100 characters) summarizing the essential visual narrative or subject of the image.\n\n3. Narrative Caption: Construct a short narrative caption (2-3 sentences) that expands upon the Short Caption, incorporating narrative and emotional insights from storytelling and emotional sentiment perspectives.\n\n4. Explicit Reasoning: Clearly explain your thought process, step-by-step, describing how insights from different perspectives informed your integrated description.\n\n5. Integrated Description: Provide a cohesive description that combines the most important elements from formal analysis, emotional tone, narrative elements, and other perspectives.\n\n6. Key Insights: List the most significant insights about the image drawn explicitly from formal analysis, emotional tone, narrative elements, and other perspectives.\n\n6. Long Dense Caption: Craft a detailed, comprehensive narrative integrating observable elements, emotional undertones, formal properties, and narrative contexts into a nuanced, multi-layered account.\n\nEnsure the chain-of-thought process is transparent, structured, and coherent, with each earlier field logically supporting subsequent ones.",
+      "schema_fields": [
+        {
+          "name": "synthesis_tags",
+          "type": "str",
+          "description": "Key thematic and analytical tags extracted from all combined perspectives.",
+          "is_list": true
+        },
+        {
+          "name": "short_caption",
+          "type": "str",
+          "description": "Concise, engaging single-sentence caption summarizing the essential visual narrative (max 100 chars).",
+          "is_list": false
+        },
+        {
+          "name": "narrative_caption",
+          "type": "str",
+          "description": "Brief narrative caption expanding on the short caption, providing simple narrative context.",
+          "is_list": false
+        },
+        {
+          "name": "explicit_reasoning",
+          "type": "str",
+          "description": "Clear, structured step-by-step reasoning explaining how insights from different perspectives informed the integrated description.",
+          "is_list": false
+        },
+        {
+          "name": "integrated_description",
+          "type": "str",
+          "description": "Cohesive description synthesizing key insights from formal analysis, emotional sentiment, narrative, and other perspectives.",
+          "is_list": false
+        },
+        {
+          "name": "key_insights",
+          "type": "str",
+          "description": "Most significant insights from the image, drawn from multiple analytical perspectives.",
+          "is_list": true
+        },
+        {
+          "name": "long_dense_caption",
+          "type": "str",
+          "description": "Detailed narrative integrating visual, emotional, formal, and contextual insights into a nuanced account.",
+          "is_list": false
+        }
+      ],
+      "table_columns": [
+        {"name": "Component", "style": "cyan"},
+        {"name": "Content", "style": "green"}
+      ],
+  "context_template": "<SynthesizedCaption>\n{short_caption}\n\nTags: {synthesis_tags}\n</SynthesizedCaption>\n"
+}

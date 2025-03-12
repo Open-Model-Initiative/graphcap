@@ -72,6 +72,16 @@ export async function checkGraphCapServerHealth(url: string): Promise<boolean> {
 }
 
 /**
+ * Check the health of the Data Service
+ * 
+ * @param url - The base URL of the Data Service
+ * @returns A promise that resolves to a boolean indicating if the server is healthy
+ */
+export async function checkDataServiceHealth(url: string): Promise<boolean> {
+  return checkServerHealth(url);
+}
+
+/**
  * Check the health of a server by its ID
  * 
  * @param id - The ID of the server (from SERVER_IDS)
@@ -84,6 +94,8 @@ export async function checkServerHealthById(id: string, url: string): Promise<bo
       return checkMediaServerHealth(url);
     case SERVER_IDS.GRAPHCAP_SERVER:
       return checkGraphCapServerHealth(url);
+    case SERVER_IDS.DATA_SERVICE:
+      return checkDataServiceHealth(url);
     default:
       console.error(`Unknown server ID: ${id}`);
       return false;

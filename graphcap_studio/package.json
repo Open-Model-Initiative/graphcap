@@ -23,6 +23,7 @@
     "@tanstack/router-devtools": "^1.112.18",
     "@tanstack/router-plugin": "^1.113.0",
     "clsx": "^2.1.1",
+    "hono": "^4.7.4",
     "lucide-react": "^0.479.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

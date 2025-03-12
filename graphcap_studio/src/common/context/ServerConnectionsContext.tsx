@@ -11,6 +11,8 @@ interface ServerConnectionsContextValue {
   handleConnect: (id: string) => void;
   handleDisconnect: (id: string) => void;
   handleUrlChange: (id: string, url: string) => void;
+  autoConnect: () => Promise<void>;
+  isAutoConnecting: boolean;
 }
 
 // Create the context with a default value

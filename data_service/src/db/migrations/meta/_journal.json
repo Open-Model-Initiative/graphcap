@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1741712888694,
+      "tag": "0000_stale_ken_ellis",
+      "breakpoints": true
+    }
+  ]
+}

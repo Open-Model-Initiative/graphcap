@@ -1,6 +1,6 @@
 ---
-description: Current Task for the Agent
+description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
-Include Task for the branch here
+Add your task here.

@@ -6,7 +6,7 @@
   background-color: var(--panel-bg, white);
   border-color: var(--border-color, #e5e7eb);
   transition: width 0.3s ease-in-out;
-  z-index: 5; /* Below header and footer but above content */
+  z-index: 20; /* Increased z-index to be above content but below header/footer */
   display: flex;
   flex-direction: column;
   color: var(--text-color, #111827);
