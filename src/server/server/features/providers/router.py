@@ -7,12 +7,13 @@ Defines API routes for working with AI providers.
 This module provides the following endpoints:
 - GET /providers/list - List all available providers
 - GET /providers/check/{provider_name} - Check if a specific provider is available
+- GET /providers/{provider_name}/models - List available models for a specific provider
 """
 
 from fastapi import APIRouter, HTTPException
 
-from .models import ProviderListResponse
-from .service import get_available_providers, get_provider_manager
+from .models import ProviderListResponse, ProviderModelsResponse
+from .service import get_available_providers, get_provider_manager, get_provider_models
 
 router = APIRouter(prefix="/providers", tags=["providers"])
 
@@ -61,4 +62,27 @@ async def check_provider(provider_name: str) -> dict:
         "kind": provider_config.kind,
         "environment": provider_config.environment,
         "default_model": provider_config.default_model or "",
-    } 
+    }
+
+
+@router.get("/{provider_name}/models", response_model=ProviderModelsResponse)
+async def list_provider_models(provider_name: str) -> ProviderModelsResponse:
+    """
+    List available models for a specific provider.
+    
+    Args:
+        provider_name: Name of the provider to get models for
+        
+    Returns:
+        List of available models for the provider
+        
+    Raises:
+        HTTPException: If the provider is not found
+    """
+    try:
+        models = await get_provider_models(provider_name)
+        return ProviderModelsResponse(provider=provider_name, models=models)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting models: {str(e)}") 
