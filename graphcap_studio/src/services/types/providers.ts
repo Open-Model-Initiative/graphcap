@@ -102,4 +102,21 @@ export interface ProviderApiKey {
 export interface SuccessResponse {
   success: boolean;
   message: string;
+}
+
+/**
+ * Provider model info from GraphCap server
+ */
+export interface ProviderModelInfo {
+  id: string;
+  name: string;
+  is_default: boolean;
+}
+
+/**
+ * Provider models response from GraphCap server
+ */
+export interface ProviderModelsResponse {
+  provider: string;
+  models: ProviderModelInfo[];
 } 

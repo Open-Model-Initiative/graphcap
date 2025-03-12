@@ -35,10 +35,9 @@ services:
       - graphcap_server_db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - graphcap
 

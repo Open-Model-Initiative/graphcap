@@ -177,9 +177,6 @@ export function ActionPanel({
             {/* Active section content */}
             {currentSection && (
               <div className={styles.sectionContent}>
-                <div className={styles.sectionHeader}>
-                  <h3 className={styles.sectionHeaderTitle}>{currentSection.title}</h3>
-                </div>
                 <div className={styles.sectionBody}>
                   {currentSection.content}
                 </div>

@@ -16,13 +16,15 @@ import {
   ProviderCreate, 
   ProviderUpdate, 
   ProviderApiKey,
-  SuccessResponse
+  SuccessResponse,
+  ProviderModelsResponse
 } from './types/providers';
 
 // Query keys for TanStack Query
 export const queryKeys = {
   providers: ['providers'] as const,
   provider: (id: number) => [...queryKeys.providers, id] as const,
+  providerModels: (providerName: string) => [...queryKeys.providers, 'models', providerName] as const,
 };
 
 // Define a more specific type for the client
@@ -49,12 +51,7 @@ function getDataServiceUrl(connections: any[]): string {
     conn => conn.id === SERVER_IDS.DATA_SERVICE
   );
   
-  if (dataServiceConnection && dataServiceConnection.url) {
-    return dataServiceConnection.url;
-  }
-  
-  // Fallback to default URL
-  return import.meta.env.VITE_DATA_SERVICE_URL || 'http://localhost:32550';
+  return dataServiceConnection?.url || import.meta.env.VITE_DATA_SERVICE_URL || 'http://localhost:32550';
 }
 
 /**
@@ -62,7 +59,7 @@ function getDataServiceUrl(connections: any[]): string {
  */
 function createDataServiceClient(connections: any[]): DataServiceClient {
   const baseUrl = getDataServiceUrl(connections);
-  return hc<AppType>(`${baseUrl}/api/v1`) as unknown as DataServiceClient;
+  return hc<AppType>(`${baseUrl}/api/v1`) as DataServiceClient;
 }
 
 /**
@@ -227,5 +224,41 @@ export function useUpdateProviderApiKey() {
       // Invalidate specific provider query
       queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
     },
+  });
+}
+
+/**
+ * Get the GraphCap Server URL from server connections context
+ */
+function getGraphCapServerUrl(connections: any[]): string {
+  const graphcapServerConnection = connections.find(
+    conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER
+  );
+  
+  return graphcapServerConnection?.url || import.meta.env.VITE_GRAPHCAP_SERVER_URL || 'http://localhost:32100';
+}
+
+/**
+ * Hook to get available models for a provider from the GraphCap server
+ */
+export function useProviderModels(providerName: string) {
+  const { connections } = useServerConnectionsContext();
+  const graphcapServerConnection = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
+  const isConnected = graphcapServerConnection?.status === 'connected';
+  
+  return useQuery({
+    queryKey: queryKeys.providerModels(providerName),
+    queryFn: async () => {
+      const baseUrl = getGraphCapServerUrl(connections);
+      const response = await fetch(`${baseUrl}/providers/${providerName}/models`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch provider models: ${response.status}`);
+      }
+      
+      return response.json() as Promise<ProviderModelsResponse>;
+    },
+    enabled: isConnected && !!providerName,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 } 
