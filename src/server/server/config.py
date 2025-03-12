@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # Path settings
     DATASETS_PATH: Path = Path("/datasets")
-    CONFIG_PATH: Path = Path("/config")
+    CONFIG_PATH: Path = Path("/workspace/config")
     PROVIDER_CONFIG_PATH: Optional[Path] = None
 
     def __init__(self, **kwargs):

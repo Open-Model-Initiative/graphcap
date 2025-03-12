@@ -177,6 +177,16 @@ class JsonPerspectiveProcessor(BasePerspective):
 
         return context
 
+    @property
+    def config_name(self) -> str:
+        """Get the configuration name."""
+        return self.config.name
+
+    @property
+    def version(self) -> str:
+        """Get the perspective version."""
+        return self.config.version
+
 
 def load_perspective_config(config_path: Union[str, Path]) -> PerspectiveConfig:
     """Load a perspective configuration from a JSON file."""

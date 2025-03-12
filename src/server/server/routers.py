@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from .features.jobs.router import router as dagster_job_router
+from .features.perspectives.router import router as perspectives_router
+from .features.providers.router import router as providers_router
 
-routers = [dagster_job_router]
+routers = [perspectives_router, providers_router]
 
 main_router = APIRouter()
 
