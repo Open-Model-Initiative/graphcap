@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ServerConnection } from '../types';
-import { SERVER_IDS, SERVER_NAMES, DEFAULT_URLS } from '../constants';
+import { SERVER_IDS, SERVER_NAMES, DEFAULT_URLS, CONNECTION_STATUS } from '../constants';
 import { checkServerHealthById } from '../../services/serverConnections';
 
 // Local storage keys
@@ -133,9 +133,13 @@ const saveConnectionsToStorage = (connections: ServerConnection[]): void => {
 export function useServerConnections() {
   // Initialize connections with values from local storage or defaults
   const [connections, setConnections] = useState<ServerConnection[]>(loadConnectionsFromStorage);
+  // Track when auto-connection is in progress
+  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
   
   // Use a ref to keep track of the latest connections without triggering re-renders
   const connectionsRef = useRef<ServerConnection[]>(connections);
+  // Use a ref to track if auto-connect has already been performed
+  const hasAutoConnectedRef = useRef(false);
   
   // Update the ref whenever connections change
   useEffect(() => {
@@ -221,10 +225,64 @@ export function useServerConnections() {
     );
   }, []);
   
+  /**
+   * Automatically connect to all servers with valid URLs that are not already connected
+   */
+  const autoConnect = useCallback(async () => {
+    // Don't auto-connect if already in progress
+    if (isAutoConnecting) {
+      return;
+    }
+    
+    // Get all server IDs with valid URLs that are not already connected
+    const serversToConnect = connections
+      .filter(conn => 
+        conn.url && 
+        conn.url.trim() !== '' && 
+        conn.status !== CONNECTION_STATUS.CONNECTED && 
+        conn.status !== CONNECTION_STATUS.TESTING
+      )
+      .map(conn => conn.id);
+    
+    if (serversToConnect.length === 0) {
+      return;
+    }
+    
+    setIsAutoConnecting(true);
+    
+    try {
+      // Connect to each server in sequence
+      for (const serverId of serversToConnect) {
+        await handleConnect(serverId);
+        // Add a small delay between connection attempts to avoid overwhelming the network
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } finally {
+      setIsAutoConnecting(false);
+      // Mark that auto-connect has been performed
+      hasAutoConnectedRef.current = true;
+    }
+  }, [handleConnect, connections, isAutoConnecting]);
+  
+  // Auto-connect to servers when the component mounts, but only once
+  useEffect(() => {
+    // Only auto-connect if it hasn't been done yet
+    if (!hasAutoConnectedRef.current) {
+      // Use a small delay to ensure the UI is rendered before connection attempts start
+      const timer = setTimeout(() => {
+        autoConnect();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoConnect]);
+  
   return {
     connections,
     handleConnect,
     handleDisconnect,
-    handleUrlChange
+    handleUrlChange,
+    autoConnect,
+    isAutoConnecting
   };
 } 
