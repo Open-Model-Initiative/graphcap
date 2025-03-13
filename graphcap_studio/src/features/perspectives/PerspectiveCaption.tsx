@@ -6,8 +6,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useGeneratePerspectiveCaption, usePerspectives } from '@/services/perspectives/hooks';
-import { CaptionOptions, CaptionResponse } from '@/services/perspectives/types';
+import { useGeneratePerspectiveCaption, usePerspectives } from './services/hooks';
+import { CaptionOptions, CaptionResponse } from './services/types';
 import { Provider } from '@/services/types/providers';
 
 interface PerspectiveCaptionProps {

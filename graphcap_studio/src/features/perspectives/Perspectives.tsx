@@ -11,9 +11,9 @@ import { PerspectiveUIProvider } from './context/PerspectiveUIContext';
 import { usePerspectivesContext } from './context/PerspectivesContext';
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { PerspectiveHeader } from './components/PerspectiveHeader';
-import { PerspectiveSchema } from '@/services/perspectives/types';
+import { PerspectiveSchema } from '@/features/perspectives/services/types';
 import { Image } from '@/services/images';
-import { useImagePerspectives } from '@/services/perspectives';
+import { useImagePerspectives } from '@/features/perspectives/services';
 
 interface PerspectivesProps {
   image: Image | null;

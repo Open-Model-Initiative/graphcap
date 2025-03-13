@@ -6,7 +6,7 @@
  */
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { PerspectiveType, usePerspectives, Perspective } from '@/services/perspectives';
+import { PerspectiveType, usePerspectives, Perspective } from '@/features/perspectives/services';
 
 interface PerspectivesContextType {
   // UI state
