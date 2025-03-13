@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Perspectives Service
+ * 
+ * This module provides functions for interacting with the GraphCap Server's
+ * perspectives API using TanStack Query.
+ */
+
+// Export types
+export * from './types';
+
+// Export constants
+export * from './constants';
+
+// Export utility functions
+export * from './utils';
+
+// Export API methods
+export { perspectivesApi } from './api';
+
+// Export hooks
+export * from './hooks'; 

@@ -9,7 +9,8 @@ services:
     ports:
       - 32100:32100
     volumes:
-      - ./src:/app
+      - ./src/graphcap:/app/graphcap
+      - ./src/server/server:/app/server/server
       - ./workspace:/workspace
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
