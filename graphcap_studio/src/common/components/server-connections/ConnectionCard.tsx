@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
 import { ConnectionCardProps } from '../../types/connectionComponents';
+import {
+  Box,
+  Stack,
+  Heading,
+  Flex,
+} from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 /**
  * ConnectionCard component
@@ -13,28 +20,41 @@ export const ConnectionCard = memo(function ConnectionCard({
   actions,
   status
 }: ConnectionCardProps) {
+  const bgColor = useColorModeValue('gray.50', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'gray.100');
+
   return (
-    <div className="border rounded-md p-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
-      <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+    <Box 
+      bg={bgColor} 
+      borderColor={borderColor} 
+      borderWidth="1px"
+      borderRadius="lg"
+      p={4}
+      shadow="sm"
+      _hover={{ shadow: 'md' }}
+      transition="all 0.2s"
+    >
+      <Heading size="sm" mb={3} color={textColor}>
         {title}
-      </h3>
+      </Heading>
       
-      <div className="space-y-3 max-w-full">
+      <Stack gap={4}>
         {/* URL Input */}
-        <div className="w-full">
+        <Box w="full">
           {urlInput}
-        </div>
+        </Box>
         
         {/* Controls and Status */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <Flex justify="space-between" align="center" gap={4}>
+          <Box>
             {actions}
-          </div>
-          <div>
+          </Box>
+          <Box>
             {status}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Flex>
+      </Stack>
+    </Box>
   );
 }); 

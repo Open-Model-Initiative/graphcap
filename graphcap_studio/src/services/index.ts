@@ -35,6 +35,6 @@ export {
   useUpdateProvider,
   useDeleteProvider,
   useUpdateProviderApiKey
-} from './providers';
+} from '../features/inference/services/providers';
 
 

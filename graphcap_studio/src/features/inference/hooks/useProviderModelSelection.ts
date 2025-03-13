@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
-import { useProviders, useProviderModels } from '../../../../services/providers';
+import { useProviders, useProviderModels } from '../services/providers';
 
 /**
  * Custom hook to handle provider and model selection logic

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo, ChangeEvent } from 'react';
 import { ConnectionUrlInputProps } from '../../types/connectionComponents';
+import { Input } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 /**
  * ConnectionUrlInput component
@@ -16,12 +18,19 @@ export const ConnectionUrlInput = memo(function ConnectionUrlInput({
     onUrlChange(e.target.value);
   };
   
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.300', 'gray.700');
+  const textColor = useColorModeValue('gray.900', 'gray.100');
+  
   return (
-    <input
+    <Input
       type="text"
       value={url}
       onChange={handleChange}
-      className="w-full px-2 py-1 text-sm border rounded text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+      size="sm"
+      bg={bgColor}
+      borderColor={borderColor}
+      color={textColor}
       aria-label={`${serverName} URL`}
     />
   );

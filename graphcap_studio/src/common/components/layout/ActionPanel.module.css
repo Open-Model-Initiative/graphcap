@@ -1,15 +1,9 @@
 /* ActionPanel.module.css */
 .panel {
-  position: fixed;
-  top: 0; /* Flush with header */
-  bottom: 0; /* Flush with footer */
-  background-color: var(--panel-bg, white);
-  border-color: var(--border-color, #e5e7eb);
-  transition: width 0.3s ease-in-out;
-  z-index: 20; /* Increased z-index to be above content but below header/footer */
   display: flex;
   flex-direction: column;
-  color: var(--text-color, #111827);
+  height: 100vh;
+  overflow: hidden;
 }
 
 .leftPanel {
@@ -24,26 +18,24 @@
 
 /* Restore the toggle button but with improved positioning */
 .toggleButton {
-  display: flex;
-  position: absolute;
-  top: 4.5rem; /* Position below the header */
-  z-index: 30;
-  width: 1.5rem;
-  height: 1.5rem;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
-  background-color: var(--toggle-bg, #e5e7eb);
-  color: var(--toggle-color, #111827);
-  transition: all 0.2s;
-  cursor: pointer;
-  border: 1px solid var(--border-color, #e5e7eb);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 0 !important;
+  height: 80px !important;
+  width: 16px !important;
+  background: var(--chakra-colors-gray-100);
+  border: 1px solid var(--chakra-colors-gray-200) !important;
+  transition: background-color 0.2s !important;
 }
 
 .toggleButton:hover {
-  background-color: var(--toggle-hover-bg, #d1d5db);
-  color: var(--toggle-hover-color, #000000);
+  background: var(--chakra-colors-gray-200) !important;
+}
+
+.toggleButton svg {
+  width: 12px;
+  height: 12px;
 }
 
 .leftToggle {
@@ -57,13 +49,10 @@
 }
 
 .panelContent {
-  height: 100%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  /* Add padding to account for header and footer */
-  padding-top: 3.5rem; /* Height of header */
-  padding-bottom: 3rem; /* Height of footer */
+  padding: var(--chakra-space-2);
+  gap: var(--chakra-space-2);
 }
 
 /* Icon navigation in collapsed mode */
@@ -104,31 +93,22 @@
 .sectionTabs {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  gap: var(--chakra-space-1);
 }
 
 .sectionTab {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  gap: 0.75rem;
-  background-color: transparent;
-  border: none;
+  width: 100%;
   text-align: left;
-  cursor: pointer;
+  border-radius: 4px;
   transition: background-color 0.2s;
-  color: var(--tab-color, #4b5563);
 }
 
 .sectionTab:hover {
-  background-color: var(--tab-hover-bg, #f9fafb);
-  color: var(--tab-hover-color, #111827);
+  background: var(--chakra-colors-gray-100);
 }
 
 .activeTab {
-  background-color: var(--active-tab-bg, #f3f4f6);
-  color: var(--active-tab-color, #111827);
-  font-weight: 500;
+  background: var(--chakra-colors-gray-100);
 }
 
 .sectionIcon {
@@ -147,9 +127,9 @@
 /* Section content */
 .sectionContent {
   flex: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .sectionHeader {
@@ -166,7 +146,7 @@
 .sectionBody {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: var(--chakra-space-2);
 }
 
 /* Dark mode support */

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, FormEvent, useCallback } from 'react';
-import { Provider, ProviderCreate, ProviderUpdate } from '../../types/providers';
+import { Provider, ProviderCreate, ProviderUpdate } from '../../../services/types/providers';
 import { DEFAULT_PROVIDER_FORM_DATA } from '../constants';
-import { useCreateProvider, useUpdateProvider } from '../../providers';
+import { useCreateProvider, useUpdateProvider } from '@/features/inference/services/providers';
 
 /**
  * Custom hook for managing provider form state and operations

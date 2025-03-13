@@ -7,5 +7,5 @@ export { default as ProviderDetails } from './ProviderDetails';
 export { ModelSelectionSection } from './ModelSelectionSection';
 export { FormFields } from './FormFields';
 export { FormActions } from './FormActions';
-export * from './hooks';
+export * from '../../../features/inference/hooks';
 export * from './context'; 

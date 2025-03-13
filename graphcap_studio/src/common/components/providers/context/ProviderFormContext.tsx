@@ -2,7 +2,7 @@
 import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { ProviderCreate, ProviderUpdate } from '../../../../services/types/providers';
 import { ProviderFormData } from '../form';
-import { useProviderForm, useModelSelection } from '../hooks';
+import { useProviderForm, useModelSelection } from '../../../../features/inference/hooks';
 
 type ProviderFormContextType = {
   // Form state

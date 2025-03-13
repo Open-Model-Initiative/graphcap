@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Image } from '@/services/images';
-import { useProviders } from '@/services/providers';
+import { useProviders } from '@/features/inference/services/providers';
 import { createLogger } from '@/common/utils/logger';
 import { 
   ImageCaptions, 
