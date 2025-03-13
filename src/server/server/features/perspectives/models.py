@@ -112,4 +112,29 @@ class CaptionFormRequest:
                 self.context = json.loads(context)
             except json.JSONDecodeError:
                 # If not valid JSON array, treat as a single context item
-                self.context = [context] 
+                self.context = [context]
+
+
+class CaptionPathRequest(BaseModel):
+    """Request model for generating a caption with a perspective using a file path."""
+
+    perspective: str = Field(..., description="Name of the perspective to use")
+    image_path: str = Field(..., description="Path to the image file in the workspace")
+    provider: str = Field("gemini", description="Name of the provider to use")
+    max_tokens: Optional[int] = Field(4096, description="Maximum number of tokens in the response")
+    temperature: Optional[float] = Field(0.8, description="Temperature for generation")
+    top_p: Optional[float] = Field(0.9, description="Top-p sampling parameter")
+    repetition_penalty: Optional[float] = Field(1.15, description="Repetition penalty")
+    context: Optional[Union[List[str], str]] = Field(None, description="Additional context for the caption")
+    global_context: Optional[str] = Field(None, description="Global context for the caption")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "perspective": "custom_caption",
+                "image_path": "/workspace/datasets/example.jpg",
+                "provider": "gemini",
+                "max_tokens": 4096,
+                "temperature": 0.8
+            }
+        } 
