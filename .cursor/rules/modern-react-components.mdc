@@ -16,7 +16,7 @@ React has evolved significantly over the years, and with it, the way we write co
 4. Employ component composition
 5. Keep components small and focused
 6. Utilize Context api for UI state
-
+7. Utilize the logger in [logger.ts](mdc:graphcap_studio/src/common/utils/logger.ts) for structured logging
 
 <Warning>
 1. **Constants:**  

@@ -12,8 +12,8 @@ import {
   PerspectiveListResponseSchema, 
   CaptionResponseSchema,
   CaptionRequestSchema
-} from './types';
-import { API_ENDPOINTS } from './constants';
+} from '../types';
+import { API_ENDPOINTS } from '../constants';
 import { ensureWorkspacePath, handleApiError } from './utils';
 
 /**

@@ -11,9 +11,13 @@ import { PerspectiveUIProvider } from './context/PerspectiveUIContext';
 import { usePerspectivesContext } from './context/PerspectivesContext';
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { PerspectiveHeader } from './components/PerspectiveHeader';
-import { PerspectiveSchema } from '@/features/perspectives/services/types';
+import { PerspectiveSchema } from '@/features/perspectives/types';
 import { Image } from '@/services/images';
 import { useImagePerspectives } from '@/features/perspectives/services';
+import { createLogger } from '@/common/utils/logger';
+
+// Create a logger instance for this component
+const logger = createLogger('PerspectivesComponent');
 
 interface PerspectivesProps {
   image: Image | null;
@@ -41,22 +45,34 @@ export function Perspectives({ image }: PerspectivesProps) {
     generatedPerspectives,
   } = useImagePerspectives(image);
 
-  // Combine loading and error states
-  const isLoading = contextLoading || imageLoading;
+  const isPerspectivesListLoading = contextLoading;
   const error = contextError || imageError;
+
+  // Log the perspectives data
+  logger.info(`Perspectives data received: ${perspectives ? perspectives.length : 0} perspectives`, { 
+    perspectiveNames: perspectives?.map(p => p.name).join(', ') || 'none'
+  });
 
   // Convert perspectives array to schema record
   const schemas = React.useMemo(() => {
-    return perspectives.reduce((acc, perspective) => {
+    const result = perspectives.reduce((acc, perspective) => {
       if (perspective.schema) {
         acc[perspective.name] = perspective.schema;
       }
       return acc;
     }, {} as Record<string, PerspectiveSchema>);
+    
+    // Log the schemas
+    logger.info(`Converted ${Object.keys(result).length} perspectives to schemas`, { 
+      schemaKeys: Object.keys(result).join(', ') || 'none'
+    });
+    
+    return result;
   }, [perspectives]);
 
-  // Handle loading state
-  if (isLoading) {
+  // Handle loading state for perspectives list only
+  if (isPerspectivesListLoading) {
+    logger.info('Rendering loading state');
     return (
       <div className="space-y-4">
         <PerspectiveHeader isLoading={true} />
@@ -67,6 +83,7 @@ export function Perspectives({ image }: PerspectivesProps) {
 
   // Handle error state
   if (error) {
+    logger.error('Rendering error state', { error: error instanceof Error ? error.message : error });
     return (
       <div className="p-4 bg-gray-800 rounded-lg">
         <div className="text-gray-400 text-center">
@@ -82,6 +99,7 @@ export function Perspectives({ image }: PerspectivesProps) {
 
   // Handle empty schemas
   if (Object.keys(schemas).length === 0) {
+    logger.warn('No schemas available, rendering empty state');
     return (
       <div className="space-y-4">
         <PerspectiveHeader isLoading={false} />
@@ -90,6 +108,7 @@ export function Perspectives({ image }: PerspectivesProps) {
     );
   }
 
+  logger.info(`Rendering ${Object.keys(schemas).length} perspective cards`);
   return (
     <div className="space-y-4">
       <PerspectiveHeader isLoading={false} />
@@ -102,10 +121,10 @@ export function Perspectives({ image }: PerspectivesProps) {
               data={captions?.perspectives[key]?.content || null}
               isActive={activePerspective === key}
               isGenerated={!!captions?.perspectives[key]}
-              onGenerate={(providerId) => generatePerspective(key, providerId)}
+              onGenerate={(providerId, options) => generatePerspective(key, providerId, options)}
               onSetActive={() => handleSelectPerspective(key)}
               providers={availableProviders}
-              isGenerating={generatedPerspectives.includes(key)}
+              isGenerating={generatedPerspectives.includes(key) && imageLoading}
             />
           ))}
         </div>

@@ -9,7 +9,7 @@ import { useCallback } from 'react';
 import { Image } from '@/services/images';
 import { useImagePerspectives } from '@/features/perspectives/services';
 import { usePerspectivesContext } from '../context/PerspectivesContext';
-import { PerspectiveType } from '@/features/perspectives/services/types';
+import { PerspectiveType } from '@/features/perspectives/types';
 
 interface UsePerspectiveOperationsResult {
   // Data

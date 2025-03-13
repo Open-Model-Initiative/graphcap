@@ -5,5 +5,14 @@
  * This module exports hooks for the perspectives components.
  */
 
+// UI Hooks
 export { usePerspectiveUI } from './usePerspectiveUI';
-export { usePerspectiveOperations } from './usePerspectiveOperations'; 
+export { usePerspectiveOperations } from './usePerspectiveOperations';
+
+// API Hooks
+export { usePerspectives } from './usePerspectives';
+export { useGeneratePerspectiveCaption } from './useGeneratePerspectiveCaption';
+export { useImagePerspectives } from './useImagePerspectives';
+
+// Utilities
+export * from './utils'; 

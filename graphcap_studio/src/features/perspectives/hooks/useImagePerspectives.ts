@@ -1,124 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Perspectives Service Hooks
+ * useImagePerspectives Hook
  * 
- * This module provides React Query hooks for interacting with the perspectives service.
+ * This hook manages perspective data for a specific image.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useServerConnectionsContext } from '../../../common/context/ServerConnectionsContext';
-import { SERVER_IDS } from '../../../common/constants';
-import { 
-  CaptionOptions, 
-  CaptionResponse, 
-  PerspectiveListResponse,
-  ImageCaptions,
-  PerspectiveType,
-  PerspectiveData,
-  ImagePerspectivesResult
-} from './types';
-import { API_ENDPOINTS, CACHE_TIMES, DEFAULTS, perspectivesQueryKeys } from './constants';
-import { ensureWorkspacePath, getGraphCapServerUrl, handleApiError } from './utils';
 import { Image } from '@/services/images';
 import { useProviders } from '@/services/providers';
-import { perspectivesApi } from './api';
+import { createLogger } from '@/common/utils/logger';
+import { 
+  ImageCaptions, 
+  PerspectiveType, 
+  PerspectiveData, 
+  ImagePerspectivesResult,
+  CaptionOptions
+} from '../types';
+import { DEFAULTS } from '../services/constants';
+import { usePerspectives } from './usePerspectives';
+import { useGeneratePerspectiveCaption } from './useGeneratePerspectiveCaption';
 
-/**
- * Hook to get all available perspectives
- */
-export function usePerspectives() {
-  const { connections } = useServerConnectionsContext();
-  const graphcapServerConnection = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
-  const isConnected = graphcapServerConnection?.status === 'connected';
-  
-  return useQuery({
-    queryKey: perspectivesQueryKeys.perspectives,
-    queryFn: async () => {
-      const baseUrl = getGraphCapServerUrl(connections);
-      const response = await fetch(`${baseUrl}${API_ENDPOINTS.LIST_PERSPECTIVES}`);
-      
-      if (!response.ok) {
-        await handleApiError(response, 'Failed to fetch perspectives');
-      }
-      
-      return response.json() as Promise<PerspectiveListResponse>;
-    },
-    enabled: isConnected,
-    staleTime: CACHE_TIMES.PERSPECTIVES_STALE_TIME,
-  });
-}
-
-/**
- * Hook to generate a caption for an image using a perspective
- */
-export function useGeneratePerspectiveCaption() {
-  const queryClient = useQueryClient();
-  const { connections } = useServerConnectionsContext();
-  
-  return useMutation({
-    mutationFn: async ({ 
-      imagePath, 
-      perspective, 
-      provider = DEFAULTS.PROVIDER,
-      options = {}
-    }: { 
-      imagePath: string; 
-      perspective: string; 
-      provider?: string;
-      options?: CaptionOptions;
-    }) => {
-      // Get the base URL for the GraphCap server
-      const baseUrl = getGraphCapServerUrl(connections);
-      
-      // Prepare the request for the REST API
-      const request = {
-        perspective,
-        image_path: imagePath,
-        provider,
-        // Add optional parameters if provided
-        ...(options.max_tokens && { max_tokens: options.max_tokens }),
-        ...(options.temperature && { temperature: options.temperature }),
-        ...(options.top_p && { top_p: options.top_p }),
-        ...(options.repetition_penalty && { repetition_penalty: options.repetition_penalty }),
-        ...(options.global_context && { global_context: options.global_context }),
-        ...(options.context && { context: options.context }),
-      };
-      
-      // Ensure the image path has the correct workspace prefix
-      const normalizedImagePath = ensureWorkspacePath(request.image_path);
-      console.log('Generating caption for image path:', normalizedImagePath);
-      
-      // Update the request with the normalized path
-      const normalizedRequest = {
-        ...request,
-        image_path: normalizedImagePath,
-      };
-      
-      // Make the API request directly instead of using perspectivesApi
-      const response = await fetch(`${baseUrl}${API_ENDPOINTS.REST_GENERATE_CAPTION}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(normalizedRequest),
-      });
-      
-      if (!response.ok) {
-        await handleApiError(response, 'Failed to generate caption');
-      }
-      
-      const data = await response.json();
-      return data as CaptionResponse;
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate the specific caption query
-      queryClient.invalidateQueries({ 
-        queryKey: perspectivesQueryKeys.caption(variables.imagePath, variables.perspective) 
-      });
-    },
-  });
-}
+// Create a logger instance for this hook
+const logger = createLogger('PerspectivesHooks');
 
 /**
  * Hook for fetching and managing perspective data for an image
@@ -133,7 +36,12 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   const [captions, setCaptions] = useState<ImageCaptions | null>(null);
   const [activePerspective, setActivePerspective] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatingPerspectives, setGeneratingPerspectives] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  
+  logger.debug('useImagePerspectives hook initialized', { 
+    imagePath: image?.path
+  });
   
   // Derived state
   const generatedPerspectives = captions ? Object.keys(captions.perspectives) : [];
@@ -151,7 +59,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   const generateCaption = useGeneratePerspectiveCaption();
   
   // Derived state for available perspectives
-  const availablePerspectives = perspectivesData?.perspectives || [];
+  const availablePerspectives = perspectivesData || [];
   
   // Derived state for available providers
   const availableProviders = providersData?.map(provider => ({
@@ -164,19 +72,31 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     if (captions && generatedPerspectives.length > 0 && !activePerspective) {
       // Prefer graph_caption if available, otherwise use the first available perspective
       if (generatedPerspectives.includes('graph_caption')) {
+        logger.debug('Setting active perspective to graph_caption');
         setActivePerspective('graph_caption');
       } else {
+        logger.debug(`Setting active perspective to ${generatedPerspectives[0]}`);
         setActivePerspective(generatedPerspectives[0]);
       }
     }
   }, [captions, generatedPerspectives, activePerspective]);
   
   // Function to generate a perspective using the perspectives API
-  const generatePerspective = useCallback(async (perspective: PerspectiveType, providerId?: number) => {
-    if (!image) return;
+  const generatePerspective = useCallback(async (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions) => {
+    if (!image) {
+      logger.warn('Cannot generate perspective: No image provided');
+      return;
+    }
     
-    console.log(`Generating perspective: ${perspective}`);
+    logger.info(`Generating perspective: ${perspective}`, { 
+      imagePath: image.path,
+      providerId,
+      options
+    });
+    
     setError(null);
+    // Track which perspective is being generated
+    setGeneratingPerspectives(prev => [...prev, perspective]);
     setIsLoading(true);
     
     try {
@@ -186,20 +106,26 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         const provider = providersData.find(p => p.id === providerId);
         if (provider) {
           providerName = provider.name;
+          logger.debug(`Using provider: ${providerName} (ID: ${providerId})`);
+        } else {
+          logger.warn(`Provider with ID ${providerId} not found, using default: ${providerName}`);
         }
       }
-      console.log("Generating caption for perspective:", perspective, "with provider:", providerName);
       
       // Generate the caption
       const result = await generateCaption.mutateAsync({
         imagePath: image.path,
         perspective,
-        provider: providerName,
-        options: {
+        providerId,
+        options: options || {
           temperature: 0.7,
           max_tokens: 4096
         }
       });
+      
+      // Log the caption result
+      logger.debug('Caption generation result received');
+      logger.debug(`Caption content for perspective ${perspective}:`, result.content);
       
       // Create a perspective data object
       const perspectiveData: PerspectiveData = {
@@ -207,13 +133,14 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         version: '1.0',
         model: 'api-generated',
         provider: providerName,
-        content: result.result
+        content: result.content || {} // Ensure content is not undefined
       };
       
       // Update the captions with the new perspective
       setCaptions(prevCaptions => {
         if (!prevCaptions) {
           // Create a new captions object if none exists
+          logger.debug('Creating new captions object');
           return {
             image,
             perspectives: {
@@ -228,6 +155,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         }
         
         // Update existing captions
+        logger.debug('Updating existing captions');
         return {
           ...prevCaptions,
           perspectives: {
@@ -244,31 +172,82 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       });
       
       // Set the new perspective as active
+      logger.info(`Setting active perspective to ${perspective}`);
       setActivePerspective(perspective);
     } catch (err) {
-      console.error('Error generating perspective:', err);
+      logger.error('Error generating perspective', err);
       setError(err instanceof Error ? err.message : 'Failed to generate perspective');
     } finally {
-      setIsLoading(false);
+      // Remove the perspective from the generating list
+      setGeneratingPerspectives(prev => prev.filter(p => p !== perspective));
+      // Only set isLoading to false if no perspectives are being generated
+      setIsLoading(prev => {
+        const updatedGenerating = generatingPerspectives.filter(p => p !== perspective);
+        return updatedGenerating.length > 0;
+      });
     }
-  }, [image, providersData, generateCaption]);
+  }, [image, providersData, generateCaption, generatingPerspectives]);
   
   // Function to generate all perspectives
   const generateAllPerspectives = useCallback(async () => {
-    if (!image || !perspectivesData) return;
+    if (!image || !perspectivesData) {
+      logger.warn('Cannot generate all perspectives: No image or perspectives data');
+      return;
+    }
     
-    console.log('Generating all perspectives');
+    logger.info('Generating all perspectives', { 
+      imagePath: image.path,
+      perspectiveCount: perspectivesData.length
+    });
+    
     setIsLoading(true);
+    // Track all perspectives as generating
+    setGeneratingPerspectives(perspectivesData.map(p => p.name));
     
     try {
       // Generate each perspective one by one
-      for (const perspective of perspectivesData.perspectives) {
+      for (const perspective of perspectivesData) {
+        logger.debug(`Generating perspective: ${perspective.name}`);
         await generatePerspective(perspective.name);
       }
+      
+      logger.info('All perspectives generated successfully');
+    } catch (err) {
+      logger.error('Error generating all perspectives', err);
     } finally {
       setIsLoading(false);
+      setGeneratingPerspectives([]);
     }
   }, [image, perspectivesData, generatePerspective]);
+  
+  // Log when the hook's return value changes
+  useEffect(() => {
+    logger.debug('useImagePerspectives state updated', {
+      isLoading,
+      hasError: error !== null,
+      hasCaptions: captions !== null,
+      activePerspective,
+      generatedPerspectiveCount: generatedPerspectives.length,
+      availablePerspectiveCount: availablePerspectives.length,
+      availableProviderCount: availableProviders.length,
+      generatingPerspectives
+    });
+    
+    // Log the current perspective content if available
+    if (perspectiveData && perspectiveData.content) {
+      logger.debug('Current perspective content:', perspectiveData.content);
+    }
+  }, [
+    isLoading, 
+    error, 
+    captions, 
+    activePerspective, 
+    generatedPerspectives, 
+    availablePerspectives, 
+    availableProviders,
+    perspectiveData,
+    generatingPerspectives
+  ]);
   
   return {
     isLoading,
@@ -276,6 +255,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     captions,
     activePerspective,
     generatedPerspectives,
+    generatingPerspectives,
     setActivePerspective,
     generatePerspective,
     generateAllPerspectives,

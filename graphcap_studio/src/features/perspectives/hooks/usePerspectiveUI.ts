@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { PerspectiveType } from '@/features/perspectives/services/types';
+import { PerspectiveType } from '@/features/perspectives/types';
 
 interface UsePerspectiveUIOptions {
   onGeneratePerspective?: (perspective: PerspectiveType, providerId?: number) => void;
