@@ -14,6 +14,36 @@ from pydantic import BaseModel, Field, create_model
 from ..providers.models import ProviderInfo
 
 
+class SchemaField(BaseModel):
+    """Schema field information for a perspective."""
+
+    name: str = Field(..., description="Name of the field")
+    type: str = Field(..., description="Type of the field (str, float)")
+    description: str = Field(..., description="Description of the field")
+    is_list: bool = Field(False, description="Whether the field is a list")
+    is_complex: bool = Field(False, description="Whether the field is a complex type")
+    fields: Optional[List['SchemaField']] = Field(None, description="Fields for complex types")
+
+
+class TableColumn(BaseModel):
+    """Table column information for a perspective."""
+
+    name: str = Field(..., description="Name of the column")
+    style: str = Field(..., description="Style of the column")
+
+
+class PerspectiveSchema(BaseModel):
+    """Schema information for a perspective."""
+
+    name: str = Field(..., description="Name of the schema")
+    display_name: str = Field(..., description="Display name of the schema")
+    version: str = Field(..., description="Version of the schema")
+    prompt: str = Field(..., description="Prompt template for the perspective")
+    schema_fields: List[SchemaField] = Field(..., description="Fields in the schema")
+    table_columns: List[TableColumn] = Field(..., description="Table columns for display")
+    context_template: str = Field(..., description="Template for context generation")
+
+
 class PerspectiveInfo(BaseModel):
     """Information about a perspective."""
 
@@ -21,6 +51,7 @@ class PerspectiveInfo(BaseModel):
     display_name: str = Field(..., description="Human-readable name for the perspective")
     version: str = Field(..., description="Version of the perspective")
     description: str = Field("", description="Description of what the perspective analyzes")
+    schema: Optional[PerspectiveSchema] = Field(None, description="Schema information for the perspective")
 
 
 class PerspectiveListResponse(BaseModel):

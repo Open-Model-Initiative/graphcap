@@ -6,6 +6,7 @@ Provides services for working with perspective captions.
 """
 
 import base64
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -21,7 +22,7 @@ from graphcap.providers.clients.base_client import BaseClient
 from loguru import logger
 
 from ..providers.service import get_provider_manager
-from .models import PerspectiveInfo
+from .models import PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
 
 
 async def download_image(url: str) -> Path:
@@ -99,12 +100,82 @@ async def save_base64_image(base64_data: str) -> Path:
         raise HTTPException(status_code=400, detail=f"Error saving base64 image: {str(e)}")
 
 
+def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema]:
+    """
+    Load the schema for a perspective from its configuration file.
+    
+    Args:
+        perspective_name: Name of the perspective
+        
+    Returns:
+        Schema information for the perspective, or None if not found
+    """
+    try:
+        # Construct the path to the schema file
+        schema_path = Path("/workspace/config/perspectives") / f"{perspective_name}.json"
+        
+        # Check if the schema file exists
+        if not schema_path.exists():
+            logger.warning(f"Schema file not found for perspective {perspective_name}")
+            return None
+            
+        # Load and parse the schema file
+        with open(schema_path, "r") as f:
+            schema_data = json.load(f)
+            
+        # Convert the schema data to our models
+        schema_fields = []
+        for field_data in schema_data.get("schema_fields", []):
+            # Convert nested fields for complex types
+            nested_fields = None
+            if field_data.get("fields"):
+                nested_fields = [
+                    SchemaField(
+                        name=f["name"],
+                        type=f["type"],
+                        description=f["description"],
+                        is_list=f.get("is_list", False),
+                        is_complex=f.get("is_complex", False)
+                    )
+                    for f in field_data["fields"]
+                ]
+                
+            schema_fields.append(
+                SchemaField(
+                    name=field_data["name"],
+                    type=field_data["type"],
+                    description=field_data["description"],
+                    is_list=field_data.get("is_list", False),
+                    is_complex=field_data.get("is_complex", False),
+                    fields=nested_fields
+                )
+            )
+            
+        table_columns = [
+            TableColumn(name=col["name"], style=col["style"])
+            for col in schema_data.get("table_columns", [])
+        ]
+        
+        return PerspectiveSchema(
+            name=schema_data["name"],
+            display_name=schema_data["display_name"],
+            version=schema_data["version"],
+            prompt=schema_data["prompt"],
+            schema_fields=schema_fields,
+            table_columns=table_columns,
+            context_template=schema_data["context_template"]
+        )
+    except Exception as e:
+        logger.error(f"Error loading schema for perspective {perspective_name}: {str(e)}")
+        return None
+
+
 def get_available_perspectives() -> List[PerspectiveInfo]:
     """
-    Get a list of available perspectives.
+    Get a list of available perspectives with their schemas.
     
     Returns:
-        List of perspective information
+        List of perspective information including schemas
     """
     perspective_names = get_perspective_list()
     perspectives = []
@@ -112,12 +183,15 @@ def get_available_perspectives() -> List[PerspectiveInfo]:
     for name in perspective_names:
         try:
             perspective = get_perspective(name)
+            schema = load_perspective_schema(perspective.config_name)
+            
             perspectives.append(
                 PerspectiveInfo(
                     name=perspective.config_name,
                     display_name=perspective.display_name,
                     version=perspective.version,
                     description="",  # Could be added to the perspective config in the future
+                    schema=schema
                 )
             )
         except Exception as e:

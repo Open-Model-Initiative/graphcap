@@ -5,64 +5,67 @@
  * This component displays a perspective with controls.
  */
 
-import { ReactNode } from 'react';
+import React from 'react';
 import { Button } from '@/common/ui';
-import { usePerspectiveUI } from './hooks';
+import { usePerspectiveUI } from './context/PerspectiveUIContext';
 import { PERSPECTIVE_CLASSES } from './constants';
-import { PerspectiveType } from '@/services/perspectives/types';
+import { PerspectiveContent } from './PerspectiveContent';
+import { SchemaView } from './components/SchemaView';
+import { PerspectiveSchema, Provider } from '@/services/perspectives/types';
 
 interface PerspectiveCardProps {
-  readonly title: string;
-  readonly description: string;
-  readonly type: string;
-  readonly isActive: boolean;
-  readonly isGenerated: boolean;
-  readonly onGenerate: (providerId?: number) => void;
-  readonly onSetActive: () => void;
-  readonly children?: ReactNode;
-  readonly providers?: Array<{ id: number; name: string }>;
-  readonly isGenerating?: boolean;
-  readonly perspectiveKey?: string;
+  schema: PerspectiveSchema;
+  data: Record<string, any> | null;
+  isActive: boolean;
+  isGenerated: boolean;
+  onGenerate: (providerId?: number) => void;
+  onSetActive: () => void;
+  providers?: Provider[];
+  isGenerating?: boolean;
 }
+
+type TabType = 'prompt' | 'caption' | 'schema';
 
 /**
  * Card component for displaying a perspective with controls
  */
 export function PerspectiveCard({
-  title,
-  description,
-  type,
+  schema,
+  data,
   isActive,
   isGenerated,
   onGenerate,
   onSetActive,
-  children,
   providers = [],
   isGenerating = false,
-  perspectiveKey
 }: PerspectiveCardProps) {
-  // Create a wrapper function to match the expected signature
-  const handleGeneratePerspective = (perspective: PerspectiveType, providerId?: number) => {
-    onGenerate(providerId);
+  const [selectedProviderId, setSelectedProviderId] = React.useState<number | undefined>();
+  const [activeTab, setActiveTab] = React.useState<TabType>('prompt');
+
+  const handleProviderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setSelectedProviderId(value ? Number(value) : undefined);
   };
 
-  const { selectedProviderId, handleProviderChange, handleGenerate } = usePerspectiveUI({
-    onGeneratePerspective: handleGeneratePerspective,
-    perspectiveKey: perspectiveKey as PerspectiveType
-  });
+  const handleGenerate = () => {
+    onGenerate(selectedProviderId);
+  };
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
   
   return (
     <div className={`${PERSPECTIVE_CLASSES.CARD.BASE} ${
       isActive ? PERSPECTIVE_CLASSES.CARD.ACTIVE : PERSPECTIVE_CLASSES.CARD.INACTIVE
     }`}>
       {/* Card Header */}
-      <div className={PERSPECTIVE_CLASSES.HEADER.BASE}>
+      <div className="p-4 bg-gray-800">
         <div className="flex justify-between items-start">
           <div>
-            <h4 className="font-medium text-gray-200">{title}</h4>
-            <p className="text-xs text-gray-400 mt-1">{description}</p>
+            <h4 className="font-medium text-gray-200">{schema.display_name}</h4>
             <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300">
-              {type}
+              {schema.name}
             </span>
           </div>
           
@@ -79,17 +82,67 @@ export function PerspectiveCard({
         </div>
       </div>
       
-      {/* Content Area */}
-      {isActive && isGenerated && children && (
-        <div className={PERSPECTIVE_CLASSES.CONTENT.BASE}>
-          {children}
-        </div>
-      )}
+      {/* Tabs - Always visible */}
+      <div className="flex border-b border-gray-700">
+        <button
+          className={`flex-1 px-4 py-2 text-sm font-medium ${
+            activeTab === 'prompt'
+              ? 'text-blue-500 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+          onClick={() => handleTabChange('prompt')}
+        >
+          Prompt
+        </button>
+        <button
+          className={`flex-1 px-4 py-2 text-sm font-medium ${
+            activeTab === 'caption'
+              ? 'text-blue-500 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+          onClick={() => handleTabChange('caption')}
+        >
+          Caption
+        </button>
+        <button
+          className={`flex-1 px-4 py-2 text-sm font-medium ${
+            activeTab === 'schema'
+              ? 'text-blue-500 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+          onClick={() => handleTabChange('schema')}
+        >
+          Schema
+        </button>
+      </div>
+
+      {/* Tab Content - Always visible */}
+      <div className="p-4 bg-gray-900">
+        {activeTab === 'prompt' ? (
+          <div className="prose prose-invert max-w-none">
+            <p className="text-sm text-gray-300 whitespace-pre-wrap">{schema.prompt}</p>
+          </div>
+        ) : activeTab === 'caption' ? (
+          isGenerated && data ? (
+            <PerspectiveContent
+              perspectiveKey={schema.name}
+              data={data}
+              className="perspective-content"
+            />
+          ) : (
+            <div className="text-sm text-gray-400 text-center py-4">
+              No caption generated yet
+            </div>
+          )
+        ) : (
+          <SchemaView schema={schema} />
+        )}
+      </div>
       
-      {/* Action Bar - Always present */}
-      <div className={PERSPECTIVE_CLASSES.ACTION_BAR.BASE}>
-        <div className="flex items-center space-x-2">
-          {isGenerated ? (
+      {/* Action Bar */}
+      <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
             <Button
               variant={isActive ? "primary" : "secondary"}
               size="sm"
@@ -103,48 +156,46 @@ export function PerspectiveCard({
             >
               {isActive ? 'Active' : 'View'}
             </Button>
-          ) : (
-            <></>
-          )}
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          {providers.length > 0 && (
-            <select
-              className={PERSPECTIVE_CLASSES.SELECT.BASE}
-              value={selectedProviderId || ''}
-              onChange={handleProviderChange}
-              disabled={isGenerating}
-            >
-              <option value="">Default Provider</option>
-              {providers.map(provider => (
-                <option key={provider.id} value={provider.id}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
-          )}
+          </div>
           
-          <Button
-            variant={isGenerated ? "success" : "primary"}
-            size="sm"
-            onClick={handleGenerate}
-            isLoading={isGenerating}
-            disabled={isGenerating}
-            leftIcon={
-              isGenerated ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              )
-            }
-          >
-            {isGenerated ? (isGenerating ? 'Regenerating...' : 'Regenerate') : (isGenerating ? 'Generating...' : 'Generate')}
-          </Button>
+          <div className="flex items-center space-x-2">
+            {providers.length > 0 && (
+              <select
+                className={PERSPECTIVE_CLASSES.SELECT.BASE}
+                value={selectedProviderId || ''}
+                onChange={handleProviderChange}
+                disabled={isGenerating}
+              >
+                <option value="">Default Provider</option>
+                {providers.map(provider => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            
+            <Button
+              variant={isGenerated ? "success" : "primary"}
+              size="sm"
+              onClick={handleGenerate}
+              isLoading={isGenerating}
+              disabled={isGenerating}
+              leftIcon={
+                isGenerated ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                )
+              }
+            >
+              {isGenerated ? (isGenerating ? 'Regenerating...' : 'Regenerate') : (isGenerating ? 'Generating...' : 'Generate')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
