@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo, useCallback } from 'react';
 import { Provider } from '../../../services/types/providers';
-import { useDeleteProvider, useUpdateProviderApiKey } from '../../../services/providers';
+import { useDeleteProvider, useUpdateProviderApiKey } from '../../../features/inference/services/providers';
+import {
+  Box,
+  Button,
+  Flex,
+  Stack,
+  Text,
+  Circle,
+  List,
+  Fieldset,
+} from '@chakra-ui/react';
+import { useColorMode } from '@/components/ui/color-mode';
 
 type ProviderDetailsProps = {
   readonly provider: Provider;
@@ -14,6 +25,10 @@ type ProviderDetailsProps = {
 function ProviderDetails({ provider, onEdit }: ProviderDetailsProps) {
   const deleteProvider = useDeleteProvider();
   const updateApiKey = useUpdateProviderApiKey();
+  const { colorMode } = useColorMode();
+  
+  const textColor = colorMode === 'light' ? 'gray.600' : 'gray.300';
+  const labelColor = colorMode === 'light' ? 'gray.500' : 'gray.400';
   
   const handleDelete = useCallback(() => {
     if (confirm(`Are you sure you want to delete ${provider.name}?`)) {
@@ -29,94 +44,120 @@ function ProviderDetails({ provider, onEdit }: ProviderDetailsProps) {
   }, [provider.id, updateApiKey]);
   
   return (
-    <div className="p-4">
-      <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-sm font-medium">{provider.name}</h3>
-        <div className="flex space-x-2">
-          <button
-            className="text-xs px-2 py-1 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors duration-150"
-            onClick={onEdit}
-          >
-            Edit
-          </button>
-          <button
-            className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-150"
-            onClick={handleDelete}
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-      
-      <div className="space-y-3 text-sm">
-        <div>
-          <p className="text-xs text-gray-500">Kind</p>
-          <p>{provider.kind}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Environment</p>
-          <p>{provider.environment}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Base URL</p>
-          <p className="break-all">{provider.baseUrl}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Environment Variable</p>
-          <p>{provider.envVar}</p>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">API Key</p>
-          <div className="flex items-center space-x-2">
-            <p>{provider.apiKey ? '••••••••' : 'Not set'}</p>
-            <button
-              className="text-xs px-2 py-1 bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition-colors duration-150"
-              onClick={handleUpdateApiKey}
+    <Box p={4}>
+      <Fieldset.Root size="lg">
+        <Stack>
+          <Fieldset.Legend>{provider.name}</Fieldset.Legend>
+          <Stack direction="row" gap={2} justify="flex-end">
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="gray"
+              onClick={onEdit}
             >
-              Update
-            </button>
-          </div>
-        </div>
-        <div>
-          <p className="text-xs text-gray-500">Status</p>
-          <p>{provider.isEnabled ? 'Enabled' : 'Disabled'}</p>
-        </div>
-        
-        {/* Models */}
-        <div>
-          <p className="text-xs text-gray-500 mb-1">Models</p>
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              colorScheme="red"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </Stack>
+        </Stack>
+
+        <Fieldset.Content>
+          <Stack direction="column" gap={3}>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>Kind</Text>
+              <Text color={textColor}>{provider.kind}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>Environment</Text>
+              <Text color={textColor}>{provider.environment}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>Base URL</Text>
+              <Text color={textColor} wordBreak="break-all">{provider.baseUrl}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>Environment Variable</Text>
+              <Text color={textColor}>{provider.envVar}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>API Key</Text>
+              <Stack direction="row" gap={2}>
+                <Text color={textColor}>{provider.apiKey ? '••••••••' : 'Not set'}</Text>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  colorScheme="gray"
+                  onClick={handleUpdateApiKey}
+                >
+                  Update
+                </Button>
+              </Stack>
+            </Box>
+            <Box>
+              <Text fontSize="sm" color={labelColor}>Status</Text>
+              <Text color={textColor}>{provider.isEnabled ? 'Enabled' : 'Disabled'}</Text>
+            </Box>
+          </Stack>
+        </Fieldset.Content>
+      </Fieldset.Root>
+
+      {/* Models Section */}
+      <Fieldset.Root size="lg" mt={6}>
+        <Fieldset.Legend>Models</Fieldset.Legend>
+        <Fieldset.Content>
           {provider.models && provider.models.length > 0 ? (
-            <ul className="text-xs space-y-1">
+            <List.Root variant="plain">
               {provider.models.map(model => (
-                <li key={model.id} className="flex items-center justify-between">
-                  <span>{model.name}</span>
-                  <span className={`w-2 h-2 rounded-full ${model.isEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </li>
+                <List.Item key={model.id}>
+                  <Flex justify="space-between" align="center">
+                    <Text fontSize="sm" color={textColor}>{model.name}</Text>
+                    <Circle 
+                      size="2" 
+                      bg={model.isEnabled ? 'green.500' : 'gray.300'} 
+                    />
+                  </Flex>
+                </List.Item>
               ))}
-            </ul>
+            </List.Root>
           ) : (
-            <p className="text-xs text-gray-500">No models configured</p>
+            <Text fontSize="sm" color={labelColor}>No models configured</Text>
           )}
-        </div>
-        
-        {/* Rate Limits */}
-        <div>
-          <p className="text-xs text-gray-500 mb-1">Rate Limits</p>
+        </Fieldset.Content>
+      </Fieldset.Root>
+
+      {/* Rate Limits Section */}
+      <Fieldset.Root size="lg" mt={6}>
+        <Fieldset.Legend>Rate Limits</Fieldset.Legend>
+        <Fieldset.Content>
           {provider.rateLimits ? (
-            <ul className="text-xs space-y-1">
+            <List.Root variant="plain">
               {provider.rateLimits.requestsPerMinute && (
-                <li>Requests per minute: {provider.rateLimits.requestsPerMinute}</li>
+                <List.Item>
+                  <Text fontSize="sm" color={textColor}>
+                    Requests per minute: {provider.rateLimits.requestsPerMinute}
+                  </Text>
+                </List.Item>
               )}
               {provider.rateLimits.tokensPerMinute && (
-                <li>Tokens per minute: {provider.rateLimits.tokensPerMinute}</li>
+                <List.Item>
+                  <Text fontSize="sm" color={textColor}>
+                    Tokens per minute: {provider.rateLimits.tokensPerMinute}
+                  </Text>
+                </List.Item>
               )}
-            </ul>
+            </List.Root>
           ) : (
-            <p className="text-xs text-gray-500">No rate limits configured</p>
+            <Text fontSize="sm" color={labelColor}>No rate limits configured</Text>
           )}
-        </div>
-      </div>
-    </div>
+        </Fieldset.Content>
+      </Fieldset.Root>
+    </Box>
   );
 }
 

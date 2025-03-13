@@ -6,6 +6,8 @@ import { ProviderFormProvider, useProviderFormContext } from './context';
 import { FormFields } from './FormFields';
 import { ModelSelectionSection } from './ModelSelectionSection';
 import { FormActions } from './FormActions';
+import { Box, Heading, Stack, VStack } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
 
 type ProviderFormProps = {
   readonly initialData?: Partial<ProviderCreate | ProviderUpdate>;
@@ -41,26 +43,28 @@ function ProviderForm(props: ProviderFormProps) {
  */
 function FormContent() {
   const { handleSubmit, onSubmit, providerName } = useProviderFormContext();
+  const textColor = useColorModeValue('gray.700', 'gray.200');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-4">
-      <h3 className="text-sm font-medium mb-4">
+    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4}>
+      <Heading size="sm" mb={4} color={textColor}>
         {providerName ? `Edit Provider: ${providerName}` : 'Add Provider'}
-      </h3>
+      </Heading>
       
-      <div className="space-y-4">
+      <VStack gap={4} align="stretch">
         <FormFields />
         
         {/* Model Selection Section */}
         {providerName && (
-          <div className="mt-4 border-t pt-4">
+          <Box borderTop="1px" borderColor={borderColor} pt={4}>
             <ModelSelectionSection />
-          </div>
+          </Box>
         )}
         
         <FormActions />
-      </div>
-    </form>
+      </VStack>
+    </Box>
   );
 }
 

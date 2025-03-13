@@ -2,11 +2,12 @@
 import { memo } from 'react';
 import { CONNECTION_STATUS } from '../../constants';
 import { ConnectionStatusIndicatorProps } from '../../types/connectionComponents';
+import { Status } from '@/components/ui/status';
 
 /**
  * ConnectionStatusIndicator component
  * 
- * Displays a visual indicator of the connection status
+ * Displays a visual indicator of the connection status using Chakra UI Status component
  */
 export const ConnectionStatusIndicator = memo(function ConnectionStatusIndicator({
   status
@@ -14,23 +15,27 @@ export const ConnectionStatusIndicator = memo(function ConnectionStatusIndicator
   switch (status) {
     case CONNECTION_STATUS.CONNECTED:
       return (
-        <span className="px-2 py-1 text-xs bg-green-500 text-white rounded">
+        <Status value="success" size="sm">
           Connected
-        </span>
+        </Status>
       );
     case CONNECTION_STATUS.TESTING:
       return (
-        <span className="px-2 py-1 text-xs bg-yellow-500 text-white rounded">
+        <Status value="warning" size="sm">
           Testing...
-        </span>
+        </Status>
       );
     case CONNECTION_STATUS.ERROR:
       return (
-        <span className="px-2 py-1 text-xs bg-red-500 text-white rounded">
+        <Status value="error" size="sm">
           Error
-        </span>
+        </Status>
       );
     default:
-      return null;
+      return (
+        <Status value="info" size="sm">
+          Disconnected
+        </Status>
+      );
   }
 }); 

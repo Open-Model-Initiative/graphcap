@@ -42,7 +42,7 @@ function Index() {
           </Text>
           
           <Box mb={6}>
-            <Link as={RouterLink} to="/gallery" _hover={{ textDecoration: 'none' }}>
+            <Link as={RouterLink} to="/gallery/os_home" _hover={{ textDecoration: 'none' }}>
               <Button 
                 colorScheme="blue" 
                 bg={buttonBgColor}

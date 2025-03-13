@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useCallback } from 'react';
-import { useProviderModels } from '../../../../services/providers';
+import { useProviderModels } from '../services/providers';
 
 /**
  * Custom hook for managing model selection
