@@ -1,29 +1,53 @@
+import { 
+  Box, 
+  Flex, 
+  Text, 
+  Link as ChakraLink, 
+  Stack
+} from '@chakra-ui/react'
+import { useColorModeValue } from '@/components/ui/color-mode'
+
 export function Footer() {
+  const bgColor = useColorModeValue('white', 'gray.900')
+  const borderColor = useColorModeValue('gray.200', 'gray.800')
+  const textColor = useColorModeValue('gray.600', 'gray.400')
+  const hoverColor = useColorModeValue('gray.900', 'white')
+
   return (
-    <footer className="h-8 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-      <div className="h-full px-4 flex items-center justify-between">
-        <div className="text-xs text-gray-600 dark:text-gray-400">
+    <Box 
+      as="footer" 
+      h="8" 
+      bg={bgColor} 
+      borderTop="1px" 
+      borderColor={borderColor}
+    >
+      <Flex h="full" px="4" align="center" justify="space-between">
+        <Text fontSize="xs" color={textColor}>
           {new Date().getFullYear()} graphcap Studio - alpha client
-        </div>
-        <div className="flex space-x-3">
-          <a 
+        </Text>
+        <Stack direction="row" gap="3">
+          <ChakraLink 
             href="https://github.com/fearnworks/graphcap" 
-            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            fontSize="xs"
+            color={textColor}
+            _hover={{ color: hoverColor }}
             target="_blank"
             rel="noopener noreferrer"
           >
             GitHub
-          </a>
-          <a 
+          </ChakraLink>
+          <ChakraLink 
             href="https://fearnworks.github.io/graphcap/" 
-            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            fontSize="xs"
+            color={textColor}
+            _hover={{ color: hoverColor }}
             target="_blank"
             rel="noopener noreferrer"
           >
             Documentation
-          </a>
-        </div>
-      </div>
-    </footer>
+          </ChakraLink>
+        </Stack>
+      </Flex>
+    </Box>
   )
 } 

@@ -1,36 +1,84 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link as RouterLink } from '@tanstack/react-router'
+import { 
+  Box, 
+  Heading, 
+  Text, 
+  Button, 
+  List, 
+  ListItem, 
+  Container,
+  Card,
+  CardBody,
+  CardHeader,
+  Link,
+  VStack,
+  Icon
+} from "@chakra-ui/react"
+import { useColorModeValue } from "@/components/ui/color-mode"
+import { MdCircle } from "react-icons/md"
 
 export const Route = createFileRoute('/')({
   component: Index,
 })
 
 function Index() {
+  const bgColor = useColorModeValue("gray.50", "gray.800")
+  const cardBgColor = useColorModeValue("white", "gray.700")
+  const textColor = useColorModeValue("gray.800", "gray.200")
+  const headingColor = useColorModeValue("gray.900", "white")
+  const buttonBgColor = useColorModeValue("blue.500", "blue.400")
+  const buttonHoverBgColor = useColorModeValue("blue.600", "blue.500")
+
   return (
-    <div className="p-2 text-white">
-      <h3 className="text-xl font-bold mb-4 text-white">Welcome to graphcap Studio!</h3>
-      <p className="mb-4 text-gray-200">Dashboard currently under construction. Please go to the Gallery to view the available datasets.</p>
-      <div className="mb-6">
-        <Link 
-          to="/gallery"
-          className="px-3 py-2 rounded-md text-sm bg-gray-900 text-white hover:bg-gray-700 transition-colors"
-        >
-          Go to Gallery
-        </Link>
-      </div>
-      
-      <div className="bg-gray-800 p-4 rounded-md mb-6">
-        <h4 className="text-lg font-semibold mb-2 text-white">Getting Started</h4>
-        <p className="text-sm mb-2 text-gray-200">
-          Use the side panels to access various tools and settings:
-        </p>
-        <ul className="text-sm list-disc pl-5 space-y-1 mb-2 text-gray-200">
-          <li>Left panel: Feature flags and application settings</li>
-          <li>Right panel: Server connections and file browser</li>
-        </ul>
-        <p className="text-sm text-gray-200">
-          Click the toggle buttons on the edges of the screen to expand or collapse the panels.
-        </p>
-      </div>
-    </div>
+    <Box p={4} bg={bgColor} color={textColor}>
+      <Container maxW="container.lg">
+        <VStack gap={6} align="stretch">
+          <Heading as="h3" size="lg" mb={2} color={headingColor}>
+            Welcome to graphcap Studio!
+          </Heading>
+          
+          <Text mb={4}>
+            Dashboard currently under construction. Please go to the Gallery to view the available datasets.
+          </Text>
+          
+          <Box mb={6}>
+            <Link as={RouterLink} to="/gallery" _hover={{ textDecoration: 'none' }}>
+              <Button 
+                colorScheme="blue" 
+                bg={buttonBgColor}
+                _hover={{ bg: buttonHoverBgColor }}
+                size="md"
+              >
+                Go to Gallery
+              </Button>
+            </Link>
+          </Box>
+          
+          <Card.Root bg={cardBgColor} mb={6} shadow="md">
+            <Card.Header pb={0}>
+              <Heading size="md" color={headingColor}>Getting Started</Heading>
+            </Card.Header>
+            <Card.Body>
+              <Text mb={2}>
+                Use the side panels to access various tools and settings:
+              </Text>
+              <List.Root gap={1} mb={2}>
+                <List.Item display="flex" alignItems="center">
+                  <Icon as={MdCircle} color="blue.500" fontSize="xs" mr={2} />
+                  Left panel: Feature flags and application settings
+                </List.Item>
+                <List.Item display="flex" alignItems="center">
+                  <Icon as={MdCircle} color="blue.500" fontSize="xs" mr={2} />
+                  Right panel: Server connections and file browser
+                </List.Item>
+              </List.Root>
+              <Text>
+                Click the toggle buttons on the edges of the screen to expand or collapse the panels.
+              </Text>
+            </Card.Body>
+          </Card.Root>
+        </VStack>
+      </Container>
+    </Box>
   )
 }

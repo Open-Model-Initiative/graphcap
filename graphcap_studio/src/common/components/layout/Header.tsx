@@ -1,93 +1,180 @@
-import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { 
+  Box, 
+  Flex, 
+  Stack, 
+  Text, 
+  Button, 
+  IconButton, 
+  useDisclosure
+} from '@chakra-ui/react'
+import { useColorModeValue } from '@/components/ui/color-mode'
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isOpen, onToggle } = useDisclosure()
+  const bgColor = useColorModeValue('white', 'gray.900')
+  const borderColor = useColorModeValue('gray.200', 'gray.800')
+  const textColor = useColorModeValue('gray.900', 'white')
+  const navTextColor = useColorModeValue('gray.700', 'gray.200')
+  const navHoverBg = useColorModeValue('gray.100', 'gray.800')
 
   return (
-    <header className="h-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-10">
-      <div className="h-full px-4 flex items-center justify-between">
+    <Box 
+      as="header" 
+      h="10" 
+      bg={bgColor} 
+      borderBottom="1px" 
+      borderColor={borderColor} 
+      zIndex="10"
+    >
+      <Flex h="full" px="4" align="center" justify="space-between">
         {/* Logo and brand */}
-        <div className="flex items-center space-x-4">
-          <Link to="/" className="text-xs font-semibold text-gray-900 dark:text-white">
-            graphcap Studio
+        <Flex align="center" gap="4">
+          <Link to="/">
+            <Text fontSize="xs" fontWeight="semibold" color={textColor}>
+              graphcap Studio
+            </Text>
           </Link>
-        </div>
+        </Flex>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-3">
-          <Link 
-            to="/" 
-            className="px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            Home
-          </Link>
-          <Link 
-            to="/gallery/os_img" 
-            className="px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            Gallery
-          </Link>
-          <a 
-            href="http://localhost:32300" 
-            className="px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            Pipelines
-          </a>
-          <Link 
-            to="/debug" 
-            className="px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            Debug
-          </Link>
-        </nav>
-
-        {/* Mobile menu button */}
-        <button
-          className="md:hidden p-1 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          <span className="sr-only">Open menu</span>
-          {/* Hamburger icon */}
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden absolute z-20 inset-x-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-          <div className="px-2 pt-1 pb-2 space-y-0.5">
-            <Link 
-              to="/" 
-              className="block px-3 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+        <Stack direction="row" display={{ base: 'none', md: 'flex' }} gap="3">
+          <Link to="/">
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              px="2" 
+              py="1" 
+              color={navTextColor} 
+              _hover={{ bg: navHoverBg }}
             >
               Home
-            </Link>
-            <Link 
-              to="/gallery" 
-              className="block px-3 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+            </Button>
+          </Link>
+          <Link to="/gallery">
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              px="2" 
+              py="1" 
+              color={navTextColor} 
+              _hover={{ bg: navHoverBg }}
             >
               Gallery
-            </Link>
-            <Link 
-              to="/workflows" 
-              className="block px-3 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Workflows
-            </Link>
-            <Link 
-              to="/debug" 
-              className="block px-3 py-1 rounded-md text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+            </Button>
+          </Link>
+          <Button 
+            as="a" 
+            href="http://localhost:32300" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            variant="ghost" 
+            size="xs" 
+            px="2" 
+            py="1" 
+            color={navTextColor} 
+            _hover={{ bg: navHoverBg }}
+          >
+            Pipelines
+          </Button>
+          <Link to="/debug">
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              px="2" 
+              py="1" 
+              color={navTextColor} 
+              _hover={{ bg: navHoverBg }}
             >
               Debug
+            </Button>
+          </Link>
+        </Stack>
+
+        {/* Mobile menu button */}
+        <IconButton
+          display={{ base: 'flex', md: 'none' }}
+          onClick={onToggle}
+          aria-label="Toggle Navigation"
+          size="sm"
+          color={navTextColor}
+          _hover={{ bg: navHoverBg }}
+        />
+      </Flex>
+
+      {/* Mobile menu */}
+      {isOpen && (
+        <Box 
+          display={{ base: 'block', md: 'none' }}
+          position="absolute" 
+          zIndex="20" 
+          w="full" 
+          bg={bgColor} 
+          borderBottom="1px" 
+          borderColor={borderColor}
+        >
+          <Stack direction="column" align="stretch" px="2" pt="1" pb="2" gap="0.5">
+            <Link to="/">
+              <Button 
+                w="full" 
+                justifyContent="flex-start" 
+                variant="ghost" 
+                size="xs" 
+                px="3" 
+                py="1" 
+                color={navTextColor} 
+                _hover={{ bg: navHoverBg }}
+              >
+                Home
+              </Button>
             </Link>
-          </div>
-        </div>
+            <Link to="/gallery">
+              <Button 
+                w="full" 
+                justifyContent="flex-start" 
+                variant="ghost" 
+                size="xs" 
+                px="3" 
+                py="1" 
+                color={navTextColor} 
+                _hover={{ bg: navHoverBg }}
+              >
+                Gallery
+              </Button>
+            </Link>
+            <Button 
+              as="a" 
+              href="http://localhost:32300" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              w="full" 
+              justifyContent="flex-start" 
+              variant="ghost" 
+              size="xs" 
+              px="3" 
+              py="1" 
+              color={navTextColor} 
+              _hover={{ bg: navHoverBg }}
+            >
+              Pipelines
+            </Button>
+            <Link to="/debug">
+              <Button 
+                w="full" 
+                justifyContent="flex-start" 
+                variant="ghost" 
+                size="xs" 
+                px="3" 
+                py="1" 
+                color={navTextColor} 
+                _hover={{ bg: navHoverBg }}
+              >
+                Debug
+              </Button>
+            </Link>
+          </Stack>
+        </Box>
       )}
-    </header>
+    </Box>
   )
 } 

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { Provider } from '@/components/ui/provider'
 
 // Import styles
 import './index.css'
@@ -42,14 +43,16 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App>
-          <AppContextProvider>
-            <RouterProvider router={router} />
-            <DevTools />
-          </AppContextProvider>
-        </App>
-      </QueryClientProvider>
+      <Provider>
+        <QueryClientProvider client={queryClient}>
+          <App>
+            <AppContextProvider>
+              <RouterProvider router={router} />
+              <DevTools />
+            </AppContextProvider>
+          </App>
+        </QueryClientProvider>
+      </Provider>
     </StrictMode>,
   )
 }
