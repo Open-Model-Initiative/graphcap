@@ -7,7 +7,7 @@
  */
 
 import { ReactNode } from 'react';
-import { PERSPECTIVE_CLASSES } from '../../constants';
+import { PERSPECTIVE_CLASSES } from '../constants';
 
 export interface PerspectiveCardProps {
   readonly title: string;

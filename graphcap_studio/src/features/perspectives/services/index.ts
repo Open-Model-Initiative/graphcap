@@ -7,10 +7,7 @@
  */
 
 // Export types
-export * from './types';
-
-// Export constants
-export * from './constants';
+export * from '@/features/perspectives/types';
 
 // Export utility functions
 export * from './utils';
@@ -18,5 +15,9 @@ export * from './utils';
 // Export API methods
 export { perspectivesApi } from './api';
 
-// Export hooks
-export * from './hooks'; 
+// Export hooks from the hooks directory
+export {
+  usePerspectives,
+  useGeneratePerspectiveCaption,
+  useImagePerspectives
+} from '@/features/perspectives/hooks'; 

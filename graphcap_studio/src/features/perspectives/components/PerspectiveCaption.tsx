@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useGeneratePerspectiveCaption, usePerspectives } from '@/features/perspectives/services/hooks';
 import { Provider } from '@/services/types/providers';
-import { PERSPECTIVE_CLASSES } from '../../constants';
+import { PERSPECTIVE_CLASSES } from '../constants';
 
 export interface PerspectiveCaptionProps {
   readonly imagePath: string;
