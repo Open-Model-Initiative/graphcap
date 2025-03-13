@@ -8,7 +8,7 @@
 import { useState, useCallback } from 'react';
 import { useGeneratePerspectiveCaption, usePerspectives } from './services/hooks';
 import { CaptionOptions, CaptionResponse } from './services/types';
-import { Provider } from '@/services/types/providers';
+import { Provider } from '@/features/inference/providers/types';
 
 interface PerspectiveCaptionProps {
   readonly imagePath: string;

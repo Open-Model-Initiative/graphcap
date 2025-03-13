@@ -18,7 +18,7 @@ import {
   ProviderApiKey,
   SuccessResponse,
   ProviderModelsResponse
-} from '../../../services/types/providers';
+} from '../providers/types';
 
 // Query keys for TanStack Query
 export const queryKeys = {

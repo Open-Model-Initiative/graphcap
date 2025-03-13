@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext, ReactNode, useCallback, useMemo } from 'react';
-import { ProviderCreate, ProviderUpdate } from '../../../../services/types/providers';
+import { ProviderCreate, ProviderUpdate } from '../types';
 import { ProviderFormData } from '../form';
-import { useProviderForm, useModelSelection } from '../../../../features/inference/hooks';
+import { useProviderForm, useModelSelection } from '../../hooks';
 
 type ProviderFormContextType = {
   // Form state
   control: any;
   handleSubmit: any;
   errors: any;
-  providerName: string;
+  watch: any;
+  providerName: string | undefined;
   
   // Model selection state
   selectedModelId: string;
@@ -48,13 +49,13 @@ export function ProviderFormProvider({
   children,
   initialData = {},
   isCreating,
-  onSubmit,
+  onSubmit: onSubmitProp,
   onCancel,
   isSubmitting,
   onModelSelect
 }: ProviderFormProviderProps) {
   // Use the form hook
-  const { control, handleSubmit, errors, providerName } = useProviderForm(initialData);
+  const { control, handleSubmit, errors, providerName, onSubmit: onSubmitForm, watch } = useProviderForm(initialData);
   
   // Use the model selection hook
   const {
@@ -71,6 +72,14 @@ export function ProviderFormProvider({
   const handleModelSelect = useCallback(() => {
     handleModelSelectBase();
   }, [handleModelSelectBase]);
+
+  // Create a memoized version of onSubmit that calls both form and prop handlers
+  const onSubmitHandler = useCallback(async (data: ProviderFormData) => {
+    const result = await onSubmitForm(data);
+    if (result.success) {
+      onSubmitProp(data);
+    }
+  }, [onSubmitForm, onSubmitProp]);
   
   // Create the context value wrapped in useMemo to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
@@ -78,6 +87,7 @@ export function ProviderFormProvider({
     control,
     handleSubmit,
     errors,
+    watch,
     providerName,
     
     // Model selection state
@@ -94,12 +104,13 @@ export function ProviderFormProvider({
     isCreating,
     
     // Form callbacks
-    onSubmit,
+    onSubmit: onSubmitHandler,
     onCancel
   }), [
     control, 
     handleSubmit, 
     errors, 
+    watch, 
     providerName, 
     selectedModelId, 
     setSelectedModelId, 
@@ -110,7 +121,7 @@ export function ProviderFormProvider({
     handleModelSelect, 
     isSubmitting, 
     isCreating, 
-    onSubmit, 
+    onSubmitHandler, 
     onCancel
   ]);
   

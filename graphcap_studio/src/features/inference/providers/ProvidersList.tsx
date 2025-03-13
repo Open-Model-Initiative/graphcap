@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Provider } from '../../../services/types/providers';
+import { Provider } from './types';
 import { ProviderSelect } from './form';
 
 type ProvidersListProps = {
