@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+/**
+ * Perspective Content Component
+ * 
+ * This component displays the content of a perspective.
+ */
+
 import React from 'react';
-import { PerspectiveField } from './components/PerspectiveField';
 import { usePerspectiveUI } from './context/PerspectiveUIContext';
+import { SchemaFieldFactory } from './components/schema-fields';
 
 interface PerspectiveContentProps {
   perspectiveKey: string;
@@ -9,31 +15,32 @@ interface PerspectiveContentProps {
   className?: string;
 }
 
-/**
- * Component for displaying the content of a generated perspective
- * Uses a generic approach to display any perspective content
- */
-export function PerspectiveContent({ perspectiveKey, data, className = '' }: PerspectiveContentProps) {
+export function PerspectiveContent({
+  perspectiveKey,
+  data,
+  className = '',
+}: PerspectiveContentProps) {
   const { schemas } = usePerspectiveUI();
   const schema = schemas[perspectiveKey];
 
   if (!schema) {
     return (
-      <div className="text-red-500 p-4">
-        Error: Schema not found for perspective {perspectiveKey}
+      <div className="text-sm text-gray-400 text-center py-4">
+        Schema not found for perspective: {perspectiveKey}
       </div>
     );
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {schema.schema_fields.map((field) => (
-        <PerspectiveField
-          key={field.name}
-          field={field}
-          value={data[field.name]}
-          className="perspective-field-container"
-        />
+        <div key={field.name} className="bg-gray-800 p-3 rounded-lg">
+          <SchemaFieldFactory
+            field={field}
+            value={data[field.name]}
+            className="perspective-field"
+          />
+        </div>
       ))}
     </div>
   );
