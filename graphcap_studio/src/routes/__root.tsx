@@ -5,7 +5,7 @@ import { useFeatureFlag } from '../common/providers'
 import { FeatureFlagsPanel } from '../common/components/feature-flags'
 import { ServerConnectionsPanel } from '../common/components/server-connections'
 import { FileBrowserPanel } from '../common/components/file-browser'
-import { ProvidersPanel } from '../common/components/providers'
+import { ProvidersPanel } from '../features/inference/providers'
 import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon } from '../common/components/icons'
 
 /**

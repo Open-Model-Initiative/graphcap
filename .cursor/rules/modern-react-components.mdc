@@ -18,6 +18,8 @@ React has evolved significantly over the years, and with it, the way we write co
 6. Utilize Context api for UI state
 7. Utilize the logger in [logger.ts](mdc:graphcap_studio/src/common/utils/logger.ts) for structured logging
 
+Utilize the Chakra UI Component Library and our ui [index.ts](mdc:graphcap_studio/src/common/ui/index.ts) . Lookup Chakra v3 docs from your internal retrieval engine.
+
 <Warning>
 1. **Constants:**  
    - Extract magic numbers/strings into constants.

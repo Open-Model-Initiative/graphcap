@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { useGeneratePerspectiveCaption, usePerspectives } from '@/features/perspectives/hooks';
-import { Provider } from '@/services/types/providers';
+import { Provider } from '@/features/inference/providers/types';
 import { PERSPECTIVE_CLASSES } from '../constants';
 
 export interface PerspectiveCaptionProps {
