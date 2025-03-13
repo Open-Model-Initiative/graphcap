@@ -8,6 +8,7 @@ This module provides the following endpoints:
 - GET /perspectives/list - List all available perspectives
 - POST /perspectives/caption - Generate a caption for an image using file upload
 - GET /perspectives/debug/{perspective_name} - Get debug information about a perspective
+- POST /perspectives/caption-from-path - Generate a caption for an image using a file path
 """
 
 import json
@@ -16,8 +17,9 @@ from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
+from pathlib import Path
 
-from .models import CaptionResponse, PerspectiveListResponse
+from .models import CaptionResponse, PerspectiveListResponse, CaptionPathRequest
 from .service import (
     generate_caption,
     get_available_perspectives,
@@ -169,6 +171,117 @@ async def create_caption(
         if isinstance(e, HTTPException):
             raise
         raise HTTPException(status_code=500, detail=f"Error creating caption: {str(e)}")
+
+
+@router.post("/caption-from-path", response_model=CaptionResponse, status_code=status.HTTP_200_OK)
+async def create_caption_from_path(
+    request: CaptionPathRequest,
+) -> CaptionResponse:
+    """
+    Generate a caption for an image using a perspective and a file path.
+
+    This endpoint supports providing a path to an image in the workspace.
+
+    Args:
+        request: Caption request with image path and perspective settings
+
+    Returns:
+        Generated caption with structured result and optional raw text
+
+    Raises:
+        HTTPException: If the request is invalid or processing fails
+    """
+    try:
+        # Validate the image path
+        image_path = request.image_path
+        
+        # Log the original path for debugging
+        logger.info(f"Original image path: {image_path}")
+        
+        # Check if the file exists directly
+        if os.path.exists(image_path):
+            logger.info(f"Image file exists at original path: {image_path}")
+        else:
+            # Try to handle workspace paths
+            if image_path.startswith('/workspace/'):
+                # In container, /workspace is the actual path
+                logger.info(f"Path starts with /workspace/: {image_path}")
+                # No need to modify the path as it should be correct in the container
+            else:
+                # Try to normalize the path
+                if not image_path.startswith('/'):
+                    image_path = f"/{image_path}"
+                    logger.info(f"Added leading slash: {image_path}")
+                
+                # If path doesn't start with /workspace, add it
+                if not image_path.startswith('/workspace/'):
+                    # Check if it starts with /datasets
+                    if image_path.startswith('/datasets/'):
+                        image_path = f"/workspace{image_path}"
+                        logger.info(f"Converted /datasets/ path to /workspace/datasets/: {image_path}")
+                    else:
+                        image_path = f"/workspace{image_path}"
+                        logger.info(f"Added /workspace prefix: {image_path}")
+                
+                # Check if the file exists with the normalized path
+                if not os.path.exists(image_path):
+                    logger.error(f"Image file not found at normalized path: {image_path}")
+                    raise HTTPException(
+                        status_code=404, 
+                        detail=f"Image file not found at path: {image_path}"
+                    )
+                else:
+                    logger.info(f"Image file exists at normalized path: {image_path}")
+
+        # Parse context from JSON string if provided
+        parsed_context = None
+        if request.context:
+            if isinstance(request.context, list):
+                parsed_context = request.context
+            else:
+                parsed_context = [request.context]
+
+        # Convert string path to Path object
+        image_path_obj = Path(image_path)
+        logger.info(f"Final image path for caption generation: {image_path_obj}")
+
+        # Generate the caption
+        caption_data = await generate_caption(
+            perspective_name=request.perspective,
+            image_path=image_path_obj,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            repetition_penalty=request.repetition_penalty,
+            context=parsed_context,
+            global_context=request.global_context,
+            provider_name=request.provider,
+        )
+
+        # Log the caption data for debugging
+        logger.debug(f"Caption data: {caption_data}")
+        
+        # Extract the parsed result and raw text
+        parsed_result = caption_data.get("parsed", {})
+        raw_text = caption_data.get("raw_text")
+        
+        # If parsed result is empty but raw_text exists, try to create a basic result
+        if not parsed_result and raw_text:
+            logger.warning("Parsed result is empty but raw_text exists. Creating basic result.")
+            parsed_result = {"text": raw_text}
+
+        # Return the response
+        return CaptionResponse(
+            perspective=request.perspective,
+            provider=request.provider,
+            result=parsed_result,
+            raw_text=raw_text,
+        )
+    except Exception as e:
+        logger.error(f"Error creating caption from path: {str(e)}")
+        if isinstance(e, HTTPException):
+            raise
+        raise HTTPException(status_code=500, detail=f"Error creating caption from path: {str(e)}")
 
 
 def _parse_context(context_str) -> Optional[List[str]]:
