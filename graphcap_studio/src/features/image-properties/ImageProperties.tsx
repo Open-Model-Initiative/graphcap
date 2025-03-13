@@ -4,6 +4,7 @@ import { Image } from '@/services/images';
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { useImageProperties } from './hooks';
 import { Perspectives } from '@/common/components/perspectives';
+import { PerspectivesProvider } from '@/common/components/perspectives/context/PerspectivesContext';
 
 interface ImagePropertiesProps {
   readonly image: Image | null;
@@ -118,7 +119,9 @@ export function ImageProperties({ image, isLoading = false, error = null }: Imag
         )}
         
         {activeTab === 'perspectives' && (
-          <Perspectives image={image} />
+          <PerspectivesProvider>
+            <Perspectives image={image} />
+          </PerspectivesProvider>
         )}
       </div>
     </div>

@@ -6,13 +6,16 @@
  */
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { PerspectiveType } from '@/services/perspectives/types';
+import { PerspectiveType, usePerspectives, Perspective } from '@/services/perspectives';
 
 interface PerspectivesContextType {
   // UI state
   activePerspective: PerspectiveType | null;
   selectedProviderId: number | undefined;
   isGeneratingAll: boolean;
+  perspectives: Perspective[];
+  isLoading: boolean;
+  error: Error | null;
   
   // UI actions
   setActivePerspective: (perspective: PerspectiveType | null) => void;
@@ -40,6 +43,9 @@ export function PerspectivesProvider({
   const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(initialSelectedProviderId);
   const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
   
+  // Fetch perspectives using React Query
+  const { data: perspectivesData, isLoading, error } = usePerspectives();
+  
   // UI actions
   const handleSelectPerspective = useCallback((perspective: PerspectiveType) => {
     setActivePerspective(perspective);
@@ -55,6 +61,9 @@ export function PerspectivesProvider({
     activePerspective,
     selectedProviderId,
     isGeneratingAll,
+    perspectives: perspectivesData?.perspectives || [],
+    isLoading,
+    error,
     
     // UI actions
     setActivePerspective,

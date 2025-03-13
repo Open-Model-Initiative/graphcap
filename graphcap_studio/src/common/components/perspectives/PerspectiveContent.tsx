@@ -1,25 +1,42 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode } from 'react';
+import React from 'react';
+import { PerspectiveField } from './components/PerspectiveField';
+import { usePerspectiveUI } from './context/PerspectiveUIContext';
 
-export interface PerspectiveContentProps {
-  readonly content: Record<string, any>;
-  readonly type: string;
-  readonly children?: ReactNode;
+interface PerspectiveContentProps {
+  perspectiveKey: string;
+  data: Record<string, any>;
+  className?: string;
 }
 
 /**
  * Component for displaying the content of a generated perspective
  * Uses a generic approach to display any perspective content
  */
-export function PerspectiveContent({ content, type, children }: PerspectiveContentProps) {
-  // If there's custom content provided, render that instead
-  if (children) {
-    return <>{children}</>;
+export function PerspectiveContent({ perspectiveKey, data, className = '' }: PerspectiveContentProps) {
+  const { schemas } = usePerspectiveUI();
+  const schema = schemas[perspectiveKey];
+
+  if (!schema) {
+    return (
+      <div className="text-red-500 p-4">
+        Error: Schema not found for perspective {perspectiveKey}
+      </div>
+    );
   }
 
-  // Use the DefaultContent component for all perspectives
-  // In the future, we can build custom components for specific perspectives
-  return <DefaultContent content={content} />;
+  return (
+    <div className={`space-y-6 ${className}`}>
+      {schema.schema_fields.map((field) => (
+        <PerspectiveField
+          key={field.name}
+          field={field}
+          value={data[field.name]}
+          className="perspective-field-container"
+        />
+      ))}
+    </div>
+  );
 }
 
 // Default content display for any perspective

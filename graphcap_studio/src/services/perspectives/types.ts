@@ -9,11 +9,49 @@ import { z } from 'zod';
 import { Image } from '@/services/images';
 
 // Zod schemas for type validation
+export const SchemaFieldSchema: z.ZodType<{
+  name: string;
+  type: 'str' | 'float';
+  description: string;
+  is_list?: boolean;
+  is_complex?: boolean;
+  fields?: Array<{
+    name: string;
+    type: 'str' | 'float';
+    description: string;
+    is_list?: boolean;
+    is_complex?: boolean;
+  }>;
+}> = z.object({
+  name: z.string(),
+  type: z.enum(['str', 'float']),
+  description: z.string(),
+  is_list: z.boolean().optional(),
+  is_complex: z.boolean().optional(),
+  fields: z.array(z.lazy(() => SchemaFieldSchema)).optional(),
+});
+
+export const TableColumnSchema = z.object({
+  name: z.string(),
+  style: z.string(),
+});
+
+export const PerspectiveSchemaSchema = z.object({
+  name: z.string(),
+  display_name: z.string(),
+  version: z.string(),
+  prompt: z.string(),
+  schema_fields: z.array(SchemaFieldSchema),
+  table_columns: z.array(TableColumnSchema),
+  context_template: z.string(),
+});
+
 export const PerspectiveSchema = z.object({
   name: z.string(),
   display_name: z.string(),
   version: z.string(),
   description: z.string(),
+  schema: PerspectiveSchemaSchema.optional(),
 });
 
 export const PerspectiveListResponseSchema = z.object({
@@ -40,6 +78,9 @@ export const CaptionResponseSchema = z.object({
 });
 
 // Types derived from Zod schemas
+export type SchemaField = z.infer<typeof SchemaFieldSchema>;
+export type TableColumn = z.infer<typeof TableColumnSchema>;
+export type PerspectiveSchema = z.infer<typeof PerspectiveSchemaSchema>;
 export type Perspective = z.infer<typeof PerspectiveSchema>;
 export type PerspectiveListResponse = z.infer<typeof PerspectiveListResponseSchema>;
 export type CaptionRequest = z.infer<typeof CaptionRequestSchema>;
@@ -95,4 +136,9 @@ export interface ImagePerspectivesResult {
   availablePerspectives: Perspective[];
   availableProviders: { id: number; name: string }[];
   perspectiveData: PerspectiveData | null;
+}
+
+export interface Provider {
+  id: number;
+  name: string;
 } 
