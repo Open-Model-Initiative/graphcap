@@ -6,7 +6,7 @@
  */
 
 import { ReactNode } from 'react';
-import { SchemaField } from '@/services/perspectives/types';
+import { SchemaField } from '@/features/perspectives/services/types';
 
 export interface BaseFieldProps {
   field: SchemaField;

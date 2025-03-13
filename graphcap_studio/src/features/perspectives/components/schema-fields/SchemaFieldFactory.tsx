@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { SchemaField } from '@/services/perspectives/types';
+import { SchemaField } from '@/features/perspectives/services/types';
 import { TagField } from './TagField';
 import { NodeField } from './NodeField';
 import { EdgeField } from './EdgeField';

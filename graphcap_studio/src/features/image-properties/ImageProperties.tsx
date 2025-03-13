@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Image } from '@/services/images';
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { useImageProperties } from './hooks';
-import { Perspectives } from '@/common/components/perspectives';
-import { PerspectivesProvider } from '@/common/components/perspectives/context/PerspectivesContext';
+import { Perspectives } from '@/features/perspectives';
+import { PerspectivesProvider } from '@/features/perspectives/context/PerspectivesContext';
 
 interface ImagePropertiesProps {
   readonly image: Image | null;

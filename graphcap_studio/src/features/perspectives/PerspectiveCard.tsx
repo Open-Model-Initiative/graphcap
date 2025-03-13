@@ -11,7 +11,7 @@ import { usePerspectiveUI } from './context/PerspectiveUIContext';
 import { PERSPECTIVE_CLASSES } from './constants';
 import { PerspectiveContent } from './PerspectiveContent';
 import { SchemaView } from './components/SchemaView';
-import { PerspectiveSchema, Provider } from '@/services/perspectives/types';
+import { PerspectiveSchema, Provider } from '@/features/perspectives/services/types';
 import { useClipboard } from '@/common/hooks/useClipboard';
 
 interface PerspectiveCardProps {

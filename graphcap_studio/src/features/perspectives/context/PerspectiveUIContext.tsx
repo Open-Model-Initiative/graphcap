@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { PerspectiveSchema } from '@/services/perspectives/types';
+import { PerspectiveSchema } from '@/features/perspectives/services/types';
 
 interface PerspectiveUIContextType {
   schemas: Record<string, PerspectiveSchema>;

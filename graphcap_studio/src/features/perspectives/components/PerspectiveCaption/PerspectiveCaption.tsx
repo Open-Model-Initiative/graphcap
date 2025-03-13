@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { useGeneratePerspectiveCaption, usePerspectives } from '@/services/perspectives/hooks';
+import { useGeneratePerspectiveCaption, usePerspectives } from '@/features/perspectives/services/hooks';
 import { Provider } from '@/services/types/providers';
 import { PERSPECTIVE_CLASSES } from '../../constants';
 

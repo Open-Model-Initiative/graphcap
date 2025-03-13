@@ -7,8 +7,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useServerConnectionsContext } from '../../common/context/ServerConnectionsContext';
-import { SERVER_IDS } from '../../common/constants';
+import { useServerConnectionsContext } from '../../../common/context/ServerConnectionsContext';
+import { SERVER_IDS } from '../../../common/constants';
 import { 
   CaptionOptions, 
   CaptionResponse, 
@@ -19,7 +19,7 @@ import {
   ImagePerspectivesResult
 } from './types';
 import { API_ENDPOINTS, CACHE_TIMES, DEFAULTS, perspectivesQueryKeys } from './constants';
-import { ensureWorkspacePath, getGraphCapServerUrl, handleApiError, isUrl } from './utils';
+import { ensureWorkspacePath, getGraphCapServerUrl, handleApiError } from './utils';
 import { Image } from '@/services/images';
 import { useProviders } from '@/services/providers';
 import { perspectivesApi } from './api';
@@ -134,7 +134,6 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   const [activePerspective, setActivePerspective] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { connections } = useServerConnectionsContext();
   
   // Derived state
   const generatedPerspectives = captions ? Object.keys(captions.perspectives) : [];
@@ -178,6 +177,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     
     console.log(`Generating perspective: ${perspective}`);
     setError(null);
+    setIsLoading(true);
     
     try {
       // Find the provider by ID if provided
@@ -248,6 +248,8 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     } catch (err) {
       console.error('Error generating perspective:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate perspective');
+    } finally {
+      setIsLoading(false);
     }
   }, [image, providersData, generateCaption]);
   
@@ -256,10 +258,15 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     if (!image || !perspectivesData) return;
     
     console.log('Generating all perspectives');
+    setIsLoading(true);
     
-    // Generate each perspective one by one
-    for (const perspective of perspectivesData.perspectives) {
-      await generatePerspective(perspective.name);
+    try {
+      // Generate each perspective one by one
+      for (const perspective of perspectivesData.perspectives) {
+        await generatePerspective(perspective.name);
+      }
+    } finally {
+      setIsLoading(false);
     }
   }, [image, perspectivesData, generatePerspective]);
   
