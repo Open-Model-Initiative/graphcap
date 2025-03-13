@@ -1,105 +1,102 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { Image } from '@/services/images';
+import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { useImageProperties } from './hooks';
-import { 
-  BasicInformation, 
-  FileInformation, 
-  LoadingState, 
-  ErrorState,
-  Perspectives,
-  Segments
-} from './components';
+import { Perspectives } from '@/common/components/perspectives';
 
 interface ImagePropertiesProps {
-  readonly image: Image;
-  readonly onSave?: (properties: Record<string, any>) => void;
+  readonly image: Image | null;
+  readonly isLoading?: boolean;
+  readonly error?: string | null;
 }
 
-type TabType = 'basic' | 'perspectives' | 'segments';
-
 /**
- * A component for displaying and editing image properties
- * 
- * This component uses the EditorContext through the useImageProperties hook
- * to access datasets and other shared state.
+ * Component for displaying image properties and metadata
  */
-export function ImageProperties({ 
-  image, 
-  onSave 
-}: ImagePropertiesProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('basic');
+export function ImageProperties({ image, isLoading = false, error = null }: ImagePropertiesProps) {
+  const [activeTab, setActiveTab] = useState<string>('basic');
   
-  const {
-    properties,
+  // Get image properties data
+  const { 
+    properties, 
+    isLoading: propertiesLoading, 
+    error: propertiesError,
     newTag,
     isEditing,
-    isLoading,
-    error,
     setNewTag,
     handlePropertyChange,
     handleAddTag,
     handleRemoveTag,
     handleSave,
-    toggleEditing
+    setIsEditing
   } = useImageProperties(image);
-
-  // Call the onSave prop if provided
-  const handleSaveWithCallback = () => {
-    handleSave();
-    if (onSave) {
-      onSave(properties);
-    }
+  
+  // Toggle editing function
+  const toggleEditing = () => setIsEditing(!isEditing);
+  
+  // Combine loading and error states
+  const isLoadingState = isLoading || propertiesLoading;
+  const errorState = error ?? propertiesError;
+  
+  // Define tabs
+  const tabs = [
+    { id: 'basic', label: 'Basic' },
+    { id: 'file', label: 'File' },
+    { id: 'segments', label: 'Segments' },
+    { id: 'perspectives', label: 'Perspectives' }
+  ];
+  
+  // Handle tab change
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
   };
-
-  if (isLoading) {
+  
+  // Render loading state
+  if (isLoadingState) {
     return <LoadingState />;
   }
-
-  if (error) {
-    return <ErrorState message={error} />;
+  
+  // Render error state
+  if (errorState) {
+    return <ErrorState message={errorState} />;
   }
-
-  return (
-    <div className="space-y-4">
-      {/* Tabs */}
-      <div className="flex border-b border-gray-700">
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'basic'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('basic')}
-        >
-          Basic
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'perspectives'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('perspectives')}
-        >
-          Perspectives
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'segments'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('segments')}
-        >
-          Segments
-        </button>
+  
+  // Render no image selected state
+  if (!image) {
+    return (
+      <div className="p-4 text-center text-gray-400">
+        <p>No image selected</p>
       </div>
-
-      {/* Tab Content */}
-      {activeTab === 'basic' && (
-        <>
-          <BasicInformation
+    );
+  }
+  
+  return (
+    <div className="h-full flex flex-col">
+      {/* Tabs */}
+      <div className="border-b border-gray-700">
+        <nav className="flex space-x-4 px-4" aria-label="Image properties tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`py-3 px-1 text-sm font-medium border-b-2 ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
+              }`}
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+      
+      {/* Tab content */}
+      <div className="flex-1 overflow-y-auto p-2">
+        {activeTab === 'basic' && properties && (
+          <BasicInformation 
             properties={properties}
             isEditing={isEditing}
             newTag={newTag}
@@ -107,21 +104,23 @@ export function ImageProperties({
             onNewTagChange={setNewTag}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
-            onSave={handleSaveWithCallback}
+            onSave={handleSave}
             onToggleEdit={toggleEditing}
           />
-
+        )}
+        
+        {activeTab === 'file' && (
           <FileInformation image={image} />
-        </>
-      )}
-
-      {activeTab === 'perspectives' && (
-        <Perspectives image={image} />
-      )}
-
-      {activeTab === 'segments' && (
-        <Segments image={image} />
-      )}
+        )}
+        
+        {activeTab === 'segments' && (
+          <Segments image={image} />
+        )}
+        
+        {activeTab === 'perspectives' && (
+          <Perspectives image={image} />
+        )}
+      </div>
     </div>
   );
 } 

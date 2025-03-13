@@ -37,3 +37,10 @@ export {
   useUpdateProviderApiKey
 } from './providers';
 
+// Perspectives
+export {
+  usePerspectives,
+  useGeneratePerspectiveCaption,
+  useImagePerspectives
+} from './perspectives/hooks';
+
