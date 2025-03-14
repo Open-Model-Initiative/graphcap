@@ -11,11 +11,8 @@ import { SERVER_IDS } from '@/features/server-connections/constants';
 import { CaptionOptions, CaptionResponse } from '../types';
 import { API_ENDPOINTS, perspectivesQueryKeys } from '../services/constants';
 import { getGraphCapServerUrl, ensureWorkspacePath, handleApiError } from '../services/utils';
-import { createLogger } from '@/common/utils/logger/logger';
 import { ServerConnection } from '@/features/server-connections/types';
 
-// Create a logger instance for this hook
-const logger = createLogger('PerspectivesHooks');
 
 /**
  * Hook to generate a perspective caption for an image
@@ -26,7 +23,7 @@ export function useGeneratePerspectiveCaption() {
   const queryClient = useQueryClient();
   const { connections } = useServerConnectionsContext();
   
-  logger.info('Initializing useGeneratePerspectiveCaption hook');
+  console.log('Initializing useGeneratePerspectiveCaption hook');
   
   return useMutation<CaptionResponse, Error, {
     perspective: string;
@@ -51,7 +48,7 @@ export function useGeneratePerspectiveCaption() {
       // Normalize the image path to ensure it starts with /workspace
       const normalizedImagePath = ensureWorkspacePath(imagePath);
       
-      logger.info(`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`);
+      console.log(`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`);
       
       const endpoint = API_ENDPOINTS.REST_GENERATE_CAPTION;
       const url = `${baseUrl}${endpoint}`;
@@ -69,7 +66,7 @@ export function useGeneratePerspectiveCaption() {
         global_context: options?.global_context ?? ''
       };
       
-      logger.info(`Sending caption generation request to: ${url}`, {
+      console.log(`Sending caption generation request to: ${url}`, {
         perspective,
         image_path: normalizedImagePath,
         provider_id: providerId,
@@ -97,14 +94,14 @@ export function useGeneratePerspectiveCaption() {
       
       const data = await response.json() as CaptionResponse;
       
-      logger.info(`Successfully generated caption for perspective: ${perspective}`, {
+      console.log(`Successfully generated caption for perspective: ${perspective}`, {
         content: data.result || data.content
       });
       
       return data;
     },
     onSuccess: (result, variables) => {
-      logger.debug('Caption generation successful, invalidating queries', { 
+      console.debug('Caption generation successful, invalidating queries', { 
         imagePath: variables.imagePath,
         perspective: variables.perspective
       });
@@ -115,7 +112,7 @@ export function useGeneratePerspectiveCaption() {
       });
     },
     onError: (error) => {
-      logger.error('Caption generation failed', error);
+      console.error('Caption generation failed', error);
     }
   });
 } 

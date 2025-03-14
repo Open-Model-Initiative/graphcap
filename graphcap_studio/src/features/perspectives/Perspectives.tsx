@@ -14,10 +14,7 @@ import { PerspectiveHeader } from './components/PerspectiveHeader';
 import { PerspectiveSchema } from '@/features/perspectives/types';
 import { Image } from '@/services/images';
 import { useImagePerspectives } from '@/features/perspectives/services';
-import { createLogger } from '@/common/utils/logger/logger';
 
-// Create a logger instance for this component
-const logger = createLogger('PerspectivesComponent');
 
 interface PerspectivesProps {
   image: Image | null;
@@ -49,7 +46,7 @@ export function Perspectives({ image }: PerspectivesProps) {
   const error = contextError || imageError;
 
   // Log the perspectives data
-  logger.info(`Perspectives data received: ${perspectives ? perspectives.length : 0} perspectives`, { 
+  console.log(`Perspectives data received: ${perspectives ? perspectives.length : 0} perspectives`, { 
     perspectiveNames: perspectives?.map(p => p.name).join(', ') || 'none'
   });
 
@@ -63,7 +60,7 @@ export function Perspectives({ image }: PerspectivesProps) {
     }, {} as Record<string, PerspectiveSchema>);
     
     // Log the schemas
-    logger.info(`Converted ${Object.keys(result).length} perspectives to schemas`, { 
+    console.log(`Converted ${Object.keys(result).length} perspectives to schemas`, { 
       schemaKeys: Object.keys(result).join(', ') || 'none'
     });
     
@@ -72,7 +69,7 @@ export function Perspectives({ image }: PerspectivesProps) {
 
   // Handle loading state for perspectives list only
   if (isPerspectivesListLoading) {
-    logger.info('Rendering loading state');
+    console.log('Rendering loading state');
     return (
       <div className="space-y-4">
         <PerspectiveHeader isLoading={true} />
@@ -83,7 +80,7 @@ export function Perspectives({ image }: PerspectivesProps) {
 
   // Handle error state
   if (error) {
-    logger.error('Rendering error state', { error: error instanceof Error ? error.message : error });
+    console.error('Rendering error state', { error: error instanceof Error ? error.message : error });
     return (
       <div className="p-4 bg-gray-800 rounded-lg">
         <div className="text-gray-400 text-center">
@@ -99,7 +96,7 @@ export function Perspectives({ image }: PerspectivesProps) {
 
   // Handle empty schemas
   if (Object.keys(schemas).length === 0) {
-    logger.warn('No schemas available, rendering empty state');
+    console.warn('No schemas available, rendering empty state');
     return (
       <div className="space-y-4">
         <PerspectiveHeader isLoading={false} />
@@ -108,7 +105,7 @@ export function Perspectives({ image }: PerspectivesProps) {
     );
   }
 
-  logger.info(`Rendering ${Object.keys(schemas).length} perspective cards`);
+  console.log(`Rendering ${Object.keys(schemas).length} perspective cards`);
   return (
     <div className="space-y-4">
       <PerspectiveHeader isLoading={false} />

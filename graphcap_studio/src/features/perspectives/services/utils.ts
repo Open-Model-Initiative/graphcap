@@ -8,10 +8,7 @@
 import { SERVER_IDS } from '@/features/server-connections/constants';
 import { ServerConnection } from '@/features/perspectives/types';
 import { DEFAULTS } from '@/features/perspectives/constants';
-import { createLogger } from '@/common/utils/logger/logger';
 
-// Create a logger instance for this module
-const logger = createLogger('PerspectivesUtils');
 
 /**
  * Get the GraphCap Server URL from server connections context
@@ -90,10 +87,10 @@ export async function handleApiError(response: Response, defaultMessage: string)
     }
   } catch (e) {
     // If we can't parse the error as JSON, use the status text
-    logger.error('Error parsing API error response', e);
+    console.error('Error parsing API error response', e);
     errorMessage = `${defaultMessage}: ${response.statusText}`;
   }
   
-  logger.error(`API Error: ${errorMessage}`);
+  console.error(`API Error: ${errorMessage}`);
   throw new Error(errorMessage);
 } 
