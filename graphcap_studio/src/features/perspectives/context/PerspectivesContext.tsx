@@ -7,10 +7,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { PerspectiveType, usePerspectives, Perspective } from '@/features/perspectives/services';
-import { createLogger } from '@/common/utils/logger/logger';
 
-// Create a logger instance for this module
-const logger = createLogger('PerspectivesContext');
 
 interface PerspectivesContextType {
   // UI state
@@ -53,30 +50,30 @@ export function PerspectivesProvider({
   // Log perspectives data when it changes
   useEffect(() => {
     if (perspectivesData) {
-      logger.info(`PerspectivesContext received data: ${perspectivesData.length} perspectives`);
-      logger.info(`Perspective names: ${perspectivesData.map(p => p.name).join(', ')}`);
+      console.log(`PerspectivesContext received data: ${perspectivesData.length} perspectives`);
+      console.log(`Perspective names: ${perspectivesData.map(p => p.name).join(', ')}`);
       
       // Check if perspectives have schemas
       const withSchema = perspectivesData.filter(p => p.schema);
-      logger.info(`Perspectives with schema: ${withSchema.length}/${perspectivesData.length}`);
+      console.log(`Perspectives with schema: ${withSchema.length}/${perspectivesData.length}`);
       if (withSchema.length === 0 && perspectivesData.length > 0) {
-        logger.warn('No perspectives have schemas! This will cause the UI to show "No perspectives available"');
-        logger.debug('First perspective data:', perspectivesData[0]);
+        console.warn('No perspectives have schemas! This will cause the UI to show "No perspectives available"');
+        console.debug('First perspective data:', perspectivesData[0]);
       }
     } else {
-      logger.warn('No perspectives data received');
+      console.warn('No perspectives data received');
     }
   }, [perspectivesData]);
   
   // UI actions
   const handleSelectPerspective = useCallback((perspective: PerspectiveType) => {
-    logger.info(`Setting active perspective to: ${perspective}`);
+    console.log(`Setting active perspective to: ${perspective}`);
     setActivePerspective(perspective);
   }, []);
   
   const handleProviderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    logger.info(`Setting selected provider ID to: ${value || 'undefined'}`);
+    console.log(`Setting selected provider ID to: ${value || 'undefined'}`);
     setSelectedProviderId(value ? Number(value) : undefined);
   }, []);
   

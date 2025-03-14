@@ -7,7 +7,6 @@ import { ServerConnectionsPanel } from '@/features/server-connections/components
 import { FileBrowserPanel } from '../common/components/file-browser'
 import { ProvidersPanel } from '@/features/inference/providers'
 import { SettingsPanel } from '@/features/app-settings'
-import { LoggerProvider } from '@/common/utils/logger'
 import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon } from '../common/components/icons'
 
 /**
@@ -81,7 +80,6 @@ function RightActionPanel() {
 
 export const Route = createRootRoute({
   component: () => (
-    <LoggerProvider>
       <MainLayout 
         leftActionPanel={<LeftActionPanel />}
         rightActionPanel={<RightActionPanel />}
@@ -89,6 +87,5 @@ export const Route = createRootRoute({
         <Outlet />
         <RouterDevTools />
       </MainLayout>
-    </LoggerProvider>
   ),
 }) 
