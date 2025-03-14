@@ -7,14 +7,14 @@ import {
 import { BasicInfoSection, ConnectionSection, RateLimitsSection } from './form';
 import styles from './FormFields.module.css';
 import { ModelSelectionSection } from './ModelSelectionSection';
-type FormFieldsProps = {
-  readonly isEditing: boolean;
-};
+import { useProviderFormContext } from './context';
 
 /**
- * Component for rendering provider form fields
+ * Component for rendering provider form fields in either view or edit mode
  */
-export function FormFields({ isEditing }: FormFieldsProps) {
+export function FormFields() {
+  const { isEditing } = useProviderFormContext();
+
   return (
     <Tabs.Root 
       defaultValue="basic" 
