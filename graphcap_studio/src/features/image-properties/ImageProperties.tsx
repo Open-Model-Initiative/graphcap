@@ -5,6 +5,8 @@ import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState }
 import { useImageProperties } from './hooks';
 import { Perspectives } from '@/features/perspectives';
 import { PerspectivesProvider } from '@/features/perspectives/context/PerspectivesContext';
+import { Box } from '@chakra-ui/react';
+import { Tabs } from '@chakra-ui/react';
 
 interface ImagePropertiesProps {
   readonly image: Image | null;
@@ -16,8 +18,6 @@ interface ImagePropertiesProps {
  * Component for displaying image properties and metadata
  */
 export function ImageProperties({ image, isLoading = false, error = null }: ImagePropertiesProps) {
-  const [activeTab, setActiveTab] = useState<string>('basic');
-  
   // Get image properties data
   const { 
     properties, 
@@ -40,19 +40,6 @@ export function ImageProperties({ image, isLoading = false, error = null }: Imag
   const isLoadingState = isLoading || propertiesLoading;
   const errorState = error ?? propertiesError;
   
-  // Define tabs
-  const tabs = [
-    { id: 'basic', label: 'Basic' },
-    { id: 'file', label: 'File' },
-    { id: 'segments', label: 'Segments' },
-    { id: 'perspectives', label: 'Perspectives' }
-  ];
-  
-  // Handle tab change
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
-  };
-  
   // Render loading state
   if (isLoadingState) {
     return <LoadingState />;
@@ -66,64 +53,53 @@ export function ImageProperties({ image, isLoading = false, error = null }: Imag
   // Render no image selected state
   if (!image) {
     return (
-      <div className="p-4 text-center text-gray-400">
+      <Box p={4} textAlign="center" color="gray.400">
         <p>No image selected</p>
-      </div>
+      </Box>
     );
   }
   
   return (
-    <div className="h-full flex flex-col">
-      {/* Tabs */}
-      <div className="border-b border-gray-700">
-        <nav className="flex space-x-4 px-4" aria-label="Image properties tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`py-3 px-1 text-sm font-medium border-b-2 ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600'
-              }`}
-              aria-current={activeTab === tab.id ? 'page' : undefined}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto p-2">
-        {activeTab === 'basic' && properties && (
-          <BasicInformation 
-            properties={properties}
-            isEditing={isEditing}
-            newTag={newTag}
-            onPropertyChange={handlePropertyChange}
-            onNewTagChange={setNewTag}
-            onAddTag={handleAddTag}
-            onRemoveTag={handleRemoveTag}
-            onSave={handleSave}
-            onToggleEdit={toggleEditing}
-          />
-        )}
+    <Box height="full" display="flex" flexDirection="column">
+      <Tabs.Root defaultValue="basic" variant="line" colorPalette="blue" size="md">
+        <Tabs.List borderBottomColor="gray.700">
+          <Tabs.Trigger value="basic">Basic</Tabs.Trigger>
+          <Tabs.Trigger value="file">File</Tabs.Trigger>
+          <Tabs.Trigger value="segments">Segments</Tabs.Trigger>
+          <Tabs.Trigger value="perspectives">Perspectives</Tabs.Trigger>
+          <Tabs.Indicator />
+        </Tabs.List>
         
-        {activeTab === 'file' && (
+        <Tabs.Content value="basic" p={2} overflow="auto">
+          {properties && (
+            <BasicInformation 
+              properties={properties}
+              isEditing={isEditing}
+              newTag={newTag}
+              onPropertyChange={handlePropertyChange}
+              onNewTagChange={setNewTag}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              onSave={handleSave}
+              onToggleEdit={toggleEditing}
+            />
+          )}
+        </Tabs.Content>
+        
+        <Tabs.Content value="file" p={2} overflow="auto">
           <FileInformation image={image} />
-        )}
+        </Tabs.Content>
         
-        {activeTab === 'segments' && (
+        <Tabs.Content value="segments" p={2} overflow="auto">
           <Segments image={image} />
-        )}
+        </Tabs.Content>
         
-        {activeTab === 'perspectives' && (
+        <Tabs.Content value="perspectives" p={2} overflow="auto">
           <PerspectivesProvider>
             <Perspectives image={image} />
           </PerspectivesProvider>
-        )}
-      </div>
-    </div>
+        </Tabs.Content>
+      </Tabs.Root>
+    </Box>
   );
 } 

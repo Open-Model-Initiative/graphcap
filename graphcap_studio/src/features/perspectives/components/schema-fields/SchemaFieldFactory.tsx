@@ -6,7 +6,8 @@
  */
 
 import React from 'react';
-import { SchemaField } from '@/features/perspectives/services/types';
+import { Stack, Text } from '@chakra-ui/react';
+import { SchemaField } from '@/features/perspectives/types';
 import { TagField } from './TagField';
 import { NodeField } from './NodeField';
 import { EdgeField } from './EdgeField';
@@ -60,7 +61,7 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
     if (Array.isArray(value) && value.every(isNode)) {
       return (
         <BaseField field={field} value={value} className={className}>
-          <div className="space-y-2">
+          <Stack direction="column" gap="2">
             {value.map((node, index) => (
               <NodeField
                 key={node.id || index}
@@ -68,7 +69,7 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
                 value={node}
               />
             ))}
-          </div>
+          </Stack>
         </BaseField>
       );
     }
@@ -76,7 +77,7 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
     if (Array.isArray(value) && value.every(isEdge)) {
       return (
         <BaseField field={field} value={value} className={className}>
-          <div className="space-y-2">
+          <Stack direction="column" gap="2">
             {value.map((edge, index) => (
               <EdgeField
                 key={`${edge.source}-${edge.target}-${index}`}
@@ -84,7 +85,7 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
                 value={edge}
               />
             ))}
-          </div>
+          </Stack>
         </BaseField>
       );
     }
@@ -101,12 +102,12 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
   // Default rendering for other types
   return (
     <BaseField field={field} value={value} className={className}>
-      <div className="text-sm text-gray-300">
+      <Text fontSize="sm" color="gray.300" whiteSpace="pre-wrap">
         {typeof value === 'object'
           ? JSON.stringify(value, null, 2)
           : String(value)
         }
-      </div>
+      </Text>
     </BaseField>
   );
 }; 

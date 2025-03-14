@@ -7,7 +7,18 @@
  */
 
 import { ReactNode } from 'react';
-import { PERSPECTIVE_CLASSES } from '../constants';
+import { 
+  Card, 
+  Box, 
+  Text, 
+  Button, 
+  Flex, 
+  Stack, 
+  Badge, 
+  Spinner
+} from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/color-mode';
+import { LuEye, LuRefreshCw, LuExternalLink } from 'react-icons/lu';
 
 export interface PerspectiveCardProps {
   readonly title: string;
@@ -43,73 +54,96 @@ export function PerspectiveCard({
   onProviderChange,
   className = ''
 }: PerspectiveCardProps) {
-  const cardClasses = `${PERSPECTIVE_CLASSES.CARD.BASE} ${
-    isActive ? PERSPECTIVE_CLASSES.CARD.ACTIVE : PERSPECTIVE_CLASSES.CARD.INACTIVE
-  } ${className}`;
+  const borderColor = useColorModeValue('blue.500', 'blue.400');
+  const inactiveBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const badgeBg = useColorModeValue('gray.100', 'gray.700');
+  const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
   
   return (
-    <div className={cardClasses}>
-      {/* Card Header */}
-      <div className={PERSPECTIVE_CLASSES.HEADER.BASE}>
-        <div className="flex justify-between items-start">
-          <div>
-            <h4 className="font-medium text-gray-200">{title}</h4>
-            <p className="text-xs text-gray-400 mt-1">{description}</p>
-            <span className="inline-block mt-2 text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-300">
+    <Card.Root 
+      variant="outline" 
+      borderColor={isActive ? borderColor : inactiveBorderColor}
+      borderWidth="1px"
+      overflow="hidden"
+      className={className}
+    >
+      <Card.Header bg={useColorModeValue('gray.50', 'gray.800')} p={3}>
+        <Flex justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Card.Title fontSize="md" fontWeight="medium">{title}</Card.Title>
+            <Text fontSize="xs" color={mutedTextColor} mt={1}>{description}</Text>
+            <Badge 
+              mt={2} 
+              size="sm" 
+              bg={badgeBg} 
+              color={mutedTextColor} 
+              borderRadius="full" 
+              px={2} 
+              py={0.5}
+              fontSize="xs"
+            >
               {type}
-            </span>
-          </div>
+            </Badge>
+          </Box>
           
           {/* Status indicator */}
           {isGenerating && (
-            <div className={PERSPECTIVE_CLASSES.LOADING.BASE}>
-              <svg className="animate-spin h-3 w-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Processing</span>
-            </div>
+            <Stack direction="row" gap={1} bg={useColorModeValue('gray.100', 'gray.700')} px={2} py={1} borderRadius="md" fontSize="xs">
+              <Spinner size="xs" color="blue.500" />
+              <Text>Processing</Text>
+            </Stack>
           )}
-        </div>
-      </div>
+        </Flex>
+      </Card.Header>
       
       {/* Content Area */}
       {isActive && isGenerated && children && (
-        <div className={PERSPECTIVE_CLASSES.CONTENT.BASE}>
+        <Card.Body bg={useColorModeValue('white', 'gray.900')} p={3} borderTop="1px" borderColor={inactiveBorderColor}>
           {children}
-        </div>
+        </Card.Body>
       )}
       
       {/* Action Bar - Always present */}
-      <div className={PERSPECTIVE_CLASSES.ACTION_BAR.BASE}>
-        <div className="flex items-center space-x-2">
+      <Card.Footer 
+        bg={useColorModeValue('gray.50', 'gray.800')} 
+        p={3} 
+        borderTop="1px" 
+        borderColor={inactiveBorderColor}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Stack direction="row" gap={2}>
           {isGenerated ? (
-            <button
-              className={`px-2 py-1 text-xs ${PERSPECTIVE_CLASSES.BUTTON.BASE} ${
-                isActive
-                  ? PERSPECTIVE_CLASSES.BUTTON.PRIMARY
-                  : PERSPECTIVE_CLASSES.BUTTON.SECONDARY
-              }`}
+            <Button
+              size="xs"
+              variant={isActive ? "solid" : "outline"}
+              colorScheme={isActive ? "blue" : "gray"}
               onClick={onSetActive}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+              <LuEye style={{ marginRight: '4px' }} />
               {isActive ? 'Active' : 'View'}
-            </button>
+            </Button>
           ) : (
-            <div className="text-xs text-gray-400 italic">Not generated yet</div>
+            <Text fontSize="xs" fontStyle="italic" color={mutedTextColor}>Not generated yet</Text>
           )}
-        </div>
+        </Stack>
         
-        <div className="flex items-center space-x-2">
+        <Stack direction="row" gap={2}>
           {providers.length > 0 && (
             <select
-              className={PERSPECTIVE_CLASSES.SELECT.BASE}
               value={selectedProviderId || ''}
               onChange={onProviderChange}
               disabled={isGenerating}
+              style={{
+                fontSize: '0.75rem',
+                backgroundColor: useColorModeValue('white', 'var(--chakra-colors-gray-700)'),
+                color: useColorModeValue('var(--chakra-colors-gray-800)', 'var(--chakra-colors-gray-200)'),
+                borderRadius: 'var(--chakra-radii-md)',
+                borderColor: inactiveBorderColor,
+                padding: '0.25rem 0.5rem',
+                width: 'auto'
+              }}
             >
               <option value="">Default Provider</option>
               {providers.map(provider => (
@@ -120,33 +154,26 @@ export function PerspectiveCard({
             </select>
           )}
           
-          <button
-            className={`px-2 py-1 text-xs ${PERSPECTIVE_CLASSES.BUTTON.BASE} ${
-              isGenerated 
-                ? PERSPECTIVE_CLASSES.BUTTON.SUCCESS 
-                : PERSPECTIVE_CLASSES.BUTTON.PRIMARY
-            } ${isGenerating ? PERSPECTIVE_CLASSES.BUTTON.DISABLED : ''}`}
+          <Button
+            size="xs"
+            colorScheme={isGenerated ? "green" : "blue"}
             onClick={onGenerate}
             disabled={isGenerating}
           >
             {isGenerated ? (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+                <LuRefreshCw style={{ marginRight: '4px' }} />
                 {isGenerating ? 'Regenerating...' : 'Regenerate'}
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <LuExternalLink style={{ marginRight: '4px' }} />
                 {isGenerating ? 'Generating...' : 'Generate'}
               </>
             )}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Stack>
+      </Card.Footer>
+    </Card.Root>
   );
 } 

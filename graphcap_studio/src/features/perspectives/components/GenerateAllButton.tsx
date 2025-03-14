@@ -5,7 +5,8 @@
  * This component displays a button to generate all perspectives.
  */
 
-import { Button } from '@/common/ui';
+import { Button, Center, Spinner } from '@chakra-ui/react';
+import { LuDownload } from 'react-icons/lu';
 
 interface GenerateAllButtonProps {
   readonly isLoading: boolean;
@@ -22,21 +23,26 @@ export function GenerateAllButton({
   onGenerateAll 
 }: GenerateAllButtonProps) {
   return (
-    <div className="mt-4 flex justify-center">
+    <Center mt={4}>
       <Button
-        variant="primary"
+        colorScheme="blue"
         size="md"
-        isLoading={isLoading}
-        disabled={isDisabled || isLoading}
         onClick={onGenerateAll}
-        leftIcon={
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        }
+        disabled={isDisabled || isLoading}
+        width={{ base: 'full', sm: 'auto' }}
       >
-        {isLoading ? 'Generating All Perspectives...' : 'Generate All Perspectives'}
+        {isLoading ? (
+          <>
+            <Spinner size="xs" mr={2} />
+            Generating All Perspectives...
+          </>
+        ) : (
+          <>
+            <LuDownload style={{ marginRight: '8px' }} />
+            Generate All Perspectives
+          </>
+        )}
       </Button>
-    </div>
+    </Center>
   );
 } 
