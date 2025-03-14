@@ -6,6 +6,14 @@
  */
 
 import React from 'react';
+import { 
+  Box, 
+  Flex, 
+  Text, 
+  Badge, 
+  Grid, 
+  GridItem 
+} from '@chakra-ui/react';
 import { BaseField } from './BaseField';
 import { EdgeFieldProps } from './types';
 
@@ -18,34 +26,36 @@ export const EdgeField: React.FC<EdgeFieldProps> = ({ field, value, className })
 
   return (
     <BaseField field={field} value={value} className={className}>
-      <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="text-sm font-medium text-gray-200">{source}</span>
-          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      <Box bg="gray.800" borderRadius="lg" p="3" borderWidth="1px" borderColor="gray.700">
+        <Flex alignItems="center" gap="2" mb="2">
+          <Text fontSize="sm" fontWeight="medium" color="gray.200">{source}</Text>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
-          <span className="text-sm font-medium text-gray-200">{target}</span>
+          <Text fontSize="sm" fontWeight="medium" color="gray.200">{target}</Text>
           {type && (
-            <span className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-400 ml-2">
+            <Badge bg="gray.700" color="gray.400" borderRadius="full" px="2" py="0.5" fontSize="xs" ml="2">
               {type}
-            </span>
+            </Badge>
           )}
-        </div>
+        </Flex>
         {Object.entries(rest).length > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-700">
-            <div className="grid grid-cols-2 gap-2">
+          <Box mt="2" pt="2" borderTopWidth="1px" borderColor="gray.700">
+            <Grid templateColumns="repeat(2, 1fr)" gap="2">
               {Object.entries(rest).map(([key, val]) => (
-                <div key={key} className="text-xs">
-                  <span className="text-gray-400">{key}: </span>
-                  <span className="text-gray-300">
-                    {typeof val === 'object' ? JSON.stringify(val) : String(val)}
-                  </span>
-                </div>
+                <GridItem key={key}>
+                  <Text fontSize="xs">
+                    <Text as="span" color="gray.400">{key}: </Text>
+                    <Text as="span" color="gray.300">
+                      {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                    </Text>
+                  </Text>
+                </GridItem>
               ))}
-            </div>
-          </div>
+            </Grid>
+          </Box>
         )}
-      </div>
+      </Box>
     </BaseField>
   );
 }; 

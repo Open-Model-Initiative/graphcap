@@ -7,9 +7,21 @@
  */
 
 import { useState } from 'react';
+import { 
+  Box, 
+  Button, 
+  Flex, 
+  Heading, 
+  Text, 
+  Stack, 
+  Card,
+  Spinner
+} from '@chakra-ui/react';
+import { Field } from '@/components/ui/field';
+import { useColorModeValue } from '@/components/ui/color-mode';
 import { useGeneratePerspectiveCaption, usePerspectives } from '@/features/perspectives/hooks';
 import { Provider } from '@/features/inference/providers/types';
-import { PERSPECTIVE_CLASSES } from '../constants';
+import { LuZap, LuTriangleAlert } from 'react-icons/lu';
 
 export interface PerspectiveCaptionProps {
   readonly imagePath: string;
@@ -34,6 +46,16 @@ export function PerspectiveCaption({
   // Data fetching
   const { data: perspectivesData, isLoading: perspectivesLoading } = usePerspectives();
   const generateCaption = useGeneratePerspectiveCaption();
+  
+  // Color mode values
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const labelColor = useColorModeValue('gray.600', 'gray.400');
+  const resultBgColor = useColorModeValue('gray.50', 'gray.900');
+  const fieldNameColor = useColorModeValue('gray.600', 'gray.400');
+  const errorBgColor = useColorModeValue('red.50', 'rgba(254, 178, 178, 0.16)');
+  const errorBorderColor = useColorModeValue('red.300', 'red.500');
+  const errorTextColor = useColorModeValue('red.600', 'red.300');
   
   // Event handlers
   const handlePerspectiveChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -71,63 +93,100 @@ export function PerspectiveCaption({
   };
   
   return (
-    <div className={`mt-4 ${className}`}>
-      <h3 className="text-sm font-medium mb-2">Generate Perspective Caption</h3>
+    <Box mt={4} className={className}>
+      <Heading as="h3" size="sm" fontWeight="medium" mb={2}>
+        Generate Perspective Caption
+      </Heading>
       
-      <div className="flex flex-col space-y-3">
+      <Stack direction="column" gap={3}>
         {/* Perspective selection */}
-        <div>
-          <label htmlFor="perspective-select" className="block text-xs text-gray-500 mb-1">
+        <Field.Root>
+          <Field.Label htmlFor="perspective-select" fontSize="xs" color={labelColor}>
             Select Perspective
-          </label>
+          </Field.Label>
           <select
             id="perspective-select"
-            className="w-full bg-gray-700 text-white text-sm rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedPerspective}
             onChange={handlePerspectiveChange}
             disabled={perspectivesLoading}
+            style={{
+              width: '100%',
+              backgroundColor: useColorModeValue('white', 'var(--chakra-colors-gray-700)'),
+              color: useColorModeValue('var(--chakra-colors-gray-800)', 'white'),
+              fontSize: '0.875rem',
+              borderRadius: 'var(--chakra-radii-md)',
+              padding: '0.5rem 0.75rem',
+              border: `1px solid ${useColorModeValue('var(--chakra-colors-gray-200)', 'var(--chakra-colors-gray-600)')}`,
+              outline: 'none'
+            }}
           >
             <option value="">Select a perspective...</option>
-            {perspectivesData?.perspectives.map((perspective) => (
+            {perspectivesData?.map((perspective) => (
               <option key={perspective.name} value={perspective.name}>
                 {perspective.display_name}
               </option>
             ))}
           </select>
-        </div>
+        </Field.Root>
         
         {/* Generate button */}
-        <div>
-          <button
-            className={`px-3 py-2 text-sm rounded transition-colors duration-150 ${PERSPECTIVE_CLASSES.BUTTON.BASE} ${PERSPECTIVE_CLASSES.BUTTON.PRIMARY} ${
-              !selectedPerspective || loading || !imagePath ? PERSPECTIVE_CLASSES.BUTTON.DISABLED : ''
-            }`}
+        <Box>
+          <Button
+            size="sm"
+            colorScheme="blue"
             onClick={handleGenerateCaption}
             disabled={!selectedPerspective || loading || !imagePath}
+            width={{ base: 'full', sm: 'auto' }}
           >
-            {loading ? 'Generating...' : 'Generate Caption'}
-          </button>
-        </div>
+            {loading ? (
+              <>
+                <Spinner size="xs" mr={2} />
+                Generating...
+              </>
+            ) : (
+              <>
+                <LuZap style={{ marginRight: '8px' }} />
+                Generate Caption
+              </>
+            )}
+          </Button>
+        </Box>
         
         {/* Error message */}
         {error && (
-          <div className="text-red-400 text-xs mt-2">
-            {error}
-          </div>
+          <Flex 
+            alignItems="center" 
+            bg={errorBgColor} 
+            borderLeft="4px" 
+            borderColor={errorBorderColor} 
+            borderRadius="md" 
+            p={2}
+          >
+            <LuTriangleAlert color={errorTextColor} style={{ marginRight: '8px' }} />
+            <Text fontSize="xs" color={errorTextColor}>{error}</Text>
+          </Flex>
         )}
         
         {/* Caption result */}
         {caption && (
-          <div className="mt-4 p-3 bg-gray-800 rounded text-sm">
-            {Object.entries(caption).map(([key, value]) => (
-              <div key={key} className="mb-2">
-                <h4 className="text-xs font-medium text-gray-400 mb-1">{key}</h4>
-                <p className="whitespace-pre-wrap">{typeof value === 'string' ? value : JSON.stringify(value, null, 2)}</p>
-              </div>
-            ))}
-          </div>
+          <Card.Root variant="outline" mt={2} borderColor={borderColor}>
+            <Card.Body p={3} bg={resultBgColor}>
+              <Stack direction="column" gap={3}>
+                {Object.entries(caption).map(([key, value]) => (
+                  <Box key={key}>
+                    <Text fontSize="xs" fontWeight="medium" color={fieldNameColor} mb={1}>
+                      {key}
+                    </Text>
+                    <Text fontSize="sm" whiteSpace="pre-wrap">
+                      {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+                    </Text>
+                  </Box>
+                ))}
+              </Stack>
+            </Card.Body>
+          </Card.Root>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 } 

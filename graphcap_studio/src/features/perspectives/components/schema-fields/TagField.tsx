@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { Flex, Tag } from "@chakra-ui/react";
 import { BaseField } from './BaseField';
 import { TagFieldProps } from './types';
 
@@ -16,16 +17,18 @@ export const TagField: React.FC<TagFieldProps> = ({ field, value, className }) =
 
   return (
     <BaseField field={field} value={value} className={className}>
-      <div className="flex flex-wrap gap-2">
+      <Flex flexWrap="wrap" gap="2">
         {value.map((tag, index) => (
-          <span
+          <Tag.Root
             key={`${tag}-${index}`}
-            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+            size="sm"
+            variant="subtle"
+            colorPalette="blue"
           >
-            {tag}
-          </span>
+            <Tag.Label>{tag}</Tag.Label>
+          </Tag.Root>
         ))}
-      </div>
+      </Flex>
     </BaseField>
   );
 }; 
