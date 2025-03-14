@@ -11,7 +11,7 @@ import { SERVER_IDS } from '@/features/server-connections/constants';
 import { CaptionOptions, CaptionResponse } from '../types';
 import { API_ENDPOINTS, perspectivesQueryKeys } from '../services/constants';
 import { getGraphCapServerUrl, ensureWorkspacePath, handleApiError } from '../services/utils';
-import { createLogger } from '@/common/utils/logger';
+import { createLogger } from '@/common/utils/logger/logger';
 import { ServerConnection } from '@/features/server-connections/types';
 
 // Create a logger instance for this hook

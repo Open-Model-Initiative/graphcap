@@ -2,10 +2,12 @@ import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { MainLayout, ActionPanel } from '../common/components/layout'
 import { useFeatureFlag } from '@/context'
-import { FeatureFlagsPanel } from '../common/components/feature-flags'
+import { FeatureFlagsPanel } from '../features/app-settings/feature-flags'
 import { ServerConnectionsPanel } from '@/features/server-connections/components'
 import { FileBrowserPanel } from '../common/components/file-browser'
-import { ProvidersPanel } from '../features/inference/providers'
+import { ProvidersPanel } from '@/features/inference/providers'
+import { SettingsPanel } from '@/features/app-settings'
+import { LoggerProvider } from '@/common/utils/logger'
 import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon } from '../common/components/icons'
 
 /**
@@ -43,7 +45,7 @@ function LeftActionPanel() {
           id: 'settings',
           title: 'Settings',
           icon: <SettingsIcon />,
-          content: <div className="p-4">Settings panel content will go here</div>
+          content: <SettingsPanel />
         }
       ]}
     />
@@ -79,12 +81,14 @@ function RightActionPanel() {
 
 export const Route = createRootRoute({
   component: () => (
-    <MainLayout 
-      leftActionPanel={<LeftActionPanel />}
-      rightActionPanel={<RightActionPanel />}
-    >
-      <Outlet />
-      <RouterDevTools />
-    </MainLayout>
+    <LoggerProvider>
+      <MainLayout 
+        leftActionPanel={<LeftActionPanel />}
+        rightActionPanel={<RightActionPanel />}
+      >
+        <Outlet />
+        <RouterDevTools />
+      </MainLayout>
+    </LoggerProvider>
   ),
 }) 

@@ -8,7 +8,6 @@ import {
   Text,
   Textarea,
   createListCollection,
-  CloseButton,
   Tag as ChakraTag,
 } from "@chakra-ui/react"
 import { ImagePropertiesData } from '../hooks/useImageProperties'
@@ -47,8 +46,6 @@ export function BasicInformation({
   const borderColor = useColorModeValue("gray.200", "gray.700")
   const labelColor = useColorModeValue("gray.600", "gray.400")
   const textColor = useColorModeValue("gray.800", "gray.200")
-  const tagBg = useColorModeValue("blue.100", "blue.900")
-  const tagColor = useColorModeValue("blue.800", "blue.200")
 
   const ratingItems = [
     { label: "Not rated", value: "0" },
