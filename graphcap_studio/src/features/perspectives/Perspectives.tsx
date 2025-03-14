@@ -14,7 +14,7 @@ import { PerspectiveHeader } from './components/PerspectiveHeader';
 import { PerspectiveSchema } from '@/features/perspectives/types';
 import { Image } from '@/services/images';
 import { useImagePerspectives } from '@/features/perspectives/services';
-import { createLogger } from '@/common/utils/logger';
+import { createLogger } from '@/common/utils/logger/logger';
 
 // Create a logger instance for this component
 const logger = createLogger('PerspectivesComponent');

@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { PerspectiveType, usePerspectives, Perspective } from '@/features/perspectives/services';
-import { createLogger } from '@/common/utils/logger';
+import { createLogger } from '@/common/utils/logger/logger';
 
 // Create a logger instance for this module
 const logger = createLogger('PerspectivesContext');

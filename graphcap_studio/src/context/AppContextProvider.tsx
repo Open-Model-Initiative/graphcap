@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react';
 import { DatasetInitializer } from '@/features/datasets';
-import { FeatureFlagProvider } from './FeatureFlagProvider';
+import { FeatureFlagProvider } from '../features/app-settings/feature-flags/FeatureFlagProvider';
 import { ServerConnectionsProvider } from '.';
 
 interface AppContextProviderProps {

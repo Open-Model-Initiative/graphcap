@@ -6,7 +6,9 @@
  */
 
 import React from 'react';
+import { Box, VStack, HStack } from '@chakra-ui/react';
 import { Button } from '@/common/ui';
+import { Slider } from '@/components/ui/slider';
 import { CaptionOptions } from '@/features/perspectives/types';
 
 // Default options for caption generation
@@ -33,11 +35,10 @@ export function GenerationOptionForm({
   onClose,
   isGenerating = false,
 }: GenerationOptionFormProps) {
-  const handleOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
+  const handleOptionChange = (name: keyof CaptionOptions) => (details: { value: number[] }) => {
     onChange({
       ...options,
-      [name]: type === 'number' ? parseFloat(value) : value
+      [name]: details.value[0]
     });
   };
 
@@ -45,101 +46,113 @@ export function GenerationOptionForm({
     onChange(DEFAULT_OPTIONS);
   };
   
+  const getSliderValue = (key: keyof CaptionOptions): number[] => {
+    const defaultValue = DEFAULT_OPTIONS[key];
+    const value = typeof options[key] === 'number' ? options[key] : defaultValue;
+    return [value as number];
+  };
+  
   return (
-    <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800 rounded-md shadow-lg z-50 p-4 border border-gray-700">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="text-sm font-medium text-gray-300">Generation Options</h4>
-        <button
+    <Box
+      position="absolute"
+      right="0"
+      top="full"
+      mt={2}
+      w="64"
+      bg="bg.panel"
+      rounded="l2"
+      shadow="lg"
+      zIndex={50}
+      p={4}
+      borderWidth="1px"
+      borderColor="border.default"
+    >
+      <HStack justify="space-between" mb={3}>
+        <Box as="h4" textStyle="sm" fontWeight="medium" color="fg.default">
+          Generation Options
+        </Box>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-200"
           disabled={isGenerating}
           aria-label="Close"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+          ✕
+        </Button>
+      </HStack>
       
-      <div className="space-y-3">
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Temperature</label>
-          <div className="flex items-center">
-            <input
-              type="range"
-              name="temperature"
-              min="0"
-              max="1"
-              step="0.1"
-              value={options.temperature || 0.7}
-              onChange={handleOptionChange}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              disabled={isGenerating}
-            />
-            <span className="ml-2 text-xs text-gray-400">{options.temperature || 0.7}</span>
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Max Tokens</label>
-          <input
-            type="number"
-            name="max_tokens"
-            value={options.max_tokens || 4096}
-            onChange={handleOptionChange}
-            className="w-full px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded-md text-gray-300"
+      <VStack gap={4}>
+        <Box w="full">
+          <Box as="label" display="block" fontSize="xs" mb={1}>
+            Temperature
+          </Box>
+          <Slider
+            aria-label={['Temperature']}
+            value={getSliderValue('temperature')}
+            onValueChange={handleOptionChange('temperature')}
+            min={0}
+            max={1}
+            step={0.1}
             disabled={isGenerating}
           />
-        </div>
+        </Box>
         
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Top P</label>
-          <div className="flex items-center">
-            <input
-              type="range"
-              name="top_p"
-              min="0"
-              max="1"
-              step="0.05"
-              value={options.top_p || 0.95}
-              onChange={handleOptionChange}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              disabled={isGenerating}
-            />
-            <span className="ml-2 text-xs text-gray-400">{options.top_p || 0.95}</span>
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Repetition Penalty</label>
-          <div className="flex items-center">
-            <input
-              type="range"
-              name="repetition_penalty"
-              min="1"
-              max="2"
-              step="0.1"
-              value={options.repetition_penalty || 1.1}
-              onChange={handleOptionChange}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              disabled={isGenerating}
-            />
-            <span className="ml-2 text-xs text-gray-400">{options.repetition_penalty || 1.1}</span>
-          </div>
-        </div>
-        
-        <div className="pt-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleResetDefaults}
-            className="w-full"
+        <Box w="full">
+          <Box as="label" display="block" fontSize="xs" mb={1}>
+            Max Tokens
+          </Box>
+          <Slider
+            aria-label={['Max Tokens']}
+            value={getSliderValue('max_tokens')}
+            onValueChange={handleOptionChange('max_tokens')}
+            min={1}
+            max={8192}
+            step={1}
             disabled={isGenerating}
-          >
-            Reset to Defaults
-          </Button>
-        </div>
-      </div>
-    </div>
+          />
+        </Box>
+        
+        <Box w="full">
+          <Box as="label" display="block" fontSize="xs" mb={1}>
+            Top P
+          </Box>
+          <Slider
+            aria-label={['Top P']}
+            value={getSliderValue('top_p')}
+            onValueChange={handleOptionChange('top_p')}
+            min={0}
+            max={1}
+            step={0.05}
+            disabled={isGenerating}
+          />
+        </Box>
+        
+        <Box w="full">
+          <Box as="label" display="block" fontSize="xs" mb={1}>
+            Repetition Penalty
+          </Box>
+          <Slider
+            aria-label={['Repetition Penalty']}
+            value={getSliderValue('repetition_penalty')}
+            onValueChange={handleOptionChange('repetition_penalty')}
+            min={1}
+            max={2}
+            step={0.1}
+            disabled={isGenerating}
+          />
+        </Box>
+        
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleResetDefaults}
+          disabled={isGenerating}
+          className="w-full"
+        >
+          Reset to Defaults
+        </Button>
+      </VStack>
+    </Box>
   );
 } 
