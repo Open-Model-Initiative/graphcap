@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext, ReactNode } from 'react';
-import { useServerConnections } from '../hooks';
-import { ServerConnection } from '../types';
+import { useServerConnections } from '../common/hooks';
+import { ServerConnection } from '../common/types';
 
 /**
  * Interface for the ServerConnectionsContext value

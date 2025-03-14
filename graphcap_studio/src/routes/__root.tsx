@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { MainLayout, ActionPanel } from '../common/components/layout'
-import { useFeatureFlag } from '../common/providers'
+import { useFeatureFlag } from '@/context'
 import { FeatureFlagsPanel } from '../common/components/feature-flags'
 import { ServerConnectionsPanel } from '../common/components/server-connections'
 import { FileBrowserPanel } from '../common/components/file-browser'

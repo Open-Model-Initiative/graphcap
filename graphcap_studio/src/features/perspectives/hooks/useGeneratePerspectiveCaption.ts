@@ -6,7 +6,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useServerConnectionsContext } from '@/common/context';
+import { useServerConnectionsContext } from '@/context';
 import { SERVER_IDS } from '@/common/constants';
 import { CaptionOptions, CaptionResponse } from '../types';
 import { API_ENDPOINTS, perspectivesQueryKeys } from '../services/constants';
