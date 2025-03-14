@@ -2,7 +2,7 @@
 import { ReactNode } from 'react';
 import { DatasetInitializer } from '@/features/datasets';
 import { FeatureFlagProvider } from './FeatureFlagProvider';
-import { ServerConnectionsProvider } from '../context';
+import { ServerConnectionsProvider } from '.';
 
 interface AppContextProviderProps {
   readonly children: ReactNode;

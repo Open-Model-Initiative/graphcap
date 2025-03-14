@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo, useMemo } from 'react';
-import { useServerConnectionsContext } from '../../context/ServerConnectionsContext';
+import { useServerConnectionsContext } from '@/context/ServerConnectionsContext';
 import { ServerConnectionsPanelProps } from '../../types';
 import { ServerConnectionItem } from './ServerConnectionItem';
 import { CONNECTION_STATUS } from '../../constants';

@@ -12,7 +12,7 @@ import './App.css'
 // Import the generated route tree
 import { routeTree } from '../routeTree.gen'
 import App from './App'
-import { AppContextProvider, useFeatureFlag } from '../common/providers'
+import { AppContextProvider, useFeatureFlag } from '@/context'
 import { getQueryClient } from '@/common/utils/queryClient'
 
 // Create a new router instance

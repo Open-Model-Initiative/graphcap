@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { DatasetTree } from './DatasetTree';
 import { CreateDatasetModal } from './CreateDatasetModal';
-import { useDatasetContext } from '../context/DatasetContext';
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 
 interface DatasetContainerProps {
   readonly className?: string;

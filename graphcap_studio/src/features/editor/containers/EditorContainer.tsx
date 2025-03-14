@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Dataset } from "@/services/images";
 import { ImageEditor } from "../components/ImageEditor";
-import { useEditorContext } from "../context/EditorContext";
+import { useEditorContext } from "@/features/editor/context/EditorContext";
 import { EditorLayout } from "@/pages/gallery/GalleryLayout";
 import { ViewerContainer } from "@/features/gallery-viewer";
 import { PropertiesContainer } from "@/features/image-properties";

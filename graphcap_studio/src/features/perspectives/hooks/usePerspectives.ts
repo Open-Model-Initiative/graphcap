@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useServerConnectionsContext } from '@/common/context';
+import { useServerConnectionsContext } from '@/context';
 import { SERVER_IDS } from '@/common/constants';
 import { Perspective, PerspectiveListResponse } from '../types';
 import { API_ENDPOINTS, CACHE_TIMES, perspectivesQueryKeys } from '../services/constants';

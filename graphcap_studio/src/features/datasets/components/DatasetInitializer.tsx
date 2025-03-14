@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react';
 import { useDatasets } from '../hooks/useDatasets';
-import { DatasetContextProvider } from '../context/DatasetContext';
+import { DatasetContextProvider } from '@/features/datasets/context/DatasetContext';
 import { Dataset } from '@/services/images';
 
 interface DatasetInitializerProps {

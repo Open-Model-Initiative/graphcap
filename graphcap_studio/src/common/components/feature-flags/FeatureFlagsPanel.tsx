@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useFeatureFlags } from '@/common/providers';
+import { useFeatureFlags } from '@/context';
 import {
   Box,
   Heading,
