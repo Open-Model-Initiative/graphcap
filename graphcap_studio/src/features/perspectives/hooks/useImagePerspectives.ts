@@ -31,7 +31,6 @@ import { useGeneratePerspectiveCaption } from './useGeneratePerspectiveCaption';
  */
 export function useImagePerspectives(image: Image | null): ImagePerspectivesResult {
   const [captions, setCaptions] = useState<ImageCaptions | null>(null);
-  const [activePerspective, setActivePerspective] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [generatingPerspectives, setGeneratingPerspectives] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +41,6 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   
   // Derived state
   const generatedPerspectives = captions ? Object.keys(captions.perspectives) : [];
-  const perspectiveData = activePerspective && captions?.perspectives[activePerspective] 
-    ? captions.perspectives[activePerspective] 
-    : null;
   
   // Get available perspectives from the server
   const { data: perspectivesData } = usePerspectives();
@@ -63,20 +59,6 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     id: provider.id,
     name: provider.name
   })) || [];
-  
-  // Set the active perspective when captions are loaded
-  useEffect(() => {
-    if (captions && generatedPerspectives.length > 0 && !activePerspective) {
-      // Prefer graph_caption if available, otherwise use the first available perspective
-      if (generatedPerspectives.includes('graph_caption')) {
-        console.debug('Setting active perspective to graph_caption');
-        setActivePerspective('graph_caption');
-      } else {
-        console.debug(`Setting active perspective to ${generatedPerspectives[0]}`);
-        setActivePerspective(generatedPerspectives[0]);
-      }
-    }
-  }, [captions, generatedPerspectives, activePerspective]);
   
   // Function to generate a perspective using the perspectives API
   const generatePerspective = useCallback(async (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions) => {
@@ -167,10 +149,6 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
           }
         };
       });
-      
-      // Set the new perspective as active
-      console.log(`Setting active perspective to ${perspective}`);
-      setActivePerspective(perspective);
     } catch (err) {
       console.error('Error generating perspective', err);
       setError(err instanceof Error ? err.message : 'Failed to generate perspective');
@@ -223,26 +201,22 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       isLoading,
       hasError: error !== null,
       hasCaptions: captions !== null,
-      activePerspective,
       generatedPerspectiveCount: generatedPerspectives.length,
       availablePerspectiveCount: availablePerspectives.length,
       availableProviderCount: availableProviders.length,
       generatingPerspectives
     });
     
-    // Log the current perspective content if available
-    if (perspectiveData && perspectiveData.content) {
-      console.debug('Current perspective content:', perspectiveData.content);
+    if (captions?.perspectives) {
+      console.debug('Current perspectives:', Object.keys(captions.perspectives));
     }
   }, [
     isLoading, 
     error, 
     captions, 
-    activePerspective, 
     generatedPerspectives, 
     availablePerspectives, 
     availableProviders,
-    perspectiveData,
     generatingPerspectives
   ]);
   
@@ -250,14 +224,11 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     isLoading,
     error,
     captions,
-    activePerspective,
     generatedPerspectives,
     generatingPerspectives,
-    setActivePerspective,
     generatePerspective,
     generateAllPerspectives,
     availablePerspectives,
-    availableProviders,
-    perspectiveData
+    availableProviders
   };
 } 

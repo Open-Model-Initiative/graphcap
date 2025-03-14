@@ -1,61 +1,63 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
-import { Provider } from './types';
-import { ProviderFormProvider, useProviderFormContext } from './context';
 import { FormFields } from './FormFields';
-import { ModelSelectionSection } from './ModelSelectionSection';
-import { FormActions } from './FormActions';
-import { Box } from '@chakra-ui/react';
-
-type ProviderFormProps = {
-  readonly provider?: Provider;
-  readonly isEditing: boolean;
-  readonly onEdit: () => void;
-  readonly onSubmit: (data: Provider) => void;
-  readonly onCancel: () => void;
-  readonly isSubmitting: boolean;
-  readonly onModelSelect?: (providerName: string, modelId: string) => void;
-};
+import { Box, Button, Flex } from '@chakra-ui/react';
+import { useProviderFormContext } from './context';
 
 /**
- * Component for provider creation/editing form with integrated model selection
+ * Component for provider form that displays fields in either view or edit mode
  */
-function ProviderForm(props: ProviderFormProps) {
-  const { 
-    provider,
-    isEditing,
-    onEdit,
+function ProviderForm() {
+  const {
+    selectedProvider,
+    isSubmitting,
     onSubmit,
     onCancel,
-    isSubmitting,
-    onModelSelect
-  } = props;
-  
-  return (
-    <ProviderFormProvider
-      initialData={provider}
-      isCreating={!provider}
-      onSubmit={onSubmit}
-      onCancel={onCancel}
-      isSubmitting={isSubmitting}
-      onModelSelect={onModelSelect}
-    >
-      <FormContent isEditing={isEditing} onEdit={onEdit} />
-    </ProviderFormProvider>
-  );
-}
+    mode,
+    setMode
+  } = useProviderFormContext();
 
-/**
- * Inner component that uses the context
- */
-function FormContent({ isEditing, onEdit }: { isEditing: boolean; onEdit: () => void }) {
-  const { handleSubmit, onSubmit } = useProviderFormContext();
-  
-  return (
-    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4}>
-      <FormFields isEditing={isEditing} />
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedProvider) {
+      onSubmit(selectedProvider);
+    }
+  };
 
-      <FormActions />
+  const isEditing = mode === 'edit';
+
+  return (
+    <Box as="form" onSubmit={handleSubmit} p={4}>
+      <FormFields />
+      
+      {/* Actions */}
+      <Flex justify="flex-end" mt={4} gap={2}>
+        {isEditing ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              colorScheme="blue"
+              type="submit"
+              loadingText="Saving..."
+              loading={isSubmitting}
+            >
+              Save Changes
+            </Button>
+          </>
+        ) : (
+          <Button
+            colorScheme="blue"
+            onClick={() => setMode('edit')}
+          >
+            Edit Provider
+          </Button>
+        )}
+      </Flex>
     </Box>
   );
 }

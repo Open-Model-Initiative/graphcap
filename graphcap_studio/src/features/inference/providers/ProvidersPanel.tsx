@@ -1,39 +1,103 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
 import { useProviders } from '../services/providers';
-import { useDatabaseHealth, useProviderForm } from '../hooks';
+import { useDatabaseHealth } from '../hooks';
 import ProviderForm from './ProviderForm';
 import { ProviderSelect } from './form';
+import { ProviderFormProvider, useProviderFormContext } from './context';
 import {
   Box,
   Button,
   Center,
   Flex,
-  Heading,
   Text,
   VStack,
 } from '@chakra-ui/react';
 import { useColorMode } from '@/components/ui/color-mode';
 
 /**
+ * Panel content that requires context
+ */
+function PanelContent({ providers }: { providers: any[] }) {
+  const { 
+    mode, 
+    setMode, 
+    selectedProvider,
+    setSelectedProvider 
+  } = useProviderFormContext();
+  
+  const { colorMode } = useColorMode();
+  const textColor = colorMode === 'light' ? 'gray.600' : 'gray.300';
+  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
+
+  // No providers state
+  if (providers.length === 0) {
+    return (
+      <VStack p={4} gap={4}>
+        <Text color={textColor}>No providers configured</Text>
+        <Button
+          colorScheme="blue"
+          onClick={() => {/* TODO: Handle new provider creation */}}
+        >
+          Add Provider
+        </Button>
+      </VStack>
+    );
+  }
+
+  return (
+    <Flex direction="column" h="full">
+      {/* Header */}
+      <Flex 
+        p={3} 
+        borderBottom="1px" 
+        borderColor={borderColor}
+        justify="space-between" 
+        align="center"
+        gap={4}
+      >
+        {/* Provider Selection Dropdown */}
+        <Box flex="1">
+          <ProviderSelect
+            providers={providers}
+            selectedProviderId={selectedProvider?.id || null}
+            onChange={(id) => {
+              const provider = providers.find(p => p.id === id);
+              if (provider) {
+                setSelectedProvider(provider);
+                setMode('view');
+              }
+            }}
+            className="w-full"
+            aria-label="Select Provider"
+          />
+        </Box>
+        <Button
+          size="sm"
+          colorScheme="blue"
+          onClick={() => {/* TODO: Handle new provider creation */}}
+        >
+          Add Provider
+        </Button>
+      </Flex>
+      
+      {/* Content */}
+      <Box flex="1" overflow="auto">
+        <ProviderForm />
+      </Box>
+    </Flex>
+  );
+}
+
+/**
  * Providers Panel Component
  * 
- * This component displays a list of providers and allows for CRUD operations
- * on provider configurations.
+ * This component displays a list of providers and allows viewing and editing
+ * provider configurations.
  */
 export function ProvidersPanel() {
   // Custom hooks
   const { isConnected } = useDatabaseHealth();
-  const { 
-    isCreating, 
-    isEditing, 
-    selectedProviderId, 
-    setSelectedProviderId,
-    startCreating,
-    startEditing,
-    cancelForm,
-    isSubmitting
-  } = useProviderForm();
   
   // Fetch providers
   const { 
@@ -42,34 +106,9 @@ export function ProvidersPanel() {
     isError, 
     error 
   } = useProviders();
-  
-  // Get selected provider
-  const selectedProvider = useMemo(() => 
-    providers.find(p => p.id === selectedProviderId),
-    [providers, selectedProviderId]
-  );
-  
-  // Handle provider selection
-  const handleSelectProvider = (id: number) => {
-    setSelectedProviderId(id);
-  };
-  
-  // Handle edit button click
-  const handleEditProvider = () => {
-    if (selectedProvider) {
-      startEditing(selectedProvider);
-    }
-  };
-
-  // Handle model selection
-  const handleModelSelect = (providerName: string, modelId: string) => {
-    console.log(`Selected model: ${modelId} from provider: ${providerName}`);
-    // Add your logic here to handle the selected model
-  };
 
   const { colorMode } = useColorMode();
   const textColor = colorMode === 'light' ? 'gray.600' : 'gray.300';
-  const borderColor = colorMode === 'light' ? 'gray.200' : 'gray.700';
 
   // Loading state
   if (isLoading) {
@@ -89,76 +128,14 @@ export function ProvidersPanel() {
     );
   }
 
-  // No providers state
-  if (providers.length === 0 && !isCreating) {
-    return (
-      <VStack p={4} gap={4}>
-        <Text color={textColor}>No providers configured</Text>
-        <Button
-          colorScheme="blue"
-          onClick={startCreating}
-        >
-          Add Provider
-        </Button>
-      </VStack>
-    );
-  }
-  
   return (
-    <Flex direction="column" h="full">
-      {/* Header */}
-      <Flex 
-        p={3} 
-        borderBottom="1px" 
-        borderColor={borderColor}
-        justify="space-between" 
-        align="center"
-        gap={4}
-      >
-        {/* Provider Selection Dropdown */}
-        {!isCreating && providers.length > 0 && (
-          <Box flex="1">
-            <ProviderSelect
-              providers={providers}
-              selectedProviderId={selectedProviderId}
-              onChange={handleSelectProvider}
-              className="w-full"
-              aria-label="Select Provider"
-            />
-          </Box>
-        )}
-        <Button
-          size="sm"
-          colorScheme="blue"
-          onClick={startCreating}
-          disabled={isCreating || isEditing}
-        >
-          Add Provider
-        </Button>
-      </Flex>
-      
-      {/* Content */}
-      <Box flex="1" overflow="auto">
-        {/* Provider Form */}
-        {(isCreating || selectedProvider) && (
-          <ProviderForm
-            provider={selectedProvider}
-            isEditing={isCreating || isEditing}
-            onEdit={handleEditProvider}
-            onSubmit={cancelForm}
-            onCancel={cancelForm}
-            isSubmitting={isSubmitting}
-            onModelSelect={handleModelSelect}
-          />
-        )}
-        
-        {/* No Provider Selected Message */}
-        {!selectedProvider && !isCreating && providers.length > 0 && (
-          <Center p={4}>
-            <Text color={textColor}>Select a provider to view details</Text>
-          </Center>
-        )}
-      </Box>
-    </Flex>
+    <ProviderFormProvider
+      mode="view"
+      onSubmit={() => {}}
+      onCancel={() => {}}
+      isSubmitting={false}
+    >
+      <PanelContent providers={providers} />
+    </ProviderFormProvider>
   );
 } 

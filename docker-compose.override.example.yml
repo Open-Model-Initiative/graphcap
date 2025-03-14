@@ -162,6 +162,24 @@ name: graphcap
 #     env_file:
 #       - ./workspace/config/.env
 
+###############
+# OPTIONAL PROVIDERS
+###############
+
+#  ollama:
+#    image: ollama/ollama:latest
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              capabilities: [compute, utility]
+#    ports:
+#      - "11434:11434"
+#    volumes:
+#      - ./ollama:/root/.ollama
+
+
 # volumes:
 #   graphcap_server_db:
 

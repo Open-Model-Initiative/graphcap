@@ -8,10 +8,8 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { PerspectiveType, usePerspectives, Perspective } from '@/features/perspectives/services';
 
-
 interface PerspectivesContextType {
   // UI state
-  activePerspective: PerspectiveType | null;
   selectedProviderId: number | undefined;
   isGeneratingAll: boolean;
   perspectives: Perspective[];
@@ -19,10 +17,8 @@ interface PerspectivesContextType {
   error: Error | null;
   
   // UI actions
-  setActivePerspective: (perspective: PerspectiveType | null) => void;
   setSelectedProviderId: (providerId: number | undefined) => void;
   setIsGeneratingAll: (isGenerating: boolean) => void;
-  handleSelectPerspective: (perspective: PerspectiveType) => void;
   handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
@@ -30,17 +26,14 @@ const PerspectivesContext = createContext<PerspectivesContextType | undefined>(u
 
 interface PerspectivesProviderProps {
   children: ReactNode;
-  initialActivePerspective?: PerspectiveType | null;
   initialSelectedProviderId?: number | undefined;
 }
 
 export function PerspectivesProvider({ 
   children, 
-  initialActivePerspective = null,
   initialSelectedProviderId = undefined
 }: PerspectivesProviderProps) {
   // UI state
-  const [activePerspective, setActivePerspective] = useState<PerspectiveType | null>(initialActivePerspective);
   const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(initialSelectedProviderId);
   const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
   
@@ -65,12 +58,6 @@ export function PerspectivesProvider({
     }
   }, [perspectivesData]);
   
-  // UI actions
-  const handleSelectPerspective = useCallback((perspective: PerspectiveType) => {
-    console.log(`Setting active perspective to: ${perspective}`);
-    setActivePerspective(perspective);
-  }, []);
-  
   const handleProviderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     console.log(`Setting selected provider ID to: ${value || 'undefined'}`);
@@ -79,7 +66,6 @@ export function PerspectivesProvider({
   
   const value = {
     // UI state
-    activePerspective,
     selectedProviderId,
     isGeneratingAll,
     perspectives: perspectivesData || [],
@@ -87,10 +73,8 @@ export function PerspectivesProvider({
     error,
     
     // UI actions
-    setActivePerspective,
     setSelectedProviderId,
     setIsGeneratingAll,
-    handleSelectPerspective,
     handleProviderChange,
   };
   

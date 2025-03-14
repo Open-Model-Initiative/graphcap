@@ -223,21 +223,18 @@ export interface ImageCaptions {
 // ============================================================================
 
 /**
- * A composite type describing the state and operations for the perspectives feature.
+ * Result type for the useImagePerspectives hook.
  */
 export interface ImagePerspectivesResult {
   isLoading: boolean;
   error: string | null;
   captions: ImageCaptions | null;
-  activePerspective: PerspectiveType | null;
   generatedPerspectives: PerspectiveType[];
   generatingPerspectives: string[];
-  setActivePerspective: (perspective: PerspectiveType) => void;
   generatePerspective: (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions) => void;
   generateAllPerspectives: () => void;
   availablePerspectives: Perspective[];
   availableProviders: Provider[];
-  perspectiveData: PerspectiveData | null;
 }
 
 /**
@@ -245,7 +242,6 @@ export interface ImagePerspectivesResult {
  */
 export interface PerspectivesContextType {
   // UI state
-  activePerspective: PerspectiveType | null;
   selectedProviderId: number | undefined;
   isGeneratingAll: boolean;
   perspectives: Perspective[];
@@ -253,10 +249,8 @@ export interface PerspectivesContextType {
   error: Error | null;
   
   // UI actions
-  setActivePerspective: (perspective: PerspectiveType | null) => void;
   setSelectedProviderId: (providerId: number | undefined) => void;
   setIsGeneratingAll: (isGenerating: boolean) => void;
-  handleSelectPerspective: (perspective: PerspectiveType) => void;
   handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
@@ -265,12 +259,11 @@ export interface PerspectivesContextType {
  */
 export interface PerspectivesProviderProps {
   children: React.ReactNode;
-  initialActivePerspective?: PerspectiveType | null;
   initialSelectedProviderId?: number | undefined;
 }
 
 /**
- * Result type for the perspective operations hook.
+ * Result type for the usePerspectiveOperations hook.
  */
 export interface PerspectiveOperationsResult {
   // Data

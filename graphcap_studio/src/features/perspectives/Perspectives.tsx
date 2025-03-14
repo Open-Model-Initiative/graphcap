@@ -130,32 +130,3 @@ export function Perspectives({ image }: PerspectivesProps) {
   );
 }
 
-/**
- * Format a date string from the format YYYYMMDD_HHMMSS to a more readable format
- */
-function formatDate(dateString: string): string {
-  // Check if the date is in ISO format
-  if (dateString.includes('T') && dateString.includes('Z')) {
-    return new Date(dateString).toLocaleString();
-  }
-  
-  // Check if the date is in the expected format
-  const regex = /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/;
-  const match = regex.exec(dateString);
-  if (!match) return dateString;
-  
-  const [, year, month, day, hour, minute, second] = match;
-  
-  // Create a date object
-  const date = new Date(
-    parseInt(year),
-    parseInt(month) - 1, // Month is 0-indexed in JavaScript
-    parseInt(day),
-    parseInt(hour),
-    parseInt(minute),
-    parseInt(second)
-  );
-  
-  // Format the date
-  return date.toLocaleString();
-} 

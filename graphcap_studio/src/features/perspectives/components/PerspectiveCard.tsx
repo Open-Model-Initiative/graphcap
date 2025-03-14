@@ -11,23 +11,21 @@ import {
   Card, 
   Box, 
   Text, 
-  Button, 
   Flex, 
   Stack, 
   Badge, 
-  Spinner
+  Spinner,
+  Button as ChakraButton
 } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/color-mode';
-import { LuEye, LuRefreshCw, LuExternalLink } from 'react-icons/lu';
+import { LuRefreshCw, LuExternalLink } from 'react-icons/lu';
 
 export interface PerspectiveCardProps {
   readonly title: string;
   readonly description: string;
   readonly type: string;
-  readonly isActive: boolean;
   readonly isGenerated: boolean;
   readonly onGenerate: () => void;
-  readonly onSetActive: () => void;
   readonly children?: ReactNode;
   readonly providers?: Array<{ id: number; name: string }>;
   readonly isGenerating?: boolean;
@@ -43,10 +41,8 @@ export function PerspectiveCard({
   title,
   description,
   type,
-  isActive,
   isGenerated,
   onGenerate,
-  onSetActive,
   children,
   providers = [],
   isGenerating = false,
@@ -54,15 +50,14 @@ export function PerspectiveCard({
   onProviderChange,
   className = ''
 }: PerspectiveCardProps) {
-  const borderColor = useColorModeValue('blue.500', 'blue.400');
-  const inactiveBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
   const badgeBg = useColorModeValue('gray.100', 'gray.700');
   const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
   
   return (
     <Card.Root 
       variant="outline" 
-      borderColor={isActive ? borderColor : inactiveBorderColor}
+      borderColor={borderColor}
       borderWidth="1px"
       overflow="hidden"
       className={className}
@@ -97,8 +92,8 @@ export function PerspectiveCard({
       </Card.Header>
       
       {/* Content Area */}
-      {isActive && isGenerated && children && (
-        <Card.Body bg={useColorModeValue('white', 'gray.900')} p={3} borderTop="1px" borderColor={inactiveBorderColor}>
+      {isGenerated && children && (
+        <Card.Body bg={useColorModeValue('white', 'gray.900')} p={3} borderTop="1px" borderColor={borderColor}>
           {children}
         </Card.Body>
       )}
@@ -108,42 +103,37 @@ export function PerspectiveCard({
         bg={useColorModeValue('gray.50', 'gray.800')} 
         p={3} 
         borderTop="1px" 
-        borderColor={inactiveBorderColor}
+        borderColor={borderColor}
         display="flex"
         justifyContent="space-between"
         alignItems="center"
       >
         <Stack direction="row" gap={2}>
           {isGenerated ? (
-            <Button
+            <ChakraButton
               size="xs"
-              variant={isActive ? "solid" : "outline"}
-              colorScheme={isActive ? "blue" : "gray"}
-              onClick={onSetActive}
+              variant="outline"
+              colorScheme="gray"
+              onClick={onGenerate}
+              display="flex"
+              alignItems="center"
+              gap={2}
             >
-              <LuEye style={{ marginRight: '4px' }} />
-              {isActive ? 'Active' : 'View'}
-            </Button>
+              <LuRefreshCw />
+              Regenerate
+            </ChakraButton>
           ) : (
             <Text fontSize="xs" fontStyle="italic" color={mutedTextColor}>Not generated yet</Text>
           )}
         </Stack>
         
-        <Stack direction="row" gap={2}>
-          {providers.length > 0 && (
+        {/* Provider Selection */}
+        {providers.length > 0 && (
+          <Stack direction="row" gap={2} alignItems="center">
             <select
               value={selectedProviderId || ''}
               onChange={onProviderChange}
-              disabled={isGenerating}
-              style={{
-                fontSize: '0.75rem',
-                backgroundColor: useColorModeValue('white', 'var(--chakra-colors-gray-700)'),
-                color: useColorModeValue('var(--chakra-colors-gray-800)', 'var(--chakra-colors-gray-200)'),
-                borderRadius: 'var(--chakra-radii-md)',
-                borderColor: inactiveBorderColor,
-                padding: '0.25rem 0.5rem',
-                width: 'auto'
-              }}
+              className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             >
               <option value="">Default Provider</option>
               {providers.map(provider => (
@@ -152,27 +142,33 @@ export function PerspectiveCard({
                 </option>
               ))}
             </select>
-          )}
-          
-          <Button
-            size="xs"
-            colorScheme={isGenerated ? "green" : "blue"}
-            onClick={onGenerate}
-            disabled={isGenerating}
-          >
-            {isGenerated ? (
-              <>
-                <LuRefreshCw style={{ marginRight: '4px' }} />
-                {isGenerating ? 'Regenerating...' : 'Regenerate'}
-              </>
-            ) : (
-              <>
-                <LuExternalLink style={{ marginRight: '4px' }} />
-                {isGenerating ? 'Generating...' : 'Generate'}
-              </>
+            
+            {!isGenerated && (
+              <ChakraButton
+                size="xs"
+                variant="solid"
+                colorScheme="blue"
+                onClick={onGenerate}
+                disabled={isGenerating}
+                display="flex"
+                alignItems="center"
+                gap={2}
+              >
+                {isGenerating ? (
+                  <>
+                    <Spinner size="xs" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <LuExternalLink />
+                    Generate
+                  </>
+                )}
+              </ChakraButton>
             )}
-          </Button>
-        </Stack>
+          </Stack>
+        )}
       </Card.Footer>
     </Card.Root>
   );
