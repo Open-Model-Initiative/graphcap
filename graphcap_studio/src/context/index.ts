@@ -2,3 +2,4 @@
 export { ServerConnectionsProvider, useServerConnectionsContext } from './ServerConnectionsContext'; 
 export * from './AppContextProvider';
 export * from './FeatureFlagProvider'; 
+export * from './useSharedContext';

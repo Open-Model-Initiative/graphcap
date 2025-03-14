@@ -7,12 +7,12 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServerConnectionsContext } from '@/context';
-import { SERVER_IDS } from '@/common/constants';
+import { SERVER_IDS } from '@/features/server-connections/constants';
 import { CaptionOptions, CaptionResponse } from '../types';
 import { API_ENDPOINTS, perspectivesQueryKeys } from '../services/constants';
 import { getGraphCapServerUrl, ensureWorkspacePath, handleApiError } from '../services/utils';
 import { createLogger } from '@/common/utils/logger';
-import { ServerConnection } from '@/common/types';
+import { ServerConnection } from '@/features/server-connections/types';
 
 // Create a logger instance for this hook
 const logger = createLogger('PerspectivesHooks');

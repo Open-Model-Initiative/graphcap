@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ServerConnection } from '../types';
-import { SERVER_IDS, SERVER_NAMES, DEFAULT_URLS, CONNECTION_STATUS } from '../constants';
-import { checkServerHealthById } from '../../services/serverConnections';
+import { ServerConnection } from './types';
+import { SERVER_IDS, SERVER_NAMES, DEFAULT_URLS, CONNECTION_STATUS } from './constants';
+import { checkServerHealthById } from './services/serverConnections';
 
 // Local storage keys
 const STORAGE_KEY = 'graphcap-server-connections';

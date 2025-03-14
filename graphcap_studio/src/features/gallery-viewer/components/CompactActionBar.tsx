@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
-import { useSharedContext } from '@/common/hooks';
+import { useSharedContext } from '@/context/useSharedContext'; /* TODO: Refactor */
 import { Dataset, Image } from '@/services/images';
 
 interface CompactActionBarProps {

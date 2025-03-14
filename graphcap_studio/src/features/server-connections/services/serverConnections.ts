@@ -6,7 +6,7 @@
  * such as the Media Server and GraphCap Server.
  */
 
-import { SERVER_IDS } from '../common/constants';
+import { SERVER_IDS } from '../constants';
 
 /**
  * Interface for health check response

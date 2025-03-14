@@ -5,7 +5,7 @@
  * This module provides utility functions for the perspectives service.
  */
 
-import { SERVER_IDS } from '@/common/constants';
+import { SERVER_IDS } from '@/features/server-connections/constants';
 import { ServerConnection } from '@/features/perspectives/types';
 import { DEFAULTS } from '@/features/perspectives/constants';
 import { createLogger } from '@/common/utils/logger';

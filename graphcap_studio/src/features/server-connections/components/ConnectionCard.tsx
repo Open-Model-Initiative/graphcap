@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
-import { ConnectionCardProps } from '../../types/connectionComponents';
+import { ConnectionCardProps } from '@/features/server-connections/types';
 import {
   Box,
   Stack,

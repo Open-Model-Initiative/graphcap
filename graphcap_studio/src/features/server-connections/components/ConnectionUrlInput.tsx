@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo, ChangeEvent } from 'react';
-import { ConnectionUrlInputProps } from '../../types/connectionComponents';
+import { ConnectionUrlInputProps } from '@/features/server-connections/types';
 import { Input } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/color-mode';
 
