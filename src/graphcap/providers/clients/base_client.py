@@ -40,7 +40,7 @@ class BaseClient(AsyncOpenAI, ABC):
 
     def __init__(self, name: str, kind: str, environment: str, env_var: str, base_url: str, default_model: str):
         # Check for required environment variable
-        if env_var != "NONE":
+        if env_var and env_var != "NONE":
             api_key = os.getenv(env_var)
             if api_key is None:
                 raise ValueError(f"Environment variable {env_var} is not set")
