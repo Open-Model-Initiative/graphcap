@@ -52,7 +52,7 @@ def _parse_provider_config(config_data: dict[str, Any]) -> ProviderConfig:
 
     kind: str = config_data["kind"]
     environment: str = config_data["environment"]
-    env_var: str = config_data["env_var"]
+    env_var: str = config_data.get("env_var", "")
     base_url: str = config_data["base_url"]
 
     # If no default model specified, require one to be set
@@ -137,8 +137,6 @@ def validate_config(providers: dict[str, ProviderConfig]) -> list[str]:
 
     for name, provider in providers.items():
         # Required fields
-        if not provider.env_var:
-            errors.append(f"{name}: Missing env_var")
         if not provider.base_url:
             errors.append(f"{name}: Missing base URL")
         if not provider.kind:
