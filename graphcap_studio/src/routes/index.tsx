@@ -5,11 +5,8 @@ import {
   Text, 
   Button, 
   List, 
-  ListItem, 
   Container,
   Card,
-  CardBody,
-  CardHeader,
   Link,
   VStack,
   Icon
