@@ -1,1 +1,1 @@
-export * from './feature-stub';
+export * from '../../components/ui/feature-stub';
