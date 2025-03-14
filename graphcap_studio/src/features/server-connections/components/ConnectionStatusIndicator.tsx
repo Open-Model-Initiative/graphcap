@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
-import { CONNECTION_STATUS } from '../../constants';
-import { ConnectionStatusIndicatorProps } from '../../types/connectionComponents';
+import { CONNECTION_STATUS } from '@/features/server-connections/constants';
+import { ConnectionStatusIndicatorProps } from '@/features/server-connections/types';
 import { Status } from '@/components/ui/status';
 
 /**

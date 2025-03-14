@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
-import { CONNECTION_STATUS } from '../../constants';
-import { ConnectionActionButtonProps } from '../../types/connectionComponents';
+import { CONNECTION_STATUS } from '@/features/server-connections/constants';
+import { ConnectionActionButtonProps } from '@/features/server-connections/types';
 import { Button } from '@chakra-ui/react';
 
 /**

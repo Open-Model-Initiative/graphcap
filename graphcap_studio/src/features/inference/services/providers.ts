@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hc } from 'hono/client';
 import type { AppType } from '../../../../../data_service/src/app'; // TODO: Refactor
-import { SERVER_IDS } from '@/common/constants';
+import { SERVER_IDS } from '@/features/server-connections/constants';
 import { useServerConnectionsContext } from '@/context/ServerConnectionsContext';
 import { 
   Provider, 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
 import { useServerConnectionsContext } from '@/context/ServerConnectionsContext';
-import { SERVER_IDS } from '@/common/constants';
+import { SERVER_IDS } from '@/features/server-connections';
 
 /**
  * Custom hook for checking database health

@@ -10,12 +10,7 @@
  */
 
 // Server connections
-export {
-  checkServerHealth,
-  checkMediaServerHealth,
-  checkGraphCapServerHealth,
-  checkServerHealthById
-} from './serverConnections';
+
 
 // File browser
 export {
