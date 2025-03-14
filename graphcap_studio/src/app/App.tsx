@@ -1,14 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Box } from '@chakra-ui/react'
-import './App.css'
 
 interface AppProps {
-  children: ReactNode
+  readonly children: ReactNode
 }
 
-function App({ children }: AppProps) {
-  
-
+function App({ children }: Readonly<AppProps>) {
   return (
     <Box minH="100vh" bg="background" color="text.default">
       {children}

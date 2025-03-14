@@ -7,7 +7,6 @@ import { Provider } from '@/components/ui/provider'
 
 // Import styles
 import './index.css'
-import './App.css'
 
 // Import the generated route tree
 import { routeTree } from '../routeTree.gen'

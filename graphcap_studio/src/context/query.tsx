@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
 })
 
 interface QueryProviderProps {
-  children: ReactNode
+  readonly children: ReactNode
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
