@@ -1,28 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from 'react';
-import { Image } from '@/services/images';
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
-import { useImageProperties } from './hooks';
 import { Perspectives } from '@/features/perspectives';
 import { PerspectivesProvider } from '@/features/perspectives/context/PerspectivesContext';
 import { Box } from '@chakra-ui/react';
 import { Tabs } from '@chakra-ui/react';
-
-interface ImagePropertiesProps {
-  readonly image: Image | null;
-  readonly isLoading?: boolean;
-  readonly error?: string | null;
-}
+import { useImagePropertiesContext } from './context';
 
 /**
  * Component for displaying image properties and metadata
+ * 
+ * This component uses the ImagePropertiesContext to access and manage
+ * image properties data.
  */
-export function ImageProperties({ image, isLoading = false, error = null }: ImagePropertiesProps) {
-  // Get image properties data
+export function ImageProperties() {
+  // Get context data and methods
   const { 
     properties, 
-    isLoading: propertiesLoading, 
-    error: propertiesError,
+    isLoading,
+    error,
+    image,
     newTag,
     isEditing,
     setNewTag,
@@ -30,24 +26,17 @@ export function ImageProperties({ image, isLoading = false, error = null }: Imag
     handleAddTag,
     handleRemoveTag,
     handleSave,
-    setIsEditing
-  } = useImageProperties(image);
-  
-  // Toggle editing function
-  const toggleEditing = () => setIsEditing(!isEditing);
-  
-  // Combine loading and error states
-  const isLoadingState = isLoading || propertiesLoading;
-  const errorState = error ?? propertiesError;
+    toggleEditing
+  } = useImagePropertiesContext();
   
   // Render loading state
-  if (isLoadingState) {
+  if (isLoading) {
     return <LoadingState />;
   }
   
   // Render error state
-  if (errorState) {
-    return <ErrorState message={errorState} />;
+  if (error) {
+    return <ErrorState message={error} />;
   }
   
   // Render no image selected state
