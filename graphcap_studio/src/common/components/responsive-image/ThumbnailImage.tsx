@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ResponsiveImage } from './ResponsiveImage';
+import { ImageErrorBoundary } from './ImageErrorBoundary';
+import { ThumbnailComponent } from './ThumbnailComponent';
 
 interface ThumbnailImageProps {
   readonly imagePath: string;
@@ -7,17 +8,19 @@ interface ThumbnailImageProps {
   readonly isSelected?: boolean;
   readonly className?: string;
   readonly aspectRatio?: number;
+  readonly width?: number;
+  readonly height?: number;
   readonly onClick?: () => void;
 }
 
 /**
- * A specialized thumbnail component based on ResponsiveImage
+ * A specialized thumbnail image with selection capabilities
  * 
  * Features:
- * - Optimized for thumbnail display with appropriate sizes attribute
  * - Visual indication for selected state
  * - Click handling for selection
- * - Consistent aspect ratio
+ * - Efficient suspense-based image loading
+ * - Error handling with retry capability
  */
 export function ThumbnailImage({
   imagePath,
@@ -25,6 +28,8 @@ export function ThumbnailImage({
   isSelected = false,
   className = '',
   aspectRatio = 1,
+  width = 150,
+  height,
   onClick,
 }: ThumbnailImageProps) {
   return (
@@ -36,15 +41,15 @@ export function ThumbnailImage({
       onClick={onClick}
       aria-pressed={isSelected}
     >
-      <ResponsiveImage
-        imagePath={imagePath}
-        alt={alt}
-        aspectRatio={aspectRatio}
-        sizes="150px" // Thumbnails are typically small
-        objectFit="cover"
-        priority={false}
-        forceContainerAspect={true}
-      />
+      <ImageErrorBoundary compact={true}>
+        <ThumbnailComponent
+          imagePath={imagePath}
+          alt={alt}
+          aspectRatio={aspectRatio}
+          width={width}
+          height={height}
+        />
+      </ImageErrorBoundary>
     </button>
   );
 }

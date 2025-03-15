@@ -2,7 +2,7 @@
 import React from 'react';
 import { ImageOff } from 'lucide-react';
 import { ResponsiveImage } from '@/common/components/responsive-image';
-import { ErrorBoundary } from '../ErrorBoundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useImageCarousel } from '../ImageCarouselContext';
 
 interface MainImageDisplayProps {
@@ -27,7 +27,7 @@ export function MainImageDisplay({ className = '' }: MainImageDisplayProps) {
   }
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallback={<div>Error loading image</div>}>
       <div className={`relative w-full h-full overflow-hidden ${className}`}>
         <div className="absolute inset-0 flex items-center justify-center">
           <ResponsiveImage

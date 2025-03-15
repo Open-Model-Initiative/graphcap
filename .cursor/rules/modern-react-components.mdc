@@ -237,43 +237,4 @@ NavigationBar.tsx
 
 ### 8. Implement Error Boundaries
 
-Use error boundaries to catch and handle errors in component trees.
-
-```tsx
-import React, { ErrorInfo } from 'react';
-
-type ErrorBoundaryProps = {
-  children: React.ReactNode;
-  fallback: React.ReactNode;
-};
-
-type ErrorBoundaryState = {
-  hasError: boolean;
-};
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;
-```
-
+Use error boundaries to catch and handle errors in component trees with react-error-boundary.

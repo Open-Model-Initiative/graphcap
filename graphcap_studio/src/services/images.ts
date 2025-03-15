@@ -111,6 +111,64 @@ export const queryKeys = {
 const getClient = () => getQueryClient();
 
 /**
+ * Enhanced fetch function with retry logic and timeout handling
+ * 
+ * @param url - URL to fetch
+ * @param options - Fetch options
+ * @param retryCount - Number of retry attempts (default: 3)
+ * @param retryDelay - Base delay between retries in ms (default: 1000)
+ * @param timeout - Timeout in ms (default: 30000)
+ * @returns Promise with the fetch response
+ */
+async function fetchWithRetry(
+  url: string | URL,
+  options?: RequestInit,
+  retryCount = 3,
+  retryDelay = 1000,
+  timeout = 30000
+): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const fetchOptions = {
+      ...options,
+      signal: controller.signal,
+    };
+    
+    try {
+      const response = await fetch(url, fetchOptions);
+      if (!response.ok && retryCount > 0) {
+        // Exponential backoff with jitter
+        const delay = retryDelay * Math.pow(1.5, 3 - retryCount) * (0.9 + Math.random() * 0.2);
+        console.warn(`Request failed with status ${response.status}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retryCount - 1, retryDelay, timeout);
+      }
+      return response;
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`Request timed out after ${timeout}ms:`, url);
+        throw new Error(`Request timed out after ${timeout}ms: ${url.toString()}`);
+      }
+      
+      if (retryCount > 0) {
+        // Exponential backoff with jitter
+        const delay = retryDelay * Math.pow(1.5, 3 - retryCount) * (0.9 + Math.random() * 0.2);
+        console.warn(`Request failed with error: ${error}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchWithRetry(url, options, retryCount - 1, retryDelay, timeout);
+      }
+      throw error;
+    }
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+/**
  * React hook for listing images using TanStack Query
  * 
  * @param directory - Optional directory path
@@ -127,12 +185,7 @@ export function useListImages(directory?: string) {
         url.searchParams.append('directory', directory);
       }
       
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Failed to list images: ${response.statusText}`);
-      }
+      const response = await fetchWithRetry(url.toString());
       
       const data = await response.json();
       console.log('Received data:', data);
@@ -156,12 +209,7 @@ export function useListDatasetImages() {
       console.log('Listing dataset images');
       
       try {
-        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          throw new Error(`Failed to list dataset images: ${response.statusText}`);
-        }
+        const response = await fetchWithRetry(`${MEDIA_SERVER_URL}/api/datasets/images`);
         
         const data = await response.json();
         console.log('Received datasets data:', data);
@@ -277,6 +325,22 @@ export function preloadImage(imagePath: string, size: 'thumbnail' | 'full' = 'th
   
   const img = new Image();
   img.src = url;
+  
+  // Add event listeners to track load/error
+  img.onload = () => {
+    console.log(`Preloaded image (${size}): ${imagePath}`);
+  };
+  
+  img.onerror = () => {
+    console.warn(`Failed to preload image (${size}): ${imagePath}`);
+    // Remove from cache if loading failed
+    if (size === 'thumbnail') {
+      const cacheKey = `${imagePath}_200x200_webp`;
+      thumbnailCache.delete(cacheKey);
+    } else {
+      imageUrlCache.delete(imagePath);
+    }
+  };
 }
 
 /**
@@ -291,19 +355,13 @@ export function useProcessImage() {
     mutationFn: async (request: ImageProcessRequest) => {
       console.log('Processing image:', request);
       
-      const response = await fetch(`${MEDIA_SERVER_URL}/api/images/process`, {
+      const response = await fetchWithRetry(`${MEDIA_SERVER_URL}/api/images/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Failed to process image: ${response.statusText}`);
-      }
       
       const data = await response.json();
       console.log('Processed image result:', data);
@@ -345,7 +403,7 @@ export function useCreateDataset() {
       console.log('Creating dataset:', name);
       
       try {
-        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/create`, {
+        const response = await fetchWithRetry(`${MEDIA_SERVER_URL}/api/datasets/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -353,16 +411,9 @@ export function useCreateDataset() {
           body: JSON.stringify({ name }),
         });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          
-          // Handle specific error cases
-          if (response.status === 409) {
-            throw new Error(`Dataset "${name}" already exists (409)`);
-          } else {
-            throw new Error(`Failed to create dataset: ${response.statusText}`);
-          }
+        // Handle specific error cases
+        if (response.status === 409) {
+          throw new Error(`Dataset "${name}" already exists (409)`);
         }
         
         console.log('Dataset created successfully:', name);
@@ -406,16 +457,16 @@ export function useUploadImage() {
         formData.append('targetPath', targetPath);
       }
       
-      const response = await fetch(`${MEDIA_SERVER_URL}/api/images/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Failed to upload image: ${response.statusText}`);
-      }
+      const response = await fetchWithRetry(
+        `${MEDIA_SERVER_URL}/api/images/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+        3,  // retryCount
+        2000, // retryDelay
+        60000 // timeout (60s for uploads)
+      );
       
       const data = await response.json();
       console.log('Upload result:', data);
@@ -453,7 +504,7 @@ export function useAddImageToDataset() {
         // Ensure we're using the correct datasets path
         const targetDatasetPath = `${DATASETS_PATH}/${datasetName}`;
         
-        const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/add-image`, {
+        const response = await fetchWithRetry(`${MEDIA_SERVER_URL}/api/datasets/add-image`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -464,12 +515,6 @@ export function useAddImageToDataset() {
             targetPath: targetDatasetPath
           }),
         });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          throw new Error(`Failed to add image to dataset: ${response.statusText}`);
-        }
         
         const data = await response.json();
         console.log('Add image to dataset result:', data);
@@ -511,11 +556,7 @@ export async function prefetchImages(directory?: string): Promise<void> {
         url.searchParams.append('directory', directory);
       }
       
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error(`Failed to list images: ${response.statusText}`);
-      }
-      
+      const response = await fetchWithRetry(url.toString());
       const data = await response.json();
       return ImageListResponseSchema.parse(data);
     }
@@ -530,11 +571,7 @@ export async function prefetchDatasetImages(): Promise<void> {
   await queryClient.prefetchQuery({
     queryKey: queryKeys.datasetImages,
     queryFn: async () => {
-      const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
-      if (!response.ok) {
-        throw new Error(`Failed to list dataset images: ${response.statusText}`);
-      }
-      
+      const response = await fetchWithRetry(`${MEDIA_SERVER_URL}/api/datasets/images`);
       const data = await response.json();
       return DatasetListResponseSchema.parse(data);
     }

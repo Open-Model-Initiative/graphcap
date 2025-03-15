@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-export * from './ResponsiveImage';
-export * from './ThumbnailImage';
-export * from './useResponsiveImage'; 
+export { ResponsiveImage } from './ResponsiveImage';
+export { ThumbnailImage } from './ThumbnailImage';
+export { ThumbnailComponent } from './ThumbnailComponent';
+export { ImageErrorBoundary } from './ImageErrorBoundary';

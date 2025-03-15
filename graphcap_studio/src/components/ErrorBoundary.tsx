@@ -6,76 +6,45 @@
  * logs those errors, and displays a fallback UI instead of the component tree that crashed.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
   /**
    * The UI to display when an error is caught
    */
-  fallback: ReactNode;
+  fallback: ReactNode | ((error: Error, reset: () => void) => ReactNode);
   /**
    * Optional callback for when an error is caught
    */
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   /**
    * Child components that might throw errors
    */
   children: ReactNode;
 }
 
-interface ErrorBoundaryState {
-  /**
-   * Whether an error has been caught
-   */
-  hasError: boolean;
-  /**
-   * The error that was caught
-   */
-  error: Error | null;
-}
-
 /**
  * ErrorBoundary component to catch errors in React components
+ * 
+ * This component uses the react-error-boundary package to provide
+ * error boundary functionality with support for functional components.
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null
-    };
-  }
-
-  /**
-   * Used to render a fallback UI after an error has been thrown
-   */
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return {
-      hasError: true,
-      error
-    };
-  }
-
-  /**
-   * Called when an error has been caught
-   */
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log the error to the console
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
-    // Call the onError callback if provided
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+export function ErrorBoundary({ fallback, onError, children }: ErrorBoundaryProps) {
+  // Handle different types of fallback (ReactNode or function)
+  const renderFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
+    if (typeof fallback === 'function') {
+      return fallback(error, resetErrorBoundary);
     }
-  }
+    return fallback;
+  };
 
-  render(): ReactNode {
-    if (this.state.hasError) {
-      // Render the fallback UI
-      return this.props.fallback;
-    }
-
-    // Render the children normally
-    return this.props.children;
-  }
+  return (
+    <ReactErrorBoundary
+      fallbackRender={renderFallback}
+      onError={onError}
+    >
+      {children}
+    </ReactErrorBoundary>
+  );
 } 
