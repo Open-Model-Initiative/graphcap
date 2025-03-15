@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Image } from '@/services/images';
-import { FeatureStub } from '@/components/ui/feature-stub';
+import { FeatureStub } from '@/components/ui/status/FeatureStub';
 
 interface SegmentsProps {
   readonly image: Image;

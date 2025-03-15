@@ -5,7 +5,7 @@
  * This component displays a message when no perspectives are available.
  */
 
-import { EmptyState } from '@/components/ui';
+import { EmptyState } from '@/components/ui/status/EmptyState';
 
 /**
  * Component for displaying when no perspectives are available

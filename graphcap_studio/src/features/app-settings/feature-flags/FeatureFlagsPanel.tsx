@@ -6,7 +6,7 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/buttons/Switch';
 import { useColorModeValue } from '@/components/ui/color-mode';
 
 /**
