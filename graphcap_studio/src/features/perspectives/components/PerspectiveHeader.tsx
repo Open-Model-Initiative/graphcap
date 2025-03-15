@@ -5,7 +5,7 @@
  * This component displays the header for the perspectives section.
  */
 
-import { LoadingSpinner } from '@/components/ui';
+import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
 
 interface PerspectiveHeaderProps {
   readonly isLoading: boolean;

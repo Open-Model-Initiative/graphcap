@@ -2,13 +2,10 @@
 import { useState } from 'react';
 import { Image, preloadImage } from '@/services/images';
 import { ResponsiveImage } from '@/common/components/responsive-image';
-import { 
-  LoadingSpinner, 
-  EmptyState, 
-  NavigationButton, 
-  ImageCounter
-} from '@/components/ui';
-
+import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
+import { EmptyState } from '@/components/ui/status/EmptyState';
+import { NavigationButton } from '@/components/ui/buttons/NavigationButton';
+import { ImageCounter } from '@/components/ui/ImageCounter';
 
 import { ImageOff, Upload } from 'lucide-react';
 import { ThumbnailStrip } from './ThumbnailStrip';

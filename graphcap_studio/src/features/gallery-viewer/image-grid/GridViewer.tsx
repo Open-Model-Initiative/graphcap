@@ -3,8 +3,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
 import { LazyImage } from '@/features/gallery-viewer/image-grid/LazyImage';
-import { LoadingSpinner, EmptyState } from '@/components/ui';
-import { UploadDropzone } from '../image-uploader';
+import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
+import { EmptyState } from '@/components/ui/status/EmptyState';
+import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';
 
 /**
  * Props for the image renderer component
