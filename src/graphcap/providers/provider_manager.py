@@ -29,20 +29,29 @@ class ProviderManager:
 
     def __init__(self, config_path: str | Path):
         """Initialize provider manager with configuration file"""
+        logger.info(f"Initializing ProviderManager with config from: {config_path}")
         self.providers = get_providers_config(config_path)
         self._clients: Dict[str, BaseClient] = {}
+        logger.info(f"Loaded {len(self.providers)} provider configurations")
+        logger.debug(f"Available providers: {', '.join(self.providers.keys())}")
 
     def get_client(self, provider_name: str) -> BaseClient:
         """Get or create a client for the specified provider"""
         if provider_name not in self.providers:
+            logger.error(f"Requested unknown provider: {provider_name}")
+            logger.debug(f"Available providers: {', '.join(self.providers.keys())}")
             raise ValueError(f"Unknown provider: {provider_name}")
 
         # Return cached client if available
         if provider_name in self._clients:
+            logger.debug(f"Using cached client for provider: {provider_name}")
             return self._clients[provider_name]
 
         # Create new client
         config = self.providers[provider_name]
+        logger.info(f"Initializing new client for provider: {provider_name}")
+        logger.debug(f"Provider config - kind: {config.kind}, environment: {config.environment}, base_url: {config.base_url}")
+        
         try:
             client = get_client(
                 name=provider_name,
@@ -55,26 +64,34 @@ class ProviderManager:
 
             # Set rate limits if configured
             if config.rate_limits:
+                logger.debug(f"Setting rate limits for {provider_name} - requests: {config.rate_limits.requests_per_minute}/min, tokens: {config.rate_limits.tokens_per_minute}/min")
                 client.requests_per_minute = config.rate_limits.requests_per_minute
                 client.tokens_per_minute = config.rate_limits.tokens_per_minute
 
             self._clients[provider_name] = client
+            logger.info(f"Successfully initialized client for provider: {provider_name}")
             return client
 
         except Exception as e:
             logger.error(f"Failed to initialize client for {provider_name}: {str(e)}")
+            logger.debug(f"Provider config details - env_var: {config.env_var}, default_model: {config.default_model}")
             raise
 
     def clients(self) -> Dict[str, BaseClient]:
         """Get all initialized clients"""
+        logger.debug(f"Returning {len(self._clients)} initialized clients")
         return self._clients.copy()
 
     def available_providers(self) -> list[str]:
         """Get list of available provider names"""
-        return list(self.providers.keys())
+        providers = list(self.providers.keys())
+        logger.debug(f"Available providers: {', '.join(providers)}")
+        return providers
 
     def get_provider_config(self, provider_name: str) -> ProviderConfig:
         """Get configuration for a specific provider"""
         if provider_name not in self.providers:
+            logger.error(f"Requested config for unknown provider: {provider_name}")
             raise ValueError(f"Unknown provider: {provider_name}")
+        logger.debug(f"Returning config for provider: {provider_name}")
         return self.providers[provider_name] 
