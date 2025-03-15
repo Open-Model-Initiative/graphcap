@@ -2,6 +2,40 @@
 
 This feature provides functionality for working with different perspectives on images in GraphCap Studio.
 
+## Context Architecture
+
+The perspectives feature uses a hierarchical context architecture to manage state efficiently:
+
+1. **PerspectivesDataProvider**: Manages server data fetching and API communication
+2. **PerspectivesCaptionProvider**: Handles caption data via localStorage and generation status
+3. **PerspectiveUIProvider**: Manages UI state like active perspective and provider selection
+
+### Caption Storage
+
+Captions for perspectives are stored locally in the browser's localStorage. This provides several benefits:
+- Persistence between sessions
+- Reduced server load
+- Improved performance
+- Simplified data flow
+
+The storage uses a key format of `datasetId_imageFilename_perspectiveName` to organize captions.
+
+Access the caption functionality using:
+
+```typescript
+const { 
+  captions,
+  generatedPerspectives, 
+  isGenerating,
+  generatePerspective,
+  isPerspectiveGenerated,
+  isPerspectiveGenerating,
+  getPerspectiveData
+} = usePerspectivesCaption();
+```
+
+This replaces the previous complex prop-drilling approach where these properties were passed down through multiple component layers.
+
 ## Context Structure
 
 The perspectives feature uses a context-based approach for state management, following React Context API best practices. The context structure has been refactored to separate data concerns from UI concerns:
@@ -23,6 +57,15 @@ The perspectives feature uses a context-based approach for state management, fol
 - Handles provider selection
 - Manages UI-specific state like generation status
 - Provides rendering utilities for perspective fields
+
+### Inference Context
+
+`PerspectiveInferenceContext` - Responsible for inference provider management:
+
+- Handles provider selection and availability
+- Manages inference generation status
+- Provides methods for interacting with providers
+- Abstracts provider data fetching from the inference feature
 
 ### Combined Provider
 

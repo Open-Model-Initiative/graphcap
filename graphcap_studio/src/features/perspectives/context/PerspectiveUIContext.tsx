@@ -3,26 +3,22 @@
  * Perspective UI Context
  * 
  * This context manages UI state and rendering utilities for perspectives.
- * It follows the Context API best practices and separates UI concerns from data fetching.
+ * It follows the Context API best practices and focuses exclusively on UI concerns.
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { PerspectiveSchema, Provider } from '../types';
+import { PerspectiveSchema } from '../types';
 
 // Define the context type with explicit typing
 interface PerspectiveUIContextType {
   // UI state
   activeSchemaName: string | null;
-  selectedProviderId: number | undefined;
-  isGeneratingAll: boolean;
-  availableProviders: Provider[];
+  expandedPanels: Record<string, boolean>;
   
   // UI actions
   setActiveSchemaName: (schemaName: string | null) => void;
-  setSelectedProviderId: (providerId: number | undefined) => void;
-  setIsGeneratingAll: (isGenerating: boolean) => void;
-  setAvailableProviders: (providers: Provider[]) => void;
-  handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  togglePanelExpansion: (panelId: string) => void;
+  setAllPanelsExpanded: (expanded: boolean) => void;
   
   // Rendering utilities
   renderField: (field: PerspectiveSchema['schema_fields'][0], value: any) => ReactNode;
@@ -43,38 +39,39 @@ export class PerspectiveUIProviderError extends Error {
 
 interface PerspectiveUIProviderProps {
   children: ReactNode;
-  initialProviderId?: number;
-  initialProviders?: Provider[];
 }
 
 /**
  * Provider component for perspective UI state and utilities
+ * Focused exclusively on UI concerns
  */
 export function PerspectiveUIProvider({ 
-  children, 
-  initialProviderId,
-  initialProviders = [] 
+  children
 }: PerspectiveUIProviderProps) {
   // UI state
   const [activeSchemaName, setActiveSchemaName] = React.useState<string | null>(null);
-  const [selectedProviderId, setSelectedProviderId] = React.useState<number | undefined>(initialProviderId);
-  const [isGeneratingAll, setIsGeneratingAll] = React.useState<boolean>(false);
-  const [availableProviders, setAvailableProviders] = React.useState<Provider[]>(initialProviders);
+  const [expandedPanels, setExpandedPanels] = React.useState<Record<string, boolean>>({});
 
-  // Provider change handler
-  const handleProviderChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    try {
-      const value = e.target.value;
-      setSelectedProviderId(value ? Number(value) : undefined);
-    } catch (error) {
-      console.error('Error handling provider change:', error);
-      // Continue with undefined provider ID on error
-      setSelectedProviderId(undefined);
-    }
+  // Panel expansion handlers
+  const togglePanelExpansion = React.useCallback((panelId: string) => {
+    setExpandedPanels(prev => ({
+      ...prev,
+      [panelId]: !prev[panelId]
+    }));
+  }, []);
+
+  const setAllPanelsExpanded = React.useCallback((expanded: boolean) => {
+    setExpandedPanels(prev => {
+      const newState = { ...prev };
+      Object.keys(newState).forEach(key => {
+        newState[key] = expanded;
+      });
+      return newState;
+    });
   }, []);
 
   // Field rendering utility function
-  const renderField = (field: PerspectiveSchema['schema_fields'][0], value: any) => {
+  const renderField = React.useCallback((field: PerspectiveSchema['schema_fields'][0], value: any) => {
     try {
       if (!field) return null;
 
@@ -114,22 +111,18 @@ export function PerspectiveUIProvider({
         <p className="text-red-500 text-sm">Error rendering field: {error instanceof Error ? error.message : 'Unknown error'}</p>
       );
     }
-  };
+  }, []);
 
   // Create context value object
   const value: PerspectiveUIContextType = {
     // UI state
     activeSchemaName,
-    selectedProviderId,
-    isGeneratingAll,
-    availableProviders,
+    expandedPanels,
     
     // UI actions
     setActiveSchemaName,
-    setSelectedProviderId,
-    setIsGeneratingAll,
-    setAvailableProviders,
-    handleProviderChange,
+    togglePanelExpansion,
+    setAllPanelsExpanded,
     
     // Rendering utilities
     renderField,

@@ -28,7 +28,7 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
     <FeatureFlagProvider>
       <ServerConnectionsProvider>
         <DatasetInitializer>
-          <PerspectivesProvider>
+          <PerspectivesProvider image={null}>
             {children}
           </PerspectivesProvider>
         </DatasetInitializer>

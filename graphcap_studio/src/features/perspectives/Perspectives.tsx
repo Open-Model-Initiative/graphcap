@@ -5,11 +5,13 @@
  * This component displays and manages image perspectives from GraphCap.
  */
 
-import React, { useCallback, useMemo } from 'react';
-import { usePerspectivesData, usePerspectiveUI } from './context';
+import React, { useCallback, useMemo, useEffect } from 'react';
+import { 
+  usePerspectivesData, 
+  usePerspectiveUI
+} from './context';
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { Image } from '@/services/images';
-import { useImagePerspectives } from '@/features/perspectives/hooks';
 import { useServerConnectionsContext } from '@/context';
 import { SERVER_IDS } from '@/features/server-connections/constants';
 import { Box, Flex, Icon, Button } from '@chakra-ui/react';
@@ -32,73 +34,67 @@ export function Perspectives({ image }: PerspectivesProps) {
   const [options, setOptions] = React.useState<CaptionOptions>(DEFAULT_OPTIONS);
   const optionsButtonRef = React.useRef<HTMLButtonElement>(null);
   
+  // Get data from perspectives data context
+  const {
+    isServerConnected,
+    generatePerspective,
+    selectedProviderId,
+    schemas,
+    perspectivesError: dataError,
+    setCurrentImage,
+    currentImage
+  } = usePerspectivesData();
+  
   // Get server connection status
   const { connections, handleConnect } = useServerConnectionsContext();
   const graphcapServer = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
   
-  // Get data from the perspectives data context
-  const {
-    perspectives,
-    schemas,
-    isLoading: dataLoading,
-    isServerConnected,
-    error: dataError
-  } = usePerspectivesData();
-
-  // Get UI state from the perspectives UI context
+  // Get UI state from perspectives UI context
   const {
     activeSchemaName,
-    setActiveSchemaName,
-    selectedProviderId,
-    setSelectedProviderId,
-    availableProviders: contextProviders,
-    setAvailableProviders
+    setActiveSchemaName
   } = usePerspectiveUI();
-
-  // Get image-specific perspective data
-  const {
-    captions,
-    isLoading: imageLoading,
-    error: imageError,
-    generatePerspective,
-    availableProviders,
-    generatedPerspectives,
-  } = useImagePerspectives(image);
-
-  // Combined loading and error states
-  const isLoading = dataLoading || imageLoading;
-  const error = dataError || imageError;
-
-  // Update available providers in context whenever they change
-  React.useEffect(() => {
-    if (availableProviders.length > 0) {
-      setAvailableProviders(availableProviders);
+  
+  // Effect to update current image in context when image prop changes
+  useEffect(() => {
+    if (image && (!currentImage || image.path !== currentImage.path)) {
+      setCurrentImage(image);
     }
-  }, [availableProviders, setAvailableProviders]);
+  }, [image, currentImage, setCurrentImage]);
+  
+  // Effect to set the first schema as active if none is selected
+  useEffect(() => {
+    if (!activeSchemaName && schemas && Object.keys(schemas).length > 0) {
+      setActiveSchemaName(Object.keys(schemas)[0]);
+    }
+  }, [activeSchemaName, schemas, setActiveSchemaName]);
 
-  // Handler for updating options with memoization to avoid recreating the function
   const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
     setOptions(newOptions);
   }, []);
-
-  // Handler for generating perspective with options - memoized to avoid recreating on every render
-  const handleGeneratePerspective = useCallback((schemaKey: string) => {
-    generatePerspective(schemaKey, selectedProviderId, options);
-    // Close options menu after generation
-    setShowOptions(false);
-  }, [generatePerspective, selectedProviderId, options]);
-
-  // Handler for provider change
-  const handleProviderChange = useCallback((providerId: number | undefined) => {
-    setSelectedProviderId(providerId);
-  }, [setSelectedProviderId]);
   
   // Options control button - memoized to avoid recreating on every render
   const optionsControl = useMemo(() => ({
     isOpen: showOptions,
     onToggle: () => setShowOptions(!showOptions),
-    buttonRef: optionsButtonRef
-  }), [showOptions]);
+    buttonRef: optionsButtonRef,
+    options
+  }), [showOptions, options]);
+
+  // Demonstrate using the new unified context for generating a perspective
+  const handleGeneratePerspective = useCallback((schemaName: string) => {
+    if (image) {
+      // Use the new unified generatePerspective method
+      generatePerspective(
+        schemaName,
+        image.path,
+        selectedProviderId,
+        options
+      ).catch(error => {
+        console.error(`Error generating perspective "${schemaName}":`, error);
+      });
+    }
+  }, [image, generatePerspective, selectedProviderId, options]);
 
   // Show error state if there's an error or server is not connected
   if (!isServerConnected) {
@@ -109,19 +105,31 @@ export function Perspectives({ image }: PerspectivesProps) {
     );
   }
   
-  if (error) {
+  if (dataError) {
     return (
       <Flex direction="column" height="100%" overflow="hidden">
         <PerspectivesErrorState 
           type="general"
-          error={error} 
+          error={dataError} 
         />
       </Flex>
     );
   }
 
-  // Show empty state if no image is selected or no schemas are available
-  if (!image || !schemas || Object.keys(schemas).length === 0) {
+  // Show error state if no image is selected
+  if (!image) {
+    return (
+      <Flex direction="column" height="100%" overflow="hidden">
+        <PerspectivesErrorState 
+          type="general"
+          error="No image selected. Please select an image to view perspectives." 
+        />
+      </Flex>
+    );
+  }
+
+  // Show empty state if no schemas are available
+  if (!schemas || Object.keys(schemas).length === 0) {
     return (
       <Flex direction="column" height="100%" overflow="hidden">
         <EmptyPerspectives />
@@ -129,10 +137,13 @@ export function Perspectives({ image }: PerspectivesProps) {
     );
   }
 
-  // Set the first schema as active if none is selected
-  if (!activeSchemaName && Object.keys(schemas).length > 0) {
-    setActiveSchemaName(Object.keys(schemas)[0]);
-    return null; // Return null to avoid rendering with undefined activeSchemaName
+  // Additional safeguard to ensure we have activeSchemaName and it refers to a valid schema
+  if (!activeSchemaName || !schemas[activeSchemaName]) {
+    return (
+      <Flex direction="column" height="100%" overflow="hidden" justifyContent="center" alignItems="center">
+        <EmptyPerspectives />
+      </Flex>
+    );
   }
 
   return (
@@ -145,13 +156,6 @@ export function Perspectives({ image }: PerspectivesProps) {
     >
       {/* Main Content */}
       <PerspectivesPager
-        schemas={schemas}
-        activeSchemaName={activeSchemaName || ''}
-        captions={captions}
-        generatedPerspectives={generatedPerspectives}
-        isLoading={isLoading}
-        onGenerate={handleGeneratePerspective}
-        onSetActiveSchema={setActiveSchemaName}
         optionsControl={optionsControl}
       />
       

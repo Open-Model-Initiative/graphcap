@@ -8,7 +8,7 @@
 import { useCallback } from 'react';
 import { Image } from '@/services/images';
 import { useImagePerspectives } from '@/features/perspectives/services';
-import { usePerspectivesContext } from '@/features/perspectives/context/PerspectivesContext';
+import { usePerspectivesData } from '@/features/perspectives/context';
 import { PerspectiveType } from '@/features/perspectives/types';
 
 interface UsePerspectiveOperationsResult {
@@ -32,8 +32,11 @@ interface UsePerspectiveOperationsResult {
 export function usePerspectiveOperations(image: Image): UsePerspectiveOperationsResult {
   const {
     selectedProviderId,
-    setIsGeneratingAll
-  } = usePerspectivesContext();
+    setIsGeneratingAll,
+    availableProviders: contextProviders,
+    perspectives: contextPerspectives,
+    generatePerspective: contextGeneratePerspective
+  } = usePerspectivesData();
 
   const {
     isLoading,
@@ -41,15 +44,22 @@ export function usePerspectiveOperations(image: Image): UsePerspectiveOperations
     captions,
     generatedPerspectives,
     availablePerspectives,
-    availableProviders,
+    availableProviders: imageProviders,
     generatePerspective: generatePerspectiveService,
     generateAllPerspectives: generateAllPerspectivesService
   } = useImagePerspectives(image);
 
   // Generate a specific perspective
+  // Use either the service method or the context method based on what's available
   const generatePerspective = useCallback((perspectiveKey: string, providerId?: number) => {
-    generatePerspectiveService(perspectiveKey, providerId);
-  }, [generatePerspectiveService]);
+    if (image && contextGeneratePerspective) {
+      // Use the context method if available
+      contextGeneratePerspective(perspectiveKey, image.path, providerId || selectedProviderId);
+    } else {
+      // Fall back to the service method
+      generatePerspectiveService(perspectiveKey, providerId);
+    }
+  }, [contextGeneratePerspective, generatePerspectiveService, image, selectedProviderId]);
 
   // Generate all perspectives
   const generateAllPerspectives = useCallback(() => {
@@ -71,6 +81,9 @@ export function usePerspectiveOperations(image: Image): UsePerspectiveOperations
     return new Date(dateString).toLocaleString();
   }, []);
 
+  // Use context providers if available, otherwise use the service providers
+  const mergedProviders = contextProviders?.length > 0 ? contextProviders : imageProviders;
+
   return {
     // Data
     isLoading,
@@ -78,7 +91,7 @@ export function usePerspectiveOperations(image: Image): UsePerspectiveOperations
     captions,
     generatedPerspectives,
     availablePerspectives,
-    availableProviders,
+    availableProviders: mergedProviders,
     
     // Operations
     generatePerspective,
