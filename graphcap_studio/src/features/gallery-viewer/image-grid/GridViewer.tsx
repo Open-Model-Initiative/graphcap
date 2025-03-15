@@ -2,8 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeGrid } from 'react-window';
 import { Image } from '@/services/images';
-import { LazyImage } from '@/common/components/image-grid/LazyImage';
-import { LoadingSpinner, EmptyState } from '@/common/ui';
+import { LazyImage } from '@/features/gallery-viewer/image-grid/LazyImage';
+import { LoadingSpinner, EmptyState } from '@/components/ui';
 import { UploadDropzone } from '../image-uploader';
 
 /**
@@ -159,7 +159,7 @@ export function GridViewer({
           description="Try selecting a different dataset or uploading new images."
         />
         <UploadDropzone
-          datasetName={datasetName}
+          datasetName={datasetName ?? ''}
           onUploadComplete={() => {}}
         />
       </div>

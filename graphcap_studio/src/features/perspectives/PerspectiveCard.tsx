@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Button } from '@/common/ui';
+import { Button } from '@/components/ui';
 import { usePerspectiveUI } from './context/PerspectiveUIContext';
 import { PERSPECTIVE_CLASSES } from './constants';
 import { PerspectiveContent } from './PerspectiveContent';

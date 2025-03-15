@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Box, VStack, HStack } from '@chakra-ui/react';
-import { Button } from '@/common/ui';
+import { Button } from '@/components/ui';
 import { Slider } from '@/components/ui/slider';
 import { CaptionOptions } from '@/features/perspectives/types';
 
@@ -144,7 +144,7 @@ export function GenerationOptionForm({
         </Box>
         
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           onClick={handleResetDefaults}
           disabled={isGenerating}
