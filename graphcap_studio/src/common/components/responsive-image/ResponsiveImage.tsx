@@ -2,8 +2,8 @@
 import { useRef, useMemo } from 'react';
 import { getImageUrl, getThumbnailUrl } from '@/services/images';
 import { useResponsiveImage } from './useResponsiveImage';
-import { generateSrcSet } from '@/common/utils/imageSrcSet';
-import { formatAspectRatioForCSS } from '@/common/utils/aspectRatio';
+import { generateSrcSet } from '@/utils/imageSrcSet';
+import { formatAspectRatioForCSS } from '@/utils/aspectRatio';
 
 interface ResponsiveImageProps {
   readonly imagePath: string;

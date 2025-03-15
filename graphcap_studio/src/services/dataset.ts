@@ -5,7 +5,7 @@ import {
   useQuery, 
   useQueryClient
 } from '@tanstack/react-query';
-import { getQueryClient } from '../common/utils/queryClient';
+import { getQueryClient } from '../utils/queryClient';
 import {ImageSchema } from './images';
 
 /**

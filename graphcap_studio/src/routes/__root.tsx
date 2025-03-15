@@ -8,7 +8,7 @@ import { FileBrowserPanel } from '@/common/components/file-browser'
 import { ProvidersPanel } from '@/features/inference/providers'
 import { SettingsPanel } from '@/features/app-settings'
 import { DatasetPanel } from '@/features/datasets'
-import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon, DatasetIcon } from '../common/components/icons'
+import { FlagIcon, ServerIcon, FolderIcon, SettingsIcon, ProviderIcon, DatasetIcon } from '@/components/icons'
 
 /**
  * RouterDevTools component that conditionally renders based on feature flag

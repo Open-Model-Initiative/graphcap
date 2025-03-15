@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
-import { calculateHeightFromAspectRatio, calculateWidthFromAspectRatio } from '@/common/utils/aspectRatio';
+import { calculateHeightFromAspectRatio, calculateWidthFromAspectRatio } from '@/utils/aspectRatio';
 
 interface UseDynamicThumbnailsProps {
   totalCount: number;

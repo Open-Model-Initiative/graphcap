@@ -12,7 +12,7 @@ import './index.css'
 import { routeTree } from '../routeTree.gen'
 import App from './App'
 import { AppContextProvider, useFeatureFlag } from '@/context'
-import { getQueryClient } from '@/common/utils/queryClient'
+import { getQueryClient } from '@/utils/queryClient'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
