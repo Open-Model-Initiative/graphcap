@@ -5,7 +5,6 @@
  * This component displays the header for a specific perspective with navigation controls.
  */
 
-import React from 'react';
 import { Box, Flex, Text, HStack, IconButton } from '@chakra-ui/react';
 import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';

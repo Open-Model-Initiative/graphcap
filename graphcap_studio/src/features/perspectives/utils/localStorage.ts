@@ -57,7 +57,7 @@ export function getCaptionFromStorage(
 ): any | null {
   try {
     const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
-    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) || '{}');
+    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) ?? '{}');
     
     return storageData[key]?.data || null;
   } catch (error) {
@@ -76,7 +76,7 @@ export function captionExistsInStorage(
 ): boolean {
   try {
     const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
-    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) || '{}');
+    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) ?? '{}');
     
     return !!storageData[key];
   } catch (error) {
@@ -94,7 +94,7 @@ export function getAllCaptionsForImage(
 ): Record<string, any> {
   try {
     const prefix = `${datasetId}_${imageFilename}_`;
-    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) || '{}');
+    const storageData: StorageData = JSON.parse(localStorage.getItem(CAPTION_STORAGE_KEY) ?? '{}');
     
     return Object.entries(storageData)
       .filter(([key]) => key.startsWith(prefix))

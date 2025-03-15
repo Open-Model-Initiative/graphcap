@@ -5,7 +5,6 @@
  * This component displays different error states for the perspectives feature.
  */
 
-import React from 'react';
 import { Box, Center, Heading, Text, Button, Icon } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { LuServerOff, LuTriangleAlert, LuRefreshCw } from 'react-icons/lu';
@@ -15,10 +14,10 @@ import { SERVER_IDS } from '@/features/server-connections/constants';
 type ErrorStateType = 'connection' | 'general' | 'empty';
 
 interface PerspectivesErrorStateProps {
-  type: ErrorStateType;
-  error?: Error | string;
-  onReconnect?: () => void;
-  onRetry?: () => void;
+  readonly type: ErrorStateType;
+  readonly error?: Error | string;
+  readonly onReconnect?: () => void;
+  readonly onRetry?: () => void;
 }
 
 /**

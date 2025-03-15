@@ -14,9 +14,9 @@ import { EdgeField } from './EdgeField';
 import { BaseField } from './BaseField';
 
 interface SchemaFieldFactoryProps {
-  field: SchemaField;
-  value: any;
-  className?: string;
+  readonly field: SchemaField;
+  readonly value: any;
+  readonly className?: string;
 }
 
 export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
