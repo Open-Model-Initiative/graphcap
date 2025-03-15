@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Provider } from './types';
 import { ProviderSelect } from './form';
+import { useProviderFormContext } from './context';
 
 type ProvidersListProps = {
-  readonly providers: Provider[];
-  readonly selectedProviderId: number | null;
   readonly onSelectProvider: (id: number) => void;
 };
 
@@ -12,10 +10,10 @@ type ProvidersListProps = {
  * Component for displaying a list of providers as a dropdown
  */
 export default function ProvidersList({ 
-  providers, 
-  selectedProviderId, 
   onSelectProvider 
 }: ProvidersListProps) {
+  const { providers } = useProviderFormContext();
+  
   if (providers.length === 0) {
     return (
       <div className="p-4 text-center">
@@ -27,8 +25,6 @@ export default function ProvidersList({
   return (
     <div className="p-4">
       <ProviderSelect
-        providers={providers}
-        selectedProviderId={selectedProviderId}
         onChange={onSelectProvider}
         className="w-full"
       />

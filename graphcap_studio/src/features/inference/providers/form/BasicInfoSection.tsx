@@ -10,15 +10,14 @@ import {
   GridItem,
 } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
-import { useProviderFormContext } from '@/features/inference/providers/context';
+import { useInferenceProviderContext } from '@/features/inference/providers/context';
 import { EnvironmentSelect } from './EnvironmentSelect';
 
-type BasicInfoSectionProps = {
-  readonly isEditing: boolean;
-};
-
-export function BasicInfoSection({ isEditing }: BasicInfoSectionProps) {
-  const { control, errors, watch } = useProviderFormContext();
+/**
+ * Component for displaying and editing basic provider information
+ */
+export function BasicInfoSection() {
+  const { control, errors, watch, isEditing } = useInferenceProviderContext();
   const labelColor = useColorModeValue('gray.600', 'gray.300');
   const textColor = useColorModeValue('gray.700', 'gray.200');
 

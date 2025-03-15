@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box } from '@chakra-ui/react';
-import { useProviderFormContext } from './context';
+import { useInferenceProviderContext } from './context';
 import { StatusMessage } from '../../../components/ui/status/StatusMessage';
 import { ModelSelector } from './form/ModelSelector';
 import { ActionButton } from '../../../components/ui/buttons/ActionButton';
@@ -26,7 +26,7 @@ export function ModelSelectionSection() {
     modelsError,
     handleModelSelect,
     isSubmitting
-  } = useProviderFormContext();
+  } = useInferenceProviderContext();
 
   // Handle different states
   if (!providerName) {

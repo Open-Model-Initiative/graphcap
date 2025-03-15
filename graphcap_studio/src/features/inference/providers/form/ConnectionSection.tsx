@@ -3,14 +3,13 @@ import { Controller } from 'react-hook-form';
 import { Field, Input, VStack, Box, Text } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { Switch } from '@/components/ui/buttons/Switch';
-import { useProviderFormContext } from '../context';
+import { useInferenceProviderContext } from '../context';
 
-type ConnectionSectionProps = {
-  readonly isEditing: boolean;
-};
-
-export function ConnectionSection({ isEditing }: ConnectionSectionProps) {
-  const { control, errors, watch } = useProviderFormContext();
+/**
+ * Component for displaying and editing provider connection settings
+ */
+export function ConnectionSection() {
+  const { control, errors, watch, isEditing } = useInferenceProviderContext();
   const labelColor = useColorModeValue('gray.600', 'gray.300');
   const textColor = useColorModeValue('gray.700', 'gray.200');
 

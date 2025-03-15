@@ -3,14 +3,13 @@ import { ChangeEvent } from 'react';
 import { Controller } from 'react-hook-form';
 import { Field, Input, VStack, Box, Text, Grid, GridItem } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
-import { useProviderFormContext } from '../context';
+import { useInferenceProviderContext } from '../context';
 
-type RateLimitsSectionProps = {
-  readonly isEditing: boolean;
-};
-
-export function RateLimitsSection({ isEditing }: RateLimitsSectionProps) {
-  const { control, errors, watch } = useProviderFormContext();
+/**
+ * Component for displaying and editing provider rate limits
+ */
+export function RateLimitsSection() {
+  const { control, errors, watch, isEditing } = useInferenceProviderContext();
   const labelColor = useColorModeValue('gray.600', 'gray.300');
   const textColor = useColorModeValue('gray.700', 'gray.200');
 
