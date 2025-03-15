@@ -7,7 +7,7 @@ import { Upload } from 'lucide-react';
 import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';
 import styles from './ThumbnailStrip.module.css';
 import { ErrorBoundary } from '../ErrorBoundary';
-import { useImageCarouselContext } from '../ImageCarouselContext';
+import { useImageCarousel } from '../ImageCarouselContext';
 
 interface ThumbnailStripProps {
   readonly images: Image[];
@@ -44,7 +44,7 @@ function ThumbnailStripBase({
   maxHeight = 70
 }: Readonly<ThumbnailStripProps>) {
   // Get dataset name from context
-  const { datasetName, onUploadComplete} = useImageCarouselContext();
+  const { datasetName, onUploadComplete} = useImageCarousel();
   
   // Use custom hook for dynamic thumbnail sizing
   const {

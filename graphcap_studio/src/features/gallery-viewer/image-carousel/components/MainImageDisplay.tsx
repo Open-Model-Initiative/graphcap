@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: Apache-2.0
+import React from 'react';
+import { ImageOff } from 'lucide-react';
+import { ResponsiveImage } from '@/common/components/responsive-image';
+import { ErrorBoundary } from '../ErrorBoundary';
+import { useImageCarousel } from '../ImageCarouselContext';
+
+interface MainImageDisplayProps {
+  className?: string;
+}
+
+/**
+ * Component to display the main selected image with error handling
+ */
+export function MainImageDisplay({ className = '' }: MainImageDisplayProps) {
+  const { 
+    selectedImage, 
+    currentIndex, 
+    totalImages, 
+    imageLoadError, 
+    setImageLoadError, 
+    handleRetry 
+  } = useImageCarousel();
+
+  if (!selectedImage) {
+    return null;
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className={`relative w-full h-full ${className}`}>
+        <div className="h-full w-full">
+          <ResponsiveImage
+            imagePath={selectedImage.path}
+            alt={selectedImage.name}
+            className="h-full w-full"
+            objectFit="contain"
+            priority={true} // Main image is high priority
+            sizes="(max-width: 768px) 100vw, 80vw"
+            forceContainerAspect={false} // Don't force aspect ratio for main gallery view
+            onError={() => setImageLoadError(true)}
+            aria-labelledby="carousel-image-label"
+          />
+          
+          {/* Hidden label for screen readers */}
+          <span id="carousel-image-label" className="sr-only">
+            {selectedImage.name} - Image {currentIndex + 1} of {totalImages}
+          </span>
+        </div>
+        
+        {/* Show error state if image fails to load */}
+        {imageLoadError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80">
+            <div className="text-center p-6 bg-white dark:bg-gray-700 rounded-lg shadow-lg">
+              <ImageOff className="h-12 w-12 mx-auto text-gray-400" />
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Failed to load image</p>
+              <button 
+                className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
+                onClick={handleRetry}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
+  );
+} 
