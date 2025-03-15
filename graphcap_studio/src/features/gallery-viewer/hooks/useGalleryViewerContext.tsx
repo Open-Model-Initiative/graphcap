@@ -15,9 +15,6 @@ interface GalleryViewerContextType {
   // Derived values
   currentIndex: number;
   totalImages: number;
-
-  // Dataset information
-  datasetName: string;
   
   // Callbacks
   onUploadComplete?: () => void;
@@ -29,7 +26,6 @@ interface GalleryViewerProviderProps {
   readonly initialViewMode?: ViewMode;
   readonly initialSelectedImage?: Image | null;
   readonly onImageSelected?: (image: Image) => void;
-  readonly datasetName: string;
   readonly onUploadComplete?: () => void;
 }
 
@@ -42,7 +38,6 @@ const GalleryViewerContext = createContext<GalleryViewerContextType | undefined>
  * - View mode (grid or carousel)
  * - Selected image
  * - Current index and total images
- * - Dataset name for image uploads
  * - Upload callbacks
  * 
  * @param children - Child components
@@ -50,7 +45,6 @@ const GalleryViewerContext = createContext<GalleryViewerContextType | undefined>
  * @param initialViewMode - Initial view mode, defaults to DEFAULT_VIEW_MODE
  * @param initialSelectedImage - Initial selected image
  * @param onImageSelected - Callback when an image is selected
- * @param datasetName - Name of the dataset being viewed
  * @param onUploadComplete - Callback when upload is complete
  */
 export function GalleryViewerProvider({
@@ -59,7 +53,6 @@ export function GalleryViewerProvider({
   initialViewMode = DEFAULT_VIEW_MODE,
   initialSelectedImage = null,
   onImageSelected,
-  datasetName,
   onUploadComplete
 }: Readonly<GalleryViewerProviderProps>) {
   // Internal state
@@ -100,9 +93,8 @@ export function GalleryViewerProvider({
     setSelectedImage: setSelectedImageInternal,
     currentIndex,
     totalImages,
-    datasetName,
     onUploadComplete
-  }), [viewMode, selectedImage, currentIndex, totalImages, datasetName, onUploadComplete]);
+  }), [viewMode, selectedImage, currentIndex, totalImages, onUploadComplete]);
   
   return (
     <GalleryViewerContext.Provider value={contextValue}>

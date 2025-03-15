@@ -6,6 +6,7 @@ import { LazyImage } from '@/features/gallery-viewer/image-grid/LazyImage';
 import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
 import { EmptyState } from '@/components/ui/status/EmptyState';
 import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 
 /**
  * Props for the image renderer component
@@ -34,6 +35,7 @@ interface GridViewerProps {
    * If not provided, a default img element will be used
    */
   readonly ImageComponent?: React.ComponentType<ImageRendererProps>;
+  readonly onUploadComplete?: () => void;
 }
 
 /**
@@ -63,19 +65,26 @@ export function GridViewer({
   images,
   isLoading = false,
   isEmpty = false,
-  className = '',
-  containerWidth: externalWidth,
-  containerHeight: externalHeight,
   selectedImage,
   onSelectImage,
   onEditImage,
   ImageComponent,
-  datasetName
+  className = '',
+  containerWidth: externalWidth,
+  containerHeight: externalHeight,
+  datasetName: propDatasetName,
+  onUploadComplete
 }: GridViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [itemSize, setItemSize] = useState(180); // Default item size
   const [columnCount, setColumnCount] = useState(1);
+
+  // Get dataset context
+  const { currentDataset } = useDatasetContext();
+  
+  // Use prop datasetName if provided, otherwise use currentDataset from context
+  const datasetName = propDatasetName || currentDataset;
 
   // Update dimensions when container size changes
   useEffect(() => {
@@ -160,8 +169,8 @@ export function GridViewer({
           description="Try selecting a different dataset or uploading new images."
         />
         <UploadDropzone
-          datasetName={datasetName ?? ''}
-          onUploadComplete={() => {}}
+          datasetName={datasetName}
+          onUploadComplete={onUploadComplete}
         />
       </div>
     );
