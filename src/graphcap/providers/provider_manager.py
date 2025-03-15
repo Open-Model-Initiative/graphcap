@@ -33,7 +33,14 @@ class ProviderManager:
         self.providers = get_providers_config(config_path)
         self._clients: Dict[str, BaseClient] = {}
         logger.info(f"Loaded {len(self.providers)} provider configurations")
-        logger.debug(f"Available providers: {', '.join(self.providers.keys())}")
+        for name, config in self.providers.items():
+            logger.info(f"Provider '{name}' configuration:")
+            logger.info(f"  - kind: {config.kind}")
+            logger.info(f"  - environment: {config.environment}")
+            logger.info(f"  - base_url: {config.base_url}")
+            logger.info(f"  - default_model: {config.default_model}")
+            if config.rate_limits:
+                logger.info(f"  - rate_limits: {config.rate_limits}")
 
     def get_client(self, provider_name: str) -> BaseClient:
         """Get or create a client for the specified provider"""
@@ -50,7 +57,11 @@ class ProviderManager:
         # Create new client
         config = self.providers[provider_name]
         logger.info(f"Initializing new client for provider: {provider_name}")
-        logger.debug(f"Provider config - kind: {config.kind}, environment: {config.environment}, base_url: {config.base_url}")
+        logger.info(f"Provider config details:")
+        logger.info(f"  - kind: {config.kind}")
+        logger.info(f"  - environment: {config.environment}")
+        logger.info(f"  - base_url: {config.base_url}")
+        logger.info(f"  - default_model: {config.default_model}")
         
         try:
             client = get_client(
@@ -74,7 +85,11 @@ class ProviderManager:
 
         except Exception as e:
             logger.error(f"Failed to initialize client for {provider_name}: {str(e)}")
-            logger.debug(f"Provider config details - env_var: {config.env_var}, default_model: {config.default_model}")
+            logger.error(f"Provider config details:")
+            logger.error(f"  - kind: {config.kind}")
+            logger.error(f"  - environment: {config.environment}")
+            logger.error(f"  - base_url: {config.base_url}")
+            logger.error(f"  - default_model: {config.default_model}")
             raise
 
     def clients(self) -> Dict[str, BaseClient]:

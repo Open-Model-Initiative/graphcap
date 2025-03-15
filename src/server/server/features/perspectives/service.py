@@ -8,6 +8,7 @@ Provides services for working with perspective captions.
 import base64
 import json
 import os
+import socket
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -237,8 +238,27 @@ async def generate_caption(
 
         # Get the provider client from the provider manager
         provider_manager = get_provider_manager()
+        
+        # Debug: Log available providers
+        available_providers = provider_manager.available_providers()
+        logger.debug(f"Available providers: {available_providers}")
+        
+        # Debug: Try to resolve host.docker.internal
+        try:
+            host_ip = socket.gethostbyname('host.docker.internal')
+            logger.debug(f"host.docker.internal resolves to: {host_ip}")
+        except socket.gaierror as e:
+            logger.warning(f"Could not resolve host.docker.internal: {e}")
+        
         try:
             provider: BaseClient = provider_manager.get_client(provider_name)
+            # Debug: Log provider details
+            logger.debug(f"Provider details:")
+            logger.debug(f"  - Name: {provider_name}")
+            logger.debug(f"  - Kind: {provider.kind}")
+            logger.debug(f"  - Environment: {provider.environment}")
+            logger.debug(f"  - Base URL: {provider.base_url}")
+            logger.debug(f"  - Default Model: {provider.default_model}")
         except ValueError as e:
             logger.error(f"Provider '{provider_name}' not found: {str(e)}")
             raise HTTPException(
