@@ -2,7 +2,7 @@ version: "3"
 dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 includes:
-  data: ./data_service/Taskfile.data.yml
+  data: ./servers/data_service/Taskfile.data.yml
   inference: ./src/server/Taskfile.inference.yml
 tasks:
   build:
