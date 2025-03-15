@@ -9,7 +9,7 @@ import {
   TextProps,
 } from '@chakra-ui/react';
 import { Status } from '@/components/ui/status';
-import { useColorMode } from '@/components/ui/color-mode';
+import { useColorMode } from '@/components/ui/theme/color-mode';
 
 type StatusType = 'warning' | 'loading' | 'error';
 

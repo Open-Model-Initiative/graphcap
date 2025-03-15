@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Controller } from 'react-hook-form';
 import { Field, createListCollection } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { SelectRoot, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { useProviderFormContext } from '../context';
 import { PROVIDER_ENVIRONMENTS } from '../../constants';

@@ -2,7 +2,7 @@
 import { ChangeEvent } from 'react';
 import { Controller } from 'react-hook-form';
 import { Field, Input, VStack, Box, Text, Grid, GridItem } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { useProviderFormContext } from '../context';
 
 type RateLimitsSectionProps = {

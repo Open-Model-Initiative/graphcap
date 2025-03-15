@@ -11,7 +11,7 @@ import {
   VStack,
   Icon
 } from "@chakra-ui/react"
-import { useColorModeValue } from "@/components/ui/color-mode"
+import { useColorModeValue } from "@/components/ui/theme/color-mode"
 import { MdCircle } from "react-icons/md"
 
 export const Route = createFileRoute('/')({

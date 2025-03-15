@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Controller } from 'react-hook-form';
 import { Field, Input, VStack, Box, Text } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { Switch } from '@/components/ui/buttons/Switch';
 import { useProviderFormContext } from '../context';
 

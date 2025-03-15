@@ -12,7 +12,7 @@ import {
   Flex,
   Spinner,
 } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 /**
  * Server Connections Panel component

@@ -7,7 +7,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { Switch } from '@/components/ui/buttons/Switch';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 /**
  * Feature Flags Panel component

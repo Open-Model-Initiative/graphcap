@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectValueText,
 } from '@/components/ui/select';
-import { useColorMode } from '@/components/ui/color-mode';
+import { useColorMode } from '@/components/ui/theme/color-mode';
 
 // Define the model item type for the select component
 export interface ModelItem {

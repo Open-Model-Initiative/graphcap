@@ -5,7 +5,7 @@ import {
   Link as ChakraLink, 
   Stack
 } from '@chakra-ui/react'
-import { useColorModeValue } from '@/components/ui/color-mode'
+import { useColorModeValue } from '@/components/ui/theme/color-mode'
 
 export function Footer() {
   const bgColor = useColorModeValue('white', 'gray.900')

@@ -5,7 +5,7 @@ import {
   Flex,
   HStack,
 } from '@chakra-ui/react';
-import { useColorMode } from '@/components/ui/color-mode';
+import { useColorMode } from '@/components/ui/theme/color-mode';
 
 /**
  * Component for rendering form action buttons with Chakra UI styling

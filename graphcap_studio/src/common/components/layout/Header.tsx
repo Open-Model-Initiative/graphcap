@@ -7,7 +7,7 @@ import {
   Button, 
   Link
 } from '@chakra-ui/react'
-import { useColorModeValue } from '@/components/ui/color-mode'
+import { useColorModeValue } from '@/components/ui/theme/color-mode'
 
 export function Header() {
   const bgColor = useColorModeValue('white', 'gray.900')
