@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useProviders } from '../services/providers';
 import { useDatabaseHealth } from '../hooks';
 import ProviderForm from './ProviderForm';
 import { ProviderSelect } from './form';
-import { ProviderFormProvider, useProviderFormContext } from './context';
+import { InferenceProviderProvider, useInferenceProviderContext } from './context';
 import {
   Box,
   Button,
@@ -18,13 +18,14 @@ import { useColorMode } from '@/components/ui/theme/color-mode';
 /**
  * Panel content that requires context
  */
-function PanelContent({ providers }: { providers: any[] }) {
+function PanelContent() {
   const { 
     mode, 
     setMode, 
     selectedProvider,
-    setSelectedProvider 
-  } = useProviderFormContext();
+    setSelectedProvider,
+    providers
+  } = useInferenceProviderContext();
   
   const { colorMode } = useColorMode();
   const textColor = colorMode === 'light' ? 'gray.600' : 'gray.300';
@@ -59,15 +60,6 @@ function PanelContent({ providers }: { providers: any[] }) {
         {/* Provider Selection Dropdown */}
         <Box flex="1">
           <ProviderSelect
-            providers={providers}
-            selectedProviderId={selectedProvider?.id || null}
-            onChange={(id) => {
-              const provider = providers.find(p => p.id === id);
-              if (provider) {
-                setSelectedProvider(provider);
-                setMode('view');
-              }
-            }}
             className="w-full"
             aria-label="Select Provider"
           />
@@ -75,7 +67,7 @@ function PanelContent({ providers }: { providers: any[] }) {
         <Button
           size="sm"
           colorScheme="blue"
-          onClick={() => {/* TODO: Handle new provider creation */}}
+          onClick={() => setMode('create')}
         >
           Add Provider
         </Button>
@@ -96,16 +88,17 @@ function PanelContent({ providers }: { providers: any[] }) {
  * provider configurations.
  */
 export function ProvidersPanel() {
-  // Custom hooks
-  const { isConnected } = useDatabaseHealth();
-  
-  // Fetch providers
   const { 
-    data: providers = [], 
+    data: providersData = [], 
     isLoading, 
     isError, 
     error 
   } = useProviders();
+
+  // Set the initial selected provider to the first one in the list
+  const initialSelectedProvider = useMemo(() => {
+    return providersData.length > 0 ? providersData[0] : null;
+  }, [providersData]);
 
   const { colorMode } = useColorMode();
   const textColor = colorMode === 'light' ? 'gray.600' : 'gray.300';
@@ -129,13 +122,15 @@ export function ProvidersPanel() {
   }
 
   return (
-    <ProviderFormProvider
-      mode="view"
+    <InferenceProviderProvider
+      providers={providersData}
+      selectedProvider={initialSelectedProvider}
+      isCreating={false}
       onSubmit={() => {}}
       onCancel={() => {}}
       isSubmitting={false}
     >
-      <PanelContent providers={providers} />
-    </ProviderFormProvider>
+      <PanelContent />
+    </InferenceProviderProvider>
   );
 } 

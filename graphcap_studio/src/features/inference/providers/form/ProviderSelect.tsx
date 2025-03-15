@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Provider } from '../types';
 import {
   SelectRoot,
   SelectTrigger,
@@ -8,11 +7,9 @@ import {
   SelectValueText,
 } from '@/components/ui/select';
 import { createListCollection } from '@chakra-ui/react';
+import { useInferenceProviderContext } from '../context';
 
 type ProviderSelectProps = {
-  readonly providers: Provider[];
-  readonly selectedProviderId: number | null;
-  readonly onChange: (id: number) => void;
   readonly className?: string;
   readonly 'aria-label'?: string;
 };
@@ -21,12 +18,18 @@ type ProviderSelectProps = {
  * Component for selecting a provider from a dropdown
  */
 export function ProviderSelect({
-  providers,
-  selectedProviderId,
-  onChange,
   className,
   'aria-label': ariaLabel = 'Select Provider'
 }: ProviderSelectProps) {
+  const { 
+    providers, 
+    selectedProvider, 
+    setSelectedProvider,
+    setMode
+  } = useInferenceProviderContext();
+  
+  const selectedProviderId = selectedProvider?.id ?? null;
+  
   // Convert providers to the format expected by SelectRoot
   const providerItems = providers.map(provider => ({
     label: provider.name,
@@ -39,12 +42,21 @@ export function ProviderSelect({
   
   // Convert selectedProviderId to string array format
   const value = selectedProviderId ? [String(selectedProviderId)] : [];
+
+  const handleProviderChange = (details: any) => {
+    const id = Number(details.value[0]);
+    const provider = providers.find(p => p.id === id);
+    if (provider) {
+      setSelectedProvider(provider);
+      setMode('view');
+    }
+  };
   
   return (
     <SelectRoot
       collection={providerCollection}
       value={value}
-      onValueChange={(details) => onChange(Number(details.value[0]))}
+      onValueChange={handleProviderChange}
       aria-label={ariaLabel}
       className={className}
     >

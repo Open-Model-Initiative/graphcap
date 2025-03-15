@@ -3,11 +3,11 @@ import { Controller } from 'react-hook-form';
 import { Field, createListCollection } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { SelectRoot, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
-import { useProviderFormContext } from '../context';
+import { useInferenceProviderContext } from '../context';
 import { PROVIDER_ENVIRONMENTS } from '../../constants';
 
 export function EnvironmentSelect() {
-  const { control, errors } = useProviderFormContext();
+  const { control, errors } = useInferenceProviderContext();
   const labelColor = useColorModeValue('gray.600', 'gray.300');
 
   const environmentItems = PROVIDER_ENVIRONMENTS.map(env => ({

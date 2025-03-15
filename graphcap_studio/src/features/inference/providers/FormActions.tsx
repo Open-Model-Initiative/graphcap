@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useProviderFormContext } from './context';
+import { useInferenceProviderContext } from './context';
 import {
   Button,
   Flex,
@@ -15,7 +15,7 @@ export function FormActions() {
     isSubmitting, 
     isCreating, 
     onCancel 
-  } = useProviderFormContext();
+  } = useInferenceProviderContext();
   
   const { colorMode } = useColorMode();
   const isDark = colorMode === 'dark';

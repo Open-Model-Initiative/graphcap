@@ -2,37 +2,31 @@
 import { memo } from 'react';
 import { FormFields } from './FormFields';
 import { Box, Button, Flex } from '@chakra-ui/react';
-import { useProviderFormContext } from './context';
+import { useInferenceProviderContext } from './context';
 
 /**
  * Component for provider form that displays fields in either view or edit mode
  */
 function ProviderForm() {
   const {
-    selectedProvider,
+    handleSubmit,
     isSubmitting,
     onSubmit,
     onCancel,
     mode,
     setMode
-  } = useProviderFormContext();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedProvider) {
-      onSubmit(selectedProvider);
-    }
-  };
+  } = useInferenceProviderContext();
 
   const isEditing = mode === 'edit';
+  const isCreating = mode === 'create';
 
   return (
-    <Box as="form" onSubmit={handleSubmit} p={4}>
+    <Box as="form" onSubmit={handleSubmit(onSubmit)} p={4}>
       <FormFields />
       
       {/* Actions */}
       <Flex justify="flex-end" mt={4} gap={2}>
-        {isEditing ? (
+        {isEditing || isCreating ? (
           <>
             <Button
               variant="outline"
@@ -46,7 +40,7 @@ function ProviderForm() {
               loadingText="Saving..."
               loading={isSubmitting}
             >
-              Save Changes
+              {isCreating ? 'Create Provider' : 'Save Changes'}
             </Button>
           </>
         ) : (

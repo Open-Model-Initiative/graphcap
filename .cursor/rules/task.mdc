@@ -4,20 +4,4 @@ globs:
 alwaysApply: true
 ---
 # Feature Request: 
-### Is your feature request related to a problem?
-I wish graphcap could provide perspective captions through a REST API because we need to access these capabilities from the frontend UI without embedding the Python code directly.
-
-### Describe the solution you'd like
-Add REST API endpoints to the existing server that allow:
-- `GET /api/v1/perspectives/list` - List all available perspectives
-- `POST /api/v1/perspectives/caption` - Generate a caption for an image using a specified perspective
-
-The API should accept image URLs or base64-encoded images and return structured JSON responses with caption data.
-
-### Alternatives Considered
-- Using WebSockets for real-time updates
-- Implementing a GraphQL endpoint
-- Creating a separate microservice
-
-### Additional Context
-This will enable the frontend UI to leverage the perspective caption functionality without requiring direct access to the Python codebase.
+We are reworking and cleaning up our ui architecture. Please utilize our best practices and style guidelines.

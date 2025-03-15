@@ -7,13 +7,13 @@ import {
 import { BasicInfoSection, ConnectionSection, RateLimitsSection } from './form';
 import styles from './FormFields.module.css';
 import { ModelSelectionSection } from './ModelSelectionSection';
-import { useProviderFormContext } from './context';
+import { useInferenceProviderContext } from './context';
 
 /**
  * Component for rendering provider form fields in either view or edit mode
  */
 export function FormFields() {
-  const { isEditing } = useProviderFormContext();
+  const { isEditing } = useInferenceProviderContext();
 
   return (
     <Tabs.Root 
@@ -42,17 +42,17 @@ export function FormFields() {
       </Tabs.List>
       <div className={styles.tabContent}>
         <Tabs.Content value="basic">
-          <BasicInfoSection isEditing={isEditing} />
+          <BasicInfoSection />
         </Tabs.Content>
 
         <Tabs.Content value="connection">
-          <ConnectionSection isEditing={isEditing} />
+          <ConnectionSection />
         </Tabs.Content>
         <Tabs.Content value="model">
           <ModelSelectionSection />
         </Tabs.Content>
         <Tabs.Content value="limits">
-          <RateLimitsSection isEditing={isEditing} />
+          <RateLimitsSection />
         </Tabs.Content>
       </div>
     </Tabs.Root>

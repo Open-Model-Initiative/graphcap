@@ -1,7 +1,7 @@
 ---
-description: Creating react components and features
-globs: graphcap_studio/src/**
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 
 # Creating Modern React Components in 2025
@@ -64,7 +64,7 @@ Utilize the Chakra UI Component Library and our ui [index.ts](mdc:graphcap_studi
     - Split effects if they manage unrelated tasks.
 
 12. **Data Fetching:**  
-    - Prefer React Query/SWR or Next.js data fetching methods over manual useEffect fetching.
+    - Prefer React Query fetching methods over manual useEffect fetching.
 
 13. **Performance:**  
     - Use `useMemo` for expensive calculations/objects.
