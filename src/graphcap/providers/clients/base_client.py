@@ -131,19 +131,38 @@ class BaseClient(AsyncOpenAI, ABC):
         **kwargs,
     ):
         """Create a vision completion with rate limiting"""
+        logger.info(f"Starting vision request for model: {model}")
+        logger.debug(f"Vision parameters - max_tokens: {max_tokens}, temperature: {temperature}, top_p: {top_p}")
+        
         # Estimate token count - this is approximate
         estimated_tokens = len(prompt.split()) + 1000  # Base tokens + image tokens
+        logger.debug(f"Estimated token count: {estimated_tokens}")
 
         await self._enforce_rate_limits(estimated_tokens)
+        
         # Handle image input
         if isinstance(image, (str, Path)) and not str(image).startswith("data:"):
-            image_data = await self._get_base64_image(image)
+            logger.debug(f"Loading image from path: {image}")
+            try:
+                image_data = await self._get_base64_image(image)
+                logger.debug("Successfully loaded and encoded image")
+            except Exception as e:
+                logger.error(f"Failed to load image from {image}: {str(e)}")
+                raise
         else:
+            logger.debug("Using provided base64 image data")
             image_data = image.split("base64,")[1] if "base64," in image else image
 
         # Get provider-specific message format
-        content = self._format_vision_content(prompt, image_data)
         try:
+            content = self._format_vision_content(prompt, image_data)
+            logger.debug("Successfully formatted vision content")
+        except Exception as e:
+            logger.error(f"Failed to format vision content: {str(e)}")
+            raise
+
+        try:
+            logger.debug(f"Making vision API call with schema: {'yes' if schema else 'no'}")
             if schema:
                 completion = await self.beta.chat.completions.parse(
                     model=model,
@@ -155,6 +174,7 @@ class BaseClient(AsyncOpenAI, ABC):
                     top_p=top_p,
                     timeout=180,
                 )
+                logger.info("Successfully completed structured vision request")
             else:
                 completion = await self.chat.completions.create(
                     model=model,
@@ -166,9 +186,11 @@ class BaseClient(AsyncOpenAI, ABC):
                     timeout=180,
                     **kwargs,
                 )
+                logger.info("Successfully completed unstructured vision request")
             return completion
         except Exception as e:
-            logger.error(f"Vision completion failed: {str(e)}")
+            logger.error(f"Vision completion failed for provider {self.name}: {str(e)}")
+            logger.debug(f"Vision request details - model: {model}, base_url: {self.base_url}")
             raise
 
     async def create_structured_completion(
