@@ -52,7 +52,6 @@ export function ImageGalleryContent({
     setSelectedImage,
     currentIndex,
     totalImages,
-    datasetName,
     onUploadComplete
   } = useGalleryViewerContext();
 
@@ -92,7 +91,6 @@ export function ImageGalleryContent({
             isEmpty={isEmpty}
             selectedImage={selectedImage}
             onSelectImage={setSelectedImage}
-            datasetName={datasetName}
             onUploadComplete={onUploadComplete}
             thumbnailOptions={thumbnailOptions}
             className="h-full w-full"

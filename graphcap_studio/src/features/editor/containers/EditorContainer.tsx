@@ -9,7 +9,6 @@ import {
   useImageEditor,
   useImageActions,
 } from "../hooks";
-import { DatasetContainer } from "@/features/datasets";
 
 interface EditorContainerProps {
   readonly directory?: string;
@@ -49,16 +48,10 @@ export function EditorContainer({
   // Determine if the gallery is empty or loading
   const isLoading = false; // Replace with actual loading state if needed
   const isEmpty = filteredImages.length === 0;
-  
-  // Get the selected dataset name
-  const selectedDatasetName = dataset?.name ?? '';
 
   return (
     <div className="h-full w-full flex flex-col bg-gray-900 text-white">
       <EditorLayout
-        navigation={
-          <DatasetContainer className="h-full" />
-        }
         viewer={
           <div className="h-full w-full flex flex-col">
             <div className="flex-grow relative">
@@ -73,7 +66,6 @@ export function EditorContainer({
                 <>
                   {/* Image gallery */}
                   <ViewerContainer
-                    datasetName={selectedDatasetName}
                     images={filteredImages}
                     isLoading={isLoading}
                     isEmpty={isEmpty}

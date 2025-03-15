@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
 import { EmptyState } from '@/components/ui/status/EmptyState';
 import { NavigationButton } from '@/components/ui/buttons/NavigationButton';
 import { ImageCounter } from '@/components/ui/ImageCounter';
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 
 import { ImageOff, Upload } from 'lucide-react';
 import { ThumbnailStrip } from './ThumbnailStrip';
@@ -29,7 +30,7 @@ interface CarouselViewerProps {
   readonly className?: string;
   readonly selectedImage?: Image | null;
   readonly onSelectImage: (image: Image) => void;
-  readonly datasetName: string;
+  readonly datasetName?: string;
   readonly onUploadComplete?: () => void;
   readonly thumbnailOptions?: {
     readonly minWidth?: number;
@@ -71,11 +72,17 @@ export function CarouselViewer({
   className = '',
   selectedImage,
   onSelectImage,
-  datasetName,
+  datasetName: propDatasetName,
   onUploadComplete,
   thumbnailOptions = {},
   preloadOptions = {}
 }: Readonly<CarouselViewerProps>) {
+  // Get dataset context
+  const { currentDataset } = useDatasetContext();
+  
+  // Use prop datasetName if provided, otherwise use currentDataset from context
+  const datasetName = propDatasetName || currentDataset;
+
   const { 
     minWidth = 64, 
     maxWidth = 120, 

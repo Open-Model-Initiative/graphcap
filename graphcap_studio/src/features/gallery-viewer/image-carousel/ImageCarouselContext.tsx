@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext, ReactNode, useMemo } from 'react';
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 
 interface ImageCarouselContextType {
   // Dataset information
@@ -7,14 +8,13 @@ interface ImageCarouselContextType {
   
   // Upload related
   onUploadComplete?: () => void;
-  
 }
 
 const ImageCarouselContext = createContext<ImageCarouselContextType | null>(null);
 
 interface ImageCarouselProviderProps {
   readonly children: ReactNode;
-  readonly datasetName: string;
+  readonly datasetName?: string; // Make optional
   readonly onUploadComplete?: () => void;
 }
 
@@ -23,14 +23,20 @@ interface ImageCarouselProviderProps {
  * Makes the dataset name and other shared properties available to all child components
  * 
  * @param children - Child components
- * @param datasetName - Name of the dataset being viewed
+ * @param datasetName - Optional override for dataset name
  * @param onUploadComplete - Callback when upload is complete
  */
 export function ImageCarouselProvider({ 
   children, 
-  datasetName,
+  datasetName: propDatasetName,
   onUploadComplete
 }: ImageCarouselProviderProps) {
+  // Get current dataset from context
+  const { currentDataset } = useDatasetContext();
+  
+  // Use prop datasetName if provided, otherwise use currentDataset from context
+  const datasetName = propDatasetName || currentDataset;
+
   const contextValue = useMemo(() => ({
     datasetName,
     onUploadComplete,

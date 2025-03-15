@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
-import { useSharedContext } from '@/context/useSharedContext'; /* TODO: Refactor */
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 import { Dataset, Image } from '@/services/images';
 
 interface CompactActionBarProps {
@@ -36,11 +36,12 @@ export function CompactActionBar({
   onDownload,
   onDelete
 }: CompactActionBarProps) {
-  // Get shared context for datasets
+  // Get dataset context
   const {
     datasets,
-    currentDataset
-  } = useSharedContext();
+    currentDataset,
+    addToDataset: addImageToDataset
+  } = useDatasetContext();
   
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [showDatasetDropdown, setShowDatasetDropdown] = useState(false);
@@ -77,8 +78,14 @@ export function CompactActionBar({
 
   // Handle add to dataset button click
   const onAddToDatasetClick = () => {
-    if (image && selectedDataset && onAddToDataset) {
-      onAddToDataset(image.path, selectedDataset);
+    if (image && selectedDataset) {
+      // Try to use the prop callback first (for backward compatibility)
+      if (onAddToDataset) {
+        onAddToDataset(image.path, selectedDataset);
+      } else {
+        // Otherwise use the context function
+        addImageToDataset(image.path, selectedDataset);
+      }
       setShowDatasetDropdown(false);
     }
   };
