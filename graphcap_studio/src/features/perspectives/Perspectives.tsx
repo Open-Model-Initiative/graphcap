@@ -6,15 +6,17 @@
  */
 
 import React from 'react';
-import { PerspectiveCard } from './PerspectiveCard';
-import { PerspectiveUIProvider } from './context/PerspectiveUIContext';
-import { usePerspectivesContext } from './context/PerspectivesContext';
+import { usePerspectivesData, usePerspectiveUI } from './context';
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { PerspectiveHeader } from './components/PerspectiveHeader';
-import { PerspectiveSchema } from '@/features/perspectives/types';
+import { PerspectiveCardTabbed } from './components/PerspectiveCardTabbed';
 import { Image } from '@/services/images';
-import { useImagePerspectives } from '@/features/perspectives/services';
-
+import { useImagePerspectives } from '@/features/perspectives/hooks';
+import { useServerConnectionsContext } from '@/context';
+import { SERVER_IDS } from '@/features/server-connections/constants';
+import { Box, Button, Center, Stack, Text, Icon, Heading } from '@chakra-ui/react';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
+import { LuServerOff, LuTriangleAlert, LuRefreshCw } from 'react-icons/lu';
 
 interface PerspectivesProps {
   image: Image | null;
@@ -24,13 +26,26 @@ interface PerspectivesProps {
  * Component for displaying and managing image perspectives from GraphCap
  */
 export function Perspectives({ image }: PerspectivesProps) {
+  // Get server connection status
+  const { connections, handleConnect } = useServerConnectionsContext();
+  const graphcapServer = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
+  
+  // Get data from the perspectives data context
   const {
     perspectives,
-    isLoading: contextLoading,
-    error: contextError,
-    activePerspective,
-    handleSelectPerspective,
-  } = usePerspectivesContext();
+    schemas,
+    isLoading: dataLoading,
+    isServerConnected,
+    error: dataError
+  } = usePerspectivesData();
+
+  // Get UI state from the perspectives UI context
+  const {
+    activeSchemaName,
+    setActiveSchemaName,
+    selectedProviderId,
+    setSelectedProviderId
+  } = usePerspectiveUI();
 
   // Get image-specific perspective data
   const {
@@ -42,91 +57,103 @@ export function Perspectives({ image }: PerspectivesProps) {
     generatedPerspectives,
   } = useImagePerspectives(image);
 
-  const isPerspectivesListLoading = contextLoading;
-  const error = contextError || imageError;
+  // Combined loading and error states
+  const isLoading = dataLoading;
+  const error = dataError || imageError;
 
-  // Log the perspectives data
-  console.log(`Perspectives data received: ${perspectives ? perspectives.length : 0} perspectives`, { 
-    perspectiveNames: perspectives?.map(p => p.name).join(', ') || 'none'
-  });
-
-  // Convert perspectives array to schema record
-  const schemas = React.useMemo(() => {
-    const result = perspectives.reduce((acc, perspective) => {
-      if (perspective.schema) {
-        acc[perspective.name] = perspective.schema;
-      }
-      return acc;
-    }, {} as Record<string, PerspectiveSchema>);
-    
-    // Log the schemas
-    console.log(`Converted ${Object.keys(result).length} perspectives to schemas`, { 
-      schemaKeys: Object.keys(result).join(', ') || 'none'
-    });
-    
-    return result;
-  }, [perspectives]);
-
-  // Handle loading state for perspectives list only
-  if (isPerspectivesListLoading) {
-    console.log('Rendering loading state');
+  // Handle loading state
+  if (isLoading && isServerConnected) {
     return (
-      <div className="space-y-4">
+      <Stack direction="column" gap={4}>
         <PerspectiveHeader isLoading={true} />
         <EmptyPerspectives />
-      </div>
+      </Stack>
     );
   }
 
-  // Handle error state
-  if (error) {
-    console.error('Rendering error state', { error: error instanceof Error ? error.message : error });
+  // Handle server connection error
+  if (!isServerConnected) {
     return (
-      <div className="p-4 bg-gray-800 rounded-lg">
-        <div className="text-gray-400 text-center">
-          <svg className="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium">Error Loading Perspectives</h3>
-          <p className="mt-1 text-sm">{error instanceof Error ? error.message : error}</p>
-        </div>
-      </div>
+      <Box p={4} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="lg">
+        <Center flexDirection="column" color={useColorModeValue('gray.600', 'gray.400')} textAlign="center">
+          <Icon as={LuServerOff} boxSize={12} color={useColorModeValue('yellow.500', 'yellow.400')} mb={2} />
+          <Heading as="h3" size="sm" fontWeight="medium" mt={2}>Server Connection Required</Heading>
+          <Text mt={1} fontSize="sm">GraphCap Server connection not established</Text>
+          <Button 
+            mt={3}
+            colorScheme="blue"
+            size="sm"
+            onClick={() => handleConnect(SERVER_IDS.GRAPHCAP_SERVER)}
+          >
+            Connect to Server
+          </Button>
+        </Center>
+      </Box>
+    );
+  }
+
+  // Handle other errors
+  if (error) {
+    return (
+      <Box p={4} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="lg">
+        <Center flexDirection="column" color={useColorModeValue('gray.600', 'gray.400')} textAlign="center">
+          <Icon as={LuTriangleAlert} boxSize={12} color={useColorModeValue('red.500', 'red.400')} mb={2} />
+          <Heading as="h3" size="sm" fontWeight="medium" mt={2}>Error Loading Perspectives</Heading>
+          <Text mt={1} fontSize="sm">{error instanceof Error ? error.message : String(error)}</Text>
+          <Button 
+            mt={3}
+            colorScheme="blue"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </Center>
+      </Box>
     );
   }
 
   // Handle empty schemas
   if (Object.keys(schemas).length === 0) {
-    console.warn('No schemas available, rendering empty state');
     return (
-      <div className="space-y-4">
+      <Stack direction="column" gap={4}>
         <PerspectiveHeader isLoading={false} />
         <EmptyPerspectives />
-      </div>
+      </Stack>
     );
   }
+  
+  // Debug captions data
+  console.log("Captions data:", captions);
+  console.log("Perspectives:", Object.keys(schemas).map(key => {
+    return {
+      key,
+      hasData: !!captions?.perspectives[key],
+      content: captions?.perspectives[key]?.content
+    };
+  }));
 
-  console.log(`Rendering ${Object.keys(schemas).length} perspective cards`);
   return (
-    <div className="space-y-4">
+    <Stack direction="column" gap={4}>
       <PerspectiveHeader isLoading={false} />
-      <PerspectiveUIProvider schemas={schemas}>
-        <div className="grid grid-cols-1 gap-6">
-          {Object.entries(schemas).map(([key, schema]) => (
-            <PerspectiveCard
-              key={key}
-              schema={schema}
-              data={captions?.perspectives[key]?.content || null}
-              isActive={activePerspective === key}
-              isGenerated={!!captions?.perspectives[key]}
-              onGenerate={(providerId, options) => generatePerspective(key, providerId, options)}
-              onSetActive={() => handleSelectPerspective(key)}
-              providers={availableProviders}
-              isGenerating={generatedPerspectives.includes(key) && imageLoading}
-            />
-          ))}
-        </div>
-      </PerspectiveUIProvider>
-    </div>
+      <Stack direction="column" gap={6}>
+        {Object.entries(schemas).map(([key, schema]) => (
+          <PerspectiveCardTabbed
+            key={key}
+            schema={schema}
+            data={captions?.perspectives[key]?.content || null}
+            isActive={activeSchemaName === key}
+            isGenerated={!!captions?.perspectives[key]}
+            onGenerate={() => generatePerspective(key, selectedProviderId)}
+            onSetActive={() => setActiveSchemaName(key)}
+            providers={availableProviders}
+            isGenerating={generatedPerspectives.includes(key) && imageLoading}
+            selectedProviderId={selectedProviderId}
+            onProviderChange={(providerId) => setSelectedProviderId(providerId)}
+          />
+        ))}
+      </Stack>
+    </Stack>
   );
 }
 

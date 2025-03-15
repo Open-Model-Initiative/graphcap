@@ -7,7 +7,7 @@
 
 import { SERVER_IDS } from '@/features/server-connections/constants';
 import { ServerConnection } from '@/features/perspectives/types';
-import { DEFAULTS } from '@/features/perspectives/constants';
+import { DEFAULTS } from '@/features/perspectives/constants/index';
 
 
 /**

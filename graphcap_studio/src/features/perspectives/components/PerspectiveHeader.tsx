@@ -5,7 +5,9 @@
  * This component displays the header for the perspectives section.
  */
 
+import { Box, Flex, Heading, Text, Stack } from '@chakra-ui/react';
 import { LoadingSpinner } from '@/components/ui/status/LoadingSpinner';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 interface PerspectiveHeaderProps {
   readonly isLoading: boolean;
@@ -15,15 +17,23 @@ interface PerspectiveHeaderProps {
  * Header component for the perspectives section
  */
 export function PerspectiveHeader({ isLoading }: PerspectiveHeaderProps) {
+  const textColor = useColorModeValue('gray.800', 'gray.200');
+  const mutedColor = useColorModeValue('gray.600', 'gray.400');
+  
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-medium text-gray-200">Perspectives</h3>
+    <Flex justifyContent="space-between" alignItems="center" mb={4}>
+      <Heading as="h3" fontSize="md" fontWeight="medium" color={textColor}>
+        Perspectives
+      </Heading>
+      
       {isLoading && (
-        <div className="flex items-center space-x-2 text-xs text-gray-400">
+        <Flex alignItems="center" gap={2}>
           <LoadingSpinner size="sm" color="primary" className="h-3 w-3" />
-          <span>Processing perspectives...</span>
-        </div>
+          <Text fontSize="xs" color={mutedColor}>
+            Processing perspectives...
+          </Text>
+        </Flex>
       )}
-    </div>
+    </Flex>
   );
 } 

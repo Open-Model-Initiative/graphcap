@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { DatasetInitializer } from '@/features/datasets';
 import { FeatureFlagProvider } from '../features/app-settings/feature-flags/FeatureFlagProvider';
 import { ServerConnectionsProvider } from '.';
+import { PerspectivesProvider } from '@/features/perspectives/context';
 
 interface AppContextProviderProps {
   readonly children: ReactNode;
@@ -27,7 +28,9 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
     <FeatureFlagProvider>
       <ServerConnectionsProvider>
         <DatasetInitializer>
+          <PerspectivesProvider>
             {children}
+          </PerspectivesProvider>
         </DatasetInitializer>
       </ServerConnectionsProvider>
     </FeatureFlagProvider>
