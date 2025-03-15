@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ImageProperties } from '@/features/image-properties';
 import { Image } from '@/services/images';
+import { ImagePropertiesProvider } from './context';
 
 interface PropertiesContainerProps {
   readonly className?: string;
@@ -11,7 +12,7 @@ interface PropertiesContainerProps {
  * A container component for the properties panel
  * 
  * This component renders the image properties and actions.
- * It accepts a selectedImage prop instead of using the EditorContext.
+ * It wraps the ImageProperties component with the ImagePropertiesProvider.
  */
 export function PropertiesContainer({
   className = '',
@@ -38,18 +39,11 @@ export function PropertiesContainer({
     );
   }
 
-  // Handle save function for image properties
-  const handleSave = (properties: Record<string, any>) => {
-    console.log('Properties saved:', properties);
-    // In a real implementation, this would save the properties to the backend
-  };
-
   return (
     <div className={`h-full w-full overflow-auto bg-gray-800 ${className}`}>
-      <ImageProperties
-        image={selectedImage}
-        onSave={handleSave}
-      />
+      <ImagePropertiesProvider image={selectedImage}>
+        <ImageProperties />
+      </ImagePropertiesProvider>
     </div>
   );
 } 
