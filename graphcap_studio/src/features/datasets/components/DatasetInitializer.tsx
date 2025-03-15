@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ReactNode } from 'react';
 import { useDatasets } from '../hooks/useDatasets';
-import { DatasetContextProvider } from '@/features/datasets/context/DatasetContext';
+import { DatasetProvider } from '../context/DatasetContext';
 import { Dataset } from '@/services/images';
 
-interface DatasetInitializerProps {
+type DatasetInitializerProps = {
   readonly children: ReactNode;
-}
+};
 
 /**
  * A component that initializes the DatasetContext with data from the API
  * 
- * This component fetches dataset data and initializes the DatasetContextProvider
+ * This component fetches dataset data and initializes the DatasetProvider
  * with the fetched data. It shows a loading indicator while data is being fetched.
  * 
  * @param children - The child components to render
@@ -43,13 +43,13 @@ export function DatasetInitializer({ children }: DatasetInitializerProps) {
   }
   
   return (
-    <DatasetContextProvider
+    <DatasetProvider
       initialDatasets={datasets}
       initialCurrentDataset={currentDataset}
       initialSelectedSubfolder={selectedSubfolder}
       onAddToDataset={handleAddToDataset}
     >
       {children}
-    </DatasetContextProvider>
+    </DatasetProvider>
   );
 } 

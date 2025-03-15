@@ -5,4 +5,5 @@ export * from './CreateDatasetModal';
 export * from './DatasetContainer';
 export * from './DatasetInitializer';
 export * from './DatasetLink';
-export * from './DeleteDatasetModal'; 
+export * from './DeleteDatasetModal';
+export * from './DatasetPanel'; 

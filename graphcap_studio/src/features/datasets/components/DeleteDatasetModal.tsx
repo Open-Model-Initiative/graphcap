@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useDeleteDataset } from '@/services/dataset';
 
-interface DeleteDatasetModalProps {
+type DeleteDatasetModalProps = {
   readonly isOpen: boolean;
   readonly datasetName: string;
   readonly onClose: () => void;
   readonly onDatasetDeleted: () => void;
-}
+};
 
 /**
  * A modal component for confirming dataset deletion

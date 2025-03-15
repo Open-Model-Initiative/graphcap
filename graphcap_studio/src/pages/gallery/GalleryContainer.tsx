@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { EditorContainer } from '@/features/editor/containers/EditorContainer';
 import { GalleryContextProvider, useGalleryContext } from './GalleryContext';
-import { DatasetContextProvider } from '@/features/datasets/context/DatasetContext';
+import { DatasetProvider } from '@/features/datasets/context/DatasetContext';
 import { EditorContextProvider } from '@/features/editor/context/EditorContext';
 
 /**
@@ -20,7 +20,7 @@ function GalleryContainerInner() {
   } = useGalleryContext();
 
   return (
-    <DatasetContextProvider
+    <DatasetProvider
       initialDatasets={datasets}
       initialCurrentDataset={selectedDataset ?? ''}
       initialSelectedSubfolder={selectedSubfolder}
@@ -36,7 +36,7 @@ function GalleryContainerInner() {
           />
         </div>
       </EditorContextProvider>
-    </DatasetContextProvider>
+    </DatasetProvider>
   );
 }
 

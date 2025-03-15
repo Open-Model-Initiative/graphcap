@@ -123,4 +123,30 @@ export function ProviderIcon({ className = '' }: Readonly<IconProps>) {
       <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   );
+}
+
+/**
+ * Dataset icon
+ */
+export function DatasetIcon({ className = '' }: Readonly<IconProps>) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+      width="20"
+      height="20"
+    >
+      <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" />
+      <polyline points="14 2 14 8 20 8" />
+      <path d="M2 15h10" />
+      <path d="M9 18H2" />
+      <path d="M3 12h8" />
+    </svg>
+  );
 } 

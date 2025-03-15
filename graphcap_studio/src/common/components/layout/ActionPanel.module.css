@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 0 !important;
-  height: 80px !important;
+  height: 50% !important;
   width: 16px !important;
   background: var(--chakra-colors-gray-100);
   border: 1px solid var(--chakra-colors-gray-200) !important;

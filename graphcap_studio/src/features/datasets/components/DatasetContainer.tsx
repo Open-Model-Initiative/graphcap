@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { DatasetTree } from './DatasetTree';
 import { CreateDatasetModal } from './CreateDatasetModal';
-import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
+import { useDatasetContext } from '../context/DatasetContext';
 
-interface DatasetContainerProps {
+type DatasetContainerProps = {
   readonly className?: string;
-}
+};
 
 /**
  * A container component for dataset navigation and management
@@ -19,8 +19,7 @@ export function DatasetContainer({ className = '' }: DatasetContainerProps) {
     currentDataset,
     selectedSubfolder,
     setCurrentDataset,
-    setSelectedSubfolder,
-    handleCreateDataset
+    setSelectedSubfolder
   } = useDatasetContext();
 
   // Handle dataset selection
@@ -53,8 +52,8 @@ export function DatasetContainer({ className = '' }: DatasetContainerProps) {
       <CreateDatasetModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onDatasetCreated={async (name) => {
-          await handleCreateDataset(name);
+        onDatasetCreated={(name) => {
+          setCurrentDataset(name);
           setIsCreateModalOpen(false);
         }}
       />

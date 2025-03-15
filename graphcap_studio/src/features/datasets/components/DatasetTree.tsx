@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect } from 'react';
 import { Dataset, Image } from '@/services/images';
-import { Tree, TreeItemData, TreeContextMenuAction } from '@/common/components/dataset-tree';
+import { Tree, TreeItemData, TreeContextMenuAction } from '@/features/datasets/components/dataset-tree';
 import { DeleteDatasetModal } from './DeleteDatasetModal';
 
-interface DatasetTreeProps {
+type DatasetTreeProps = {
   readonly datasets: Dataset[];
   readonly selectedDataset: string | null;
   readonly selectedSubfolder: string | null;
   readonly onSelectNode: (datasetName: string, subfolder?: string) => void;
-}
+};
 
 /**
  * Creates a child node for the tree structure
@@ -148,13 +148,13 @@ function updateItemExpanded(items: TreeItemData[], itemId: string): boolean {
 /**
  * Wrapper component for dataset root nodes
  */
-interface DatasetNodeWrapperProps {
+type DatasetNodeWrapperProps = {
   readonly children: React.ReactNode;
   readonly className: string;
   readonly onClick?: (e: React.MouseEvent) => void;
   readonly datasetName: string;
   readonly onSelectDataset: (datasetName: string) => void;
-}
+};
 
 function DatasetNodeWrapper({ 
   children, 

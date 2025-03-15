@@ -5,12 +5,12 @@ import React from 'react';
 /**
  * Props for the DatasetLink component
  */
-interface DatasetLinkProps {
+type DatasetLinkProps = {
   readonly datasetId: string;
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly onClick?: () => void;
-}
+};
 
 /**
  * Component for linking to a specific dataset using the route parameter
