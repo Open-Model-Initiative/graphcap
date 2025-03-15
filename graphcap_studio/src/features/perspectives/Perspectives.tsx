@@ -50,7 +50,9 @@ export function Perspectives({ image }: PerspectivesProps) {
     activeSchemaName,
     setActiveSchemaName,
     selectedProviderId,
-    setSelectedProviderId
+    setSelectedProviderId,
+    availableProviders: contextProviders,
+    setAvailableProviders
   } = usePerspectiveUI();
 
   // Get image-specific perspective data
@@ -66,6 +68,13 @@ export function Perspectives({ image }: PerspectivesProps) {
   // Combined loading and error states
   const isLoading = dataLoading || imageLoading;
   const error = dataError || imageError;
+
+  // Update available providers in context whenever they change
+  React.useEffect(() => {
+    if (availableProviders.length > 0) {
+      setAvailableProviders(availableProviders);
+    }
+  }, [availableProviders, setAvailableProviders]);
 
   // Handler for updating options with memoization to avoid recreating the function
   const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
@@ -138,14 +147,11 @@ export function Perspectives({ image }: PerspectivesProps) {
       <PerspectivesPager
         schemas={schemas}
         activeSchemaName={activeSchemaName || ''}
-        selectedProviderId={selectedProviderId}
         captions={captions}
         generatedPerspectives={generatedPerspectives}
-        availableProviders={availableProviders}
         isLoading={isLoading}
         onGenerate={handleGeneratePerspective}
         onSetActiveSchema={setActiveSchemaName}
-        onProviderChange={handleProviderChange}
         optionsControl={optionsControl}
       />
       

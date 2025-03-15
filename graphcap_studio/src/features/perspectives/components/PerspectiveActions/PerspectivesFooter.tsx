@@ -9,15 +9,12 @@ import React from 'react';
 import { Box, Flex, Button, Icon, HStack } from '@chakra-ui/react';
 import { LuSettings, LuRefreshCw } from 'react-icons/lu';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
-import { Provider } from '@/features/perspectives/types';
+import { usePerspectiveUI } from '@/features/perspectives/context';
 
 interface PerspectivesFooterProps {
   isLoading: boolean;
   isGenerated: boolean;
-  availableProviders: Provider[];
-  selectedProviderId?: number;
   onGenerate: () => void;
-  onProviderChange: (providerId: number | undefined) => void;
   optionsControl: {
     isOpen: boolean;
     onToggle: () => void;
@@ -31,19 +28,12 @@ interface PerspectivesFooterProps {
 export function PerspectivesFooter({
   isLoading,
   isGenerated,
-  availableProviders,
-  selectedProviderId,
   onGenerate,
-  onProviderChange,
   optionsControl
 }: PerspectivesFooterProps) {
+  const { selectedProviderId, availableProviders, handleProviderChange } = usePerspectiveUI();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  
-  const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    onProviderChange(value ? Number(value) : undefined);
-  };
   
   return (
     <Box
