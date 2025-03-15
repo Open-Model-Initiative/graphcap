@@ -9,7 +9,7 @@ import {
   Grid,
   GridItem,
 } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { useProviderFormContext } from '@/features/inference/providers/context';
 import { EnvironmentSelect } from './EnvironmentSelect';
 

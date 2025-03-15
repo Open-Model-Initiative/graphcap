@@ -3,7 +3,7 @@ import {
   Flex,
   Button,
 } from '@chakra-ui/react';
-import { useColorMode } from '@/components/ui/color-mode';
+import { useColorMode } from '@/components/ui/theme/color-mode';
 
 export interface ActionButtonProps {
   onClick: () => void;

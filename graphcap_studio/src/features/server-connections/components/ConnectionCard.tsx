@@ -7,7 +7,7 @@ import {
   Heading,
   Flex,
 } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 /**
  * ConnectionCard component

@@ -1,7 +1,7 @@
 import { AlertTriangle, Construction } from "lucide-react"
 import type { ReactNode } from "react"
 import { Box, Flex, Heading, Text } from "@chakra-ui/react"
-import { useColorModeValue } from "@/components/ui/color-mode"
+import { useColorModeValue } from "@/components/ui/theme/color-mode"
 
 interface FeatureStubProps {
   readonly featureName: string

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box } from '@chakra-ui/react';
 import { useProviderFormContext } from './context';
-import { StatusMessage } from './form/StatusMessage';
+import { StatusMessage } from '../../../components/ui/status/StatusMessage';
 import { ModelSelector } from './form/ModelSelector';
-import { ActionButton } from './form/ActionButton';
+import { ActionButton } from '../../../components/ui/buttons/ActionButton';
 
 // Define the model type
 export interface ProviderModel {

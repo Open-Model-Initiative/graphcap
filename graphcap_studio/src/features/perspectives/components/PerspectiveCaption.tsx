@@ -18,7 +18,7 @@ import {
   Spinner
 } from '@chakra-ui/react';
 import { Field } from '@/components/ui/field';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { useGeneratePerspectiveCaption, usePerspectives } from '@/features/perspectives/hooks';
 import { Provider } from '@/features/inference/providers/types';
 import { LuZap, LuTriangleAlert } from 'react-icons/lu';

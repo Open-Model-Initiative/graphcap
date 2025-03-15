@@ -13,7 +13,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { useColorMode } from '@/components/ui/color-mode';
+import { useColorMode } from '@/components/ui/theme/color-mode';
 
 /**
  * Panel content that requires context

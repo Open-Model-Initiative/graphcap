@@ -17,7 +17,7 @@ import {
   Spinner,
   Button as ChakraButton
 } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { LuRefreshCw, LuExternalLink } from 'react-icons/lu';
 
 export interface PerspectiveCardProps {

@@ -4,6 +4,6 @@ export * from './ConnectionSection';
 export * from './RateLimitsSection';
 export * from './EnvironmentSelect';
 export * from './ProviderSelect';
-export * from './StatusMessage';
+export * from '../../../../components/ui/status/StatusMessage';
 export * from './ModelSelector';
-export * from './ActionButton'; 
+export * from '../../../../components/ui/buttons/ActionButton'; 

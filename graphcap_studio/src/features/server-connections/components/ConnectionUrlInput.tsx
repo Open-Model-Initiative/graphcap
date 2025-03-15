@@ -2,7 +2,7 @@
 import { memo, ChangeEvent } from 'react';
 import { ConnectionUrlInputProps } from '@/features/server-connections/types';
 import { Input } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/color-mode';
+import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 /**
  * ConnectionUrlInput component
