@@ -7,11 +7,13 @@ import {
   EmptyState, 
   NavigationButton, 
   ImageCounter
-} from '@/common/ui';
+} from '@/components/ui';
+
+
 import { ImageOff, Upload } from 'lucide-react';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { ErrorBoundary } from './ErrorBoundary';
-import { UploadDropzone } from '@/common/components/image-uploader';
+import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';
 import { 
   useCarouselNavigation, 
   useCarouselControls, 

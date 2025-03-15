@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { Text } from "@chakra-ui/react";
 
 interface ImageCounterProps {
   readonly currentIndex: number;
@@ -19,8 +20,8 @@ export function ImageCounter({
   }
 
   return (
-    <div className={`text-xs text-gray-400 ${className}`}>
-      {currentIndex + 1} / {totalImages}
-    </div>
+    <Text fontSize="xs" color="gray.400" className={className}>
+      {currentIndex} / {totalImages}
+    </Text>
   );
 } 

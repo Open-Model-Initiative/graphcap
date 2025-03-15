@@ -3,7 +3,7 @@
 
 // Main components
 export { ImageViewer } from './ImageViewer';
-export { GridViewer } from '@/common/components/image-grid/GridViewer';
+export { GridViewer } from '@/features/gallery-viewer/image-grid/GridViewer';
 export { ImageGallery, type ViewMode } from './components/ImageGallery';
 export { ImageGalleryContent } from './ImageGalleryContent';
 export { CompactActionBar } from './components/CompactActionBar';
@@ -18,4 +18,4 @@ export {
 export { useImageViewerSize } from './hooks';
 
 // Carousel components
-export { CarouselViewer } from '@/common/components/image-carousel';
+export { CarouselViewer } from '@/features/gallery-viewer/image-carousel';

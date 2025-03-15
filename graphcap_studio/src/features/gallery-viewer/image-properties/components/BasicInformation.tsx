@@ -11,9 +11,9 @@ import {
   Tag as ChakraTag,
 } from "@chakra-ui/react"
 import { ImagePropertiesData } from '../hooks/useImageProperties'
-import { Field } from "../../../components/ui/field"
-import { useColorModeValue } from "../../../components/ui/color-mode"
-import { SelectRoot, SelectTrigger, SelectContent, SelectItem } from "../../../components/ui/select"
+import { Field } from "@/components/ui/field"
+import { useColorModeValue } from "@/components/ui/color-mode"
+import { SelectRoot, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select"
 import type { SelectValueChangeDetails } from "@chakra-ui/react"
 
 interface BasicInformationProps {

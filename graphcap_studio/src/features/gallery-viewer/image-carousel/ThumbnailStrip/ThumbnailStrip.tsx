@@ -4,7 +4,7 @@ import { Image } from '@/services/images';
 import { ThumbnailImage } from '@/common/components/responsive-image';
 import { useDynamicThumbnails } from '../hooks';
 import { Upload } from 'lucide-react';
-import { UploadDropzone } from '@/common/components/image-uploader';
+import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';
 import styles from './ThumbnailStrip.module.css';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useImageCarouselContext } from '../ImageCarouselContext';

@@ -5,7 +5,7 @@ import {
   ColorModeProvider,
   type ColorModeProviderProps,
 } from "./color-mode"
-import { graphcapTheme } from "@/components/ui/theme"
+import { graphcapTheme } from "@/app/theme"
 
 export function Provider(props: ColorModeProviderProps) {
   return (
