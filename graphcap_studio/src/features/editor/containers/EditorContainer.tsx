@@ -4,7 +4,7 @@ import { ImageEditor } from "../components/ImageEditor";
 import { useEditorContext } from "@/features/editor/context/EditorContext";
 import { EditorLayout } from "@/pages/gallery/GalleryLayout";
 import { ViewerContainer } from "@/features/gallery-viewer";
-import { PropertiesContainer } from "@/features/gallery-viewer/image-properties";
+import { PropertiesContainer } from "@/features/image-properties";
 import {
   useImageEditor,
   useImageActions,

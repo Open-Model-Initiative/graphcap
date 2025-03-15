@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ImageProperties } from '@/features/gallery-viewer/image-properties';
+import { ImageProperties } from '@/features/image-properties';
 import { Image } from '@/services/images';
 
 interface PropertiesContainerProps {
