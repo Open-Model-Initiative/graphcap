@@ -20,9 +20,9 @@ interface EditorLayoutProps {
 export function EditorLayout({
   viewer,
   properties,
-  defaultPropertiesWidth = 400,
-  minViewerWidth = 400,
-  minPropertiesWidth = 400,
+  defaultPropertiesWidth = 500,
+  minViewerWidth = 500,
+  minPropertiesWidth = 500,
   className = '',
 }: EditorLayoutProps) {
   const containerRef = useRef<HTMLDivElement>(null);

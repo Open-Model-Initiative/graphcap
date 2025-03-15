@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { Perspectives } from '@/features/perspectives';
-import { PerspectivesProvider } from '@/features/perspectives/context/PerspectivesContext';
 import { Box } from '@chakra-ui/react';
 import { Tabs } from '@chakra-ui/react';
 import { useImagePropertiesContext } from './context';
@@ -84,9 +83,7 @@ export function ImageProperties() {
         </Tabs.Content>
         
         <Tabs.Content value="perspectives" p={2} overflow="auto">
-          <PerspectivesProvider>
-            <Perspectives image={image} />
-          </PerspectivesProvider>
+          <Perspectives image={image} />
         </Tabs.Content>
       </Tabs.Root>
     </Box>

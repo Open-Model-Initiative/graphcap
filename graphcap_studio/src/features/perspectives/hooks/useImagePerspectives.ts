@@ -8,6 +8,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Image } from '@/services/images';
 import { useProviders } from '@/features/inference/services/providers';
+import { useServerConnectionsContext } from '@/context';
+import { SERVER_IDS } from '@/features/server-connections/constants';
 
 import { 
   ImageCaptions, 
@@ -35,8 +37,14 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   const [generatingPerspectives, setGeneratingPerspectives] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   
+  // Get server connection status
+  const { connections } = useServerConnectionsContext();
+  const graphcapServerConnection = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
+  const isServerConnected = graphcapServerConnection?.status === 'connected';
+  
   console.debug('useImagePerspectives hook initialized', { 
-    imagePath: image?.path
+    imagePath: image?.path,
+    isServerConnected
   });
   
   // Derived state
@@ -64,6 +72,13 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   const generatePerspective = useCallback(async (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions) => {
     if (!image) {
       console.warn('Cannot generate perspective: No image provided');
+      setError('No image provided');
+      return;
+    }
+    
+    if (!isServerConnected) {
+      console.warn('Cannot generate perspective: Server connection not established');
+      setError('Server connection not established');
       return;
     }
     
@@ -104,7 +119,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       
       // Log the caption result
       console.debug('Caption generation result received');
-      console.debug(`Caption content for perspective ${perspective}:`, result.content);
+      console.debug(`Caption content for perspective ${perspective}:`, result.content || result.result);
       
       // Create a perspective data object
       const perspectiveData: PerspectiveData = {
@@ -112,7 +127,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         version: '1.0',
         model: 'api-generated',
         provider: providerName,
-        content: result.content || {} // Ensure content is not undefined
+        content: result.content || result.result || {} // Ensure content is not undefined
       };
       
       // Update the captions with the new perspective
@@ -161,12 +176,19 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         return updatedGenerating.length > 0;
       });
     }
-  }, [image, providersData, generateCaption, generatingPerspectives]);
+  }, [image, providersData, generateCaption, generatingPerspectives, isServerConnected]);
   
   // Function to generate all perspectives
   const generateAllPerspectives = useCallback(async () => {
     if (!image || !perspectivesData) {
       console.warn('Cannot generate all perspectives: No image or perspectives data');
+      setError('No image or perspectives data available');
+      return;
+    }
+    
+    if (!isServerConnected) {
+      console.warn('Cannot generate all perspectives: Server connection not established');
+      setError('Server connection not established');
       return;
     }
     
@@ -189,11 +211,19 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       console.log('All perspectives generated successfully');
     } catch (err) {
       console.error('Error generating all perspectives', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate all perspectives');
     } finally {
       setIsLoading(false);
       setGeneratingPerspectives([]);
     }
-  }, [image, perspectivesData, generatePerspective]);
+  }, [image, perspectivesData, generatePerspective, isServerConnected]);
+  
+  // Reset error when server connection changes
+  useEffect(() => {
+    if (isServerConnected && error === 'Server connection not established') {
+      setError(null);
+    }
+  }, [isServerConnected, error]);
   
   // Log when the hook's return value changes
   useEffect(() => {
@@ -204,7 +234,8 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       generatedPerspectiveCount: generatedPerspectives.length,
       availablePerspectiveCount: availablePerspectives.length,
       availableProviderCount: availableProviders.length,
-      generatingPerspectives
+      generatingPerspectives,
+      isServerConnected
     });
     
     if (captions?.perspectives) {
@@ -217,7 +248,8 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     generatedPerspectives, 
     availablePerspectives, 
     availableProviders,
-    generatingPerspectives
+    generatingPerspectives,
+    isServerConnected
   ]);
   
   return {

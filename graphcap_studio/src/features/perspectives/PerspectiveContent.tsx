@@ -5,28 +5,27 @@
  * This component displays the content of a perspective.
  */
 
-import React from 'react';
-import { usePerspectiveUI } from './context/PerspectiveUIContext';
+import React, { ReactNode } from 'react';
+import { PerspectiveSchema } from './types';
 import { SchemaFieldFactory } from './components/schema-fields';
 
 interface PerspectiveContentProps {
-  perspectiveKey: string;
   data: Record<string, any>;
+  schema: PerspectiveSchema;
+  renderField: (field: PerspectiveSchema['schema_fields'][0], value: any) => ReactNode;
   className?: string;
 }
 
 export function PerspectiveContent({
-  perspectiveKey,
   data,
+  schema,
+  renderField,
   className = '',
 }: PerspectiveContentProps) {
-  const { schemas } = usePerspectiveUI();
-  const schema = schemas[perspectiveKey];
-
   if (!schema) {
     return (
       <div className="text-sm text-gray-400 text-center py-4">
-        Schema not found for perspective: {perspectiveKey}
+        Schema not available
       </div>
     );
   }
@@ -35,11 +34,10 @@ export function PerspectiveContent({
     <div className={`space-y-4 ${className}`}>
       {schema.schema_fields.map((field) => (
         <div key={field.name} className="bg-gray-800 p-3 rounded-lg">
-          <SchemaFieldFactory
-            field={field}
-            value={data[field.name]}
-            className="perspective-field"
-          />
+          <h4 className="text-sm font-medium text-gray-300 mb-2">
+            {field.description || field.name}
+          </h4>
+          {renderField(field, data[field.name])}
         </div>
       ))}
     </div>

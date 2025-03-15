@@ -11,6 +11,17 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
+      refetchInterval: (query) => {
+        if (Array.isArray(query.queryKey)) {
+          const queryKeyString = query.queryKey.join('-').toLowerCase();
+          if (queryKeyString.includes('server') || 
+              queryKeyString.includes('connection') || 
+              queryKeyString.includes('perspectives')) {
+            return 30000;
+          }
+        }
+        return false;
+      },
     },
   },
 })

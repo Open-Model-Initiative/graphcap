@@ -13,7 +13,7 @@ import {
   CaptionResponseSchema,
   CaptionRequestSchema
 } from '../types';
-import { API_ENDPOINTS } from '../constants';
+import { API_ENDPOINTS } from '../constants/index';
 import { ensureWorkspacePath, handleApiError } from './utils';
 
 /**

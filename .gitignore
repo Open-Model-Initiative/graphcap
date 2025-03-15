@@ -21,3 +21,4 @@ provider.config.toml
 provider.test.config.toml
 test_logs.jsonl
 docker-compose.override.yml
+node_modules/

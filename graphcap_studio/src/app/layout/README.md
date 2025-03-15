@@ -13,7 +13,7 @@ The primary layout component that provides:
 - Optional left and right sidebars
 
 ```tsx
-import { MainLayout } from '@/common/components/layout';
+import { MainLayout } from '@/app/layout';
 
 function MyPage() {
   return (
@@ -27,7 +27,7 @@ function MyPage() {
 With sidebars:
 
 ```tsx
-import { MainLayout } from '@/common/components/layout';
+import { MainLayout } from '@/app/layout';
 
 function MyPageWithSidebars() {
   return (
@@ -60,7 +60,7 @@ A reusable sidebar component that can be customized.
 A custom hook that calculates and manages layout heights, ensuring proper space allocation between fixed elements.
 
 ```tsx
-import { useLayoutHeight } from '@/common/components/layout';
+import { useLayoutHeight } from '@/app/layout';
 
 function MyCustomLayout() {
   const { 
