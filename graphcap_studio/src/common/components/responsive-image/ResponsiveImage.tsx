@@ -105,9 +105,9 @@ export function ResponsiveImage({
           srcSet={srcSet}
           sizes={sizes}
           alt={alt}
-          className={`w-full h-full transition-opacity duration-300 ${
-            loading ? 'opacity-0' : 'opacity-100'
-          }`}
+          className={`transition-opacity duration-300 ${
+            forceContainerAspect ? 'w-full h-full' : 'max-w-full max-h-full w-auto h-auto'
+          } ${loading ? 'opacity-0' : 'opacity-100'}`}
           style={{ objectFit }}
           loading={priority ? undefined : 'lazy'}
           decoding={priority ? undefined : 'async'}

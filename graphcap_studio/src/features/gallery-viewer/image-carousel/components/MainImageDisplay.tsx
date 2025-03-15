@@ -28,12 +28,12 @@ export function MainImageDisplay({ className = '' }: MainImageDisplayProps) {
 
   return (
     <ErrorBoundary>
-      <div className={`relative w-full h-full ${className}`}>
-        <div className="h-full w-full">
+      <div className={`relative w-full h-full overflow-hidden ${className}`}>
+        <div className="absolute inset-0 flex items-center justify-center">
           <ResponsiveImage
             imagePath={selectedImage.path}
             alt={selectedImage.name}
-            className="h-full w-full"
+            className="flex items-center justify-center"
             objectFit="contain"
             priority={true} // Main image is high priority
             sizes="(max-width: 768px) 100vw, 80vw"
