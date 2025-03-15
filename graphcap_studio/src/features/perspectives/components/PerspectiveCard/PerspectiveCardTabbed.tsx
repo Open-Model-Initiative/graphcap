@@ -49,8 +49,7 @@ export function PerspectiveCardTabbed({
   isGenerating = false,
   className = ''
 }: PerspectiveCardTabbedProps) {
-  // Use the perspective UI context
-  const { selectedProviderId, availableProviders, handleProviderChange } = usePerspectiveUI();
+
   const { copyToClipboard, hasCopied } = useClipboard();
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const badgeBg = useColorModeValue('gray.100', 'gray.700');

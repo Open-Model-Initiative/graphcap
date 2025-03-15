@@ -43,7 +43,7 @@ export function WrappedPerspectives({
 
   return (
     <ErrorBoundary fallback={fallback || defaultFallback}>
-      <PerspectivesProvider initialProviderId={initialProviderId}>
+      <PerspectivesProvider initialProviderId={initialProviderId} image={image}>
         <Perspectives image={image} />
       </PerspectivesProvider>
     </ErrorBoundary>

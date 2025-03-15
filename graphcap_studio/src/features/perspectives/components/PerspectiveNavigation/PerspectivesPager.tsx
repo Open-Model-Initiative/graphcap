@@ -5,7 +5,7 @@
  * This component displays perspectives in a paged layout with fixed header and footer.
  */
 
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { PerspectiveCardTabbed } from '../PerspectiveCard/PerspectiveCardTabbed';
 import { PerspectiveSchema } from '@/features/perspectives/types';
@@ -13,44 +13,46 @@ import { PerspectivesFooter } from '../PerspectiveActions/PerspectivesFooter';
 import { PerspectiveHeader } from './PerspectiveHeader';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { EmptyPerspectives } from '../EmptyPerspectives';
-import { usePerspectiveUI } from '@/features/perspectives/context';
+import { usePerspectivesData, usePerspectiveUI } from '@/features/perspectives/context';
 
-interface PerspectivesPagerProps {
-  schemas: Record<string, PerspectiveSchema>;
-  activeSchemaName: string;
-  captions: any;
-  generatedPerspectives: string[];
-  isLoading: boolean;
-  onGenerate: (schemaKey: string) => void;
-  onSetActiveSchema: (schemaName: string) => void;
-  optionsControl: {
-    isOpen: boolean;
-    onToggle: () => void;
-    buttonRef: React.RefObject<HTMLButtonElement | null>;
-  };
+interface OptionsControl {
+  isOpen: boolean;
+  onToggle: () => void;
+  buttonRef: React.RefObject<HTMLButtonElement | null>;
+  options: any;
 }
 
 /**
  * Component for displaying perspectives in a paged layout
  */
-export function PerspectivesPager({
-  schemas,
-  activeSchemaName,
-  captions,
-  generatedPerspectives,
-  isLoading,
-  onGenerate,
-  onSetActiveSchema,
+export function PerspectivesPager({ 
   optionsControl
-}: PerspectivesPagerProps) {
-  // Get provider-related props from context
-  const { selectedProviderId } = usePerspectiveUI();
+}: { 
+  optionsControl: OptionsControl;
+}) {
+  // Get data context props
+  const { 
+    schemas,
+    selectedProviderId,
+    isGenerating, 
+    generatePerspective,
+    isPerspectiveGenerated, 
+    isPerspectiveGenerating,
+    getPerspectiveData,
+    currentImage
+  } = usePerspectivesData();
+  
+  // Get UI-related props from UI context
+  const { 
+    activeSchemaName, 
+    setActiveSchemaName
+  } = usePerspectiveUI();
   
   // Get the array of schema keys for navigation
-  const schemaKeys = Object.keys(schemas);
+  const schemaKeys = Object.keys(schemas || {});
   
   // Find the current index based on active schema
-  const currentIndex = schemaKeys.indexOf(activeSchemaName);
+  const currentIndex = activeSchemaName ? schemaKeys.indexOf(activeSchemaName) : -1;
   
   // Colors
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -58,20 +60,25 @@ export function PerspectivesPager({
   // Handle navigation between perspectives
   const handleNavigate = React.useCallback((index: number) => {
     if (index >= 0 && index < schemaKeys.length) {
-      onSetActiveSchema(schemaKeys[index]);
+      setActiveSchemaName(schemaKeys[index]);
     }
-  }, [schemaKeys, onSetActiveSchema]);
+  }, [schemaKeys, setActiveSchemaName]);
 
   // If no schemas are available, show the empty state
-  if (schemaKeys.length === 0) {
+  if (!schemas || schemaKeys.length === 0) {
+    return <EmptyPerspectives />;
+  }
+
+  // Check if we have a valid activeSchemaName
+  if (!activeSchemaName || !schemas[activeSchemaName]) {
     return <EmptyPerspectives />;
   }
 
   // Get the active schema
   const activeSchema = schemas[activeSchemaName];
-  const captionData = captions?.perspectives[activeSchemaName]?.content || null;
-  const isGenerated = !!captions?.perspectives[activeSchemaName];
-  const isGenerating = generatedPerspectives.includes(activeSchemaName) && isLoading;
+  const captionData = getPerspectiveData(activeSchemaName);
+  const isGenerated = isPerspectiveGenerated(activeSchemaName);
+  const isGeneratingCurrent = isPerspectiveGenerating(activeSchemaName);
 
   return (
     <Flex 
@@ -84,8 +91,8 @@ export function PerspectivesPager({
       {/* Fixed Header with Selection Controls */}
       <Box flexShrink={0} height="auto" minHeight="40px">
         <PerspectiveHeader 
-          isLoading={isLoading}
-          currentPerspectiveName={activeSchema.display_name}
+          isLoading={isGenerating}
+          currentPerspectiveName={activeSchema?.display_name || 'Loading...'}
           totalPerspectives={schemaKeys.length}
           currentIndex={currentIndex}
           onNavigate={handleNavigate}
@@ -109,9 +116,13 @@ export function PerspectivesPager({
             data={captionData}
             isActive={true}
             isGenerated={isGenerated}
-            onGenerate={() => onGenerate(activeSchemaName)}
-            onSetActive={() => onSetActiveSchema(activeSchemaName)}
-            isGenerating={isGenerating}
+            onGenerate={() => {
+              if (currentImage) {
+                generatePerspective(activeSchemaName, currentImage.path, selectedProviderId);
+              }
+            }}
+            onSetActive={() => setActiveSchemaName(activeSchemaName)}
+            isGenerating={isGeneratingCurrent}
           />
         )}
       </Box>
@@ -126,10 +137,10 @@ export function PerspectivesPager({
         mt="auto"
       >
         <PerspectivesFooter
-          isLoading={isLoading}
+          isLoading={isGenerating}
           isGenerated={isGenerated}
-          onGenerate={() => onGenerate(activeSchemaName)}
           optionsControl={optionsControl}
+          captionOptions={optionsControl.options}
         />
       </Box>
     </Flex>
