@@ -40,7 +40,7 @@ export function PropertiesContainer({
   }
 
   return (
-    <div className={`h-full w-full overflow-auto bg-gray-800 ${className}`}>
+    <div className={`h-full w-full overflow-hidden bg-gray-800 ${className}`}>
       <ImagePropertiesProvider image={selectedImage}>
         <ImageProperties />
       </ImagePropertiesProvider>

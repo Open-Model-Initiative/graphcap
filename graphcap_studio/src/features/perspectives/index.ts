@@ -7,8 +7,6 @@
 
 // Export main components
 export { Perspectives } from './Perspectives';
-export { PerspectiveCard } from './PerspectiveCard';
-export { PerspectiveContent } from './PerspectiveContent';
 
 // Export context providers and hooks
 export {
