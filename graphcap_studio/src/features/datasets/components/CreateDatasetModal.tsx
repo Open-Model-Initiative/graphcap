@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useCreateDataset } from '@/services/dataset';
+import { useDatasetContext } from '../context/DatasetContext';
 
-interface CreateDatasetModalProps {
+type CreateDatasetModalProps = {
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onDatasetCreated: (datasetName: string) => void;
-}
+};
 
 /**
  * A modal component for creating a new dataset
@@ -20,9 +20,11 @@ export function CreateDatasetModal({
   const [datasetName, setDatasetName] = useState('');
   const [error, setError] = useState<string | null>(null);
   
-  // Use the dataset creation mutation
-  const createDatasetMutation = useCreateDataset();
-  const isCreating = createDatasetMutation.isPending;
+  // Use the dataset context
+  const { createDataset } = useDatasetContext();
+  
+  // Track loading state
+  const [isCreating, setIsCreating] = useState(false);
 
   if (!isOpen) return null;
 
@@ -42,9 +44,10 @@ export function CreateDatasetModal({
     }
 
     setError(null);
+    setIsCreating(true);
 
     try {
-      await createDatasetMutation.mutateAsync(datasetName);
+      await createDataset(datasetName);
       toast.success(`Dataset "${datasetName}" created successfully`);
       onDatasetCreated(datasetName);
       onClose();
@@ -62,6 +65,8 @@ export function CreateDatasetModal({
         // For other errors, show the error message
         setError(error instanceof Error ? error.message : 'Failed to create dataset');
       }
+    } finally {
+      setIsCreating(false);
     }
   };
 

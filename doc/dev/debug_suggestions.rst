@@ -1,0 +1,3 @@
+- Install react dev tools
+- Learn how to connect editor to debugger
+- 

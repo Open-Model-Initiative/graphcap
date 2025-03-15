@@ -2,11 +2,12 @@
 import { ReactNode, createContext, useContext, useMemo, useEffect } from 'react';
 import { useDatasets } from '@/features/datasets/hooks/useDatasets';
 import { Dataset, Image } from '@/services/images';
+import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 
 /**
- * Interface for the gallery context state
+ * Type for the gallery context state
  */
-interface GalleryContextState {
+type GalleryContextType = {
   // Dataset state
   selectedDataset: string | null;
   selectedSubfolder: string | null;
@@ -17,23 +18,23 @@ interface GalleryContextState {
   
   // Action handlers
   handleSelectDataset: (datasetId: string, subfolder?: string | null) => void;
-  handleAddToDataset: (imagePath: string, targetDataset: string) => void;
+  handleAddToDataset: (imagePath: string, targetDataset: string) => Promise<void>;
   handleCreateDataset: (name: string) => Promise<void>;
   handleUploadComplete: () => void;
-}
+};
 
 /**
  * Props for the GalleryContextProvider component
  */
-interface GalleryContextProviderProps {
+type GalleryProviderProps = {
   readonly children: ReactNode;
   readonly initialDataset?: string;
-}
+};
 
 /**
  * Context for managing gallery UI state
  */
-const GalleryContext = createContext<GalleryContextState | undefined>(undefined);
+const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
 
 /**
  * Provider component for the GalleryContext
@@ -41,7 +42,7 @@ const GalleryContext = createContext<GalleryContextState | undefined>(undefined)
  * This component coordinates between the DatasetContext and EditorContext
  * to provide a unified state management solution for the gallery page.
  */
-export function GalleryContextProvider({ children, initialDataset }: GalleryContextProviderProps) {
+export function GalleryContextProvider({ children, initialDataset }: GalleryProviderProps) {
   // Use the datasets hook to manage dataset state
   const {
     selectedDataset,
@@ -120,7 +121,7 @@ export function useGalleryContext() {
  * Hook for synchronizing the DatasetContext with the GalleryContext
  * 
  * @deprecated This hook is being deprecated in favor of the onDatasetSelected prop
- * on the DatasetContextProvider. Use that instead for new code.
+ * on the DatasetProvider. Use that instead for new code.
  */
 export function useSyncDatasetWithGallery() {
   const galleryContext = useGalleryContext();

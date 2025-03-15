@@ -1,61 +1,64 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Image } from '@/services/images';
 import { Dataset } from '@/services/dataset';
 import { useCreateDataset, useAddImageToDataset } from '@/services/dataset';
-import { getQueryClient } from '@/common/utils/queryClient';
-import { toast } from 'sonner';
 
 /**
  * Interface for the dataset context state
  */
-interface DatasetContextState {
+type DatasetContextType = {
   // Dataset state
   datasets: Dataset[];
-  setDatasets: (datasets: Dataset[]) => void;
   currentDataset: string;
-  setCurrentDataset: (dataset: string) => void;
   selectedSubfolder: string | null;
-  setSelectedSubfolder: (subfolder: string | null) => void;
   
   // Image selection state
   selectedImage: Image | null;
+  
+  // State setters
+  setDatasets: (datasets: Dataset[]) => void;
+  setCurrentDataset: (dataset: string) => void;
+  setSelectedSubfolder: (subfolder: string | null) => void;
   setSelectedImage: (image: Image | null) => void;
   
   // Action handlers
-  handleSelectImage: (image: Image) => void;
-  handleAddToDataset: (imagePath: string, targetDataset: string) => void;
-  handleCreateDataset: (name: string) => Promise<void>;
-}
+  selectImage: (image: Image) => void;
+  addToDataset: (imagePath: string, targetDataset: string) => Promise<void>;
+  createDataset: (name: string) => Promise<void>;
+};
 
 /**
  * Props for the DatasetContextProvider component
  */
-interface DatasetContextProviderProps {
+type DatasetProviderProps = {
   readonly children: ReactNode;
   readonly initialDatasets?: Dataset[];
   readonly initialCurrentDataset?: string;
   readonly initialSelectedSubfolder?: string | null;
-  readonly onAddToDataset?: (imagePath: string, targetDataset: string) => void;
+  readonly onAddToDataset?: (imagePath: string, targetDataset: string) => Promise<void>;
   readonly onCreateDataset?: (name: string) => Promise<void>;
-}
+  readonly onDatasetSelected?: (datasetId: string, subfolder?: string | null) => void;
+};
 
 /**
  * Context for managing dataset UI state
  */
-const DatasetContext = createContext<DatasetContextState | undefined>(undefined);
+export const DatasetContext = createContext<DatasetContextType | undefined>(undefined);
 
 /**
  * Provider component for the DatasetContext
  */
-export function DatasetContextProvider({ 
+export function DatasetProvider({ 
   children,
   initialDatasets = [],
   initialCurrentDataset = '',
   initialSelectedSubfolder = null,
   onAddToDataset,
   onCreateDataset,
-}: DatasetContextProviderProps) {
+  onDatasetSelected,
+}: DatasetProviderProps) {
   // Dataset state
   const [datasets, setDatasets] = useState<Dataset[]>(initialDatasets);
   const [currentDataset, setCurrentDataset] = useState<string>(initialCurrentDataset);
@@ -68,35 +71,25 @@ export function DatasetContextProvider({
   const createDatasetMutation = useCreateDataset();
   const addImageToDatasetMutation = useAddImageToDataset();
   
-  // Update datasets when initialDatasets changes
+  // Notify parent when dataset or subfolder changes
   useEffect(() => {
-    setDatasets(initialDatasets);
-  }, [initialDatasets]);
-  
-  // Update current dataset when initialCurrentDataset changes
-  useEffect(() => {
-    if (initialCurrentDataset && initialCurrentDataset !== currentDataset) {
-      setCurrentDataset(initialCurrentDataset);
+    if (onDatasetSelected && currentDataset) {
+      onDatasetSelected(currentDataset, selectedSubfolder);
     }
-  }, [initialCurrentDataset, currentDataset]);
-  
-  // Update selected subfolder when initialSelectedSubfolder changes
-  useEffect(() => {
-    setSelectedSubfolder(initialSelectedSubfolder);
-  }, [initialSelectedSubfolder]);
+  }, [currentDataset, selectedSubfolder, onDatasetSelected]);
   
   // Action handlers
-  const handleSelectImage = useCallback((image: Image) => {
+  const selectImage = useCallback((image: Image) => {
     setSelectedImage(image);
   }, []);
   
-  const handleAddToDataset = useCallback(async (imagePath: string, targetDataset: string) => {
+  const addToDataset = useCallback(async (imagePath: string, targetDataset: string): Promise<void> => {
     if (!imagePath || !targetDataset) return;
     
     try {
       // Use the provided handler if available
       if (onAddToDataset) {
-        onAddToDataset(imagePath, targetDataset);
+        await onAddToDataset(imagePath, targetDataset);
         return;
       }
       
@@ -117,7 +110,7 @@ export function DatasetContextProvider({
     }
   }, [onAddToDataset, addImageToDatasetMutation]);
   
-  const handleCreateDataset = useCallback(async (name: string): Promise<void> => {
+  const createDataset = useCallback(async (name: string): Promise<void> => {
     try {
       // Use the provided handler if available
       if (onCreateDataset) {
@@ -138,28 +131,28 @@ export function DatasetContextProvider({
   const value = useMemo(() => ({
     // Dataset state
     datasets,
-    setDatasets,
     currentDataset,
-    setCurrentDataset,
     selectedSubfolder,
-    setSelectedSubfolder,
-    
-    // Image selection
     selectedImage,
+    
+    // State setters
+    setDatasets,
+    setCurrentDataset,
+    setSelectedSubfolder,
     setSelectedImage,
     
     // Action handlers
-    handleSelectImage,
-    handleAddToDataset,
-    handleCreateDataset
+    selectImage,
+    addToDataset,
+    createDataset
   }), [
     datasets, 
     currentDataset, 
     selectedSubfolder,
     selectedImage, 
-    handleSelectImage, 
-    handleAddToDataset,
-    handleCreateDataset
+    selectImage, 
+    addToDataset,
+    createDataset
   ]);
 
   return <DatasetContext.Provider value={value}>{children}</DatasetContext.Provider>;
@@ -169,13 +162,13 @@ export function DatasetContextProvider({
  * Hook for accessing the DatasetContext
  * 
  * @returns The dataset context state
- * @throws Error if used outside of DatasetContextProvider
+ * @throws Error if used outside of DatasetProvider
  */
 export function useDatasetContext() {
   const context = useContext(DatasetContext);
   
   if (context === undefined) {
-    throw new Error('useDatasetContext must be used within a DatasetContextProvider');
+    throw new Error('useDatasetContext must be used within a DatasetProvider');
   }
   
   return context;
