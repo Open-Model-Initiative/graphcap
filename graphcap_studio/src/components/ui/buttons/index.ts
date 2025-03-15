@@ -3,3 +3,8 @@ export * from './NavigationButton';
 export * from './RadioButton';
 export * from './CloseButton';
 export * from './Switch';
+export * from './ActionButton';
+export * from './EditButton';
+export * from './AddButton';
+export * from './DownloadButton';
+export * from './DeleteButton';
