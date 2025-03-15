@@ -95,7 +95,7 @@ services:
   graphcap_media_server:
     container_name: graphcap_media_server
     build:
-      context: ./graphcap_studio/media_server
+      context: ./servers/media_server
       dockerfile: Dockerfile.media_server
     ports:
       - "32400:32400"
@@ -109,14 +109,14 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./graphcap_studio/media_server
+          path: ./servers/media_server
           target: /app
           ignore:
             - "**/.git"
             - "**/node_modules"
             - "**/.DS_Store"
         - action: rebuild
-          path: ./graphcap_studio/media_server/package.json
+          path: ./servers/media_server/package.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
       interval: 5m
@@ -153,7 +153,7 @@ services:
   graphcap_data_service:
     container_name: graphcap_data_service
     build:
-      context: ./data_service
+      context: ./servers/data_service
       dockerfile: Dockerfile
     ports:
       - "32550:32550"
@@ -166,7 +166,7 @@ services:
       - DEBUG=true  # Enable debug mode
     volumes:
       - ./workspace:/workspace
-      - ./data_service/src:/app/src  # Mount src directory directly
+      - ./servers/data_service/src:/app/src  # Mount src directory directly
     networks:
       - graphcap
     depends_on:
