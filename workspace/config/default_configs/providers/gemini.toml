@@ -7,7 +7,7 @@ environment = "development"
 [io]
 dataset_name = "graphcap_dataset"
 input_dir = "/workspace/datasets/os_img"
-output_dir = "/workspace/.local/output/v2/providers/ollama"
+output_dir = "/workspace/.local/output/v2/providers/gemini"
 copy_images = true
 sampling_strategy = "increment"
 num_samples = 1
@@ -20,7 +20,7 @@ provider_config_file = "/workspace/config/provider.config.toml"
 [filesystem]
 workspace_dir = "/workspace"
 dataset_dir = "/workspace/datasets"
-output_dir = "/workspace/.local/output/v2/providers/ollama"
+output_dir = "/workspace/.local/output/v2/providers/gemini"
 
 [perspective]
 global_context = "You are a captioning perspective."
