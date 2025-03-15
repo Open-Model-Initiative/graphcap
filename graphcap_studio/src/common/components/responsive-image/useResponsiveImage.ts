@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getThumbnailUrl } from '@/services/images';
-import { generateSrcSet } from '@/common/utils/imageSrcSet';
+import { generateSrcSet } from '@/utils/imageSrcSet';
 
 interface UseResponsiveImageProps {
   readonly imagePath: string;

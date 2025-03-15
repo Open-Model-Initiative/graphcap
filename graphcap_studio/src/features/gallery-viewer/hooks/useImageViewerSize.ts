@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, RefObject } from 'react';
-import { calculateFitDimensions } from '@/common/utils/aspectRatio';
+import { calculateFitDimensions } from '@/utils/aspectRatio';
 
 interface UseImageViewerSizeProps {
   containerRef: RefObject<HTMLElement | null>;

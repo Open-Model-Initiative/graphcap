@@ -9,7 +9,7 @@ import {
   queryKeys
 } from '@/services/dataset';
 import type { Dataset } from '@/services/dataset';
-import { getQueryClient } from '@/common/utils/queryClient';
+import { getQueryClient } from '@/utils/queryClient';
 
 /**
  * Custom hook for managing datasets

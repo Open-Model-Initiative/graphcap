@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { z } from 'zod';
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { getQueryClient } from '../common/utils/queryClient';
+import { getQueryClient } from '../utils/queryClient';
 import { FileItem } from '../common/components/file-browser/types';
 
 /**

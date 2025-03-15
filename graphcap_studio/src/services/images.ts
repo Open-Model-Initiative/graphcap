@@ -5,7 +5,7 @@ import {
   useQuery, 
   useQueryClient
 } from '@tanstack/react-query';
-import { getQueryClient } from '../common/utils/queryClient';
+import { getQueryClient } from '../utils/queryClient';
 
 /**
  * Image service for interacting with the Graphcap Media Server
