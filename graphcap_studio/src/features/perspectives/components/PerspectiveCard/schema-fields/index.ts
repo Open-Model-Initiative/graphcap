@@ -10,4 +10,6 @@ export * from './BaseField';
 export * from './TagField';
 export * from './NodeField';
 export * from './EdgeField';
-export * from './SchemaFieldFactory'; 
+export * from './SchemaFieldFactory';
+export * from './CaptionContext';
+export * from './CaptionRenderer'; 

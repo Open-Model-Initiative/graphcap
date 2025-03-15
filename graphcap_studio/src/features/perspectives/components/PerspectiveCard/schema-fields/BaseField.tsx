@@ -12,7 +12,6 @@ import {
   Text, 
   Badge, 
   Button,
-  Icon
 } from '@chakra-ui/react';
 import { BaseFieldProps } from './types';
 import { useClipboard } from '@/common/hooks/useClipboard';

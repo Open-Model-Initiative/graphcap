@@ -5,7 +5,7 @@
  * This component displays a message when no perspectives are available.
  */
 
-import { Center, Box, Text, Stack, Icon } from '@chakra-ui/react';
+import { Center, Text, Stack, Icon } from '@chakra-ui/react';
 import { LuFileQuestion } from 'react-icons/lu';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 

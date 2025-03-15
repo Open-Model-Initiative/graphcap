@@ -5,25 +5,18 @@
  * A card component for displaying a perspective with tabbed content for caption, prompt, and schema.
  * This component uses Chakra UI tabs for the tabbed interface.
  */
-
-import { ReactNode, useState } from 'react';
 import { 
   Card, 
   Box, 
   Text, 
-  Flex, 
   Stack, 
-  Badge, 
-  Spinner,
-  Button as ChakraButton,
   Tabs,
-  Select
 } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
-import { LuRefreshCw, LuExternalLink, LuCopy, LuCheck } from 'react-icons/lu';
 import { PerspectiveSchema } from '../../types';
 import { useClipboard } from '@/common/hooks/useClipboard';
-import { usePerspectiveUI } from '../../context';
+import { SchemaView } from './SchemaView';
+import { CaptionRenderer } from './schema-fields';
 
 export interface PerspectiveCardTabbedProps {
   readonly schema: PerspectiveSchema;
@@ -44,9 +37,7 @@ export function PerspectiveCardTabbed({
   data,
   isActive,
   isGenerated,
-  onGenerate,
   onSetActive,
-  isGenerating = false,
   className = ''
 }: PerspectiveCardTabbedProps) {
 
@@ -113,7 +104,7 @@ export function PerspectiveCardTabbed({
           >
             <Tabs.Content value="caption">
               {data ? (
-                <ContentView data={data} />
+                <CaptionRenderer data={data} schema={schema} />
               ) : (
                 <Box textAlign="center" py={4}>
                   <Text fontSize="sm" color={mutedTextColor} fontStyle="italic">
@@ -177,79 +168,3 @@ export function PerspectiveCardTabbed({
     </Card.Root>
   );
 }
-
-interface ContentViewProps {
-  readonly data: Record<string, any>;
-}
-
-function ContentView({ data }: ContentViewProps) {
-  const fieldNameColor = useColorModeValue('gray.600', 'gray.400');
-  
-  // Debug the incoming data
-  console.log("ContentView received data:", data);
-  
-  // Handle empty data
-  if (!data || Object.keys(data).length === 0) {
-    return (
-      <Box textAlign="center" py={4}>
-        <Text fontSize="sm" color="red.400" fontStyle="italic">
-          Caption data is empty
-        </Text>
-      </Box>
-    );
-  }
-  
-  // Check if data is nested within 'content' or 'result' property (API might return either)
-  let displayData = data;
-  if (data.content && typeof data.content === 'object') {
-    console.log("Unwrapping nested content object:", data.content);
-    displayData = data.content;
-  } else if (data.result && typeof data.result === 'object') {
-    console.log("Unwrapping nested result object:", data.result);
-    displayData = data.result;
-  }
-  
-  return (
-    <Stack direction="column" gap={3}>
-      {Object.entries(displayData).map(([key, value]) => (
-        <Box key={key}>
-          <Text fontSize="xs" fontWeight="medium" color={fieldNameColor} mb={1}>
-            {key.replace(/_/g, ' ')}
-          </Text>
-          <Text fontSize="sm" whiteSpace="pre-wrap">
-            {typeof value === 'string' 
-              ? value 
-              : typeof value === 'object' && value !== null
-                ? JSON.stringify(value, null, 2)
-                : String(value)
-            }
-          </Text>
-        </Box>
-      ))}
-    </Stack>
-  );
-}
-
-interface SchemaViewProps {
-  readonly schema: PerspectiveSchema;
-}
-
-function SchemaView({ schema }: SchemaViewProps) {
-  const fieldNameColor = useColorModeValue('gray.600', 'gray.400');
-  const fieldBgColor = useColorModeValue('gray.50', 'gray.800');
-  
-  return (
-    <Stack direction="column" gap={3}>
-      {schema.schema_fields.map((field) => (
-        <Box key={field.name} p={2} bg={fieldBgColor} borderRadius="md">
-          <Text fontSize="xs" fontWeight="medium" color={fieldNameColor} mb={1}>
-            {field.description || field.name}
-          </Text>
-          <Text fontSize="sm" color={fieldNameColor}>
-            Type: {field.type}
-          </Text>
-        </Box>
-      ))}
-    </Stack>
-  );
-} 
