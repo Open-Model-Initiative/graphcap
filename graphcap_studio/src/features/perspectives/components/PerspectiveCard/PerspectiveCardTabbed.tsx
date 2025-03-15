@@ -23,6 +23,7 @@ import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { LuRefreshCw, LuExternalLink, LuCopy, LuCheck } from 'react-icons/lu';
 import { PerspectiveSchema } from '../../types';
 import { useClipboard } from '@/common/hooks/useClipboard';
+import { usePerspectiveUI } from '../../context';
 
 export interface PerspectiveCardTabbedProps {
   readonly schema: PerspectiveSchema;
@@ -31,10 +32,7 @@ export interface PerspectiveCardTabbedProps {
   readonly isGenerated: boolean;
   readonly onGenerate: () => void;
   readonly onSetActive: () => void;
-  readonly providers?: Array<{ id: number; name: string }>;
   readonly isGenerating?: boolean;
-  readonly selectedProviderId?: number | undefined;
-  readonly onProviderChange: (providerId: number | undefined) => void;
   readonly className?: string;
 }
 
@@ -48,12 +46,11 @@ export function PerspectiveCardTabbed({
   isGenerated,
   onGenerate,
   onSetActive,
-  providers = [],
   isGenerating = false,
-  selectedProviderId,
-  onProviderChange,
   className = ''
 }: PerspectiveCardTabbedProps) {
+  // Use the perspective UI context
+  const { selectedProviderId, availableProviders, handleProviderChange } = usePerspectiveUI();
   const { copyToClipboard, hasCopied } = useClipboard();
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const badgeBg = useColorModeValue('gray.100', 'gray.700');
@@ -71,11 +68,6 @@ export function PerspectiveCardTabbed({
     copyToClipboard(dataStr);
   };
 
-  const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    onProviderChange(value ? Number(value) : undefined);
-  };
-  
   return (
     <Card.Root 
       variant="outline" 

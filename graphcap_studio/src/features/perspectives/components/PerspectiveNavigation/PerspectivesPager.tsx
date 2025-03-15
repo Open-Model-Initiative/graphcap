@@ -11,21 +11,18 @@ import { PerspectiveCardTabbed } from '../PerspectiveCard/PerspectiveCardTabbed'
 import { PerspectiveSchema } from '@/features/perspectives/types';
 import { PerspectivesFooter } from '../PerspectiveActions/PerspectivesFooter';
 import { PerspectiveHeader } from './PerspectiveHeader';
-import { Provider } from '@/features/perspectives/types';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { EmptyPerspectives } from '../EmptyPerspectives';
+import { usePerspectiveUI } from '@/features/perspectives/context';
 
 interface PerspectivesPagerProps {
   schemas: Record<string, PerspectiveSchema>;
   activeSchemaName: string;
-  selectedProviderId?: number;
   captions: any;
   generatedPerspectives: string[];
-  availableProviders: Provider[];
   isLoading: boolean;
   onGenerate: (schemaKey: string) => void;
   onSetActiveSchema: (schemaName: string) => void;
-  onProviderChange: (providerId: number | undefined) => void;
   optionsControl: {
     isOpen: boolean;
     onToggle: () => void;
@@ -39,16 +36,16 @@ interface PerspectivesPagerProps {
 export function PerspectivesPager({
   schemas,
   activeSchemaName,
-  selectedProviderId,
   captions,
   generatedPerspectives,
-  availableProviders,
   isLoading,
   onGenerate,
   onSetActiveSchema,
-  onProviderChange,
   optionsControl
 }: PerspectivesPagerProps) {
+  // Get provider-related props from context
+  const { selectedProviderId } = usePerspectiveUI();
+  
   // Get the array of schema keys for navigation
   const schemaKeys = Object.keys(schemas);
   
@@ -114,10 +111,7 @@ export function PerspectivesPager({
             isGenerated={isGenerated}
             onGenerate={() => onGenerate(activeSchemaName)}
             onSetActive={() => onSetActiveSchema(activeSchemaName)}
-            providers={availableProviders}
             isGenerating={isGenerating}
-            selectedProviderId={selectedProviderId}
-            onProviderChange={onProviderChange}
           />
         )}
       </Box>
@@ -134,10 +128,7 @@ export function PerspectivesPager({
         <PerspectivesFooter
           isLoading={isLoading}
           isGenerated={isGenerated}
-          availableProviders={availableProviders}
-          selectedProviderId={selectedProviderId}
           onGenerate={() => onGenerate(activeSchemaName)}
-          onProviderChange={onProviderChange}
           optionsControl={optionsControl}
         />
       </Box>

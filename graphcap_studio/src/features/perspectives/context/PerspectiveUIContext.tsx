@@ -7,7 +7,7 @@
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { PerspectiveSchema } from '../types';
+import { PerspectiveSchema, Provider } from '../types';
 
 // Define the context type with explicit typing
 interface PerspectiveUIContextType {
@@ -15,11 +15,13 @@ interface PerspectiveUIContextType {
   activeSchemaName: string | null;
   selectedProviderId: number | undefined;
   isGeneratingAll: boolean;
+  availableProviders: Provider[];
   
   // UI actions
   setActiveSchemaName: (schemaName: string | null) => void;
   setSelectedProviderId: (providerId: number | undefined) => void;
   setIsGeneratingAll: (isGenerating: boolean) => void;
+  setAvailableProviders: (providers: Provider[]) => void;
   handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   
   // Rendering utilities
@@ -42,6 +44,7 @@ export class PerspectiveUIProviderError extends Error {
 interface PerspectiveUIProviderProps {
   children: ReactNode;
   initialProviderId?: number;
+  initialProviders?: Provider[];
 }
 
 /**
@@ -49,12 +52,14 @@ interface PerspectiveUIProviderProps {
  */
 export function PerspectiveUIProvider({ 
   children, 
-  initialProviderId 
+  initialProviderId,
+  initialProviders = [] 
 }: PerspectiveUIProviderProps) {
   // UI state
   const [activeSchemaName, setActiveSchemaName] = React.useState<string | null>(null);
   const [selectedProviderId, setSelectedProviderId] = React.useState<number | undefined>(initialProviderId);
   const [isGeneratingAll, setIsGeneratingAll] = React.useState<boolean>(false);
+  const [availableProviders, setAvailableProviders] = React.useState<Provider[]>(initialProviders);
 
   // Provider change handler
   const handleProviderChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -117,11 +122,13 @@ export function PerspectiveUIProvider({
     activeSchemaName,
     selectedProviderId,
     isGeneratingAll,
+    availableProviders,
     
     // UI actions
     setActiveSchemaName,
     setSelectedProviderId,
     setIsGeneratingAll,
+    setAvailableProviders,
     handleProviderChange,
     
     // Rendering utilities

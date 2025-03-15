@@ -9,10 +9,12 @@
 import React, { ReactNode } from 'react';
 import { PerspectivesDataProvider } from './PerspectivesDataContext';
 import { PerspectiveUIProvider } from './PerspectiveUIContext';
+import { Provider } from '../types';
 
 interface PerspectivesProviderProps {
   children: ReactNode;
   initialProviderId?: number;
+  initialProviders?: Provider[];
 }
 
 /**
@@ -20,11 +22,15 @@ interface PerspectivesProviderProps {
  */
 export function PerspectivesProvider({
   children,
-  initialProviderId
+  initialProviderId,
+  initialProviders = []
 }: PerspectivesProviderProps) {
   return (
     <PerspectivesDataProvider>
-      <PerspectiveUIProvider initialProviderId={initialProviderId}>
+      <PerspectiveUIProvider 
+        initialProviderId={initialProviderId}
+        initialProviders={initialProviders}
+      >
         {children}
       </PerspectiveUIProvider>
     </PerspectivesDataProvider>
