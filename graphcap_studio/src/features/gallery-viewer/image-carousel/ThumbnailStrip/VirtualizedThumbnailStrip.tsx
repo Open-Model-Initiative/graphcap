@@ -2,7 +2,7 @@
 import { memo, useState, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { Image } from '@/services/images';
-import { ThumbnailImage } from '@/common/components/responsive-image';
+import { ThumbnailImage } from '@/components/responsive-image';
 import { useDynamicThumbnails } from '../hooks';
 import styles from './ThumbnailStrip.module.css';
 

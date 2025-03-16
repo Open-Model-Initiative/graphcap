@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from 'react';
 import { Image } from '@/services/images';
-import { ThumbnailImage } from '@/common/components/responsive-image';
+import { ThumbnailImage } from '@/components/responsive-image';
 import { useDynamicThumbnails } from '../hooks';
 import { Upload } from 'lucide-react';
 import { UploadDropzone } from '@/features/gallery-viewer/image-uploader';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import { ImageOff } from 'lucide-react';
-import { ResponsiveImage } from '@/common/components/responsive-image';
+import { ResponsiveImage } from '@/components/responsive-image';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useImageCarousel } from '../ImageCarouselContext';
 
