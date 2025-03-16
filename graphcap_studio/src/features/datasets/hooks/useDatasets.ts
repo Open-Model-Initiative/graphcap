@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
   useListDatasets, 
@@ -8,7 +7,6 @@ import {
   useAddImageToDataset as useAddImageToDatasetMutation,
   queryKeys
 } from '@/services/dataset';
-import type { Dataset } from '@/services/dataset';
 import { getQueryClient } from '@/utils/queryClient';
 
 /**
@@ -24,9 +22,6 @@ export function useDatasets() {
   // Track the most recently uploaded images to prioritize them in the sort
   const [recentlyUploadedImages, setRecentlyUploadedImages] = useState<Set<string>>(new Set());
   
-  // Get query client for prefetching and cache management
-  const queryClient = useQueryClient();
-
   // Fetch datasets with TanStack Query
   const { 
     data: datasetsData, 
@@ -112,9 +107,9 @@ export function useDatasets() {
       });
       
       if (result.success) {
-        toast.success(result.message || `Image added to dataset ${targetDataset} successfully`);
+        toast.success(result.message ?? `Image added to dataset ${targetDataset} successfully`);
       } else {
-        toast.error(result.message || 'Failed to add image to dataset');
+        toast.error(result.message ?? 'Failed to add image to dataset');
       }
     } catch (error) {
       toast.error(`Failed to add image to dataset: ${(error as Error).message}`);

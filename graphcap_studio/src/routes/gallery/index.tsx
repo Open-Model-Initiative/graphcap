@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useDatasets } from '@/features/datasets/hooks/useDatasets'
-import { useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 export const Route = createFileRoute('/gallery/')({
