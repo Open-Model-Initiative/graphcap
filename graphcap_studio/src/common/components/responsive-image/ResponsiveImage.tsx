@@ -52,7 +52,7 @@ function ImageComponent({
   // Format aspect ratio for CSS
   const cssAspectRatio = forceContainerAspect ? formatAspectRatioForCSS(aspectRatio) : undefined;
 
-  const handleError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleError = (_event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (onError) {
       onError(new Error(`Failed to load image: ${imagePath}`));
     }

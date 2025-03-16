@@ -7,7 +7,7 @@ import {
 } from "./color-mode"
 import { graphcapTheme } from "@/app/theme"
 
-export function Provider(props: ColorModeProviderProps) {
+export function Provider(props: Readonly<ColorModeProviderProps>) {
   return (
     <ChakraProvider value={graphcapTheme}>
       <ColorModeProvider {...props} />

@@ -1,13 +1,11 @@
-import { createFileRoute, Link as RouterLink } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { 
   Box, 
   Heading, 
   Text, 
-  Button, 
   List, 
   Container,
   Card,
-  Link,
   VStack,
   Icon
 } from "@chakra-ui/react"
@@ -23,8 +21,6 @@ function Index() {
   const cardBgColor = useColorModeValue("white", "gray.700")
   const textColor = useColorModeValue("gray.800", "gray.200")
   const headingColor = useColorModeValue("gray.900", "white")
-  const buttonBgColor = useColorModeValue("blue.500", "blue.400")
-  const buttonHoverBgColor = useColorModeValue("blue.600", "blue.500")
 
   return (
     <Box p={4} bg={bgColor} color={textColor}>
@@ -37,20 +33,6 @@ function Index() {
           <Text mb={4}>
             Dashboard currently under construction. Please go to the Gallery to view the available datasets.
           </Text>
-          
-          <Box mb={6}>
-            <Link as={RouterLink} to="/gallery/os_home" _hover={{ textDecoration: 'none' }}>
-              <Button 
-                colorScheme="blue" 
-                bg={buttonBgColor}
-                _hover={{ bg: buttonHoverBgColor }}
-                size="md"
-              >
-                Go to Gallery
-              </Button>
-            </Link>
-          </Box>
-          
           <Card.Root bg={cardBgColor} mb={6} shadow="md">
             <Card.Header pb={0}>
               <Heading size="md" color={headingColor}>Getting Started</Heading>
