@@ -57,7 +57,7 @@ export const perspectivesApi = {
       // Ensure the image path has the correct workspace prefix
       const normalizedImagePath = ensureWorkspacePath(requestParams.image_path);
       console.log('Generating caption for image path:', normalizedImagePath);
-      
+      console.log('Request params:', requestParams);
       // Create the request body and validate with Zod
       const request: CaptionRequest = {
         ...requestParams,

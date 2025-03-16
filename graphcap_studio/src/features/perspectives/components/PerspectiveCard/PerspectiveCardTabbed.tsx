@@ -17,6 +17,7 @@ import { PerspectiveSchema } from '../../types';
 import { SchemaView } from './SchemaView';
 import { CaptionRenderer } from './schema-fields';
 import { ClipboardButton } from '@/components/ui/buttons';
+import { PerspectiveDebug } from './PerspectiveDebug';
 
 export interface PerspectiveCardTabbedProps {
   readonly schema: PerspectiveSchema;
@@ -137,30 +138,7 @@ export function PerspectiveCardTabbed({
             </Tabs.Content>
             
             <Tabs.Content value="debug">
-              <Box position="relative">
-                <Box position="absolute" top="0" right="0" zIndex="1">
-                  <ClipboardButton 
-                    content={data ? { 
-                      isGenerated: String(isGenerated),
-                      dataType: data ? typeof data : 'null',
-                      dataKeys: data ? Object.keys(data).join(', ') : 'none',
-                      rawData: data
-                    } : 'No data'} 
-                    label="Copy debug info to clipboard" 
-                    size="xs" 
-                    iconOnly
-                  />
-                </Box>
-                <Box p={1} bg="gray.800" borderRadius="md" overflowX="auto">
-                  <Text fontSize="xs" fontWeight="bold" mb={2} color="yellow.300">Debug Information:</Text>
-                  <Box as="pre" fontSize="xs" whiteSpace="pre-wrap" color="green.300">
-                    isGenerated: {String(isGenerated)}{'\n'}
-                    Data type: {data ? typeof data : 'null'}{'\n'}
-                    Data keys: {data ? Object.keys(data).join(', ') : 'none'}{'\n'}
-                    Raw data: {data ? JSON.stringify(data, null, 2) : 'null'}
-                  </Box>
-                </Box>
-              </Box>
+              <PerspectiveDebug data={data} schema={schema} />
             </Tabs.Content>
           </Box>
         </Tabs.Root>

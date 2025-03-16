@@ -133,7 +133,7 @@ export function saveCaptionToStorage(
   data: any
 ): void {
   try {
-    console.log('Saving caption to localStorage:', datasetId, imageFilename, perspectiveName);
+    console.log('Saving caption to localStorage:', datasetId, imageFilename, perspectiveName, data);
     const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
     const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
     

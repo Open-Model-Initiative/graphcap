@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+// TODO: RESOLVE OLD DATASET NAME SYSTEM
 import { Upload, Plus } from 'lucide-react';
 import { useImageUploader } from './useImageUploader';
 
@@ -19,10 +20,6 @@ export function UploadDropzone({
   compact = false,
   onUploadComplete = () => {}
 }: UploadDropzoneProps) {
-  if (!datasetName) {
-    console.log('UploadDropzone requires a datasetName');
-  }
-
   const {
     isUploading,
     getRootProps,

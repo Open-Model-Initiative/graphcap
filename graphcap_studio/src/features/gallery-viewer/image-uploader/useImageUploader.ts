@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+// TODO: RESOLVE OLD DATASET NAME SYSTEM
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -28,9 +29,6 @@ export function useImageUploader({
   datasetName,
   onUploadComplete,
 }: UseImageUploaderProps): UseImageUploaderResult {
-  if (!datasetName) {
-    console.log('useImageUploader requires a datasetName');
-  }
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});

@@ -203,6 +203,7 @@ export interface PerspectiveData {
   model: string;
   provider: string;
   content: Record<string, any>;
+  options: CaptionOptions;
 }
 
 /**

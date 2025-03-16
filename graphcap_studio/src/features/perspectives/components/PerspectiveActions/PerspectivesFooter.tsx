@@ -17,6 +17,7 @@ import {
   GenerationOptionsProvider, 
   GenerationOptionsButton,
 } from '@/features/inference/generation-options';
+import { DEFAULT_OPTIONS } from '@/features/inference/generation-options/schema';
 import { CaptionOptions } from '@/features/perspectives/types';
 
 /**
@@ -120,7 +121,13 @@ export function PerspectivesFooter() {
     console.log("Generate button clicked");
     console.log("Active schema:", activeSchemaName);
     console.log("Selected provider ID:", selectedProviderId);
-    console.log("Caption options:", captionOptions);
+    
+    // Ensure we have valid options by applying defaults if needed
+    const effectiveOptions = Object.keys(captionOptions).length === 0 
+      ? DEFAULT_OPTIONS 
+      : captionOptions;
+      
+    console.log("Using caption options:", effectiveOptions);
     
     if (!validateGeneration()) {
       return;
@@ -132,7 +139,7 @@ export function PerspectivesFooter() {
         activeSchemaName!,
         currentImage!.path,
         selectedProviderId,
-        captionOptions
+        effectiveOptions
       );
       showMessage(
         "Generation started",

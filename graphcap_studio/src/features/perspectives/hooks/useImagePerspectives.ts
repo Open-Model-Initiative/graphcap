@@ -75,6 +75,12 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       setError('No image provided');
       return;
     }
+
+    if (!options) {
+      console.warn('No options provided, using default options');
+      setError('No options provided');
+      return;
+    }
     
     if (!isServerConnected) {
       console.warn('Cannot generate perspective: Server connection not established');
@@ -111,10 +117,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         imagePath: image.path,
         perspective,
         providerId,
-        options: options || {
-          temperature: 0.7,
-          max_tokens: 4096
-        }
+        options
       });
       
       // Log the caption result
@@ -127,7 +130,8 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
         version: '1.0',
         model: 'api-generated',
         provider: providerName,
-        content: result.content || result.result || {} // Ensure content is not undefined
+        content: result.content || result.result || {},
+        options: options
       };
       
       // Update the captions with the new perspective

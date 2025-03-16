@@ -14,7 +14,8 @@ import {
   Perspective, 
   PerspectiveSchema,
   CaptionOptions,
-  Provider
+  Provider,
+  PerspectiveData
 } from '../types';
 import { Image } from '@/services/images';
 import { usePerspectives } from '../hooks/usePerspectives';
@@ -298,6 +299,17 @@ export function PerspectivesDataProvider({
       // Add to generating list
       setGeneratingPerspectives(prev => [...prev, schemaName]);
       
+      // Get selected provider name
+      const provider = providersData?.find(p => p.id === (providerId ?? selectedProviderId));
+      const providerName = provider?.name || 'unknown';
+      
+      // Log the options to ensure they're being passed correctly
+      console.debug(`Generating perspective "${schemaName}" with options:`, {
+        providedOptions: options,
+        contextOptions: captionOptions,
+        finalOptions: options || captionOptions || {}
+      });
+      
       // Use the direct mutation to generate caption via API
       const result = await generateCaptionMutation.mutateAsync({
         perspective: schemaName,
@@ -306,12 +318,44 @@ export function PerspectivesDataProvider({
         options: options ?? captionOptions
       });
       
-      // Save to localStorage
+      // Validate required data
+      if (!result.metadata?.model) {
+        console.error(`ERROR: Missing model information in API response for perspective ${schemaName}`);
+      }
+      
+      if (!providerName) {
+        console.error(`ERROR: Missing provider information for perspective ${schemaName}`);
+      }
+      
+      if (!options && !captionOptions) {
+        console.error(`ERROR: Missing generation options for perspective ${schemaName}`);
+      }
+      
+      // Format the data as PerspectiveData object - no defaults!
+      const perspectiveData: PerspectiveData = {
+        config_name: schemaName,
+        version: '1.0',
+        model: result.metadata?.model || (() => {
+          console.error(`CRITICAL ERROR: Missing model information in API response for perspective ${schemaName}`);
+          return "MISSING_MODEL";
+        })(),
+        provider: providerName || (() => {
+          console.error(`CRITICAL ERROR: Missing provider information for perspective ${schemaName}`);
+          return "MISSING_PROVIDER";
+        })(),
+        content: result.content ?? result.result ?? {},
+        options: options || captionOptions || (() => {
+          console.error(`CRITICAL ERROR: Missing generation options for perspective ${schemaName}`);
+          return {};
+        })()
+      };
+      
+      // Save formatted data to localStorage
       saveCaptionToStorage(
         currentImage.directory || 'unknown',
         currentImage.name,
         schemaName,
-        result
+        perspectiveData
       );
       
       // Update state
@@ -319,11 +363,11 @@ export function PerspectivesDataProvider({
         ...prev,
         perspectives: {
           ...(prev.perspectives || {}),
-          [schemaName]: result
+          [schemaName]: perspectiveData
         }
       }));
 
-      return result;
+      return perspectiveData;
     } catch (error) {
       console.error(`Error generating perspective "${schemaName}":`, error);
       throw error;
@@ -331,7 +375,7 @@ export function PerspectivesDataProvider({
       // Remove from generating list
       setGeneratingPerspectives(prev => prev.filter(name => name !== schemaName));
     }
-  }, [currentImage, generateCaptionMutation, isServerConnected, selectedProviderId, captionOptions]);
+  }, [currentImage, generateCaptionMutation, isServerConnected, selectedProviderId, captionOptions, providersData]);
   
   // Helper to check if a perspective is generated
   const isPerspectiveGenerated = useCallback((schemaName: string) => {
@@ -348,26 +392,11 @@ export function PerspectivesDataProvider({
     // Try to get data from our in-memory state
     const perspectiveData = captions.perspectives?.[schemaName];
     
-    // Debug what we're getting from state
     console.log('getPerspectiveData for', schemaName, perspectiveData);
     
-    // Return the perspective data, checking the structure
-    if (perspectiveData) {
-      // If we have a result property with object data, return it
-      if (perspectiveData.result && typeof perspectiveData.result === 'object') {
-        return perspectiveData.result;
-      }
-      
-      // If we have a content property with object data, return it
-      if (perspectiveData.content && typeof perspectiveData.content === 'object') {
-        return perspectiveData.content;
-      }
-      
-      // Just return the entire object if none of the above matched
-      return perspectiveData;
-    }
-    
-    return null;
+    // Always return the complete perspective data object
+    // to preserve options and metadata
+    return perspectiveData;
   }, [captions]);
   
   // Create consolidated context value

@@ -22,9 +22,7 @@ import { ServerConnection } from '@/features/server-connections/types';
 export function useGeneratePerspectiveCaption() {
   const queryClient = useQueryClient();
   const { connections } = useServerConnectionsContext();
-  
-  console.log('Initializing useGeneratePerspectiveCaption hook');
-  
+
   return useMutation<CaptionResponse, Error, {
     perspective: string;
     imagePath: string;
@@ -38,6 +36,10 @@ export function useGeneratePerspectiveCaption() {
       
       if (!isConnected) {
         throw new Error('Server connection not established');
+      }
+      
+      if (!options) {
+        throw new Error('Caption generation options are required');
       }
       
       const baseUrl = getGraphCapServerUrl(connections);
@@ -58,12 +60,12 @@ export function useGeneratePerspectiveCaption() {
         perspective,
         image_path: normalizedImagePath,
         provider_id: providerId,
-        max_tokens: options?.max_tokens ?? 4000,
-        temperature: options?.temperature ?? 0.7,
-        top_p: options?.top_p ?? 0.95,
-        repetition_penalty: options?.repetition_penalty ?? 1.1,
-        context: options?.context ?? [],
-        global_context: options?.global_context ?? ''
+        max_tokens: options.max_tokens, 
+        temperature: options.temperature, 
+        top_p: options.top_p,
+        repetition_penalty: options.repetition_penalty,
+        context: options.context || [],
+        global_context: options.global_context ?? ''
       };
       
       console.log(`Sending caption generation request to: ${url}`, {
@@ -98,7 +100,12 @@ export function useGeneratePerspectiveCaption() {
         content: data.result || data.content
       });
       
-      return data;
+      // Return data with the provided options
+      return {
+        ...data,
+        // Include the original options that were used
+        options: options,
+      };
     },
     onSuccess: (result, variables) => {
       console.debug('Caption generation successful, invalidating queries', { 
