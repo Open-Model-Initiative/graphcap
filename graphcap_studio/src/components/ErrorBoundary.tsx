@@ -13,15 +13,15 @@ interface ErrorBoundaryProps {
   /**
    * The UI to display when an error is caught
    */
-  fallback: ReactNode | ((error: Error, reset: () => void) => ReactNode);
+  readonly fallback: ReactNode | ((error: Error, reset: () => void) => ReactNode);
   /**
    * Optional callback for when an error is caught
    */
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  readonly onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   /**
    * Child components that might throw errors
    */
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 /**

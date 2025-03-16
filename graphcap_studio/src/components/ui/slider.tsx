@@ -2,7 +2,7 @@ import { Slider as ChakraSlider, For, HStack } from "@chakra-ui/react"
 import * as React from "react"
 
 export interface SliderProps extends ChakraSlider.RootProps {
-  marks?: Array<number | { value: number; label: React.ReactNode }>
+  marks?: ReadonlyArray<number | { value: number; label: React.ReactNode }>
   label?: React.ReactNode
   showValue?: boolean
 }
@@ -12,12 +12,12 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     const { marks: marksProp, label, showValue, ...rest } = props
     const value = props.defaultValue ?? props.value
 
-    const marks = marksProp?.map((mark) => {
+    const marks = marksProp?.map((mark): { value: number; label: React.ReactNode | undefined } => {
       if (typeof mark === "number") return { value: mark, label: undefined }
       return mark
     })
 
-    const hasMarkLabel = !!marks?.some((mark) => mark.label)
+    const hasMarkLabel = marks ? marks.some((mark) => Boolean(mark.label)) : false
 
     return (
       <ChakraSlider.Root ref={ref} thumbAlignment="center" {...rest}>
@@ -42,12 +42,12 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
   },
 )
 
-function SliderThumbs(props: { value?: number[] }) {
+function SliderThumbs(props: { readonly value?: readonly number[] }) {
   const { value } = props
   return (
     <For each={value}>
-      {(_, index) => (
-        <ChakraSlider.Thumb key={index} index={index}>
+      {(val, index) => (
+        <ChakraSlider.Thumb key={`thumb-${val}-${index}`} index={index}>
           <ChakraSlider.HiddenInput />
         </ChakraSlider.Thumb>
       )}
@@ -56,7 +56,7 @@ function SliderThumbs(props: { value?: number[] }) {
 }
 
 interface SliderMarksProps {
-  marks?: Array<number | { value: number; label: React.ReactNode }>
+  marks?: ReadonlyArray<{ value: number; label: React.ReactNode | undefined }>
 }
 
 const SliderMarks = React.forwardRef<HTMLDivElement, SliderMarksProps>(
@@ -66,11 +66,10 @@ const SliderMarks = React.forwardRef<HTMLDivElement, SliderMarksProps>(
 
     return (
       <ChakraSlider.MarkerGroup ref={ref}>
-        {marks.map((mark, index) => {
-          const value = typeof mark === "number" ? mark : mark.value
-          const label = typeof mark === "number" ? undefined : mark.label
+        {marks.map((mark) => {
+          const { value, label } = mark
           return (
-            <ChakraSlider.Marker key={index} value={value}>
+            <ChakraSlider.Marker key={`marker-${value}`} value={value}>
               <ChakraSlider.MarkerIndicator />
               {label}
             </ChakraSlider.Marker>

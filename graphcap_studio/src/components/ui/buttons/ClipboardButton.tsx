@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { IconButtonProps, ButtonProps } from "@chakra-ui/react";
+import type { ButtonProps } from "@chakra-ui/react";
 import { Button, IconButton } from '@chakra-ui/react';
-import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { useClipboard } from '@/common/hooks/useClipboard';
 import { Tooltip } from '@/components/ui/tooltip';
 import * as React from "react";
@@ -90,15 +89,21 @@ export const ClipboardButton = React.forwardRef<
     }
   }, [error, debug]);
 
-  // Visual feedback colors
-  const successColor = useColorModeValue('green.500', 'green.300');
-
   // Set tooltip content based on state
-  const tooltipContent = hasCopied 
-    ? 'Copied!' 
-    : error 
-      ? 'Failed to copy' 
-      : label;
+  let tooltipContent = label;
+  if (hasCopied) {
+    tooltipContent = 'Copied!';
+  } else if (error) {
+    tooltipContent = 'Failed to copy';
+  }
+
+  // Determine button color based on state
+  let buttonColorPalette = colorPalette;
+  if (hasCopied) {
+    buttonColorPalette = 'green';
+  } else if (error) {
+    buttonColorPalette = 'red';
+  }
 
   // Icon elements
   const copyIcon = (
@@ -114,31 +119,29 @@ export const ClipboardButton = React.forwardRef<
     </svg>
   );
 
-  if (iconOnly) {
-    return (
-      <Tooltip content={tooltipContent} showArrow>
-        <IconButton
-          size={size}
-          variant={variant}
-          colorPalette={hasCopied ? 'green' : error ? 'red' : colorPalette}
-          onClick={handleCopy}
-          className={className}
-          aria-label={label}
-          ref={ref}
-          {...props}
-        >
-          {hasCopied ? checkIcon : copyIcon}
-        </IconButton>
-      </Tooltip>
-    );
-  }
+  const renderIconButton = () => (
+    <Tooltip content={tooltipContent} showArrow>
+      <IconButton
+        size={size}
+        variant={variant}
+        colorPalette={buttonColorPalette}
+        onClick={handleCopy}
+        className={className}
+        aria-label={label}
+        ref={ref}
+        {...props}
+      >
+        {hasCopied ? checkIcon : copyIcon}
+      </IconButton>
+    </Tooltip>
+  );
 
-  return (
+  const renderButton = () => (
     <Tooltip content={tooltipContent} showArrow>
       <Button
         size={size}
         variant={variant}
-        colorPalette={hasCopied ? 'green' : error ? 'red' : colorPalette}
+        colorPalette={buttonColorPalette}
         onClick={handleCopy}
         className={className}
         aria-label={label}
@@ -150,4 +153,6 @@ export const ClipboardButton = React.forwardRef<
       </Button>
     </Tooltip>
   );
+
+  return iconOnly ? renderIconButton() : renderButton();
 }); 

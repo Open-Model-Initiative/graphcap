@@ -3,13 +3,12 @@ import {
   Flex,
   Button,
 } from '@chakra-ui/react';
-import { useColorMode } from '@/components/ui/theme/color-mode';
 
 export interface ActionButtonProps {
-  onClick: () => void;
-  disabled: boolean;
-  isLoading: boolean;
-  label?: string;
+  readonly onClick: () => void;
+  readonly disabled: boolean;
+  readonly isLoading: boolean;
+  readonly label?: string;
 }
 
 /**
@@ -21,8 +20,7 @@ export function ActionButton({
   isLoading, 
   label = 'Use Selected Model'
 }: ActionButtonProps) {
-  const { colorMode } = useColorMode();
-  const isDark = colorMode === 'dark';
+
   
   return (
     <Flex justify="flex-end" mt={4}>
