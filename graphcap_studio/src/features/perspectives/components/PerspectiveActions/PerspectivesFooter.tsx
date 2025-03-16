@@ -154,7 +154,7 @@ export function PerspectivesFooter({
                 backgroundColor: 'inherit',
                 opacity: isProcessing ? 0.6 : 1
               }}
-              value={selectedProviderId?.toString() || ''}
+              value={selectedProviderId?.toString() ?? ''}
               onChange={handleProviderChange}
               disabled={isProcessing}
             >

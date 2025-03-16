@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { ButtonProps } from "@chakra-ui/react";
 import { Button, IconButton } from '@chakra-ui/react';
-import { useClipboard } from '@/common/hooks/useClipboard';
+import { useClipboard } from '@/hooks/useClipboard';
 import { Tooltip } from '@/components/ui/tooltip';
 import * as React from "react";
 

@@ -5,7 +5,6 @@ import { useEditorContext } from '@/features/editor/context/EditorContext';
 import { 
   getPropertiesFromStorage, 
   savePropertiesToStorage,
-  deletePropertiesFromStorage
 } from '../utils/localStorage';
 
 // Define the properties data interface

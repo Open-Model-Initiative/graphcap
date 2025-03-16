@@ -14,7 +14,6 @@ import {
   Perspective, 
   PerspectiveSchema,
   CaptionOptions,
-  CaptionResponse,
   Provider
 } from '../types';
 import { Image } from '@/services/images';
@@ -25,8 +24,6 @@ import { SERVER_IDS } from '@/features/server-connections/constants';
 import { useProviders } from '../../inference/services/providers';
 import {
   saveCaptionToStorage,
-  getCaptionFromStorage,
-  captionExistsInStorage,
   getAllCaptionsForImage
 } from '../utils/localStorage';
 
@@ -111,7 +108,7 @@ interface PerspectivesDataContextType {
   isPerspectiveGenerating: (schemaName: string) => boolean;
   
   // Data helpers
-  getPerspectiveData: (schemaName: string) => any | null;
+  getPerspectiveData: (schemaName: string) => Record<string, unknown> | null;
 }
 
 /**
@@ -129,10 +126,10 @@ export class PerspectivesDataProviderError extends Error {
 }
 
 interface PerspectivesDataProviderProps {
-  children: ReactNode;
-  image: Image | null;
-  initialProviderId?: number;
-  initialProviders?: Provider[];
+  readonly children: ReactNode;
+  readonly image: Image | null;
+  readonly initialProviderId?: number;
+  readonly initialProviders?: Provider[];
 }
 
 /**
@@ -153,7 +150,7 @@ export function PerspectivesDataProvider({
   
   // Provider state - initialize from props or localStorage
   const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(() => {
-    return initialProviderId !== undefined ? initialProviderId : loadProviderIdFromStorage();
+    return initialProviderId ?? loadProviderIdFromStorage();
   });
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(initialProviders);
   const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
@@ -296,7 +293,7 @@ export function PerspectivesDataProvider({
       const result = await generateCaptionMutation.mutateAsync({
         perspective: schemaName,
         imagePath,
-        providerId: providerId || selectedProviderId,
+        providerId: providerId ?? selectedProviderId,
         options
       });
       

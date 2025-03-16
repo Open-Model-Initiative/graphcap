@@ -12,8 +12,6 @@ import {
 } from './context';
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { Image } from '@/services/images';
-import { useServerConnectionsContext } from '@/context';
-import { SERVER_IDS } from '@/features/server-connections/constants';
 import { Box, Flex } from '@chakra-ui/react';
 import { GenerationOptionForm, DEFAULT_OPTIONS } from './components/PerspectiveActions/GenerationOptionForm';
 import { CaptionOptions } from './types';
@@ -21,7 +19,7 @@ import { PerspectivesPager } from './components/PerspectiveNavigation/Perspectiv
 import { PerspectivesErrorState } from './components/PerspectivesErrorState';
 
 interface PerspectivesProps {
-  image: Image | null;
+  readonly image: Image | null;
 }
 
 /**
@@ -36,19 +34,12 @@ export function Perspectives({ image }: PerspectivesProps) {
   // Get data from perspectives data context
   const {
     isServerConnected,
-    generatePerspective,
-    selectedProviderId,
     schemas,
     perspectivesError: dataError,
     setCurrentImage,
     currentImage
   } = usePerspectivesData();
   
-  // Get server connection status
-  const { connections, handleConnect } = useServerConnectionsContext();
-  const graphcapServer = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
-  
-  // Get UI state from perspectives UI context
   const {
     activeSchemaName,
     setActiveSchemaName
@@ -79,21 +70,6 @@ export function Perspectives({ image }: PerspectivesProps) {
     buttonRef: optionsButtonRef,
     options
   }), [showOptions, options]);
-
-  // Demonstrate using the new unified context for generating a perspective
-  const handleGeneratePerspective = useCallback((schemaName: string) => {
-    if (image) {
-      // Use the new unified generatePerspective method
-      generatePerspective(
-        schemaName,
-        image.path,
-        selectedProviderId,
-        options
-      ).catch(error => {
-        console.error(`Error generating perspective "${schemaName}":`, error);
-      });
-    }
-  }, [image, generatePerspective, selectedProviderId, options]);
 
   // Show error state if there's an error or server is not connected
   if (!isServerConnected) {

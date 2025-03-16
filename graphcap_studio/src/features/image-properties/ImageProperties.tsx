@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { Perspectives } from '@/features/perspectives';
-import { Box } from '@chakra-ui/react';
-import { Tabs } from '@chakra-ui/react';
+import { Box, Tabs } from '@chakra-ui/react';
 import { useImagePropertiesContext } from './context';
 import { saveSelectedTab, getSelectedTab } from './utils/localStorage';
 
@@ -32,7 +31,7 @@ export function ImageProperties() {
   
   // Get saved tab from localStorage or default to "basic"
   const [activeTab, setActiveTab] = useState(() => {
-    return getSelectedTab() || "basic";
+    return getSelectedTab() ?? "basic";
   });
 
   // Save tab selection to localStorage when it changes
@@ -77,7 +76,7 @@ export function ImageProperties() {
           <Tabs.Indicator />
         </Tabs.List>
         
-        <Box flex="1" overflow="auto" p={4}>
+        <Box flex="1" overflow="auto" p={1}>
           <Tabs.Content value="basic">
             {properties && (
               <BasicInformation

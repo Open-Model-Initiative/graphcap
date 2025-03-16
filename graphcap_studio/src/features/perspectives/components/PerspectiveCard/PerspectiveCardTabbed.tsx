@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { PerspectiveSchema } from '../../types';
-import { useClipboard } from '@/common/hooks/useClipboard';
 import { SchemaView } from './SchemaView';
 import { CaptionRenderer } from './schema-fields';
 import { ClipboardButton } from '@/components/ui/buttons';
@@ -24,9 +23,7 @@ export interface PerspectiveCardTabbedProps {
   readonly data: Record<string, any> | null;
   readonly isActive: boolean;
   readonly isGenerated: boolean;
-  readonly onGenerate: () => void;
   readonly onSetActive: () => void;
-  readonly isGenerating?: boolean;
   readonly className?: string;
 }
 
@@ -42,7 +39,6 @@ export function PerspectiveCardTabbed({
   className = ''
 }: PerspectiveCardTabbedProps) {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const badgeBg = useColorModeValue('gray.100', 'gray.700');
   const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
 
   const activeBorderColor = useColorModeValue('blue.500', 'blue.400');
@@ -72,9 +68,6 @@ export function PerspectiveCardTabbed({
         >
           <Tabs.List 
             bg={useColorModeValue('gray.100', 'gray.700')} 
-            px={2} 
-            pt={1}
-            pb={0}
             width="100%"
           >
             <Tabs.Trigger value="caption" disabled={!isGenerated}>Caption</Tabs.Trigger>
@@ -123,7 +116,7 @@ export function PerspectiveCardTabbed({
                     iconOnly
                   />
                 </Box>
-                <Box whiteSpace="pre-wrap" fontSize="sm" p={2} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
+                <Box whiteSpace="pre-wrap" fontSize="sm" p={1} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
                   {schema.prompt}
                 </Box>
               </Box>
@@ -158,7 +151,7 @@ export function PerspectiveCardTabbed({
                     iconOnly
                   />
                 </Box>
-                <Box p={2} bg="gray.800" borderRadius="md" overflowX="auto">
+                <Box p={1} bg="gray.800" borderRadius="md" overflowX="auto">
                   <Text fontSize="xs" fontWeight="bold" mb={2} color="yellow.300">Debug Information:</Text>
                   <Box as="pre" fontSize="xs" whiteSpace="pre-wrap" color="green.300">
                     isGenerated: {String(isGenerated)}{'\n'}
@@ -196,7 +189,7 @@ export function PerspectiveCardTabbed({
         
         {/* Metadata - e.g., timestamps or version info */}
         <Text fontSize="xs" color={mutedTextColor}>
-          {data && data.metadata?.timestamp && new Date(data.metadata.timestamp).toLocaleString()}
+          {data?.metadata?.timestamp && new Date(data.metadata.timestamp).toLocaleString()}
         </Text>
       </Card.Footer>
     </Card.Root>
