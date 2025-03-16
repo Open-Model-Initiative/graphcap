@@ -113,7 +113,7 @@ export const tabsSlotRecipe = defineSlotRecipe({
       md: {
         root: {
           "--tabs-height": "sizes.10",
-          "--tabs-content-padding": "spacing.4",
+          "--tabs-content-padding": "spacing.2",
         },
         trigger: {
           py: "2",
