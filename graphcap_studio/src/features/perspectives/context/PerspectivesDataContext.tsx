@@ -32,31 +32,31 @@ import {
 const SELECTED_PERSPECTIVE_PROVIDER_KEY = 'graphcap-selected-perspective-provider';
 
 /**
- * Save provider ID to localStorage
- * @param providerId - The provider ID to save
+ * Save provider name to localStorage
+ * @param providerName - The provider name to save
  */
-const saveProviderIdToStorage = (providerId: number | undefined) => {
+const saveProviderNameToStorage = (providerName: string | undefined) => {
   try {
-    if (providerId !== undefined) {
-      localStorage.setItem(SELECTED_PERSPECTIVE_PROVIDER_KEY, providerId.toString());
+    if (providerName !== undefined) {
+      localStorage.setItem(SELECTED_PERSPECTIVE_PROVIDER_KEY, providerName);
     } else {
       localStorage.removeItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
     }
   } catch (error) {
-    console.error('Error saving perspective provider ID to localStorage:', error);
+    console.error('Error saving perspective provider name to localStorage:', error);
   }
 };
 
 /**
- * Load provider ID from localStorage
- * @returns The saved provider ID or undefined
+ * Load provider name from localStorage
+ * @returns The selected provider name, or undefined if none is stored
  */
-const loadProviderIdFromStorage = (): number | undefined => {
+const loadProviderNameFromStorage = (): string | undefined => {
   try {
-    const savedProviderId = localStorage.getItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
-    return savedProviderId ? parseInt(savedProviderId, 10) : undefined;
+    const storedProvider = localStorage.getItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
+    return storedProvider || undefined;
   } catch (error) {
-    console.error('Error loading perspective provider ID from localStorage:', error);
+    console.error('Error loading perspective provider name from localStorage:', error);
     return undefined;
   }
 };
@@ -64,12 +64,12 @@ const loadProviderIdFromStorage = (): number | undefined => {
 // Define the context type with explicit typing
 interface PerspectivesDataContextType {
   // Provider state
-  selectedProviderId: number | undefined;
+  selectedProvider: string | undefined;
   availableProviders: Provider[];
   isGeneratingAll: boolean;
   
   // Provider actions
-  setSelectedProviderId: (providerId: number | undefined) => void;
+  setSelectedProvider: (provider: string | undefined) => void;
   setAvailableProviders: (providers: Provider[]) => void;
   setIsGeneratingAll: (isGenerating: boolean) => void;
   handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -104,7 +104,7 @@ interface PerspectivesDataContextType {
   generatePerspective: (
     schemaName: string, 
     imagePath: string,
-    providerId?: number, 
+    provider_name?: string, 
     options?: CaptionOptions
   ) => Promise<any>;
   
@@ -133,68 +133,69 @@ export class PerspectivesDataProviderError extends Error {
 interface PerspectivesDataProviderProps {
   readonly children: ReactNode;
   readonly image: Image | null;
-  readonly initialProviderId?: number;
+  readonly initialProvider?: string;
   readonly initialProviders?: Provider[];
   readonly initialCaptionOptions?: CaptionOptions;
 }
 
 /**
- * Consolidated provider component for perspectives data
- * Combines functionality from multiple data-related contexts
+ * Provider component for perspectives data
+ * @param props - Provider props
  */
 export function PerspectivesDataProvider({ 
   children,
   image: initialImage,
-  initialProviderId,
+  initialProvider,
   initialProviders = [],
   initialCaptionOptions = {}
 }: PerspectivesDataProviderProps) {
   // Server connection state
   const { connections } = useServerConnectionsContext();
-  const isServerConnected = !!connections.find(
-    conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER && conn.status === 'connected'
-  );
+  const graphcapServerConnection = connections.find(conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
+  const isServerConnected = graphcapServerConnection?.status === 'connected';
   
-  // Provider state - initialize from props or localStorage
-  const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(() => {
-    return initialProviderId ?? loadProviderIdFromStorage();
-  });
+  // Current image state
+  const [currentImage, setCurrentImage] = useState<Image | null>(initialImage);
+  
+  // Provider state
+  const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
+    initialProvider || loadProviderNameFromStorage()
+  );
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(initialProviders);
-  const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   
   // Caption options state
   const [captionOptions, setCaptionOptions] = useState<CaptionOptions>(initialCaptionOptions);
   
-  // Save selectedProviderId to localStorage when it changes
-  useEffect(() => {
-    saveProviderIdToStorage(selectedProviderId);
-  }, [selectedProviderId]);
+  // Captions state
+  const [captions, setCaptions] = useState<any>({});
   
-  // Image state
-  const [currentImage, setCurrentImage] = useState<Image | null>(initialImage);
-  
-  // Caption state
-  const [captions, setCaptions] = useState<Record<string, any>>({});
+  // Generation state
   const [generatingPerspectives, setGeneratingPerspectives] = useState<string[]>([]);
   
-  // Caption generation mutation
-  const generateCaptionMutation = useGeneratePerspectiveCaption();
-  
-  // Use the providers query from inference services
+  // Data fetching - perspectives
   const { 
-    data: providersData,
-    isLoading: isLoadingProviders,
+    data: perspectivesData, 
+    isLoading: isLoadingPerspectives, 
+    error: perspectivesError,
+    refetch: refetchPerspectivesQuery
+  } = usePerspectives();
+  
+  // Data fetching - providers
+  const { 
+    data: providersData, 
+    isLoading: isLoadingProviders, 
     error: providerError,
     refetch: refetchProviders
   } = useProviders();
   
-  // Use the perspectives query
-  const { 
-    data: perspectivesData, 
-    isLoading: isLoadingPerspectives, 
-    error: perspectivesError, 
-    refetch: refetchPerspectivesQuery 
-  } = usePerspectives();
+  // Generate caption mutation
+  const generateCaptionMutation = useGeneratePerspectiveCaption();
+  
+  // Save selected provider when it changes
+  useEffect(() => {
+    saveProviderNameToStorage(selectedProvider);
+  }, [selectedProvider]);
   
   // Convert perspectives array to schemas record for easier access
   const schemas = React.useMemo(() => {
@@ -224,11 +225,11 @@ export function PerspectivesDataProvider({
   const handleProviderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     try {
       const value = e.target.value;
-      setSelectedProviderId(value ? Number(value) : undefined);
+      setSelectedProvider(value || undefined);
     } catch (error) {
       console.error('Error handling provider change:', error);
-      // Continue with undefined provider ID on error
-      setSelectedProviderId(undefined);
+      // Continue with undefined provider on error
+      setSelectedProvider(undefined);
     }
   }, []);
   
@@ -259,12 +260,8 @@ export function PerspectivesDataProvider({
       return;
     }
     
-    // Use directory as dataset ID and name as filename for localStorage
-    const datasetId = currentImage.directory || 'unknown';
-    const filename = currentImage.name;
-    
-    // Load all captions for this image from localStorage
-    const storedCaptions = getAllCaptionsForImage(datasetId, filename);
+    // Load all captions for this image from localStorage using the image path
+    const storedCaptions = getAllCaptionsForImage(currentImage.path);
     
     // Format captions to match expected structure
     if (Object.keys(storedCaptions).length > 0) {
@@ -286,7 +283,7 @@ export function PerspectivesDataProvider({
   const generatePerspective = useCallback(async (
     schemaName: string,
     imagePath: string,
-    providerId?: number,
+    provider_name?: string,
     options?: CaptionOptions
   ) => {
     if (!isServerConnected) {
@@ -299,22 +296,26 @@ export function PerspectivesDataProvider({
       // Add to generating list
       setGeneratingPerspectives(prev => [...prev, schemaName]);
       
-      // Get selected provider name
-      const provider = providersData?.find(p => p.id === (providerId ?? selectedProviderId));
-      const providerName = provider?.name || 'unknown';
+      // Use provided provider or selected provider
+      const effectiveProvider = provider_name || selectedProvider;
+      
+      if (!effectiveProvider) {
+        throw new Error('No provider selected for caption generation');
+      }
       
       // Log the options to ensure they're being passed correctly
       console.debug(`Generating perspective "${schemaName}" with options:`, {
         providedOptions: options,
         contextOptions: captionOptions,
-        finalOptions: options || captionOptions || {}
+        finalOptions: options || captionOptions || {},
+        provider: effectiveProvider
       });
       
       // Use the direct mutation to generate caption via API
       const result = await generateCaptionMutation.mutateAsync({
         perspective: schemaName,
         imagePath,
-        providerId: providerId ?? selectedProviderId,
+        provider_name: effectiveProvider,
         options: options ?? captionOptions
       });
       
@@ -323,7 +324,7 @@ export function PerspectivesDataProvider({
         console.error(`ERROR: Missing model information in API response for perspective ${schemaName}`);
       }
       
-      if (!providerName) {
+      if (!effectiveProvider) {
         console.error(`ERROR: Missing provider information for perspective ${schemaName}`);
       }
       
@@ -339,43 +340,51 @@ export function PerspectivesDataProvider({
           console.error(`CRITICAL ERROR: Missing model information in API response for perspective ${schemaName}`);
           return "MISSING_MODEL";
         })(),
-        provider: providerName || (() => {
-          console.error(`CRITICAL ERROR: Missing provider information for perspective ${schemaName}`);
-          return "MISSING_PROVIDER";
-        })(),
-        content: result.content ?? result.result ?? {},
-        options: options || captionOptions || (() => {
-          console.error(`CRITICAL ERROR: Missing generation options for perspective ${schemaName}`);
-          return {};
-        })()
+        provider: effectiveProvider,
+        content: result.result || {},
+        options: options || captionOptions
       };
       
-      // Save formatted data to localStorage
-      saveCaptionToStorage(
-        currentImage.directory || 'unknown',
-        currentImage.name,
-        schemaName,
-        perspectiveData
-      );
-      
-      // Update state
-      setCaptions(prev => ({
-        ...prev,
-        perspectives: {
-          ...(prev.perspectives || {}),
-          [schemaName]: perspectiveData
+      // Update captions state with this new perspective data
+      setCaptions((prev: Record<string, any>) => {
+        const newCaptions = {
+          ...prev,
+          perspectives: {
+            ...prev.perspectives,
+            [schemaName]: perspectiveData
+          },
+          metadata: {
+            captioned_at: new Date().toISOString(), 
+            provider: effectiveProvider,
+            model: result.metadata?.model || 'unknown'
+          }
+        };
+        
+        // Save to localStorage for persistence
+        if (currentImage) {
+          saveCaptionToStorage(currentImage.path, newCaptions);
         }
-      }));
-
-      return perspectiveData;
+        
+        return newCaptions;
+      });
+      
+      // Return the result for chaining
+      return result;
+      
     } catch (error) {
       console.error(`Error generating perspective "${schemaName}":`, error);
       throw error;
     } finally {
-      // Remove from generating list
-      setGeneratingPerspectives(prev => prev.filter(name => name !== schemaName));
+      // Remove from generating list whether successful or failed
+      setGeneratingPerspectives(prev => prev.filter(p => p !== schemaName));
     }
-  }, [currentImage, generateCaptionMutation, isServerConnected, selectedProviderId, captionOptions, providersData]);
+  }, [
+    isServerConnected, 
+    currentImage, 
+    selectedProvider, 
+    captionOptions, 
+    generateCaptionMutation
+  ]);
   
   // Helper to check if a perspective is generated
   const isPerspectiveGenerated = useCallback((schemaName: string) => {
@@ -392,7 +401,7 @@ export function PerspectivesDataProvider({
     // Try to get data from our in-memory state
     const perspectiveData = captions.perspectives?.[schemaName];
     
-    console.log('getPerspectiveData for', schemaName, perspectiveData);
+    console.debug('getPerspectiveData for', schemaName, perspectiveData);
     
     // Always return the complete perspective data object
     // to preserve options and metadata
@@ -402,12 +411,12 @@ export function PerspectivesDataProvider({
   // Create consolidated context value
   const value: PerspectivesDataContextType = useMemo(() => ({
     // Provider state
-    selectedProviderId,
+    selectedProvider,
     availableProviders,
     isGeneratingAll,
     
     // Provider actions
-    setSelectedProviderId,
+    setSelectedProvider,
     setAvailableProviders,
     setIsGeneratingAll,
     handleProviderChange,
@@ -448,10 +457,10 @@ export function PerspectivesDataProvider({
     // Data helpers
     getPerspectiveData
   }), [
-    selectedProviderId, 
+    selectedProvider, 
     availableProviders, 
     isGeneratingAll,
-    setSelectedProviderId,
+    setSelectedProvider,
     setAvailableProviders,
     setIsGeneratingAll,
     handleProviderChange,

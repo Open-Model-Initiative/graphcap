@@ -26,11 +26,10 @@ export function useGeneratePerspectiveCaption() {
   return useMutation<CaptionResponse, Error, {
     perspective: string;
     imagePath: string;
-    providerId?: number;
-    provider?: string;
+    provider_name: string;
     options?: CaptionOptions;
   }>({
-    mutationFn: async ({ perspective, imagePath, providerId, provider, options }) => {
+    mutationFn: async ({ perspective, imagePath, provider_name, options }) => {
       const graphcapServerConnection = connections.find((conn: ServerConnection) => conn.id === SERVER_IDS.GRAPHCAP_SERVER);
       const isConnected = graphcapServerConnection?.status === 'connected';
       
@@ -59,7 +58,7 @@ export function useGeneratePerspectiveCaption() {
       const requestBody = {
         perspective,
         image_path: normalizedImagePath,
-        provider_id: providerId,
+        provider: provider_name,
         max_tokens: options.max_tokens, 
         temperature: options.temperature, 
         top_p: options.top_p,
@@ -71,7 +70,7 @@ export function useGeneratePerspectiveCaption() {
       console.log(`Sending caption generation request to: ${url}`, {
         perspective,
         image_path: normalizedImagePath,
-        provider_id: providerId,
+        provider: provider_name,
         options: {
           max_tokens: requestBody.max_tokens,
           temperature: requestBody.temperature,

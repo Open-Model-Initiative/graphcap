@@ -9,48 +9,40 @@ import { useState, useCallback } from 'react';
 import { PerspectiveType } from '@/features/perspectives/types';
 
 interface UsePerspectiveUIOptions {
-  onGeneratePerspective?: (perspective: PerspectiveType, providerId?: number) => void;
-  initialSelectedProviderId?: number;
+  onGeneratePerspective?: (perspective: PerspectiveType, provider?: string) => void;
+  initialSelectedProvider?: string;
   perspectiveKey?: PerspectiveType;
 }
 
-interface UsePerspectiveUIResult {
-  // UI state
-  selectedProviderId: number | undefined;
-  
-  // UI actions
-  handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleGenerate: () => void;
-}
-
 /**
- * Hook for managing UI state and actions for perspective components
+ * Hook for perspective UI functionality
  */
-export function usePerspectiveUI({
-  onGeneratePerspective,
-  initialSelectedProviderId,
-  perspectiveKey
-}: UsePerspectiveUIOptions = {}): UsePerspectiveUIResult {
-  // UI state
-  const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(initialSelectedProviderId);
+export function usePerspectiveUI(options: UsePerspectiveUIOptions = {}) {
+  const {
+    onGeneratePerspective,
+    initialSelectedProvider,
+    perspectiveKey
+  } = options;
   
-  // UI actions
+  // Local state
+  const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
+    initialSelectedProvider
+  );
+  
+  // Provider selection handler
   const handleProviderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedProviderId(value ? Number(value) : undefined);
+    setSelectedProvider(e.target.value);
   }, []);
   
+  // Generate handler
   const handleGenerate = useCallback(() => {
     if (onGeneratePerspective && perspectiveKey) {
-      onGeneratePerspective(perspectiveKey, selectedProviderId);
+      onGeneratePerspective(perspectiveKey, selectedProvider);
     }
-  }, [onGeneratePerspective, perspectiveKey, selectedProviderId]);
+  }, [onGeneratePerspective, perspectiveKey, selectedProvider]);
   
   return {
-    // UI state
-    selectedProviderId,
-    
-    // UI actions
+    selectedProvider,
     handleProviderChange,
     handleGenerate
   };

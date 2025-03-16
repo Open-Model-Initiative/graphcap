@@ -14,7 +14,7 @@ import { Image } from '@/services/images';
 
 interface PerspectivesProviderProps {
   children: ReactNode;
-  initialProviderId?: number;
+  initialProvider?: string;
   initialProviders?: Provider[];
   image: Image | null;
 }
@@ -27,14 +27,14 @@ interface PerspectivesProviderProps {
  */
 export function PerspectivesProvider({
   children,
-  initialProviderId,
+  initialProvider,
   initialProviders = [],
   image
 }: PerspectivesProviderProps) {
   return (
     <PerspectivesDataProvider
       image={image}
-      initialProviderId={initialProviderId}
+      initialProvider={initialProvider}
       initialProviders={initialProviders}
     >
       <PerspectiveUIProvider>

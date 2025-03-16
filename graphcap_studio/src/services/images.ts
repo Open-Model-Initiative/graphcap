@@ -255,7 +255,7 @@ export function getImageUrl(imagePath: string): string {
   // Construct the URL with the media server URL and normalized path
   const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?${cacheBuster}`;
   
-  console.log('Generated image URL:', url, 'from path:', imagePath);
+  console.debug('Generated image URL:', url, 'from path:', imagePath);
   
   // Cache the URL
   imageUrlCache.set(imagePath, url);
@@ -328,7 +328,7 @@ export function preloadImage(imagePath: string, size: 'thumbnail' | 'full' = 'th
   
   // Add event listeners to track load/error
   img.onload = () => {
-    console.log(`Preloaded image (${size}): ${imagePath}`);
+    console.debug(`Preloaded image (${size}): ${imagePath}`);
   };
   
   img.onerror = () => {

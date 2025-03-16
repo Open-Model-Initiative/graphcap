@@ -125,20 +125,23 @@ export function getCaptionStorageKey(datasetId: string, imageFilename: string, p
 
 /**
  * Save caption data to localStorage
+ * 
+ * @param imagePath - The path to the image
+ * @param captionData - The complete caption data object
  */
 export function saveCaptionToStorage(
-  datasetId: string, 
-  imageFilename: string, 
-  perspectiveName: string, 
-  data: any
+  imagePath: string,
+  captionData: any
 ): void {
   try {
-    console.log('Saving caption to localStorage:', datasetId, imageFilename, perspectiveName, data);
-    const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
+    console.log('Saving caption to localStorage:', imagePath, captionData);
+    
+    // Use image path as the storage key for this caption
+    const key = `caption:${imagePath}`;
     const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
     
     storageData[key] = {
-      data,
+      data: captionData,
       timestamp: new Date().toISOString()
     };
     
@@ -188,26 +191,33 @@ export function captionExistsInStorage(
 }
 
 /**
- * Get all captions for a specific image
+ * Get all captions for an image
+ * 
+ * @param imagePath - Path to the image
+ * @returns An object containing all captions for the image
  */
 export function getAllCaptionsForImage(
-  datasetId: string, 
-  imageFilename: string
+  imagePath: string
 ): Record<string, any> {
   try {
-    const prefix = `${datasetId}_${imageFilename}_`;
+    // Generate the image key prefix
+    const keyPrefix = `caption:${imagePath}`;
+    
+    // Get all storage data
     const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
     
-    return Object.entries(storageData)
-      .filter(([key]) => key.startsWith(prefix))
-      .reduce((result, [key, value]) => {
-        // Extract perspective name from the key
-        const perspectiveName = key.substring(prefix.length);
-        result[perspectiveName] = value.data;
-        return result;
-      }, {} as Record<string, any>);
+    // Find the key that exactly matches our prefix (the image path)
+    const matchingKey = Object.keys(storageData).find(key => key === keyPrefix);
+    
+    if (matchingKey && storageData[matchingKey]) {
+      // Return the complete caption data
+      return storageData[matchingKey].data;
+    }
+    
+    console.debug(`No captions found for image: ${imagePath}`);
+    return {};
   } catch (error) {
-    console.error('Error getting all captions for image from localStorage:', error);
+    console.error('Error getting captions from localStorage:', error);
     return {};
   }
 }

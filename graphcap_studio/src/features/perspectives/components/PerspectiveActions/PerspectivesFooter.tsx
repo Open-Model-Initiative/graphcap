@@ -24,12 +24,12 @@ import { CaptionOptions } from '@/features/perspectives/types';
  * Helper function to determine button title text
  */
 const getButtonTitle = (
-  selectedProviderId: number | undefined,
+  selectedProvider: string | undefined,
   activeSchemaName: string | null,
   isProcessing: boolean, 
   isGenerated: boolean
 ): string => {
-  if (!selectedProviderId) {
+  if (!selectedProvider) {
     return "Please select a provider";
   }
   
@@ -51,15 +51,15 @@ const getButtonTitle = (
 export function PerspectivesFooter() {
   // Use data context
   const { 
-    selectedProviderId, 
     availableProviders, 
-    handleProviderChange, 
     fetchProviders,
     generatePerspective,
     isGenerating,
     currentImage,
     captionOptions,
-    setCaptionOptions
+    setCaptionOptions,
+    selectedProvider,
+    handleProviderChange
   } = usePerspectivesData();
   
   // Use UI context
@@ -95,7 +95,7 @@ export function PerspectivesFooter() {
       return false;
     }
     
-    if (!selectedProviderId) {
+    if (!selectedProvider) {
       showMessage(
         "No provider selected",
         "Please select an inference provider",
@@ -114,13 +114,13 @@ export function PerspectivesFooter() {
     }
     
     return true;
-  }, [activeSchemaName, selectedProviderId, currentImage, showMessage]);
+  }, [activeSchemaName, selectedProvider, currentImage, showMessage]);
   
   // Handle generate button click
   const handleGenerate = useCallback(async () => {
     console.log("Generate button clicked");
     console.log("Active schema:", activeSchemaName);
-    console.log("Selected provider ID:", selectedProviderId);
+    console.log("Selected provider:", selectedProvider);
     
     // Ensure we have valid options by applying defaults if needed
     const effectiveOptions = Object.keys(captionOptions).length === 0 
@@ -138,7 +138,7 @@ export function PerspectivesFooter() {
       await generatePerspective(
         activeSchemaName!,
         currentImage!.path,
-        selectedProviderId,
+        selectedProvider,
         effectiveOptions
       );
       showMessage(
@@ -154,16 +154,16 @@ export function PerspectivesFooter() {
         "error"
       );
     }
-  }, [activeSchemaName, selectedProviderId, generatePerspective, captionOptions, showMessage, currentImage, validateGeneration]);
+  }, [activeSchemaName, selectedProvider, generatePerspective, captionOptions, showMessage, currentImage, validateGeneration]);
   
   // Combine loading states
   const isProcessing = isLoading || isGenerating;
   
   // Check if button should be disabled
-  const isGenerateDisabled = isProcessing || !activeSchemaName || !selectedProviderId;
+  const isGenerateDisabled = isProcessing || !activeSchemaName || !selectedProvider;
   
   // Get title for the generate button
-  const buttonTitle = getButtonTitle(selectedProviderId, activeSchemaName, isProcessing, isGenerated);
+  const buttonTitle = getButtonTitle(selectedProvider, activeSchemaName, isProcessing, isGenerated);
   
   // Handle options change
   const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
@@ -198,13 +198,13 @@ export function PerspectivesFooter() {
                 backgroundColor: 'inherit',
                 opacity: isProcessing ? 0.6 : 1
               }}
-              value={selectedProviderId?.toString() ?? ''}
+              value={selectedProvider || ''}
               onChange={handleProviderChange}
               disabled={isProcessing}
             >
               <option value="">Select provider</option>
               {availableProviders.map(provider => (
-                <option key={provider.id} value={provider.id.toString()}>
+                <option key={provider.id} value={provider.name}>
                   {provider.name}
                 </option>
               ))}
