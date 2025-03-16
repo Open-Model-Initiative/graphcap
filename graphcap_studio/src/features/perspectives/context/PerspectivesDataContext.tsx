@@ -9,7 +9,7 @@
  * 4. Server connection status
  */
 
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   Perspective, 
   PerspectiveSchema,
@@ -29,6 +29,39 @@ import {
   captionExistsInStorage,
   getAllCaptionsForImage
 } from '../utils/localStorage';
+
+// Local storage key for selected perspective provider
+const SELECTED_PERSPECTIVE_PROVIDER_KEY = 'graphcap-selected-perspective-provider';
+
+/**
+ * Save provider ID to localStorage
+ * @param providerId - The provider ID to save
+ */
+const saveProviderIdToStorage = (providerId: number | undefined) => {
+  try {
+    if (providerId !== undefined) {
+      localStorage.setItem(SELECTED_PERSPECTIVE_PROVIDER_KEY, providerId.toString());
+    } else {
+      localStorage.removeItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
+    }
+  } catch (error) {
+    console.error('Error saving perspective provider ID to localStorage:', error);
+  }
+};
+
+/**
+ * Load provider ID from localStorage
+ * @returns The saved provider ID or undefined
+ */
+const loadProviderIdFromStorage = (): number | undefined => {
+  try {
+    const savedProviderId = localStorage.getItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
+    return savedProviderId ? parseInt(savedProviderId, 10) : undefined;
+  } catch (error) {
+    console.error('Error loading perspective provider ID from localStorage:', error);
+    return undefined;
+  }
+};
 
 // Define the context type with explicit typing
 interface PerspectivesDataContextType {
@@ -81,12 +114,13 @@ interface PerspectivesDataContextType {
   getPerspectiveData: (schemaName: string) => any | null;
 }
 
-// Create context with undefined default value
+/**
+ * Create the context with an undefined initial value
+ * We'll check inside the hook that it's used within a provider
+ */
 const PerspectivesDataContext = createContext<PerspectivesDataContextType | undefined>(undefined);
 
-/**
- * Error type for when the PerspectivesDataContext is used outside of a provider
- */
+// Custom error class for provider errors
 export class PerspectivesDataProviderError extends Error {
   constructor(message: string) {
     super(message);
@@ -117,10 +151,17 @@ export function PerspectivesDataProvider({
     conn => conn.id === SERVER_IDS.GRAPHCAP_SERVER && conn.status === 'connected'
   );
   
-  // Provider state
-  const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(initialProviderId);
+  // Provider state - initialize from props or localStorage
+  const [selectedProviderId, setSelectedProviderId] = useState<number | undefined>(() => {
+    return initialProviderId !== undefined ? initialProviderId : loadProviderIdFromStorage();
+  });
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(initialProviders);
   const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
+  
+  // Save selectedProviderId to localStorage when it changes
+  useEffect(() => {
+    saveProviderIdToStorage(selectedProviderId);
+  }, [selectedProviderId]);
   
   // Image state
   const [currentImage, setCurrentImage] = useState<Image | null>(initialImage);
@@ -324,7 +365,7 @@ export function PerspectivesDataProvider({
   }, [captions]);
   
   // Create consolidated context value
-  const value: PerspectivesDataContextType = {
+  const value: PerspectivesDataContextType = useMemo(() => ({
     // Provider state
     selectedProviderId,
     availableProviders,
@@ -367,7 +408,33 @@ export function PerspectivesDataProvider({
     
     // Data helpers
     getPerspectiveData
-  };
+  }), [
+    selectedProviderId, 
+    availableProviders, 
+    isGeneratingAll,
+    setSelectedProviderId,
+    setAvailableProviders,
+    setIsGeneratingAll,
+    handleProviderChange,
+    fetchProviders,
+    isLoadingProviders,
+    providerError,
+    perspectivesData,
+    schemas,
+    isLoadingPerspectives,
+    perspectivesError,
+    refetchPerspectives,
+    captions,
+    generatedPerspectives,
+    generatingPerspectives,
+    isServerConnected,
+    currentImage,
+    setCurrentImage,
+    generatePerspective,
+    isPerspectiveGenerated,
+    isPerspectiveGenerating,
+    getPerspectiveData
+  ]);
   
   return (
     <PerspectivesDataContext.Provider value={value}>

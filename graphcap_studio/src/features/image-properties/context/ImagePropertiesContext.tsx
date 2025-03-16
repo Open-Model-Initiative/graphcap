@@ -2,6 +2,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { Image } from '@/services/images';
 import { useEditorContext } from '@/features/editor/context/EditorContext';
+import { 
+  getPropertiesFromStorage, 
+  savePropertiesToStorage,
+  deletePropertiesFromStorage
+} from '../utils/localStorage';
 
 // Define the properties data interface
 export interface ImagePropertiesData {
@@ -68,87 +73,112 @@ export function ImagePropertiesProvider({ children, image }: ImagePropertiesProv
     setError(null);
     
     try {
-      const savedProps = localStorage.getItem(`image-props:${image.path}`);
-      if (savedProps) {
-        setProperties(JSON.parse(savedProps));
+      // Get data from localStorage
+      const datasetId = dataset?.name ?? 'unknown';
+      const storedProperties = getPropertiesFromStorage(datasetId, image.name);
+      
+      if (storedProperties) {
+        setProperties(storedProperties);
       } else {
-        // Initialize with default properties and image info
+        // Set default properties if none exist
         setProperties({
-          title: image.name || 'Untitled',
+          title: image.name,
           description: '',
           tags: [],
           rating: 0,
           metadata: {
             path: image.path,
-            directory: image.directory,
-            url: image.url,
-            datasetName: dataset?.name ?? undefined
+            width: 0, // Default since not in Image type
+            height: 0, // Default since not in Image type 
+            size: 0, // Default since not in Image type
+            format: '', // Default since not in Image type
           }
         });
       }
+      
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading image properties:', error);
-      setError("Failed to load properties");
+      setError('Failed to load image properties');
       setIsLoading(false);
     }
   }, [image, dataset]);
-
+  
+  // Handler for property changes
   const handlePropertyChange = (key: keyof ImagePropertiesData, value: any) => {
     if (!properties) return;
     
     setProperties(prev => {
-      if (!prev) return prev;
+      if (!prev) return null;
       return {
         ...prev,
         [key]: value
       };
     });
   };
-
+  
+  // Handler for adding a tag
   const handleAddTag = () => {
     if (!newTag.trim() || !properties) return;
     
+    // Don't add duplicate tags
+    if (properties.tags.includes(newTag.trim())) {
+      setNewTag('');
+      return;
+    }
+    
     setProperties(prev => {
-      if (!prev) return prev;
+      if (!prev) return null;
       return {
         ...prev,
         tags: [...prev.tags, newTag.trim()]
       };
     });
+    
     setNewTag('');
   };
-
+  
+  // Handler for removing a tag
   const handleRemoveTag = (tag: string) => {
     if (!properties) return;
     
     setProperties(prev => {
-      if (!prev) return prev;
+      if (!prev) return null;
       return {
         ...prev,
         tags: prev.tags.filter(t => t !== tag)
       };
     });
   };
-
+  
+  // Handler for saving properties
   const handleSave = () => {
-    if (!image || !properties) return;
+    if (!properties || !image || !dataset) return;
     
-    // Save to localStorage for demo purposes
-    localStorage.setItem(`image-props:${image.path}`, JSON.stringify(properties));
-    setIsEditing(false);
+    try {
+      // Save to localStorage
+      savePropertiesToStorage(dataset.name, image.name, properties);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving image properties:', error);
+      setError('Failed to save image properties');
+    }
   };
-
+  
+  // Toggle editing state
   const toggleEditing = () => setIsEditing(!isEditing);
-
-  // Context value wrapped in useMemo
-  const value = useMemo(() => ({
+  
+  // Create the context value
+  const contextValue = useMemo(() => ({
+    // Data state
     properties,
     newTag,
     isEditing,
     isLoading,
     error,
     image,
+    
+    // Actions
     setNewTag,
     setIsEditing,
     handlePropertyChange,
@@ -163,26 +193,27 @@ export function ImagePropertiesProvider({ children, image }: ImagePropertiesProv
     isLoading,
     error,
     image,
-    // Functions don't need to be dependencies as they don't change between renders
+    handleAddTag,
+    handleRemoveTag,
+    handlePropertyChange,
+    handleSave
   ]);
-
+  
   return (
-    <ImagePropertiesContext.Provider value={value}>
+    <ImagePropertiesContext.Provider value={contextValue}>
       {children}
     </ImagePropertiesContext.Provider>
   );
 }
 
 /**
- * Custom hook for accessing the image properties context
- * 
- * This hook ensures the context is used within the provider and provides
- * type safety for consuming components.
+ * Custom hook to access the image properties context
+ * Throws an error if used outside of a provider
  */
 export function useImagePropertiesContext() {
   const context = useContext(ImagePropertiesContext);
   
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useImagePropertiesContext must be used within an ImagePropertiesProvider');
   }
   

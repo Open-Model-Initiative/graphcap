@@ -17,6 +17,9 @@ import { Provider, ProviderCreate, ProviderUpdate } from '../types';
 import { useProviderForm, useModelSelection } from '../../hooks';
 import { DEFAULT_PROVIDER_FORM_DATA } from '../../constants';
 
+// Local storage key for selected provider
+const SELECTED_PROVIDER_STORAGE_KEY = 'graphcap-selected-provider';
+
 type ViewMode = 'view' | 'edit' | 'create';
 type FormData = ProviderCreate | ProviderUpdate;
 
@@ -125,6 +128,36 @@ export function useInferenceProviderContext() {
 export const useProviderFormContext = useInferenceProviderContext;
 
 /**
+ * Save provider to localStorage
+ * @param provider - The provider to save
+ */
+const saveProviderToStorage = (provider: Provider | null) => {
+  try {
+    if (provider) {
+      localStorage.setItem(SELECTED_PROVIDER_STORAGE_KEY, JSON.stringify(provider));
+    } else {
+      localStorage.removeItem(SELECTED_PROVIDER_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Error saving provider to localStorage:', error);
+  }
+};
+
+/**
+ * Load provider from localStorage
+ * @returns The saved provider or null
+ */
+const loadProviderFromStorage = (): Provider | null => {
+  try {
+    const savedProvider = localStorage.getItem(SELECTED_PROVIDER_STORAGE_KEY);
+    return savedProvider ? JSON.parse(savedProvider) : null;
+  } catch (error) {
+    console.error('Error loading provider from localStorage:', error);
+    return null;
+  }
+};
+
+/**
  * Props for the InferenceProviderProvider component
  */
 type InferenceProviderProviderProps = {
@@ -166,13 +199,23 @@ export function InferenceProviderProvider({
 }: InferenceProviderProviderProps) {
   // View state
   const [mode, setMode] = useState<ViewMode>(isCreating ? 'create' : 'view');
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(selectedProviderProp || null);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(() => {
+    // Use the prop if provided, otherwise try to load from localStorage
+    return selectedProviderProp || loadProviderFromStorage();
+  });
   const [providers, setProviders] = useState<Provider[]>(providersProp);
   
   // Update selected provider when prop changes
   useEffect(() => {
-    setSelectedProvider(selectedProviderProp || null);
+    if (selectedProviderProp) {
+      setSelectedProvider(selectedProviderProp);
+    }
   }, [selectedProviderProp]);
+  
+  // Save selected provider to localStorage when it changes
+  useEffect(() => {
+    saveProviderToStorage(selectedProvider);
+  }, [selectedProvider]);
   
   // Update providers when prop changes
   useEffect(() => {

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+import { useState, useEffect } from 'react';
 import { BasicInformation, FileInformation, Segments, LoadingState, ErrorState } from './components';
 import { Perspectives } from '@/features/perspectives';
 import { Box } from '@chakra-ui/react';
 import { Tabs } from '@chakra-ui/react';
 import { useImagePropertiesContext } from './context';
+import { saveSelectedTab, getSelectedTab } from './utils/localStorage';
 
 /**
  * Component for displaying image properties and metadata
@@ -28,6 +30,16 @@ export function ImageProperties() {
     toggleEditing
   } = useImagePropertiesContext();
   
+  // Get saved tab from localStorage or default to "basic"
+  const [activeTab, setActiveTab] = useState(() => {
+    return getSelectedTab() || "basic";
+  });
+
+  // Save tab selection to localStorage when it changes
+  useEffect(() => {
+    saveSelectedTab(activeTab);
+  }, [activeTab]);
+  
   // Render loading state
   if (isLoading) {
     return <LoadingState />;
@@ -49,7 +61,14 @@ export function ImageProperties() {
   
   return (
     <Box height="full" display="flex" flexDirection="column" overflow="hidden">
-      <Tabs.Root defaultValue="basic" variant="line" colorPalette="blue" size="md" height="100%">
+      <Tabs.Root 
+        defaultValue={activeTab} 
+        variant="line" 
+        colorPalette="blue" 
+        size="md" 
+        height="100%"
+        onValueChange={(details) => setActiveTab(details.value)}
+      >
         <Tabs.List borderBottomColor="gray.700" flexShrink={0}>
           <Tabs.Trigger value="basic">Basic</Tabs.Trigger>
           <Tabs.Trigger value="file">File</Tabs.Trigger>
@@ -58,32 +77,32 @@ export function ImageProperties() {
           <Tabs.Indicator />
         </Tabs.List>
         
-        <Box flex="1" overflow="hidden" display="flex" flexDirection="column">
-          <Tabs.Content value="basic" p={2} overflow="auto" height="100%">
+        <Box flex="1" overflow="auto" p={4}>
+          <Tabs.Content value="basic">
             {properties && (
-              <BasicInformation 
+              <BasicInformation
                 properties={properties}
                 isEditing={isEditing}
                 newTag={newTag}
-                onPropertyChange={handlePropertyChange}
                 onNewTagChange={setNewTag}
                 onAddTag={handleAddTag}
                 onRemoveTag={handleRemoveTag}
+                onPropertyChange={handlePropertyChange}
                 onSave={handleSave}
                 onToggleEdit={toggleEditing}
               />
             )}
           </Tabs.Content>
           
-          <Tabs.Content value="file" p={2} overflow="auto" height="100%">
+          <Tabs.Content value="file">
             <FileInformation image={image} />
           </Tabs.Content>
           
-          <Tabs.Content value="segments" p={2} overflow="auto" height="100%">
+          <Tabs.Content value="segments">
             <Segments image={image} />
           </Tabs.Content>
           
-          <Tabs.Content value="perspectives" p={0} height="100%" overflow="hidden">
+          <Tabs.Content value="perspectives">
             <Perspectives image={image} />
           </Tabs.Content>
         </Box>

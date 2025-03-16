@@ -17,6 +17,7 @@ import { PerspectiveSchema } from '../../types';
 import { useClipboard } from '@/common/hooks/useClipboard';
 import { SchemaView } from './SchemaView';
 import { CaptionRenderer } from './schema-fields';
+import { ClipboardButton } from '@/components/ui/buttons';
 
 export interface PerspectiveCardTabbedProps {
   readonly schema: PerspectiveSchema;
@@ -40,23 +41,11 @@ export function PerspectiveCardTabbed({
   onSetActive,
   className = ''
 }: PerspectiveCardTabbedProps) {
-
-  const { copyToClipboard, hasCopied } = useClipboard();
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const badgeBg = useColorModeValue('gray.100', 'gray.700');
   const mutedTextColor = useColorModeValue('gray.600', 'gray.400');
+
   const activeBorderColor = useColorModeValue('blue.500', 'blue.400');
-  
-  // Data handlers
-  const handleCopy = () => {
-    if (!data) return;
-    
-    const dataStr = typeof data === 'string' 
-      ? data 
-      : JSON.stringify(data, null, 2);
-    
-    copyToClipboard(dataStr);
-  };
 
   return (
     <Card.Root 
@@ -104,7 +93,17 @@ export function PerspectiveCardTabbed({
           >
             <Tabs.Content value="caption">
               {data ? (
-                <CaptionRenderer data={data} schema={schema} />
+                <Box position="relative">
+                  <Box position="absolute" top="0" right="0" zIndex="1">
+                    <ClipboardButton 
+                      content={data} 
+                      label="Copy caption to clipboard" 
+                      size="xs" 
+                      iconOnly
+                    />
+                  </Box>
+                  <CaptionRenderer data={data} schema={schema} />
+                </Box>
               ) : (
                 <Box textAlign="center" py={4}>
                   <Text fontSize="sm" color={mutedTextColor} fontStyle="italic">
@@ -115,23 +114,58 @@ export function PerspectiveCardTabbed({
             </Tabs.Content>
             
             <Tabs.Content value="prompt">
-              <Box whiteSpace="pre-wrap" fontSize="sm" p={2} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
-                {schema.prompt}
+              <Box position="relative">
+                <Box position="absolute" top="0" right="0" zIndex="1">
+                  <ClipboardButton 
+                    content={schema.prompt} 
+                    label="Copy prompt to clipboard" 
+                    size="xs" 
+                    iconOnly
+                  />
+                </Box>
+                <Box whiteSpace="pre-wrap" fontSize="sm" p={2} bg={useColorModeValue('gray.50', 'gray.800')} borderRadius="md">
+                  {schema.prompt}
+                </Box>
               </Box>
             </Tabs.Content>
             
             <Tabs.Content value="schema">
-              <SchemaView schema={schema} />
+              <Box position="relative">
+                <Box position="absolute" top="0" right="0" zIndex="1">
+                  <ClipboardButton 
+                    content={schema} 
+                    label="Copy schema to clipboard" 
+                    size="xs" 
+                    iconOnly
+                  />
+                </Box>
+                <SchemaView schema={schema} />
+              </Box>
             </Tabs.Content>
             
             <Tabs.Content value="debug">
-              <Box p={2} bg="gray.800" borderRadius="md" overflowX="auto">
-                <Text fontSize="xs" fontWeight="bold" mb={2} color="yellow.300">Debug Information:</Text>
-                <Box as="pre" fontSize="xs" whiteSpace="pre-wrap" color="green.300">
-                  isGenerated: {String(isGenerated)}{'\n'}
-                  Data type: {data ? typeof data : 'null'}{'\n'}
-                  Data keys: {data ? Object.keys(data).join(', ') : 'none'}{'\n'}
-                  Raw data: {data ? JSON.stringify(data, null, 2) : 'null'}
+              <Box position="relative">
+                <Box position="absolute" top="0" right="0" zIndex="1">
+                  <ClipboardButton 
+                    content={data ? { 
+                      isGenerated: String(isGenerated),
+                      dataType: data ? typeof data : 'null',
+                      dataKeys: data ? Object.keys(data).join(', ') : 'none',
+                      rawData: data
+                    } : 'No data'} 
+                    label="Copy debug info to clipboard" 
+                    size="xs" 
+                    iconOnly
+                  />
+                </Box>
+                <Box p={2} bg="gray.800" borderRadius="md" overflowX="auto">
+                  <Text fontSize="xs" fontWeight="bold" mb={2} color="yellow.300">Debug Information:</Text>
+                  <Box as="pre" fontSize="xs" whiteSpace="pre-wrap" color="green.300">
+                    isGenerated: {String(isGenerated)}{'\n'}
+                    Data type: {data ? typeof data : 'null'}{'\n'}
+                    Data keys: {data ? Object.keys(data).join(', ') : 'none'}{'\n'}
+                    Raw data: {data ? JSON.stringify(data, null, 2) : 'null'}
+                  </Box>
                 </Box>
               </Box>
             </Tabs.Content>

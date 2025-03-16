@@ -8,3 +8,4 @@ export * from './EditButton';
 export * from './AddButton';
 export * from './DownloadButton';
 export * from './DeleteButton';
+export * from './ClipboardButton';

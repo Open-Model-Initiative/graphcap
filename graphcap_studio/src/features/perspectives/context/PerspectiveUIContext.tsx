@@ -6,8 +6,9 @@
  * It follows the Context API best practices and focuses exclusively on UI concerns.
  */
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { PerspectiveSchema } from '../types';
+import { saveSelectedPerspective, getSelectedPerspective } from '../utils/localStorage';
 
 // Define the context type with explicit typing
 interface PerspectiveUIContextType {
@@ -48,9 +49,26 @@ interface PerspectiveUIProviderProps {
 export function PerspectiveUIProvider({ 
   children
 }: PerspectiveUIProviderProps) {
-  // UI state
-  const [activeSchemaName, setActiveSchemaName] = React.useState<string | null>(null);
+  // UI state - initialize with value from localStorage if available
+  const [activeSchemaName, setActiveSchemaNameState] = React.useState<string | null>(() => {
+    return getSelectedPerspective();
+  });
   const [expandedPanels, setExpandedPanels] = React.useState<Record<string, boolean>>({});
+
+  // Persist activeSchemaName to localStorage when it changes
+  useEffect(() => {
+    if (activeSchemaName) {
+      saveSelectedPerspective(activeSchemaName);
+    }
+  }, [activeSchemaName]);
+
+  // Wrapper for setActiveSchemaName to also save to localStorage
+  const setActiveSchemaName = React.useCallback((schemaName: string | null) => {
+    setActiveSchemaNameState(schemaName);
+    if (schemaName) {
+      saveSelectedPerspective(schemaName);
+    }
+  }, []);
 
   // Panel expansion handlers
   const togglePanelExpansion = React.useCallback((panelId: string) => {
