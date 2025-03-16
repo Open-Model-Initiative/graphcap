@@ -39,7 +39,9 @@ function ImageComponent({
   aspectRatio,
   priority = false,
   objectFit = 'cover',
+  sizes,
   onLoad,
+  onError,
   forceContainerAspect = true,
 }: ResponsiveImageProps) {
   const { data: src } = useImageSuspenseQuery(imagePath, {
@@ -50,6 +52,12 @@ function ImageComponent({
   // Format aspect ratio for CSS
   const cssAspectRatio = forceContainerAspect ? formatAspectRatioForCSS(aspectRatio) : undefined;
 
+  const handleError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    if (onError) {
+      onError(new Error(`Failed to load image: ${imagePath}`));
+    }
+  };
+
   return (
     <div
       className={`relative overflow-hidden ${className}`}
@@ -58,6 +66,7 @@ function ImageComponent({
       <img
         src={src}
         alt={alt}
+        sizes={sizes}
         className={`transition-opacity duration-300 ${
           forceContainerAspect ? 'w-full h-full' : 'max-w-full max-h-full w-auto h-auto'
         }`}
@@ -66,6 +75,7 @@ function ImageComponent({
         decoding={priority ? undefined : 'async'}
         fetchPriority={priority ? 'high' : undefined}
         onLoad={() => onLoad?.()}
+        onError={handleError}
       />
     </div>
   );
