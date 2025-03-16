@@ -9,6 +9,11 @@ interface ImageErrorBoundaryProps {
   readonly compact?: boolean;
 }
 
+interface ImageErrorFallbackProps extends FallbackProps {
+  readonly className?: string;
+  readonly compact?: boolean;
+}
+
 /**
  * The fallback component to display when an image fails to load
  */
@@ -17,7 +22,7 @@ function ImageErrorFallback({
   resetErrorBoundary, 
   className = '', 
   compact = false 
-}: FallbackProps & { readonly className?: string; readonly compact?: boolean }) {
+}: ImageErrorFallbackProps) {
   return (
     <div className={`flex flex-col items-center justify-center p-2 bg-gray-800/20 h-full w-full ${className}`}>
       {!compact && (
@@ -51,6 +56,19 @@ function ImageErrorFallback({
 }
 
 /**
+ * Creates a fallback render function for the error boundary
+ */
+function createFallbackRender(className: string, compact: boolean) {
+  return (props: FallbackProps) => (
+    <ImageErrorFallback
+      {...props}
+      className={className}
+      compact={compact}
+    />
+  );
+}
+
+/**
  * A specialized error boundary component for images
  * 
  * This component provides a consistent error UI with retry capabilities
@@ -67,14 +85,7 @@ export function ImageErrorBoundary({
 }: ImageErrorBoundaryProps) {
   return (
     <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }: FallbackProps) => (
-        <ImageErrorFallback 
-          error={error} 
-          resetErrorBoundary={resetErrorBoundary} 
-          className={className} 
-          compact={compact} 
-        />
-      )}
+      fallbackRender={createFallbackRender(className, compact)}
     >
       {children}
     </ErrorBoundary>

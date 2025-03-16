@@ -68,7 +68,7 @@ const MemoizedThumbnailComponent = memo(InnerThumbnailComponent);
  * A performant thumbnail component that uses Suspense for loading
  */
 export function ThumbnailComponent(props: ThumbnailComponentProps) {
-  const cssAspectRatio = formatAspectRatioForCSS(props.aspectRatio || 1);
+  const cssAspectRatio = formatAspectRatioForCSS(props.aspectRatio ?? 1);
   
   return (
     <Suspense fallback={<ThumbnailSkeleton className={props.className} aspectRatio={cssAspectRatio} />}>
