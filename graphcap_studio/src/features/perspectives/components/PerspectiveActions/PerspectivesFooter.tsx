@@ -5,7 +5,7 @@
  * This component displays a fixed footer with action controls for perspectives.
  */
 
-import React, { useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Box, Flex, Button, Icon, HStack } from '@chakra-ui/react';
 import { LuSettings, LuRefreshCw } from 'react-icons/lu';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
@@ -13,27 +13,41 @@ import {
   usePerspectivesData,
   usePerspectiveUI
 } from '@/features/perspectives/context';
+import { 
+  GenerationOptionsProvider, 
+  GenerationOptionsButton,
+} from '@/features/inference/generation-options';
+import { CaptionOptions } from '@/features/perspectives/types';
 
-interface PerspectivesFooterProps {
-  isLoading: boolean;
-  isGenerated: boolean;
-  optionsControl: {
-    isOpen: boolean;
-    onToggle: () => void;
-    buttonRef: React.RefObject<HTMLButtonElement | null>;
-  };
-  captionOptions?: any; // Caption generation options
-}
+/**
+ * Helper function to determine button title text
+ */
+const getButtonTitle = (
+  selectedProviderId: number | undefined,
+  activeSchemaName: string | null,
+  isProcessing: boolean, 
+  isGenerated: boolean
+): string => {
+  if (!selectedProviderId) {
+    return "Please select a provider";
+  }
+  
+  if (!activeSchemaName) {
+    return "No perspective selected";
+  }
+  
+  if (isProcessing) {
+    return "Generation in progress";
+  }
+  
+  return isGenerated ? "Regenerate perspective" : "Generate perspective";
+};
 
 /**
  * Footer component with action controls for generating perspectives
+ * Uses contexts instead of props to reduce prop drilling
  */
-export function PerspectivesFooter({
-  isLoading,
-  isGenerated,
-  optionsControl,
-  captionOptions
-}: PerspectivesFooterProps) {
+export function PerspectivesFooter() {
   // Use data context
   const { 
     selectedProviderId, 
@@ -42,11 +56,17 @@ export function PerspectivesFooter({
     fetchProviders,
     generatePerspective,
     isGenerating,
-    currentImage
+    currentImage,
+    captionOptions,
+    setCaptionOptions
   } = usePerspectivesData();
   
   // Use UI context
-  const { activeSchemaName } = usePerspectiveUI();
+  const { 
+    activeSchemaName, 
+    isLoading,
+    isGenerated
+  } = usePerspectiveUI();
   
   // Use console.log instead of toast
   const showMessage = useCallback((title: string, message: string, type: string) => {
@@ -63,20 +83,15 @@ export function PerspectivesFooter({
     });
   }, [fetchProviders]);
   
-  // Handle generate button click
-  const handleGenerate = useCallback(async () => {
-    console.log("Generate button clicked");
-    console.log("Active schema:", activeSchemaName);
-    console.log("Selected provider ID:", selectedProviderId);
-    console.log("Caption options:", captionOptions);
-    
+  // Validation checks for generate button
+  const validateGeneration = useCallback(() => {
     if (!activeSchemaName) {
       showMessage(
         "No perspective selected",
         "Please select a perspective to generate",
         "error"
       );  
-      return;
+      return false;
     }
     
     if (!selectedProviderId) {
@@ -85,7 +100,7 @@ export function PerspectivesFooter({
         "Please select an inference provider",
         "error"
       );
-      return;
+      return false;
     }
     
     if (!currentImage) {
@@ -94,14 +109,28 @@ export function PerspectivesFooter({
         "Please select an image to generate perspective",
         "error"
       );
+      return false;
+    }
+    
+    return true;
+  }, [activeSchemaName, selectedProviderId, currentImage, showMessage]);
+  
+  // Handle generate button click
+  const handleGenerate = useCallback(async () => {
+    console.log("Generate button clicked");
+    console.log("Active schema:", activeSchemaName);
+    console.log("Selected provider ID:", selectedProviderId);
+    console.log("Caption options:", captionOptions);
+    
+    if (!validateGeneration()) {
       return;
     }
     
     try {
       console.log("Calling generatePerspective...");
       await generatePerspective(
-        activeSchemaName,
-        currentImage.path,
+        activeSchemaName!,
+        currentImage!.path,
         selectedProviderId,
         captionOptions
       );
@@ -118,13 +147,21 @@ export function PerspectivesFooter({
         "error"
       );
     }
-  }, [activeSchemaName, selectedProviderId, generatePerspective, captionOptions, showMessage, currentImage]);
+  }, [activeSchemaName, selectedProviderId, generatePerspective, captionOptions, showMessage, currentImage, validateGeneration]);
   
   // Combine loading states
   const isProcessing = isLoading || isGenerating;
   
   // Check if button should be disabled
   const isGenerateDisabled = isProcessing || !activeSchemaName || !selectedProviderId;
+  
+  // Get title for the generate button
+  const buttonTitle = getButtonTitle(selectedProviderId, activeSchemaName, isProcessing, isGenerated);
+  
+  // Handle options change
+  const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
+    setCaptionOptions(newOptions);
+  }, [setCaptionOptions]);
   
   return (
     <Box
@@ -171,18 +208,23 @@ export function PerspectivesFooter({
         )}
         
         <HStack gap={2}>
-          {/* Options Button */}
-          <Button
-            ref={optionsControl.buttonRef}
-            size="sm"
-            variant="ghost"
-            onClick={optionsControl.onToggle}
-            aria-label="Generation options"
-            disabled={isProcessing}
+          {/* Options Button with Popover */}
+          <GenerationOptionsProvider 
+            initialOptions={captionOptions} 
+            onOptionsChange={handleOptionsChange}
+            initialGenerating={isProcessing}
           >
-            <Icon as={LuSettings} mr={2} />
-            Options
-          </Button>
+            <GenerationOptionsButton
+              label={
+                <HStack gap={2}>
+                  <Icon as={LuSettings} />
+                  <Box>Options</Box>
+                </HStack>
+              }
+              size="sm"
+              variant="ghost"
+            />
+          </GenerationOptionsProvider>
           
           {/* Generate/Regenerate Button */}
           <Button
@@ -191,15 +233,7 @@ export function PerspectivesFooter({
             variant={isGenerated ? "outline" : "solid"}
             onClick={handleGenerate}
             disabled={isGenerateDisabled}
-            title={
-              !selectedProviderId 
-                ? "Please select a provider" 
-                : !activeSchemaName 
-                  ? "No perspective selected" 
-                  : isProcessing 
-                    ? "Generation in progress" 
-                    : isGenerated ? "Regenerate perspective" : "Generate perspective"
-            }
+            title={buttonTitle}
           >
             {isGenerating && <Icon as={LuRefreshCw} mr={2} animation="spin 1s linear infinite"/>}
             {isGenerated && !isGenerating && <Icon as={LuRefreshCw} mr={2} />}

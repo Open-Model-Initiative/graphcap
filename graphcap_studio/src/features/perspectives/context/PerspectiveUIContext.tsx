@@ -6,7 +6,7 @@
  * It follows the Context API best practices and focuses exclusively on UI concerns.
  */
 
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { PerspectiveSchema } from '../types';
 import { saveSelectedPerspective, getSelectedPerspective } from '../utils/localStorage';
 
@@ -15,11 +15,22 @@ interface PerspectiveUIContextType {
   // UI state
   activeSchemaName: string | null;
   expandedPanels: Record<string, boolean>;
+  isLoading: boolean;
+  isGenerated: boolean;
+  
+  // Options control
+  optionsControl: {
+    isOpen: boolean;
+    onToggle: () => void;
+    buttonRef: React.RefObject<HTMLButtonElement | null>;
+  };
   
   // UI actions
   setActiveSchemaName: (schemaName: string | null) => void;
   togglePanelExpansion: (panelId: string) => void;
   setAllPanelsExpanded: (expanded: boolean) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setIsGenerated: (isGenerated: boolean) => void;
   
   // Rendering utilities
   renderField: (field: PerspectiveSchema['schema_fields'][0], value: any) => ReactNode;
@@ -39,7 +50,7 @@ export class PerspectiveUIProviderError extends Error {
 }
 
 interface PerspectiveUIProviderProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 /**
@@ -50,10 +61,18 @@ export function PerspectiveUIProvider({
   children
 }: PerspectiveUIProviderProps) {
   // UI state - initialize with value from localStorage if available
-  const [activeSchemaName, setActiveSchemaNameState] = React.useState<string | null>(() => {
-    return getSelectedPerspective();
-  });
-  const [expandedPanels, setExpandedPanels] = React.useState<Record<string, boolean>>({});
+  const [activeSchemaName, setActiveSchemaName] = useState<string | null>(getSelectedPerspective);
+  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerated, setIsGenerated] = useState(false);
+  
+  // Option panel controls
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  
+  const toggleOptions = useCallback(() => {
+    setIsOptionsOpen(prev => !prev);
+  }, []);
 
   // Persist activeSchemaName to localStorage when it changes
   useEffect(() => {
@@ -63,22 +82,22 @@ export function PerspectiveUIProvider({
   }, [activeSchemaName]);
 
   // Wrapper for setActiveSchemaName to also save to localStorage
-  const setActiveSchemaName = React.useCallback((schemaName: string | null) => {
-    setActiveSchemaNameState(schemaName);
+  const handleActiveSchemaNameChange = useCallback((schemaName: string | null) => {
+    setActiveSchemaName(schemaName);
     if (schemaName) {
       saveSelectedPerspective(schemaName);
     }
   }, []);
 
   // Panel expansion handlers
-  const togglePanelExpansion = React.useCallback((panelId: string) => {
+  const togglePanelExpansion = useCallback((panelId: string) => {
     setExpandedPanels(prev => ({
       ...prev,
       [panelId]: !prev[panelId]
     }));
   }, []);
 
-  const setAllPanelsExpanded = React.useCallback((expanded: boolean) => {
+  const setAllPanelsExpanded = useCallback((expanded: boolean) => {
     setExpandedPanels(prev => {
       const newState = { ...prev };
       Object.keys(newState).forEach(key => {
@@ -89,7 +108,7 @@ export function PerspectiveUIProvider({
   }, []);
 
   // Field rendering utility function
-  const renderField = React.useCallback((field: PerspectiveSchema['schema_fields'][0], value: any) => {
+  const renderField = useCallback((field: PerspectiveSchema['schema_fields'][0], value: any) => {
     try {
       if (!field) return null;
 
@@ -97,7 +116,7 @@ export function PerspectiveUIProvider({
         return (
           <div className="space-y-2">
             {Array.isArray(value) && value.map((item: any, index: number) => (
-              <div key={index} className="bg-gray-800 p-2 rounded">
+              <div key={`${field.name}-${index}`} className="bg-gray-800 p-2 rounded">
                 {field.fields?.map((subField: any) => (
                   <div key={subField.name} className="text-sm">
                     <span className="text-gray-400">{subField.name}: </span>
@@ -131,20 +150,43 @@ export function PerspectiveUIProvider({
     }
   }, []);
 
-  // Create context value object
-  const value: PerspectiveUIContextType = {
+  // Create context value object wrapped in useMemo
+  const value = useMemo<PerspectiveUIContextType>(() => ({
     // UI state
     activeSchemaName,
     expandedPanels,
+    isLoading,
+    isGenerated,
+    
+    // Options control
+    optionsControl: {
+      isOpen: isOptionsOpen,
+      onToggle: toggleOptions,
+      buttonRef
+    },
     
     // UI actions
-    setActiveSchemaName,
+    setActiveSchemaName: handleActiveSchemaNameChange,
     togglePanelExpansion,
     setAllPanelsExpanded,
+    setIsLoading,
+    setIsGenerated,
     
     // Rendering utilities
     renderField,
-  };
+  }), [
+    activeSchemaName, 
+    expandedPanels, 
+    isLoading, 
+    isGenerated, 
+    isOptionsOpen, 
+    toggleOptions, 
+    buttonRef,
+    handleActiveSchemaNameChange,
+    togglePanelExpansion,
+    setAllPanelsExpanded,
+    renderField
+  ]);
 
   return (
     <PerspectiveUIContext.Provider value={value}>

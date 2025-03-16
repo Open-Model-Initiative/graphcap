@@ -91,6 +91,10 @@ interface PerspectivesDataContextType {
   isGenerating: boolean;
   isServerConnected: boolean;
   
+  // Caption options
+  captionOptions: CaptionOptions;
+  setCaptionOptions: (options: CaptionOptions) => void;
+  
   // Current image
   currentImage: Image | null;
   setCurrentImage: (image: Image | null) => void;
@@ -130,6 +134,7 @@ interface PerspectivesDataProviderProps {
   readonly image: Image | null;
   readonly initialProviderId?: number;
   readonly initialProviders?: Provider[];
+  readonly initialCaptionOptions?: CaptionOptions;
 }
 
 /**
@@ -140,7 +145,8 @@ export function PerspectivesDataProvider({
   children,
   image: initialImage,
   initialProviderId,
-  initialProviders = []
+  initialProviders = [],
+  initialCaptionOptions = {}
 }: PerspectivesDataProviderProps) {
   // Server connection state
   const { connections } = useServerConnectionsContext();
@@ -154,6 +160,9 @@ export function PerspectivesDataProvider({
   });
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(initialProviders);
   const [isGeneratingAll, setIsGeneratingAll] = useState<boolean>(false);
+  
+  // Caption options state
+  const [captionOptions, setCaptionOptions] = useState<CaptionOptions>(initialCaptionOptions);
   
   // Save selectedProviderId to localStorage when it changes
   useEffect(() => {
@@ -294,7 +303,7 @@ export function PerspectivesDataProvider({
         perspective: schemaName,
         imagePath,
         providerId: providerId ?? selectedProviderId,
-        options
+        options: options ?? captionOptions
       });
       
       // Save to localStorage
@@ -322,7 +331,7 @@ export function PerspectivesDataProvider({
       // Remove from generating list
       setGeneratingPerspectives(prev => prev.filter(name => name !== schemaName));
     }
-  }, [currentImage, generateCaptionMutation, isServerConnected, selectedProviderId]);
+  }, [currentImage, generateCaptionMutation, isServerConnected, selectedProviderId, captionOptions]);
   
   // Helper to check if a perspective is generated
   const isPerspectiveGenerated = useCallback((schemaName: string) => {
@@ -392,6 +401,10 @@ export function PerspectivesDataProvider({
     isGenerating: generatingPerspectives.length > 0,
     isServerConnected,
     
+    // Caption options
+    captionOptions,
+    setCaptionOptions,
+    
     // Current image
     currentImage,
     setCurrentImage,
@@ -425,6 +438,8 @@ export function PerspectivesDataProvider({
     generatedPerspectives,
     generatingPerspectives,
     isServerConnected,
+    captionOptions,
+    setCaptionOptions,
     currentImage,
     setCurrentImage,
     generatePerspective,

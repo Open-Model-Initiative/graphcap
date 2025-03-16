@@ -13,7 +13,7 @@ import {
 import { EmptyPerspectives } from './components/EmptyPerspectives';
 import { Image } from '@/services/images';
 import { Box, Flex } from '@chakra-ui/react';
-import { GenerationOptionForm, DEFAULT_OPTIONS } from './components/PerspectiveActions/GenerationOptionForm';
+import { GenerationOptionForm, DEFAULT_OPTIONS } from '../inference/generation-options/components/GenerationOptionForm';
 import { CaptionOptions } from './types';
 import { PerspectivesPager } from './components/PerspectiveNavigation/PerspectivesPager';
 import { PerspectivesErrorState } from './components/PerspectivesErrorState';

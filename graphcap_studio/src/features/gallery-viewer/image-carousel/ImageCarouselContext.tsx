@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { Image, preloadImage } from '@/services/images';
 import { useDatasetContext } from '@/features/datasets/context/DatasetContext';
 import { 
@@ -61,22 +61,22 @@ interface ImageCarouselContextType {
 const ImageCarouselContext = createContext<ImageCarouselContextType | undefined>(undefined);
 
 interface ImageCarouselProviderProps {
-  children: ReactNode;
-  images: Image[];
-  isLoading?: boolean;
-  isEmpty?: boolean;
-  selectedImage?: Image | null;
-  onSelectImage: (image: Image) => void;
-  datasetName?: string;
-  onUploadComplete?: () => void;
-  thumbnailOptions?: {
+  readonly children: ReactNode;
+  readonly images: Image[];
+  readonly isLoading?: boolean;
+  readonly isEmpty?: boolean;
+  readonly selectedImage?: Image | null;
+  readonly onSelectImage: (image: Image) => void;
+  readonly datasetName?: string;
+  readonly onUploadComplete?: () => void;
+  readonly thumbnailOptions?: {
     readonly minWidth?: number;
     readonly maxWidth?: number;
     readonly gap?: number;
     readonly aspectRatio?: number;
     readonly maxHeight?: number;
   };
-  preloadOptions?: {
+  readonly preloadOptions?: {
     readonly enabled?: boolean;
     readonly preloadCount?: number;
     readonly maxConcurrentPreloads?: number;
@@ -114,22 +114,22 @@ export function ImageCarouselProvider({
   const { currentDataset } = useDatasetContext();
   
   // Use prop datasetName if provided, otherwise use currentDataset from context
-  const datasetName = propDatasetName || currentDataset;
+  const datasetName = propDatasetName ?? currentDataset;
 
   // Normalize thumbnail options
   const normalizedThumbnailOptions = {
-    minWidth: thumbnailOptions.minWidth || 64,
-    maxWidth: thumbnailOptions.maxWidth || 120,
-    gap: thumbnailOptions.gap || 8,
-    aspectRatio: thumbnailOptions.aspectRatio || 1,
-    maxHeight: thumbnailOptions.maxHeight || 70
+    minWidth: thumbnailOptions.minWidth ?? 64,
+    maxWidth: thumbnailOptions.maxWidth ?? 120,
+    gap: thumbnailOptions.gap ?? 8,
+    aspectRatio: thumbnailOptions.aspectRatio ?? 1,
+    maxHeight: thumbnailOptions.maxHeight ?? 70
   };
 
   // Normalize preload options
   const normalizedPreloadOptions = {
     enabled: preloadOptions.enabled !== false,
-    preloadCount: preloadOptions.preloadCount || 2,
-    maxConcurrentPreloads: preloadOptions.maxConcurrentPreloads || 3
+    preloadCount: preloadOptions.preloadCount ?? 2,
+    maxConcurrentPreloads: preloadOptions.maxConcurrentPreloads ?? 3
   };
 
   // State for image loading error
@@ -203,7 +203,7 @@ export function ImageCarouselProvider({
     onSelectImage(image);
   }, [onSelectImage]);
 
-  const value: ImageCarouselContextType = {
+  const value = useMemo(() => ({
     images,
     selectedImage: initialSelectedImage || null,
     selectImage,
@@ -233,7 +233,30 @@ export function ImageCarouselProvider({
     thumbnailOptions: normalizedThumbnailOptions,
     
     handleRetry
-  };
+  }), [
+    images, 
+    initialSelectedImage, 
+    selectImage, 
+    currentIndex, 
+    totalImages, 
+    visibleImages, 
+    visibleStartIndex, 
+    navigateByDelta, 
+    handleThumbnailSelect, 
+    containerRef, 
+    imageContainerRef, 
+    thumbnailContainerRef, 
+    thumbnailsRef, 
+    imageContainerHeight, 
+    isCalculating, 
+    isLoading, 
+    isEmpty, 
+    imageLoadError, 
+    datasetName, 
+    onUploadComplete, 
+    normalizedThumbnailOptions, 
+    handleRetry
+  ]);
 
   return (
     <ImageCarouselContext.Provider value={value}>

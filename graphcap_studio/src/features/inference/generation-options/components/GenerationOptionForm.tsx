@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Generation Option Form Component
+ * OLD Generation Option Form Component - DEPRECATED
  * 
- * This component displays a form for configuring generation options.
+ * This is the old implementation kept for reference.
+ * Please use the new components in the 'components' directory instead.
  */
 
 import React, { useCallback, useState, useEffect, ChangeEvent } from 'react';

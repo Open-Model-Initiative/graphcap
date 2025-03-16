@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Repetition Penalty Field Component
+ * 
+ * This component renders the repetition_penalty option field.
+ */
+
+
+import { OptionField } from './OptionField';
+import { useGenerationOptions } from '../../context';
+
+/**
+ * Repetition penalty control field component
+ */
+export function RepetitionPenaltyField() {
+  const { options, updateOption, isGenerating } = useGenerationOptions();
+  
+  const handleChange = (value: number) => {
+    updateOption('repetition_penalty', value);
+  };
+  
+  return (
+    <OptionField
+      label="Repetition Penalty"
+      name="repetition_penalty"
+      value={options.repetition_penalty}
+      onChange={handleChange}
+      disabled={isGenerating}
+    />
+  );
+} 

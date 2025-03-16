@@ -1,2 +1,2 @@
 export * from './PerspectivesFooter';
-export * from './GenerationOptionForm';
+export * from '../../../inference/generation-options/components/GenerationOptionForm';
