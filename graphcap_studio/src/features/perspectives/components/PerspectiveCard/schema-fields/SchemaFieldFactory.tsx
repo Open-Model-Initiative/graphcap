@@ -12,6 +12,7 @@ import { TagField } from './TagField';
 import { NodeField } from './NodeField';
 import { EdgeField } from './EdgeField';
 import { BaseField } from './BaseField';
+import { isNode, isEdge, isTagArray } from './formatters';
 
 interface SchemaFieldFactoryProps {
   readonly field: SchemaField;
@@ -24,34 +25,6 @@ export const SchemaFieldFactory: React.FC<SchemaFieldFactoryProps> = ({
   value,
   className = ''
 }) => {
-  // Helper function to detect if value is a node
-  const isNode = (val: any): boolean => {
-    return (
-      typeof val === 'object' &&
-      val !== null &&
-      'id' in val &&
-      'label' in val
-    );
-  };
-
-  // Helper function to detect if value is an edge
-  const isEdge = (val: any): boolean => {
-    return (
-      typeof val === 'object' &&
-      val !== null &&
-      'source' in val &&
-      'target' in val
-    );
-  };
-
-  // Helper function to detect if value is a tag array
-  const isTagArray = (val: any): boolean => {
-    return (
-      Array.isArray(val) &&
-      val.every(item => typeof item === 'string')
-    );
-  };
-
   // Determine the appropriate component based on field type and value structure
   if (field.is_list) {
     if (isTagArray(value)) {

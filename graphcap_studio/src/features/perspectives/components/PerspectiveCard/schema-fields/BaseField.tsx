@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { BaseFieldProps } from './types';
 import { ClipboardButton } from '@/components/ui/buttons';
+import { formatValueForClipboard } from './formatters';
 
 export const BaseField: React.FC<BaseFieldProps> = ({
   field,
@@ -21,6 +22,9 @@ export const BaseField: React.FC<BaseFieldProps> = ({
   className = '',
   children
 }) => {
+  // Format the value for clipboard copying
+  const clipboardValue = formatValueForClipboard(value);
+  
   return (
     <Box className={className} mb="4">
       <Flex alignItems="center" justifyContent="space-between" mb="1">
@@ -29,7 +33,7 @@ export const BaseField: React.FC<BaseFieldProps> = ({
             {field.name.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </Text>
           <ClipboardButton 
-            content={value}
+            content={clipboardValue}
             label="Copy field value"
             size="xs"
             variant="ghost"

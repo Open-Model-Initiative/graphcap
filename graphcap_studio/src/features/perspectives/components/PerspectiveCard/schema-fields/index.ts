@@ -12,4 +12,5 @@ export * from './NodeField';
 export * from './EdgeField';
 export * from './SchemaFieldFactory';
 export * from './CaptionContext';
-export * from './CaptionRenderer'; 
+export * from './CaptionRenderer';
+export * from './formatters'; 
