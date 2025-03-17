@@ -5,13 +5,23 @@ Perspectives API Models
 Defines data models for the perspectives API endpoints.
 """
 
-from enum import Enum
-from typing import Dict, List, Optional, Union, Any
+from typing import List, Optional, Union
 
-from fastapi import UploadFile, Form, File
-from pydantic import BaseModel, Field, create_model
+from fastapi import File, Form, UploadFile
+from pydantic import BaseModel, Field
 
-from ..providers.models import ProviderInfo
+# Field description constants
+DESC_PERSPECTIVE_NAME = "Name of the perspective to use"
+DESC_MAX_TOKENS = "Maximum number of tokens in the response"
+DESC_TEMPERATURE = "Temperature for generation"
+DESC_TOP_P = "Top-p sampling parameter"
+DESC_REPETITION_PENALTY = "Repetition penalty"
+DESC_GLOBAL_CONTEXT = "Global context for the caption"
+DESC_ADDITIONAL_CONTEXT = "Additional context for the caption"
+DESC_RESIZE_RESOLUTION = (
+    "Resolution to resize to (None to disable, or SD_VGA, HD_720P, "
+    "FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)"
+)
 
 
 class SchemaField(BaseModel):
@@ -65,7 +75,7 @@ class ImageSource(BaseModel):
 
     url: Optional[str] = Field(None, description="URL of the image to caption")
     base64: Optional[str] = Field(None, description="Base64-encoded image data")
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -77,16 +87,16 @@ class ImageSource(BaseModel):
 class CaptionRequest(BaseModel):
     """Request model for generating a caption with a perspective."""
 
-    perspective: str = Field(..., description="Name of the perspective to use")
+    perspective: str = Field(..., description=DESC_PERSPECTIVE_NAME)
     image: ImageSource = Field(..., description="Image to caption")
-    max_tokens: Optional[int] = Field(4096, description="Maximum number of tokens in the response")
-    temperature: Optional[float] = Field(0.8, description="Temperature for generation")
-    top_p: Optional[float] = Field(0.9, description="Top-p sampling parameter")
-    repetition_penalty: Optional[float] = Field(1.15, description="Repetition penalty")
-    context: Optional[List[str]] = Field(None, description="Additional context for the caption")
-    global_context: Optional[str] = Field(None, description="Global context for the caption")
-    resize_resolution: Optional[str] = Field(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
-    
+    max_tokens: Optional[int] = Field(4096, description=DESC_MAX_TOKENS)
+    temperature: Optional[float] = Field(0.8, description=DESC_TEMPERATURE)
+    top_p: Optional[float] = Field(0.9, description=DESC_TOP_P)
+    repetition_penalty: Optional[float] = Field(1.15, description=DESC_REPETITION_PENALTY)
+    context: Optional[List[str]] = Field(None, description=DESC_ADDITIONAL_CONTEXT)
+    global_context: Optional[str] = Field(None, description=DESC_GLOBAL_CONTEXT)
+    resize_resolution: Optional[str] = Field(None, description=DESC_RESIZE_RESOLUTION)
+
     class Config:
         schema_extra = {
             "example": {
@@ -106,27 +116,27 @@ class CaptionResponse(BaseModel):
 
     perspective: str = Field(..., description="Name of the perspective used")
     provider: str = Field("gemini", description="Name of the provider used")
-    result: Dict = Field(..., description="Structured caption result")
+    result: dict = Field(..., description="Structured caption result")
     raw_text: Optional[str] = Field(None, description="Raw text response from the model")
 
 
 # Form data model for multipart/form-data requests with file uploads
 class CaptionFormRequest:
     """Form request model for generating a caption with a perspective using file upload."""
-    
+
     def __init__(
         self,
-        perspective: str = Form(..., description="Name of the perspective to use"),
+        perspective: str = Form(..., description=DESC_PERSPECTIVE_NAME),
         file: Optional[UploadFile] = File(None, description="Image file to caption"),
         url: Optional[str] = Form(None, description="URL of the image to caption"),
         base64: Optional[str] = Form(None, description="Base64-encoded image data"),
-        max_tokens: Optional[int] = Form(4096, description="Maximum number of tokens in the response"),
-        temperature: Optional[float] = Form(0.8, description="Temperature for generation"),
-        top_p: Optional[float] = Form(0.9, description="Top-p sampling parameter"),
-        repetition_penalty: Optional[float] = Form(1.15, description="Repetition penalty"),
-        global_context: Optional[str] = Form(None, description="Global context for the caption"),
+        max_tokens: Optional[int] = Form(4096, description=DESC_MAX_TOKENS),
+        temperature: Optional[float] = Form(0.8, description=DESC_TEMPERATURE),
+        top_p: Optional[float] = Form(0.9, description=DESC_TOP_P),
+        repetition_penalty: Optional[float] = Form(1.15, description=DESC_REPETITION_PENALTY),
+        global_context: Optional[str] = Form(None, description=DESC_GLOBAL_CONTEXT),
         context: Optional[str] = Form(None, description="Additional context for the caption (JSON array string)"),
-        resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
+        resize_resolution: Optional[str] = Form(None, description=DESC_RESIZE_RESOLUTION)
     ):
         self.perspective = perspective
         self.file = file
@@ -138,7 +148,7 @@ class CaptionFormRequest:
         self.repetition_penalty = repetition_penalty
         self.global_context = global_context
         self.resize_resolution = resize_resolution
-        
+
         # Parse context from JSON string if provided
         self.context = None
         if context:
@@ -153,17 +163,17 @@ class CaptionFormRequest:
 class CaptionPathRequest(BaseModel):
     """Request model for generating a caption with a perspective using a file path."""
 
-    perspective: str = Field(..., description="Name of the perspective to use")
+    perspective: str = Field(..., description=DESC_PERSPECTIVE_NAME)
     image_path: str = Field(..., description="Path to the image file in the workspace")
     provider: str = Field("gemini", description="Name of the provider to use")
-    max_tokens: Optional[int] = Field(4096, description="Maximum number of tokens in the response")
-    temperature: Optional[float] = Field(0.8, description="Temperature for generation")
-    top_p: Optional[float] = Field(0.9, description="Top-p sampling parameter")
-    repetition_penalty: Optional[float] = Field(1.15, description="Repetition penalty")
-    context: Optional[Union[List[str], str]] = Field(None, description="Additional context for the caption")
-    global_context: Optional[str] = Field(None, description="Global context for the caption")
-    resize_resolution: Optional[str] = Field(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
-    
+    max_tokens: Optional[int] = Field(4096, description=DESC_MAX_TOKENS)
+    temperature: Optional[float] = Field(0.8, description=DESC_TEMPERATURE)
+    top_p: Optional[float] = Field(0.9, description=DESC_TOP_P)
+    repetition_penalty: Optional[float] = Field(1.15, description=DESC_REPETITION_PENALTY)
+    context: Optional[Union[List[str], str]] = Field(None, description=DESC_ADDITIONAL_CONTEXT)
+    global_context: Optional[str] = Field(None, description=DESC_GLOBAL_CONTEXT)
+    resize_resolution: Optional[str] = Field(None, description=DESC_RESIZE_RESOLUTION)
+
     class Config:
         schema_extra = {
             "example": {
@@ -174,4 +184,4 @@ class CaptionPathRequest(BaseModel):
                 "temperature": 0.8,
                 "resize_resolution": "HD_720P"
             }
-        } 
+        }

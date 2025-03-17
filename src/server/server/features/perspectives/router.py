@@ -20,7 +20,7 @@ from typing import List, Optional
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
 
-from ...utils.resizing import ResolutionPreset, resize_image, log_resize_options
+from ...utils.resizing import ResolutionPreset, log_resize_options, resize_image
 from .models import CaptionPathRequest, CaptionResponse, PerspectiveListResponse
 from .service import (
     generate_caption,
@@ -225,64 +225,18 @@ async def create_caption_from_path(
         HTTPException: If the request is invalid or processing fails
     """
     try:
-        # Create Path object from image path
-        image_path = Path(request.image_path)
+        # Create Path object from image path and validate
+        image_path = _validate_image_path(request.image_path)
         temp_path = None
 
-        # Validate image path
-        if not image_path.exists():
-            raise HTTPException(status_code=404, detail=f"Image file not found: {image_path}")
+        # Handle image resizing if requested
+        image_path, temp_path = await _resize_image_if_needed(
+            image_path,
+            request.resize_resolution
+        )
 
-        # Log resize options
-        options = {
-            'resize_resolution': request.resize_resolution
-        }
-        log_resize_options(options)
-
-        # Resize the image if resize_resolution is provided
-        if request.resize_resolution:
-            try:
-                # Get the resolution enum value
-                try:
-                    resolution = ResolutionPreset[request.resize_resolution]
-                except (KeyError, ValueError):
-                    logger.warning(f"Invalid resolution: {request.resize_resolution}. Using HD_720P.")
-                    resolution = ResolutionPreset.HD_720P
-
-                # Create temporary file for resized image
-                suffix = os.path.splitext(str(image_path))[1]
-                fd, resized_path = tempfile.mkstemp(suffix=suffix)
-                os.close(fd)
-                temp_path = Path(resized_path)
-
-                # Resize the image
-                logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
-                resized_img = resize_image(image_path, resolution)
-                resized_img.save(resized_path)
-
-                # Use the resized image
-                image_path = temp_path
-                logger.info(f"Image resized successfully to {resolution.name}")
-            except Exception as e:
-                logger.error(f"Error resizing image: {str(e)}")
-                logger.warning("Using original image instead")
-                # Continue with original image if resizing fails
-
-        # Process any provided context
-        context = request.context
-        if isinstance(context, str):
-            # Try to parse as JSON first
-            try:
-                parsed_context = json.loads(context)
-                # If it's a list of strings, use it directly
-                if isinstance(parsed_context, list):
-                    context = parsed_context
-                else:
-                    # If not a list, wrap in a list
-                    context = [context]
-            except json.JSONDecodeError:
-                # If not valid JSON, treat as a single string
-                context = [context]
+        # Process context
+        context = _process_context(request.context)
 
         # Generate the caption
         caption_data = await generate_caption(
@@ -298,36 +252,127 @@ async def create_caption_from_path(
         )
 
         # Clean up temporary file if we created one
-        if temp_path and temp_path.exists():
-            try:
-                os.unlink(temp_path)
-            except Exception as e:
-                logger.error(f"Error removing temporary file: {str(e)}")
+        _cleanup_temp_file(temp_path)
 
-        # Log the caption data for debugging
-        logger.debug(f"Caption data: {caption_data}")
-
-        # Extract the parsed result and raw text
-        parsed_result = caption_data.get("parsed", {})
-        raw_text = caption_data.get("raw_text")
-
-        # If parsed result is empty but raw_text exists, try to create a basic result
-        if not parsed_result and raw_text:
-            logger.warning("Parsed result is empty but raw_text exists. Creating basic result.")
-            parsed_result = {"text": raw_text}
-
-        # Return the response
-        return CaptionResponse(
-            perspective=request.perspective,
-            provider=request.provider,
-            result=parsed_result,
-            raw_text=raw_text,
+        # Prepare the response
+        return _prepare_caption_response(
+            caption_data,
+            request.perspective,
+            request.provider
         )
     except Exception as e:
         logger.error(f"Error creating caption from path: {str(e)}")
         if isinstance(e, HTTPException):
             raise
         raise HTTPException(status_code=500, detail=f"Error creating caption from path: {str(e)}")
+
+
+def _validate_image_path(image_path_str: str) -> Path:
+    """Validate that the image path exists."""
+    image_path = Path(image_path_str)
+    if not image_path.exists():
+        raise HTTPException(status_code=404, detail=f"Image file not found: {image_path}")
+    return image_path
+
+
+async def _resize_image_if_needed(
+    image_path: Path,
+    resize_resolution: Optional[str]
+) -> tuple[Path, Optional[Path]]:
+    """Resize the image if a resize resolution is provided."""
+    temp_path = None
+
+    # Log resize options
+    options = {'resize_resolution': resize_resolution}
+    log_resize_options(options)
+
+    if not resize_resolution:
+        return image_path, temp_path
+
+    try:
+        # Get the resolution enum value
+        try:
+            resolution = ResolutionPreset[resize_resolution]
+        except (KeyError, ValueError):
+            logger.warning(f"Invalid resolution: {resize_resolution}. Using HD_720P.")
+            resolution = ResolutionPreset.HD_720P
+
+        # Create temporary file for resized image
+        suffix = os.path.splitext(str(image_path))[1]
+        fd, resized_path = tempfile.mkstemp(suffix=suffix)
+        os.close(fd)
+        temp_path = Path(resized_path)
+
+        # Resize the image
+        logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
+        resized_img = resize_image(image_path, resolution)
+        resized_img.save(resized_path)
+
+        # Use the resized image
+        logger.info(f"Image resized successfully to {resolution.name}")
+        return temp_path, temp_path
+    except Exception as e:
+        logger.error(f"Error resizing image: {str(e)}")
+        logger.warning("Using original image instead")
+        # Continue with original image if resizing fails
+        return image_path, temp_path
+
+
+def _process_context(context_input) -> Optional[List[str]]:
+    """Process and normalize context input to a list of strings."""
+    if not context_input:
+        return None
+
+    if not isinstance(context_input, str):
+        return context_input
+
+    # Try to parse as JSON first
+    try:
+        parsed_context = json.loads(context_input)
+        # If it's a list, use it directly
+        if isinstance(parsed_context, list):
+            return parsed_context
+        # If not a list, wrap in a list
+        return [context_input]
+    except json.JSONDecodeError:
+        # If not valid JSON, treat as a single string
+        return [context_input]
+
+
+def _cleanup_temp_file(temp_path: Optional[Path]) -> None:
+    """Clean up temporary file if it exists."""
+    if temp_path and temp_path.exists():
+        try:
+            os.unlink(temp_path)
+        except Exception as e:
+            logger.error(f"Error removing temporary file: {str(e)}")
+
+
+def _prepare_caption_response(
+    caption_data: dict,
+    perspective: str,
+    provider: str
+) -> CaptionResponse:
+    """Prepare the caption response from the caption data."""
+    # Log the caption data for debugging
+    logger.debug(f"Caption data: {caption_data}")
+
+    # Extract the parsed result and raw text
+    parsed_result = caption_data.get("parsed", {})
+    raw_text = caption_data.get("raw_text")
+
+    # If parsed result is empty but raw_text exists, create a basic result
+    if not parsed_result and raw_text:
+        logger.warning("Parsed result is empty but raw_text exists. Creating basic result.")
+        parsed_result = {"text": raw_text}
+
+    # Return the response
+    return CaptionResponse(
+        perspective=perspective,
+        provider=provider,
+        result=parsed_result,
+        raw_text=raw_text,
+    )
 
 
 def _parse_context(context_str) -> Optional[List[str]]:
