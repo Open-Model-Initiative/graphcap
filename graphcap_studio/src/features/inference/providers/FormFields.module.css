@@ -1,10 +1,10 @@
 .tabContent {
-  padding: 0.5rem; /* equivalent to p-2 */
-  background-color: var(--chakra-colors-gray-900);
-  box-shadow: var(--chakra-shadows-lg);
-  border: 1px solid var(--chakra-colors-gray-700);
-  border-top: none;
-  border-bottom-left-radius: var(--chakra-radii-md);
-  border-bottom-right-radius: var(--chakra-radii-md);
-  margin-top: -1px; /* Connects tab with content */
-} 
+	padding: 0.5rem; /* equivalent to p-2 */
+	background-color: var(--chakra-colors-gray-900);
+	box-shadow: var(--chakra-shadows-lg);
+	border: 1px solid var(--chakra-colors-gray-700);
+	border-top: none;
+	border-bottom-left-radius: var(--chakra-radii-md);
+	border-bottom-right-radius: var(--chakra-radii-md);
+	margin-top: -1px; /* Connects tab with content */
+}

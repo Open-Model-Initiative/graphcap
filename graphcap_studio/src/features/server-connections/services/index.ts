@@ -1,6 +1,6 @@
 export {
-    checkServerHealth,
-    checkMediaServerHealth,
-    checkGraphCapServerHealth,
-    checkServerHealthById
-  } from './serverConnections';
+	checkServerHealth,
+	checkMediaServerHealth,
+	checkGraphCapServerHealth,
+	checkServerHealthById,
+} from "./serverConnections";

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Perspectives LocalStorage Utilities
- * 
+ *
  * Utility functions for managing perspectives data in localStorage
  */
 
-const CAPTION_STORAGE_KEY = 'graphcap_perspectives_captions';
-const UI_PREFERENCES_KEY = 'graphcap_ui_preferences';
+const CAPTION_STORAGE_KEY = "graphcap_perspectives_captions";
+const UI_PREFERENCES_KEY = "graphcap_ui_preferences";
 
 // Keys for individual UI preferences
-const SELECTED_PERSPECTIVE = 'selected_perspective';
+const SELECTED_PERSPECTIVE = "selected_perspective";
 
 interface StoredCaptionData {
-  data: any;
-  timestamp: string;
+	data: any;
+	timestamp: string;
 }
 
 type StorageData = Record<string, StoredCaptionData>;
@@ -31,16 +31,16 @@ const debounceTimeouts: Record<string, NodeJS.Timeout> = {};
  * @param delay - Delay in milliseconds
  */
 function debounce(key: string, fn: () => void, delay: number = 300): void {
-  // Clear existing timeout for this key
-  if (debounceTimeouts[key]) {
-    clearTimeout(debounceTimeouts[key]);
-  }
-  
-  // Set a new timeout
-  debounceTimeouts[key] = setTimeout(() => {
-    fn();
-    delete debounceTimeouts[key];
-  }, delay);
+	// Clear existing timeout for this key
+	if (debounceTimeouts[key]) {
+		clearTimeout(debounceTimeouts[key]);
+	}
+
+	// Set a new timeout
+	debounceTimeouts[key] = setTimeout(() => {
+		fn();
+		delete debounceTimeouts[key];
+	}, delay);
 }
 
 /**
@@ -50,24 +50,24 @@ function debounce(key: string, fn: () => void, delay: number = 300): void {
  * @returns The parsed value or default value
  */
 function getFromStorage<T>(key: string, defaultValue: T): T {
-  try {
-    // Return from cache if available
-    if (memoryCache[key] !== undefined) {
-      return memoryCache[key];
-    }
-    
-    const value = localStorage.getItem(key);
-    if (value === null) {
-      return defaultValue;
-    }
-    
-    const parsed = JSON.parse(value);
-    memoryCache[key] = parsed;
-    return parsed;
-  } catch (error) {
-    console.error(`Error getting ${key} from localStorage:`, error);
-    return defaultValue;
-  }
+	try {
+		// Return from cache if available
+		if (memoryCache[key] !== undefined) {
+			return memoryCache[key];
+		}
+
+		const value = localStorage.getItem(key);
+		if (value === null) {
+			return defaultValue;
+		}
+
+		const parsed = JSON.parse(value);
+		memoryCache[key] = parsed;
+		return parsed;
+	} catch (error) {
+		console.error(`Error getting ${key} from localStorage:`, error);
+		return defaultValue;
+	}
 }
 
 /**
@@ -77,27 +77,27 @@ function getFromStorage<T>(key: string, defaultValue: T): T {
  * @param debounceMs - Optional debounce time in milliseconds
  */
 function setInStorage(key: string, value: any, debounceMs?: number): void {
-  try {
-    // Update memory cache immediately
-    memoryCache[key] = value;
-    
-    const saveToStorage = () => {
-      try {
-        const serialized = JSON.stringify(value);
-        localStorage.setItem(key, serialized);
-      } catch (error) {
-        console.error(`Error setting ${key} in localStorage:`, error);
-      }
-    };
-    
-    if (debounceMs && debounceMs > 0) {
-      debounce(key, saveToStorage, debounceMs);
-    } else {
-      saveToStorage();
-    }
-  } catch (error) {
-    console.error(`Error setting ${key} in localStorage:`, error);
-  }
+	try {
+		// Update memory cache immediately
+		memoryCache[key] = value;
+
+		const saveToStorage = () => {
+			try {
+				const serialized = JSON.stringify(value);
+				localStorage.setItem(key, serialized);
+			} catch (error) {
+				console.error(`Error setting ${key} in localStorage:`, error);
+			}
+		};
+
+		if (debounceMs && debounceMs > 0) {
+			debounce(key, saveToStorage, debounceMs);
+		} else {
+			saveToStorage();
+		}
+	} catch (error) {
+		console.error(`Error setting ${key} in localStorage:`, error);
+	}
 }
 
 /**
@@ -105,7 +105,7 @@ function setInStorage(key: string, value: any, debounceMs?: number): void {
  * @returns The UI preferences object
  */
 function getUIPreferences(): Record<string, any> {
-  return getFromStorage<Record<string, any>>(UI_PREFERENCES_KEY, {});
+	return getFromStorage<Record<string, any>>(UI_PREFERENCES_KEY, {});
 }
 
 /**
@@ -113,164 +113,171 @@ function getUIPreferences(): Record<string, any> {
  * @param preferences - The preferences object to save
  */
 function saveUIPreferences(preferences: Record<string, any>): void {
-  setInStorage(UI_PREFERENCES_KEY, preferences, 300); // Debounce for 300ms
+	setInStorage(UI_PREFERENCES_KEY, preferences, 300); // Debounce for 300ms
 }
 
 /**
  * Generate a unique key for storing caption data based on dataset, filename, and perspective
  */
-export function getCaptionStorageKey(datasetId: string, imageFilename: string, perspectiveName: string): string {
-  return `${datasetId}_${imageFilename}_${perspectiveName}`;
+export function getCaptionStorageKey(
+	datasetId: string,
+	imageFilename: string,
+	perspectiveName: string,
+): string {
+	return `${datasetId}_${imageFilename}_${perspectiveName}`;
 }
 
 /**
  * Save caption data to localStorage
- * 
+ *
  * @param imagePath - The path to the image
  * @param captionData - The complete caption data object
  */
 export function saveCaptionToStorage(
-  imagePath: string,
-  captionData: any
+	imagePath: string,
+	captionData: any,
 ): void {
-  try {
-    console.log('Saving caption to localStorage:', imagePath, captionData);
-    
-    // Use image path as the storage key for this caption
-    const key = `caption:${imagePath}`;
-    const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
-    
-    storageData[key] = {
-      data: captionData,
-      timestamp: new Date().toISOString()
-    };
-    
-    setInStorage(CAPTION_STORAGE_KEY, storageData);
-    console.log('Caption saved to localStorage:', key);
-  } catch (error) {
-    console.error('Error saving caption to localStorage:', error);
-  }
+	try {
+		console.log("Saving caption to localStorage:", imagePath, captionData);
+
+		// Use image path as the storage key for this caption
+		const key = `caption:${imagePath}`;
+		const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
+
+		storageData[key] = {
+			data: captionData,
+			timestamp: new Date().toISOString(),
+		};
+
+		setInStorage(CAPTION_STORAGE_KEY, storageData);
+		console.log("Caption saved to localStorage:", key);
+	} catch (error) {
+		console.error("Error saving caption to localStorage:", error);
+	}
 }
 
 /**
  * Get caption data from localStorage
  */
 export function getCaptionFromStorage(
-  datasetId: string, 
-  imageFilename: string, 
-  perspectiveName: string
+	datasetId: string,
+	imageFilename: string,
+	perspectiveName: string,
 ): any | null {
-  try {
-    const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
-    const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
-    
-    return storageData[key]?.data || null;
-  } catch (error) {
-    console.error('Error getting caption from localStorage:', error);
-    return null;
-  }
+	try {
+		const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
+		const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
+
+		return storageData[key]?.data || null;
+	} catch (error) {
+		console.error("Error getting caption from localStorage:", error);
+		return null;
+	}
 }
 
 /**
  * Check if a caption exists in localStorage
  */
 export function captionExistsInStorage(
-  datasetId: string, 
-  imageFilename: string, 
-  perspectiveName: string
+	datasetId: string,
+	imageFilename: string,
+	perspectiveName: string,
 ): boolean {
-  try {
-    const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
-    const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
-    
-    return !!storageData[key];
-  } catch (error) {
-    console.error('Error checking caption in localStorage:', error);
-    return false;
-  }
+	try {
+		const key = getCaptionStorageKey(datasetId, imageFilename, perspectiveName);
+		const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
+
+		return !!storageData[key];
+	} catch (error) {
+		console.error("Error checking caption in localStorage:", error);
+		return false;
+	}
 }
 
 /**
  * Get all captions for an image
- * 
+ *
  * @param imagePath - Path to the image
  * @returns An object containing all captions for the image
  */
-export function getAllCaptionsForImage(
-  imagePath: string
-): Record<string, any> {
-  try {
-    // Generate the image key prefix
-    const keyPrefix = `caption:${imagePath}`;
-    
-    // Get all storage data
-    const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
-    
-    // Find the key that exactly matches our prefix (the image path)
-    const matchingKey = Object.keys(storageData).find(key => key === keyPrefix);
-    
-    if (matchingKey && storageData[matchingKey]) {
-      // Return the complete caption data
-      return storageData[matchingKey].data;
-    }
-    
-    console.debug(`No captions found for image: ${imagePath}`);
-    return {};
-  } catch (error) {
-    console.error('Error getting captions from localStorage:', error);
-    return {};
-  }
+export function getAllCaptionsForImage(imagePath: string): Record<string, any> {
+	try {
+		// Generate the image key prefix
+		const keyPrefix = `caption:${imagePath}`;
+
+		// Get all storage data
+		const storageData = getFromStorage<StorageData>(CAPTION_STORAGE_KEY, {});
+
+		// Find the key that exactly matches our prefix (the image path)
+		const matchingKey = Object.keys(storageData).find(
+			(key) => key === keyPrefix,
+		);
+
+		if (matchingKey && storageData[matchingKey]) {
+			// Return the complete caption data
+			return storageData[matchingKey].data;
+		}
+
+		console.debug(`No captions found for image: ${imagePath}`);
+		return {};
+	} catch (error) {
+		console.error("Error getting captions from localStorage:", error);
+		return {};
+	}
 }
 
 /**
  * Clear all captions from localStorage
  */
 export function clearAllCaptions(): void {
-  try {
-    localStorage.removeItem(CAPTION_STORAGE_KEY);
-    delete memoryCache[CAPTION_STORAGE_KEY];
-  } catch (error) {
-    console.error('Error clearing captions from localStorage:', error);
-  }
+	try {
+		localStorage.removeItem(CAPTION_STORAGE_KEY);
+		delete memoryCache[CAPTION_STORAGE_KEY];
+	} catch (error) {
+		console.error("Error clearing captions from localStorage:", error);
+	}
 }
 
 /**
  * Save selected perspective name to localStorage
  */
 export function saveSelectedPerspective(perspectiveName: string): void {
-  try {
-    const preferences = getUIPreferences();
-    preferences[SELECTED_PERSPECTIVE] = perspectiveName;
-    saveUIPreferences(preferences);
-  } catch (error) {
-    console.error('Error saving selected perspective to localStorage:', error);
-  }
+	try {
+		const preferences = getUIPreferences();
+		preferences[SELECTED_PERSPECTIVE] = perspectiveName;
+		saveUIPreferences(preferences);
+	} catch (error) {
+		console.error("Error saving selected perspective to localStorage:", error);
+	}
 }
 
 /**
  * Get selected perspective name from localStorage
  */
 export function getSelectedPerspective(): string | null {
-  try {
-    const preferences = getUIPreferences();
-    return preferences[SELECTED_PERSPECTIVE] || null;
-  } catch (error) {
-    console.error('Error getting selected perspective from localStorage:', error);
-    return null;
-  }
+	try {
+		const preferences = getUIPreferences();
+		return preferences[SELECTED_PERSPECTIVE] || null;
+	} catch (error) {
+		console.error(
+			"Error getting selected perspective from localStorage:",
+			error,
+		);
+		return null;
+	}
 }
 
 /**
  * Clear UI selections from localStorage
  */
 export function clearUISelections(): void {
-  try {
-    const preferences = getUIPreferences();
-    delete preferences[SELECTED_PERSPECTIVE];
-    saveUIPreferences(preferences);
-  } catch (error) {
-    console.error('Error clearing UI selections from localStorage:', error);
-  }
+	try {
+		const preferences = getUIPreferences();
+		delete preferences[SELECTED_PERSPECTIVE];
+		saveUIPreferences(preferences);
+	} catch (error) {
+		console.error("Error clearing UI selections from localStorage:", error);
+	}
 }
 
 /**
@@ -278,7 +285,7 @@ export function clearUISelections(): void {
  * Call this when you want to force a refresh from localStorage
  */
 export function clearCache(): void {
-  Object.keys(memoryCache).forEach(key => {
-    delete memoryCache[key];
-  });
-} 
+	Object.keys(memoryCache).forEach((key) => {
+		delete memoryCache[key];
+	});
+}

@@ -1,4 +1,4 @@
-import { Button, ButtonGroup } from "@chakra-ui/react"
+import { Button, ButtonGroup } from "@chakra-ui/react";
 /**
  * Button Component
  *
@@ -11,7 +11,7 @@ import { Button, ButtonGroup } from "@chakra-ui/react"
  * ## Usage
  * ```jsx
  * import { Button, ButtonGroup } from "@chakra-ui/react";
- * 
+ *
  * <Button>Click me</Button>
  * ```
  *
@@ -123,7 +123,7 @@ import { Button, ButtonGroup } from "@chakra-ui/react"
  *
  * ```jsx
  * import { useRef } from "react";
- * 
+ *
  * const Demo = () => {
  *   const ref = useRef<HTMLButtonElement | null>(null);
  *   return <Button ref={ref}>Click me</Button>;
@@ -162,5 +162,4 @@ import { Button, ButtonGroup } from "@chakra-ui/react"
  * @see {@link https://chakra-ui.com/docs/components/button Button Documentation}
  */
 
-
-export { Button, ButtonGroup }
+export { Button, ButtonGroup };

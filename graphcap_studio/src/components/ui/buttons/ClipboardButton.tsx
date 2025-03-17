@@ -1,158 +1,187 @@
+import { Tooltip } from "@/components/ui/tooltip";
+import { useClipboard } from "@/hooks/useClipboard";
 // SPDX-License-Identifier: Apache-2.0
 import type { ButtonProps } from "@chakra-ui/react";
-import { Button, IconButton } from '@chakra-ui/react';
-import { useClipboard } from '@/hooks/useClipboard';
-import { Tooltip } from '@/components/ui/tooltip';
+import { Button, IconButton } from "@chakra-ui/react";
 import * as React from "react";
 
-export interface ClipboardButtonProps extends Omit<ButtonProps, 'children'> {
-  /**
-   * Text content to be copied to clipboard
-   */
-  content: string | Record<string, any>;
-  /**
-   * Label text for button tooltip
-   */
-  label?: string;
-  /**
-   * Optional CSS class name
-   */
-  className?: string;
-  /**
-   * Size of the button
-   */
-  size?: 'xs' | 'sm' | 'md' | 'lg';
-  /**
-   * Variant of the button
-   */
-  variant?: 'ghost' | 'outline' | 'solid';
-  /**
-   * Color scheme of the button
-   */
-  colorPalette?: string;
-  /**
-   * Show button text or just icon
-   */
-  iconOnly?: boolean;
-  /**
-   * Enable debug logging
-   */
-  debug?: boolean;
+export interface ClipboardButtonProps extends Omit<ButtonProps, "children"> {
+	/**
+	 * Text content to be copied to clipboard
+	 */
+	content: string | Record<string, any>;
+	/**
+	 * Label text for button tooltip
+	 */
+	label?: string;
+	/**
+	 * Optional CSS class name
+	 */
+	className?: string;
+	/**
+	 * Size of the button
+	 */
+	size?: "xs" | "sm" | "md" | "lg";
+	/**
+	 * Variant of the button
+	 */
+	variant?: "ghost" | "outline" | "solid";
+	/**
+	 * Color scheme of the button
+	 */
+	colorPalette?: string;
+	/**
+	 * Show button text or just icon
+	 */
+	iconOnly?: boolean;
+	/**
+	 * Enable debug logging
+	 */
+	debug?: boolean;
 }
 
 /**
  * ClipboardButton component
- * 
+ *
  * A button that copies text to clipboard when clicked and shows feedback
  */
 export const ClipboardButton = React.forwardRef<
-  HTMLButtonElement,
-  ClipboardButtonProps
->(function ClipboardButton({
-  content,
-  label = 'Copy to clipboard',
-  className = '',
-  size = 'sm',
-  variant = 'ghost',
-  colorPalette = 'gray',
-  iconOnly = false,
-  debug = true,
-  ...props
-}, ref) {
-  const { copyToClipboard, hasCopied, error } = useClipboard({ successDuration: 2000 });
+	HTMLButtonElement,
+	ClipboardButtonProps
+>(function ClipboardButton(
+	{
+		content,
+		label = "Copy to clipboard",
+		className = "",
+		size = "sm",
+		variant = "ghost",
+		colorPalette = "gray",
+		iconOnly = false,
+		debug = true,
+		...props
+	},
+	ref,
+) {
+	const { copyToClipboard, hasCopied, error } = useClipboard({
+		successDuration: 2000,
+	});
 
-  const handleCopy = () => {
-    // Handle different content types
-    const textToCopy = typeof content === 'string'
-      ? content
-      : JSON.stringify(content, null, 2);
-    
-    if (debug) {
-      console.log('[ClipboardButton] Attempting to copy text:', 
-        textToCopy.length > 100 ? `${textToCopy.substring(0, 100)}... (${textToCopy.length} chars)` : textToCopy
-      );
-    }
-    
-    copyToClipboard(textToCopy)
-      .then(() => {
-        if (debug) console.log('[ClipboardButton] Copy successful');
-      })
-      .catch(err => {
-        console.error('[ClipboardButton] Copy failed:', err);
-      });
-  };
+	const handleCopy = () => {
+		// Handle different content types
+		const textToCopy =
+			typeof content === "string" ? content : JSON.stringify(content, null, 2);
 
-  // Log errors in debug mode
-  React.useEffect(() => {
-    if (error && debug) {
-      console.error('[ClipboardButton] Clipboard error:', error);
-    }
-  }, [error, debug]);
+		if (debug) {
+			console.log(
+				"[ClipboardButton] Attempting to copy text:",
+				textToCopy.length > 100
+					? `${textToCopy.substring(0, 100)}... (${textToCopy.length} chars)`
+					: textToCopy,
+			);
+		}
 
-  // Set tooltip content based on state
-  let tooltipContent = label;
-  if (hasCopied) {
-    tooltipContent = 'Copied!';
-  } else if (error) {
-    tooltipContent = 'Failed to copy';
-  }
+		copyToClipboard(textToCopy)
+			.then(() => {
+				if (debug) console.log("[ClipboardButton] Copy successful");
+			})
+			.catch((err) => {
+				console.error("[ClipboardButton] Copy failed:", err);
+			});
+	};
 
-  // Determine button color based on state
-  let buttonColorPalette = colorPalette;
-  if (hasCopied) {
-    buttonColorPalette = 'green';
-  } else if (error) {
-    buttonColorPalette = 'red';
-  }
+	// Log errors in debug mode
+	React.useEffect(() => {
+		if (error && debug) {
+			console.error("[ClipboardButton] Clipboard error:", error);
+		}
+	}, [error, debug]);
 
-  // Icon elements
-  const copyIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
-  );
-  
-  const checkIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  );
+	// Set tooltip content based on state
+	let tooltipContent = label;
+	if (hasCopied) {
+		tooltipContent = "Copied!";
+	} else if (error) {
+		tooltipContent = "Failed to copy";
+	}
 
-  const renderIconButton = () => (
-    <Tooltip content={tooltipContent} showArrow>
-      <IconButton
-        size={size}
-        variant={variant}
-        colorPalette={buttonColorPalette}
-        onClick={handleCopy}
-        className={className}
-        aria-label={label}
-        ref={ref}
-        {...props}
-      >
-        {hasCopied ? checkIcon : copyIcon}
-      </IconButton>
-    </Tooltip>
-  );
+	// Determine button color based on state
+	let buttonColorPalette = colorPalette;
+	if (hasCopied) {
+		buttonColorPalette = "green";
+	} else if (error) {
+		buttonColorPalette = "red";
+	}
 
-  const renderButton = () => (
-    <Tooltip content={tooltipContent} showArrow>
-      <Button
-        size={size}
-        variant={variant}
-        colorPalette={buttonColorPalette}
-        onClick={handleCopy}
-        className={className}
-        aria-label={label}
-        ref={ref}
-        {...props}
-      >
-        {hasCopied ? checkIcon : copyIcon}
-        <span style={{ marginLeft: '8px' }}>{hasCopied ? 'Copied' : 'Copy'}</span>
-      </Button>
-    </Tooltip>
-  );
+	// Icon elements
+	const copyIcon = (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+			<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+		</svg>
+	);
 
-  return iconOnly ? renderIconButton() : renderButton();
-}); 
+	const checkIcon = (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<polyline points="20 6 9 17 4 12"></polyline>
+		</svg>
+	);
+
+	const renderIconButton = () => (
+		<Tooltip content={tooltipContent} showArrow>
+			<IconButton
+				size={size}
+				variant={variant}
+				colorPalette={buttonColorPalette}
+				onClick={handleCopy}
+				className={className}
+				aria-label={label}
+				ref={ref}
+				{...props}
+			>
+				{hasCopied ? checkIcon : copyIcon}
+			</IconButton>
+		</Tooltip>
+	);
+
+	const renderButton = () => (
+		<Tooltip content={tooltipContent} showArrow>
+			<Button
+				size={size}
+				variant={variant}
+				colorPalette={buttonColorPalette}
+				onClick={handleCopy}
+				className={className}
+				aria-label={label}
+				ref={ref}
+				{...props}
+			>
+				{hasCopied ? checkIcon : copyIcon}
+				<span style={{ marginLeft: "8px" }}>
+					{hasCopied ? "Copied" : "Copy"}
+				</span>
+			</Button>
+		</Tooltip>
+	);
+
+	return iconOnly ? renderIconButton() : renderButton();
+});

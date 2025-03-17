@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Perspectives Types
- * 
+ *
  * This module serves as the single source of truth for all type definitions
  * used within the perspectives feature. It consolidates all Zod schemas,
  * inferred types, domain types, and utility types in one location.
  */
 
-import { z } from 'zod';
-import { Image } from '@/services/images';
+import { Image } from "@/services/images";
+import { z } from "zod";
 
 // ============================================================================
 // SECTION A - ZOD SCHEMAS
@@ -19,34 +19,34 @@ import { Image } from '@/services/images';
  * description, and optional flags for lists or complex types.
  */
 export const SchemaFieldSchema: z.ZodType<{
-  name: string;
-  type: 'str' | 'float';
-  description: string;
-  is_list?: boolean;
-  is_complex?: boolean;
-  fields?: Array<{
-    name: string;
-    type: 'str' | 'float';
-    description: string;
-    is_list?: boolean;
-    is_complex?: boolean;
-  }>;
+	name: string;
+	type: "str" | "float";
+	description: string;
+	is_list?: boolean;
+	is_complex?: boolean;
+	fields?: Array<{
+		name: string;
+		type: "str" | "float";
+		description: string;
+		is_list?: boolean;
+		is_complex?: boolean;
+	}>;
 }> = z.object({
-  name: z.string(),
-  type: z.enum(['str', 'float']),
-  description: z.string(),
-  is_list: z.boolean().optional(),
-  is_complex: z.boolean().optional(),
-  fields: z.array(z.lazy(() => SchemaFieldSchema)).optional(),
+	name: z.string(),
+	type: z.enum(["str", "float"]),
+	description: z.string(),
+	is_list: z.boolean().optional(),
+	is_complex: z.boolean().optional(),
+	fields: z.array(z.lazy(() => SchemaFieldSchema)).optional(),
 });
 
 /**
  * Defines a table column with properties such as name and style.
  */
 export const TableColumnSchema = z.object({
-  name: z.string(),
-  style: z.string(),
-  description: z.string().optional(),
+	name: z.string(),
+	style: z.string(),
+	description: z.string().optional(),
 });
 
 /**
@@ -54,13 +54,13 @@ export const TableColumnSchema = z.object({
  * display_name, version, prompt, schema_fields, table_columns, and context_template.
  */
 export const PerspectiveSchemaSchema = z.object({
-  name: z.string(),
-  display_name: z.string(),
-  version: z.string(),
-  prompt: z.string(),
-  schema_fields: z.array(SchemaFieldSchema),
-  table_columns: z.array(TableColumnSchema),
-  context_template: z.string(),
+	name: z.string(),
+	display_name: z.string(),
+	version: z.string(),
+	prompt: z.string(),
+	schema_fields: z.array(SchemaFieldSchema),
+	table_columns: z.array(TableColumnSchema),
+	context_template: z.string(),
 });
 
 /**
@@ -68,55 +68,59 @@ export const PerspectiveSchemaSchema = z.object({
  * and an optional schema.
  */
 export const PerspectiveSchema = z.object({
-  name: z.string(),
-  display_name: z.string(),
-  version: z.string(),
-  description: z.string(),
-  schema: PerspectiveSchemaSchema.optional(),
+	name: z.string(),
+	display_name: z.string(),
+	version: z.string(),
+	description: z.string(),
+	schema: PerspectiveSchemaSchema.optional(),
 });
 
 /**
  * Wraps an array of perspectives under a 'perspectives' property.
  */
 export const PerspectiveListResponseSchema = z.object({
-  perspectives: z.array(PerspectiveSchema),
+	perspectives: z.array(PerspectiveSchema),
 });
 
 /**
  * Defines the request structure for generating a caption.
  */
 export const CaptionRequestSchema = z.object({
-  image_path: z.string(),
-  perspective: z.string(),
-  provider_id: z.number().optional(),
-  provider: z.string().optional(), // For backward compatibility
-  options: z.object({
-    max_tokens: z.number().optional(),
-    temperature: z.number().optional(),
-    top_p: z.number().optional(),
-    repetition_penalty: z.number().optional(),
-    global_context: z.string().optional(),
-    context: z.array(z.string()).optional(),
-    resize: z.boolean().optional(),
-    resize_resolution: z.string().optional(),
-  }).optional(),
+	image_path: z.string(),
+	perspective: z.string(),
+	provider_id: z.number().optional(),
+	provider: z.string().optional(), // For backward compatibility
+	options: z
+		.object({
+			max_tokens: z.number().optional(),
+			temperature: z.number().optional(),
+			top_p: z.number().optional(),
+			repetition_penalty: z.number().optional(),
+			global_context: z.string().optional(),
+			context: z.array(z.string()).optional(),
+			resize: z.boolean().optional(),
+			resize_resolution: z.string().optional(),
+		})
+		.optional(),
 });
 
 /**
  * Defines the response structure for a generated caption.
  */
 export const CaptionResponseSchema = z.object({
-  perspective: z.string(),
-  provider: z.string(),
-  result: z.record(z.any()),
-  content: z.record(z.any()).optional(), // For backward compatibility
-  raw_text: z.string().optional(),
-  metadata: z.object({
-    model: z.string(),
-    provider: z.string(),
-    version: z.string(),
-    config_name: z.string(),
-  }).optional(),
+	perspective: z.string(),
+	provider: z.string(),
+	result: z.record(z.any()),
+	content: z.record(z.any()).optional(), // For backward compatibility
+	raw_text: z.string().optional(),
+	metadata: z
+		.object({
+			model: z.string(),
+			provider: z.string(),
+			version: z.string(),
+			config_name: z.string(),
+		})
+		.optional(),
 });
 
 // ============================================================================
@@ -146,7 +150,9 @@ export type Perspective = z.infer<typeof PerspectiveSchema>;
 /**
  * Type representing a list of perspectives.
  */
-export type PerspectiveListResponse = z.infer<typeof PerspectiveListResponseSchema>;
+export type PerspectiveListResponse = z.infer<
+	typeof PerspectiveListResponseSchema
+>;
 
 /**
  * Type representing a caption request.
@@ -166,23 +172,23 @@ export type CaptionResponse = z.infer<typeof CaptionResponseSchema>;
  * Describes a connection to a server.
  */
 export type ServerConnection = {
-  id: string;
-  url?: string;
-  status?: string;
+	id: string;
+	url?: string;
+	status?: string;
 };
 
 /**
  * Specifies options for generating captions.
  */
 export type CaptionOptions = {
-  max_tokens?: number;
-  temperature?: number;
-  top_p?: number;
-  repetition_penalty?: number;
-  global_context?: string;
-  context?: string[];
-  resize?: boolean;
-  resize_resolution?: string;
+	max_tokens?: number;
+	temperature?: number;
+	top_p?: number;
+	repetition_penalty?: number;
+	global_context?: string;
+	context?: string[];
+	resize?: boolean;
+	resize_resolution?: string;
 };
 
 /**
@@ -194,33 +200,33 @@ export type PerspectiveType = string;
  * Describes a provider with id and name.
  */
 export interface Provider {
-  id: number;
-  name: string;
+	id: number;
+	name: string;
 }
 
 /**
  * Contains the details of a generated perspective.
  */
 export interface PerspectiveData {
-  config_name: string;
-  version: string;
-  model: string;
-  provider: string;
-  content: Record<string, any>;
-  options: CaptionOptions;
+	config_name: string;
+	version: string;
+	model: string;
+	provider: string;
+	content: Record<string, any>;
+	options: CaptionOptions;
 }
 
 /**
  * Defines the overall captioning data for an image.
  */
 export interface ImageCaptions {
-  image: Image;
-  perspectives: Record<string, PerspectiveData>;
-  metadata: {
-    captioned_at: string;
-    provider: string;
-    model: string;
-  };
+	image: Image;
+	perspectives: Record<string, PerspectiveData>;
+	metadata: {
+		captioned_at: string;
+		provider: string;
+		model: string;
+	};
 }
 
 // ============================================================================
@@ -231,39 +237,42 @@ export interface ImageCaptions {
  * Result type for the useImagePerspectives hook.
  */
 export interface ImagePerspectivesResult {
-  isLoading: boolean;
-  error: string | null;
-  captions: ImageCaptions | null;
-  generatedPerspectives: PerspectiveType[];
-  generatingPerspectives: string[];
-  generatePerspective: (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions) => void;
-  generateAllPerspectives: () => void;
-  availablePerspectives: Perspective[];
-  availableProviders: Provider[];
+	isLoading: boolean;
+	error: string | null;
+	captions: ImageCaptions | null;
+	generatedPerspectives: PerspectiveType[];
+	generatingPerspectives: string[];
+	generatePerspective: (
+		perspective: PerspectiveType,
+		providerId?: number,
+		options?: CaptionOptions,
+	) => void;
+	generateAllPerspectives: () => void;
+	availablePerspectives: Perspective[];
+	availableProviders: Provider[];
 }
 
 /**
  * Context type for the perspectives feature.
  */
 export interface PerspectivesContextType {
-  // UI state
-  selectedProviderId: number | undefined;
-  isGeneratingAll: boolean;
-  perspectives: Perspective[];
-  isLoading: boolean;
-  error: Error | null;
-  
-  // UI actions
-  setSelectedProviderId: (providerId: number | undefined) => void;
-  setIsGeneratingAll: (isGenerating: boolean) => void;
-  handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+	// UI state
+	selectedProviderId: number | undefined;
+	isGeneratingAll: boolean;
+	perspectives: Perspective[];
+	isLoading: boolean;
+	error: Error | null;
+
+	// UI actions
+	setSelectedProviderId: (providerId: number | undefined) => void;
+	setIsGeneratingAll: (isGenerating: boolean) => void;
+	handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }
 
 /**
  * Props for the perspectives provider component.
  */
 export interface PerspectivesProviderProps {
-  children: React.ReactNode;
-  initialSelectedProviderId?: number | undefined;
+	children: React.ReactNode;
+	initialSelectedProviderId?: number | undefined;
 }
-

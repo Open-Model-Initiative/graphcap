@@ -1,2 +1,2 @@
 // SPDX-License-Identifier: Apache-2.0
-export { FeatureFlagsPanel } from './FeatureFlagsPanel'; 
+export { FeatureFlagsPanel } from "./FeatureFlagsPanel";

@@ -1,13 +1,14 @@
+import type { Image } from "@/services/images";
+import { downloadImage } from "@/utils/download";
 // SPDX-License-Identifier: Apache-2.0
-import type { IconButtonProps } from "@chakra-ui/react"
-import { IconButton } from "@chakra-ui/react"
-import * as React from "react"
-import { LuDownload } from "react-icons/lu"
-import { downloadImage } from "@/utils/download"
-import type { Image } from "@/services/images"
+import type { IconButtonProps } from "@chakra-ui/react";
+import { IconButton } from "@chakra-ui/react";
+import * as React from "react";
+import { LuDownload } from "react-icons/lu";
 
-export interface DownloadButtonProps extends Omit<IconButtonProps, 'aria-label'> {
-  image?: Image;
+export interface DownloadButtonProps
+	extends Omit<IconButtonProps, "aria-label"> {
+	image?: Image;
 }
 
 /**
@@ -15,37 +16,37 @@ export interface DownloadButtonProps extends Omit<IconButtonProps, 'aria-label'>
  * with built-in download functionality
  */
 export const DownloadButton = React.forwardRef<
-  HTMLButtonElement,
-  DownloadButtonProps
+	HTMLButtonElement,
+	DownloadButtonProps
 >(function DownloadButton({ image, onClick, ...props }, ref) {
-  const handleClick = React.useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      // If onClick is provided, call it
-      if (onClick) {
-        onClick(event);
-      }
-      
-      // If image is provided and the default wasn't prevented, download it
-      if (image && !event.defaultPrevented) {
-        downloadImage(image).catch(error => {
-          console.error('Failed to download image:', error);
-        });
-      }
-    },
-    [image, onClick]
-  );
+	const handleClick = React.useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>) => {
+			// If onClick is provided, call it
+			if (onClick) {
+				onClick(event);
+			}
 
-  return (
-    <IconButton 
-      variant="ghost" 
-      size="sm"
-      aria-label="Download" 
-      colorPalette="gray"
-      ref={ref}
-      onClick={handleClick}
-      {...props}
-    >
-      {props.children ?? <LuDownload />}
-    </IconButton>
-  )
-}) 
+			// If image is provided and the default wasn't prevented, download it
+			if (image && !event.defaultPrevented) {
+				downloadImage(image).catch((error) => {
+					console.error("Failed to download image:", error);
+				});
+			}
+		},
+		[image, onClick],
+	);
+
+	return (
+		<IconButton
+			variant="ghost"
+			size="sm"
+			aria-label="Download"
+			colorPalette="gray"
+			ref={ref}
+			onClick={handleClick}
+			{...props}
+		>
+			{props.children ?? <LuDownload />}
+		</IconButton>
+	);
+});

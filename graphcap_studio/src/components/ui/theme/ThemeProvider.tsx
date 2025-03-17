@@ -1,16 +1,13 @@
-"use client"
+"use client";
 
-import { ChakraProvider } from "@chakra-ui/react"
-import {
-  ColorModeProvider,
-  type ColorModeProviderProps,
-} from "./color-mode"
-import { graphcapTheme } from "@/app/theme"
+import { graphcapTheme } from "@/app/theme";
+import { ChakraProvider } from "@chakra-ui/react";
+import { ColorModeProvider, type ColorModeProviderProps } from "./color-mode";
 
 export function Provider(props: Readonly<ColorModeProviderProps>) {
-  return (
-    <ChakraProvider value={graphcapTheme}>
-      <ColorModeProvider {...props} />
-    </ChakraProvider>
-  )
+	return (
+		<ChakraProvider value={graphcapTheme}>
+			<ColorModeProvider {...props} />
+		</ChakraProvider>
+	);
 }

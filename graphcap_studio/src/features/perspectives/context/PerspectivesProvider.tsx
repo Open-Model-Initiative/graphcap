@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Combined Perspectives Provider
- * 
+ *
  * This component combines the data and UI contexts for perspectives
  * to simplify usage in component trees.
  */
 
-import { ReactNode } from 'react';
-import { PerspectiveUIProvider } from './PerspectiveUIContext';
-import { PerspectivesDataProvider } from './PerspectivesDataContext';
-import { Provider } from '../types';
-import { Image } from '@/services/images';
+import { Image } from "@/services/images";
+import { ReactNode } from "react";
+import { Provider } from "../types";
+import { PerspectiveUIProvider } from "./PerspectiveUIContext";
+import { PerspectivesDataProvider } from "./PerspectivesDataContext";
 
 interface PerspectivesProviderProps {
-  readonly children: ReactNode;
-  readonly initialProvider?: string;
-  readonly initialProviders?: Provider[];
-  readonly image: Image | null;
+	readonly children: ReactNode;
+	readonly initialProvider?: string;
+	readonly initialProviders?: Provider[];
+	readonly image: Image | null;
 }
 
 /**
@@ -26,20 +26,18 @@ interface PerspectivesProviderProps {
  * 2. PerspectiveUIProvider - all UI concerns
  */
 export function PerspectivesProvider({
-  children,
-  initialProvider,
-  initialProviders = [],
-  image
+	children,
+	initialProvider,
+	initialProviders = [],
+	image,
 }: PerspectivesProviderProps) {
-  return (
-    <PerspectivesDataProvider
-      image={image}
-      initialProvider={initialProvider}
-      initialProviders={initialProviders}
-    >
-      <PerspectiveUIProvider>
-        {children}
-      </PerspectiveUIProvider>
-    </PerspectivesDataProvider>
-  );
-} 
+	return (
+		<PerspectivesDataProvider
+			image={image}
+			initialProvider={initialProvider}
+			initialProviders={initialProviders}
+		>
+			<PerspectiveUIProvider>{children}</PerspectiveUIProvider>
+		</PerspectivesDataProvider>
+	);
+}
