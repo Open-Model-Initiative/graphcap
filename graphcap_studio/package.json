@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 32200",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",  
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -47,6 +48,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@eslint/js": "^9.22.0",
     "@tanstack/router-cli": "^1.114.22",
     "@testing-library/jest-dom": "^6.6.3",
