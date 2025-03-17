@@ -6,17 +6,17 @@
  * to simplify usage in component trees.
  */
 
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { PerspectiveUIProvider } from './PerspectiveUIContext';
 import { PerspectivesDataProvider } from './PerspectivesDataContext';
 import { Provider } from '../types';
 import { Image } from '@/services/images';
 
 interface PerspectivesProviderProps {
-  children: ReactNode;
-  initialProvider?: string;
-  initialProviders?: Provider[];
-  image: Image | null;
+  readonly children: ReactNode;
+  readonly initialProvider?: string;
+  readonly initialProviders?: Provider[];
+  readonly image: Image | null;
 }
 
 /**

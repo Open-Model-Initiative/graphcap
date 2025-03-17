@@ -28,8 +28,8 @@ export function generateCaptionKey(imagePath: string, perspectiveName: string): 
     
     // Create a standardized key using directory, path, and perspective
     // Replace special characters that might cause issues in localStorage keys
-    const sanitizedPath = imagePath.replace(/[\/\\:*?"<>|]/g, '_');
-    const sanitizedDir = directory.replace(/[\/\\:*?"<>|]/g, '_');
+    const sanitizedPath = imagePath.replace(/[/\\:*?"<>|]/g, '_');
+    const sanitizedDir = directory.replace(/[/\\:*?"<>|]/g, '_');
     
     return `${STORAGE_KEY_PREFIX}-${sanitizedDir}-${sanitizedPath}-${perspectiveName}`;
   } catch (error) {

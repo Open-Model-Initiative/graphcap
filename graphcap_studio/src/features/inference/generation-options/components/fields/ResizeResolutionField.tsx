@@ -5,7 +5,6 @@
  * This component provides controls for adjusting the image resize resolution.
  */
 
-import { useState, useEffect } from 'react';
 import { Box, HStack } from '@chakra-ui/react';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { useGenerationOptions } from '../../context';
