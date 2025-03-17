@@ -13,7 +13,8 @@ import {
   TemperatureField,
   MaxTokensField,
   TopPField,
-  RepetitionPenaltyField
+  RepetitionPenaltyField,
+  GlobalContextField
 } from './fields';
 import { useGenerationOptions } from '../context';
 
@@ -82,6 +83,7 @@ export function GenerationOptionsPopover({ children }: GenerationOptionsPopoverP
                 <MaxTokensField />
                 <TopPField />
                 <RepetitionPenaltyField />
+                <GlobalContextField />
               </VStack>
             </Popover.Body>
             

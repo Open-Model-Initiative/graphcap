@@ -11,6 +11,7 @@ import {
   GenerationOptions, 
   DEFAULT_OPTIONS 
 } from '../schema';
+import { usePersistGenerationOptions } from '../persist-generation-options';
 
 // Define the context interface
 interface GenerationOptionsContextValue {
@@ -49,16 +50,25 @@ export function GenerationOptionsProvider({
   onOptionsChange,
   initialGenerating = false,
 }: Readonly<GenerationOptionsProviderProps>) {
+  const { loadPersistedOptions, saveOptions } = usePersistGenerationOptions();
+  
   // Parse initial options through the schema to ensure valid defaults
   const defaultOptions = useMemo(() => {
-    const mergedOptions = { ...DEFAULT_OPTIONS, ...initialOptions };
+    // Merge defaults with persisted options and initialOptions (with initialOptions taking precedence)
+    const persistedOptions = loadPersistedOptions();
+    const mergedOptions = { ...DEFAULT_OPTIONS, ...persistedOptions, ...initialOptions };
     return GenerationOptionsSchema.parse(mergedOptions);
-  }, [initialOptions]);
+  }, [initialOptions, loadPersistedOptions]);
   
   // State
   const [options, setOptions] = useState<GenerationOptions>(defaultOptions);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(initialGenerating);
+  
+  // Save options to localStorage when they change
+  useEffect(() => {
+    saveOptions(options);
+  }, [options, saveOptions]);
   
   // Update generating state when initialGenerating changes
   useEffect(() => {

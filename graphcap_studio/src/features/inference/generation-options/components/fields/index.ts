@@ -10,3 +10,4 @@ export * from './TemperatureField';
 export * from './MaxTokensField';
 export * from './TopPField';
 export * from './RepetitionPenaltyField';
+export * from './GlobalContextField';
