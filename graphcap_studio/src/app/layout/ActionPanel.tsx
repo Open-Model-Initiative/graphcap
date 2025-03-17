@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, useState, useCallback } from 'react';
+import { ReactNode, useState, useCallback, useRef, useEffect } from 'react';
 import { useActionPanel } from './hooks';
 import styles from './ActionPanel.module.css';
 import zIndex from '@/common/styles/z-index.module.css';
@@ -8,7 +8,6 @@ import {
   Button,
   Stack
 } from '@chakra-ui/react';
-import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 
 /**
@@ -75,7 +74,9 @@ interface ActionPanelProps {
  * A collapsible action panel component for the left or right side of the layout
  * 
  * This component provides:
- * - Collapsible panel with chevron toggle button (only visible when expanded)
+ * - Collapsible panel 
+ * - Auto-collapse when clicking outside the panel
+ * - Auto-collapse when clicking the current active section
  * - Icon-based navigation in collapsed mode
  * - Multiple sections with contextual content
  * - Persistent expanded/collapsed state
@@ -92,7 +93,7 @@ export function ActionPanel({
   sections,
   defaultActiveSection
 }: Readonly<ActionPanelProps>) {
-  const { isExpanded, width, togglePanel, expandPanel } = useActionPanel({
+  const { isExpanded, width, expandPanel, collapsePanel } = useActionPanel({
     side,
     defaultExpanded,
     expandedWidth,
@@ -103,11 +104,34 @@ export function ActionPanel({
   const [activeSection, setActiveSection] = useState<string>(
     defaultActiveSection ?? (sections.length > 0 ? sections[0].id : '')
   );
+
+  // Reference to the panel element
+  const panelRef = useRef<HTMLDivElement>(null);
+  
+  // Handle clicks outside the panel
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node) && isExpanded) {
+        collapsePanel();
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isExpanded, collapsePanel]);
   
   // Memoize the section change handler to prevent unnecessary re-renders
   const handleSectionChange = useCallback((sectionId: string) => {
-    setActiveSection(sectionId);
-  }, []);
+    if (activeSection === sectionId && isExpanded) {
+      // If clicking the current active section while expanded, collapse the panel
+      collapsePanel();
+    } else {
+      setActiveSection(sectionId);
+      expandPanel();
+    }
+  }, [activeSection, isExpanded, collapsePanel, expandPanel]);
   
   // Find the current active section
   const currentSection = sections.find(section => section.id === activeSection);
@@ -120,15 +144,9 @@ export function ActionPanel({
   const buttonHoverBg = useColorModeValue('gray.200', 'gray.600');
   const buttonActiveBg = useColorModeValue('gray.300', 'gray.500');
   
-  const getChevronIcon = () => {
-    if (side === 'left') {
-      return isExpanded ? <MdChevronLeft /> : <MdChevronRight />;
-    }
-    return isExpanded ? <MdChevronRight /> : <MdChevronLeft />;
-  };
-  
   return (
     <Box
+      ref={panelRef}
       position="fixed"
       top={0}
       bottom={0}
@@ -142,28 +160,6 @@ export function ActionPanel({
       transition="width 0.2s"
       className={`${styles.panel} ${zIndex.sidebar}`}
     >
-      <Button
-        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${side} panel`}
-        onClick={togglePanel}
-        position="absolute"
-        top="50%"
-        transform="translateY(-50%)"
-        right={side === 'left' ? "-3" : undefined}
-        left={side === 'right' ? "-3" : undefined}
-        color={buttonTextColor}
-        bg={buttonBgColor}
-        _hover={{ bg: buttonHoverBg }}
-        _active={{ bg: buttonActiveBg }}
-        className={styles.toggleButton}
-        size="xs"
-        p={0}
-        minW={5}
-        h={10}
-        borderRadius="sm"
-      >
-        {getChevronIcon()}
-      </Button>
-      
       <Box className={styles.panelContent} h="100%" overflowY="auto">
         {!isExpanded ? (
           <Stack direction="column" gap={2} align="center" pt={2}>
@@ -173,7 +169,6 @@ export function ActionPanel({
                 aria-label={section.title}
                 onClick={() => {
                   handleSectionChange(section.id);
-                  expandPanel();
                 }}
                 data-active={activeSection === section.id}
                 color={buttonTextColor}
