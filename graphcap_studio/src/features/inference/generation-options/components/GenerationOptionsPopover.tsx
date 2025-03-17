@@ -51,7 +51,8 @@ export function GenerationOptionsPopover({ children }: GenerationOptionsPopoverP
             bg={bgColor}
             borderColor={borderColor}
             shadow="lg"
-            w="120"
+            w={{ base: "320px", md: "480px", lg: "640px" }}
+            maxW="90vw"
             zIndex={50}
           >
             <Popover.Header
@@ -79,20 +80,24 @@ export function GenerationOptionsPopover({ children }: GenerationOptionsPopoverP
             </Popover.Header>
             
             <Popover.Body p={4}>
-              <Flex gap={4}>
-                <Box flex="1">
-                  <Flex direction="column" gap={4}>
-                    <TemperatureField />
-                    <TopPField />
-                    <ResizeResolutionField />
-                  </Flex>
-                </Box>
-                <Box flex="1">
-                  <Flex direction="column" gap={4}>
-                    <MaxTokensField />
-                    <RepetitionPenaltyField />
-                    <GlobalContextField />
-                  </Flex>
+              <Flex direction="column" gap={4}>
+                <Flex gap={4}>
+                  <Box flex="1">
+                    <Flex direction="column" gap={4}>
+                      <TemperatureField />
+                      <TopPField />
+                      <ResizeResolutionField />
+                    </Flex>
+                  </Box>
+                  <Box flex="1">
+                    <Flex direction="column" gap={4}>
+                      <MaxTokensField />
+                      <RepetitionPenaltyField />
+                    </Flex>
+                  </Box>
+                </Flex>
+                <Box w="full">
+                  <GlobalContextField />
                 </Box>
               </Flex>
             </Popover.Body>
