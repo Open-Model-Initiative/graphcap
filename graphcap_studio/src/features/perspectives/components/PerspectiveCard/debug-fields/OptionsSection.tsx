@@ -19,11 +19,11 @@ export function OptionsSection({ options }: OptionsSectionProps) {
   const errorBgColor = useColorModeValue('red.50', 'red.900');
   const warningBgColor = useColorModeValue('yellow.50', 'yellow.900');
   const warningColor = useColorModeValue('yellow.700', 'yellow.200');
+  const warningBorderColor = useColorModeValue('yellow.500', 'yellow.300');
   
-  return (
-    <Box>
-      <Heading size="xs" mb={2} color={labelColor}>Generation Options</Heading>
-      {!options ? (
+  const renderOptionsContent = () => {
+    if (!options) {
+      return (
         <Box p={2} bg={errorBgColor} borderRadius="md" borderLeft="4px solid" borderLeftColor={errorColor}>
           <Text fontSize="xs" color={errorColor} fontWeight="bold">
             ERROR: GENERATION OPTIONS ARE MISSING
@@ -32,8 +32,12 @@ export function OptionsSection({ options }: OptionsSectionProps) {
             All perspectives must include generation options!
           </Text>
         </Box>
-      ) : Object.keys(options).length === 0 ? (
-        <Box p={2} bg={warningBgColor} borderRadius="md" borderLeft="4px solid" borderLeftColor={useColorModeValue('yellow.500', 'yellow.300')}>
+      );
+    }
+    
+    if (Object.keys(options).length === 0) {
+      return (
+        <Box p={2} bg={warningBgColor} borderRadius="md" borderLeft="4px solid" borderLeftColor={warningBorderColor}>
           <Text fontSize="xs" color={warningColor} fontWeight="bold">
             NOTE: Options object is present but empty
           </Text>
@@ -41,19 +45,28 @@ export function OptionsSection({ options }: OptionsSectionProps) {
             Options are saved correctly but no values were provided.
           </Text>
         </Box>
-      ) : (
-        <Stack direction="column" gap={1}>
-          {Object.entries(options).map(([key, value]) => (
-            <OptionItem
-              key={key}
-              optionKey={key}
-              optionValue={value}
-              labelColor={labelColor}
-              valueColor={valueColor}
-            />
-          ))}
-        </Stack>
-      )}
+      );
+    }
+    
+    return (
+      <Stack direction="column" gap={1}>
+        {Object.entries(options).map(([key, value]) => (
+          <OptionItem
+            key={key}
+            optionKey={key}
+            optionValue={value}
+            labelColor={labelColor}
+            valueColor={valueColor}
+          />
+        ))}
+      </Stack>
+    );
+  };
+  
+  return (
+    <Box>
+      <Heading size="xs" mb={2} color={labelColor}>Generation Options</Heading>
+      {renderOptionsContent()}
     </Box>
   );
 }

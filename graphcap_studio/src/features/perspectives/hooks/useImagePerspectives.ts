@@ -180,7 +180,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       // Remove the perspective from the generating list
       setGeneratingPerspectives(prev => prev.filter(p => p !== perspective));
       // Only set isLoading to false if no perspectives are being generated
-      setIsLoading(prev => {
+      setIsLoading(() => {
         const updatedGenerating = generatingPerspectives.filter(p => p !== perspective);
         return updatedGenerating.length > 0;
       });
@@ -188,7 +188,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
   }, [image, providersData, generateCaption, generatingPerspectives, isServerConnected]);
   
   // Function to generate all perspectives
-  const generateAllPerspectives = useCallback(async () => {
+  const generateAllPerspectives = useCallback(() => {
     if (!image || !perspectivesData) {
       console.warn('Cannot generate all perspectives: No image or perspectives data');
       setError('No image or perspectives data available');
@@ -214,7 +214,7 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
       // Generate each perspective one by one
       for (const perspective of perspectivesData) {
         console.debug(`Generating perspective: ${perspective.name}`);
-        await generatePerspective(perspective.name);
+        generatePerspective(perspective.name);
       }
       
       console.log('All perspectives generated successfully');
@@ -261,14 +261,23 @@ export function useImagePerspectives(image: Image | null): ImagePerspectivesResu
     isServerConnected
   ]);
   
+  // Create wrapper functions that don't return the promises
+  const generatePerspectiveWrapper = (perspective: PerspectiveType, providerId?: number, options?: CaptionOptions): void => {
+    generatePerspective(perspective, providerId, options);
+  };
+  
+  const generateAllPerspectivesWrapper = (): void => {
+    generateAllPerspectives();
+  };
+  
   return {
     isLoading,
     error,
     captions,
     generatedPerspectives,
     generatingPerspectives,
-    generatePerspective,
-    generateAllPerspectives,
+    generatePerspective: generatePerspectiveWrapper,
+    generateAllPerspectives: generateAllPerspectivesWrapper,
     availablePerspectives,
     availableProviders
   };
