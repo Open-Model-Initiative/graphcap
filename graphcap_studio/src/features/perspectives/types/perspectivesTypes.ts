@@ -263,20 +263,3 @@ export interface PerspectivesProviderProps {
   initialSelectedProviderId?: number | undefined;
 }
 
-/**
- * Result type for the usePerspectiveOperations hook.
- */
-export interface PerspectiveOperationsResult {
-  // Data
-  isLoading: boolean;
-  error: string | null;
-  captions: any | null;
-  generatedPerspectives: string[];
-  availablePerspectives: Array<{ name: string; display_name: string; description: string }>;
-  availableProviders: Array<{ id: number; name: string }>;
-  
-  // Operations
-  generatePerspective: (perspectiveKey: string, providerId?: number) => void;
-  generateAllPerspectives: () => void;
-  formatDate: (dateString: string) => string;
-} 

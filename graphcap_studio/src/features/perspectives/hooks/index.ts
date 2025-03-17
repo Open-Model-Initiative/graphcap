@@ -7,7 +7,6 @@
 
 // UI Hooks
 export { usePerspectiveUI } from './usePerspectiveUI';
-export { usePerspectiveOperations } from './usePerspectiveOperations';
 
 // API Hooks
 export { usePerspectives } from './usePerspectives';
