@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect } from 'react';
-import { Box, Flex, Button, Icon, HStack } from '@chakra-ui/react';
+import { Box, Flex, Button, Icon, HStack, useBreakpointValue } from '@chakra-ui/react';
 import { LuSettings, LuRefreshCw } from 'react-icons/lu';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import { 
@@ -16,6 +16,7 @@ import {
 import { 
   GenerationOptionsProvider, 
   GenerationOptionsButton,
+  ProviderSelector
 } from '@/features/inference/generation-options';
 import { DEFAULT_OPTIONS } from '@/features/inference/generation-options/schema';
 import { CaptionOptions } from '@/features/perspectives/types';
@@ -76,6 +77,13 @@ export function PerspectivesFooter() {
   
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  
+  // Use responsive selector width based on screen size
+  const selectorWidth = useBreakpointValue({ 
+    base: '100%', 
+    sm: '12rem', 
+    md: '16rem' 
+  });
   
   // Fetch providers on component mount
   useEffect(() => {
@@ -169,7 +177,17 @@ export function PerspectivesFooter() {
   const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
     setCaptionOptions(newOptions);
   }, [setCaptionOptions]);
-  
+
+  // Create a handler for the new ProviderSelector component
+  const handleProviderSelection = useCallback((provider: string) => {
+    // Create a synthetic event to pass to the original handler
+    const syntheticEvent = {
+      target: { value: provider }
+    } as React.ChangeEvent<HTMLSelectElement>;
+    
+    handleProviderChange(syntheticEvent);
+  }, [handleProviderChange]);
+
   return (
     <Box
       position="sticky"
@@ -186,30 +204,15 @@ export function PerspectivesFooter() {
       <Flex justifyContent="space-between" alignItems="center">
         {/* Provider Selection */}
         {availableProviders.length > 0 ? (
-          <Box maxWidth="180px">
-            <select
-              style={{
-                fontSize: '0.875rem',
-                width: '100%',
-                padding: '0.5rem',
-                borderRadius: '0.375rem',
-                border: '1px solid',
-                borderColor: 'inherit',
-                backgroundColor: 'inherit',
-                opacity: isProcessing ? 0.6 : 1
-              }}
-              value={selectedProvider || ''}
-              onChange={handleProviderChange}
-              disabled={isProcessing}
-            >
-              <option value="">Select provider</option>
-              {availableProviders.map(provider => (
-                <option key={provider.id} value={provider.name}>
-                  {provider.name}
-                </option>
-              ))}
-            </select>
-          </Box>
+          <ProviderSelector
+            providers={availableProviders}
+            selectedProvider={selectedProvider}
+            onChange={handleProviderSelection}
+            isDisabled={isProcessing}
+            placeholder="Select provider"
+            width={selectorWidth}
+            size="sm"
+          />
         ) : (
           <Box flex="1" />
         )}

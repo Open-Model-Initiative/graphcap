@@ -15,6 +15,7 @@ interface ResponsiveImageProps {
   readonly onLoad?: () => void;
   readonly onError?: (error: Error) => void;
   readonly forceContainerAspect?: boolean;
+  readonly maxHeight?: string;
 }
 
 /**
@@ -43,6 +44,7 @@ function ImageComponent({
   onLoad,
   onError,
   forceContainerAspect = true,
+  maxHeight,
 }: ResponsiveImageProps) {
   const { data: src } = useImageSuspenseQuery(imagePath, {
     size: 'full',
@@ -61,7 +63,10 @@ function ImageComponent({
   return (
     <div
       className={`relative overflow-hidden ${className}`}
-      style={cssAspectRatio ? { aspectRatio: cssAspectRatio } : undefined}
+      style={{
+        ...(cssAspectRatio ? { aspectRatio: cssAspectRatio } : {}),
+        ...(maxHeight ? { maxHeight } : {})
+      }}
     >
       <img
         src={src}
@@ -70,7 +75,10 @@ function ImageComponent({
         className={`transition-opacity duration-300 ${
           forceContainerAspect ? 'w-full h-full' : 'max-w-full max-h-full w-auto h-auto'
         }`}
-        style={{ objectFit }}
+        style={{ 
+          objectFit,
+          ...(maxHeight && !forceContainerAspect ? { maxHeight } : {})
+        }}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? undefined : 'async'}
         fetchPriority={priority ? 'high' : undefined}
@@ -95,6 +103,7 @@ const MemoizedImageComponent = memo(ImageComponent);
  * - Loading states with suspense fallback
  * - Error handling with error boundaries
  * - Automatic retry for failed image loads
+ * - Constrains tall images with maxHeight property
  */
 export function ResponsiveImage(props: ResponsiveImageProps) {
   const cssAspectRatio = props.forceContainerAspect ? formatAspectRatioForCSS(props.aspectRatio) : undefined;

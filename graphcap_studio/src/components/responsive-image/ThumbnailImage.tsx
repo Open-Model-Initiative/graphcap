@@ -10,6 +10,7 @@ interface ThumbnailImageProps {
   readonly aspectRatio?: number;
   readonly width?: number;
   readonly height?: number;
+  readonly maxHeight?: string;
   readonly onClick?: () => void;
 }
 
@@ -21,6 +22,7 @@ interface ThumbnailImageProps {
  * - Click handling for selection
  * - Efficient suspense-based image loading
  * - Error handling with retry capability
+ * - Height constraints for tall images
  */
 export function ThumbnailImage({
   imagePath,
@@ -30,6 +32,7 @@ export function ThumbnailImage({
   aspectRatio = 1,
   width = 150,
   height,
+  maxHeight,
   onClick,
 }: ThumbnailImageProps) {
   return (
@@ -48,6 +51,7 @@ export function ThumbnailImage({
           aspectRatio={aspectRatio}
           width={width}
           height={height}
+          maxHeight={maxHeight}
         />
       </ImageErrorBoundary>
     </button>

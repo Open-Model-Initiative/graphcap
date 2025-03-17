@@ -13,13 +13,13 @@ This module provides the following endpoints:
 
 import json
 import os
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
-from pathlib import Path
 
-from .models import CaptionResponse, PerspectiveListResponse, CaptionPathRequest
+from .models import CaptionPathRequest, CaptionResponse, PerspectiveListResponse
 from .service import (
     generate_caption,
     get_available_perspectives,
@@ -45,21 +45,16 @@ async def list_perspectives() -> PerspectiveListResponse:
 async def debug_perspective(perspective_name: str) -> dict:
     """
     Get debug information about a perspective.
-    
     Args:
         perspective_name: Name of the perspective to debug
-        
     Returns:
         Debug information about the perspective
-        
     Raises:
         HTTPException: If the perspective is not found
     """
     from graphcap.perspectives import get_perspective
-    
     try:
         perspective = get_perspective(perspective_name)
-        
         # Get perspective attributes
         attributes = {
             "config_name": perspective.config_name,
@@ -68,16 +63,13 @@ async def debug_perspective(perspective_name: str) -> dict:
             "has_process_single": hasattr(perspective, "process_single"),
             "has_process_batch": hasattr(perspective, "process_batch"),
         }
-        
         # Get method signatures if available
         if attributes["has_process_single"]:
             import inspect
             attributes["process_single_signature"] = str(inspect.signature(perspective.process_single))
-            
         if attributes["has_process_batch"]:
             import inspect
             attributes["process_batch_signature"] = str(inspect.signature(perspective.process_batch))
-        
         return {
             "perspective": perspective_name,
             "attributes": attributes,
@@ -149,11 +141,11 @@ async def create_caption(
 
         # Log the caption data for debugging
         logger.debug(f"Caption data: {caption_data}")
-        
+
         # Extract the parsed result and raw text
         parsed_result = caption_data.get("parsed", {})
         raw_text = caption_data.get("raw_text")
-        
+
         # If parsed result is empty but raw_text exists, try to create a basic result
         if not parsed_result and raw_text:
             logger.warning("Parsed result is empty but raw_text exists. Creating basic result.")
@@ -194,10 +186,10 @@ async def create_caption_from_path(
     try:
         # Validate the image path
         image_path = request.image_path
-        
+
         # Log the original path for debugging
         logger.info(f"Original image path: {image_path}")
-        
+
         # Check if the file exists directly
         if os.path.exists(image_path):
             logger.info(f"Image file exists at original path: {image_path}")
@@ -212,7 +204,7 @@ async def create_caption_from_path(
                 if not image_path.startswith('/'):
                     image_path = f"/{image_path}"
                     logger.info(f"Added leading slash: {image_path}")
-                
+
                 # If path doesn't start with /workspace, add it
                 if not image_path.startswith('/workspace/'):
                     # Check if it starts with /datasets
@@ -222,12 +214,12 @@ async def create_caption_from_path(
                     else:
                         image_path = f"/workspace{image_path}"
                         logger.info(f"Added /workspace prefix: {image_path}")
-                
+
                 # Check if the file exists with the normalized path
                 if not os.path.exists(image_path):
                     logger.error(f"Image file not found at normalized path: {image_path}")
                     raise HTTPException(
-                        status_code=404, 
+                        status_code=404,
                         detail=f"Image file not found at path: {image_path}"
                     )
                 else:
@@ -260,11 +252,11 @@ async def create_caption_from_path(
 
         # Log the caption data for debugging
         logger.debug(f"Caption data: {caption_data}")
-        
+
         # Extract the parsed result and raw text
         parsed_result = caption_data.get("parsed", {})
         raw_text = caption_data.get("raw_text")
-        
+
         # If parsed result is empty but raw_text exists, try to create a basic result
         if not parsed_result and raw_text:
             logger.warning("Parsed result is empty but raw_text exists. Creating basic result.")

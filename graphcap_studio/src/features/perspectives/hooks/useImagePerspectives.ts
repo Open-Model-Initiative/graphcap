@@ -18,7 +18,6 @@ import {
   ImagePerspectivesResult,
   CaptionOptions
 } from '../types';
-import { DEFAULTS } from '../services/constants';
 import { usePerspectives } from './usePerspectives';
 import { useGeneratePerspectiveCaption } from './useGeneratePerspectiveCaption';
 

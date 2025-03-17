@@ -28,8 +28,8 @@ export function MainImageDisplay({ className = '' }: MainImageDisplayProps) {
 
   return (
     <ErrorBoundary fallback={<div>Error loading image</div>}>
-      <div className={`relative w-full h-full overflow-hidden ${className}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
+      <div className={`relative w-full h-full flex items-center justify-center ${className}`}>
+        <div className="relative max-w-full max-h-full flex items-center justify-center">
           <ResponsiveImage
             imagePath={selectedImage.path}
             alt={selectedImage.name}
@@ -37,7 +37,8 @@ export function MainImageDisplay({ className = '' }: MainImageDisplayProps) {
             objectFit="contain"
             priority={true} // Main image is high priority
             sizes="(max-width: 768px) 100vw, 80vw"
-            forceContainerAspect={false} // Don't force aspect ratio for main gallery view
+            forceContainerAspect={false} // Allow image to maintain its natural aspect ratio
+            maxHeight="calc(100vh - 200px)" // Constrain height to prevent overflow
             onError={() => setImageLoadError(true)}
             aria-labelledby="carousel-image-label"
           />

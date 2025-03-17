@@ -106,7 +106,7 @@ export function useGeneratePerspectiveCaption() {
         options: options,
       };
     },
-    onSuccess: (result, variables) => {
+    onSuccess: (_result, variables) => {
       console.debug('Caption generation successful, invalidating queries', { 
         imagePath: variables.imagePath,
         perspective: variables.perspective

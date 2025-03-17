@@ -102,8 +102,6 @@ All new code must comply with these guidelines to ensure a modular, maintainable
 Here's the basic structure of a modern React component:
 
 ```tsx
-import React from 'react';
-
 type ComponentProps = {
   // Define your props here
 };

@@ -6,4 +6,5 @@
  */
 
 export * from './GenerationOptionsPopover';
-export * from './GenerationOptionsButton'; 
+export * from './GenerationOptionsButton';
+export * from './ProviderSelector'; 

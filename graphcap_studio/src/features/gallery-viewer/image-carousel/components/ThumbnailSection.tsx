@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import React from 'react';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { ThumbnailStrip } from '../ThumbnailStrip';
 import { ImageCounter } from '@/components/ui/ImageCounter';
@@ -24,7 +23,9 @@ export function ThumbnailSection({ className = '' }: ThumbnailSectionProps) {
     totalImages, 
     selectedImage,
     handleThumbnailSelect,
-    thumbnailOptions 
+    thumbnailOptions,
+    isLoading,
+    imageLoadError
   } = useImageCarousel();
 
   const { 
@@ -42,7 +43,7 @@ export function ThumbnailSection({ className = '' }: ThumbnailSectionProps) {
         className={`w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 ${className}`}
       >
         {/* Thumbnails with counter */}
-        <div ref={thumbnailsRef} className="w-full">
+        <div ref={thumbnailsRef} className="w-full relative">
           <ThumbnailStrip
             images={visibleImages}
             selectedIndex={selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0}
@@ -52,14 +53,16 @@ export function ThumbnailSection({ className = '' }: ThumbnailSectionProps) {
             gap={gap}
             aspectRatio={aspectRatio}
             maxHeight={maxHeight}
-            className="w-full mb-2"
+            className="w-full"
           />
           
-          {/* Navigation counter - centered below thumbnails */}
-          <div className="w-full flex justify-center mt-1">
+          {/* Navigation counter - overlaid in the top-right corner */}
+          <div className="absolute top-1 right-1 z-10">
             <ImageCounter
-              currentIndex={currentIndex + 1} // Display 1-based index to users
+              currentIndex={currentIndex}
               totalImages={totalImages}
+              isLoading={isLoading || imageLoadError || totalImages <= 0}
+              className="bg-gray-800/50 dark:bg-gray-900/70 px-2 py-0.5 rounded"
             />
           </div>
         </div>

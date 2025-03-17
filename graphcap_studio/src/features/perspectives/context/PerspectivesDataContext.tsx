@@ -54,7 +54,7 @@ const saveProviderNameToStorage = (providerName: string | undefined) => {
 const loadProviderNameFromStorage = (): string | undefined => {
   try {
     const storedProvider = localStorage.getItem(SELECTED_PERSPECTIVE_PROVIDER_KEY);
-    return storedProvider || undefined;
+    return storedProvider ?? undefined;
   } catch (error) {
     console.error('Error loading perspective provider name from localStorage:', error);
     return undefined;
@@ -159,7 +159,7 @@ export function PerspectivesDataProvider({
   
   // Provider state
   const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
-    initialProvider || loadProviderNameFromStorage()
+    initialProvider ?? loadProviderNameFromStorage()
   );
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(initialProviders);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
@@ -246,7 +246,7 @@ export function PerspectivesDataProvider({
     
     try {
       const result = await refetchPerspectivesQuery();
-      return result.data || [];
+      return result.data ?? [];
     } catch (error) {
       console.error('Error refetching perspectives:', error);
       throw error;
@@ -297,7 +297,7 @@ export function PerspectivesDataProvider({
       setGeneratingPerspectives(prev => [...prev, schemaName]);
       
       // Use provided provider or selected provider
-      const effectiveProvider = provider_name || selectedProvider;
+      const effectiveProvider = provider_name ?? selectedProvider;
       
       if (!effectiveProvider) {
         throw new Error('No provider selected for caption generation');
@@ -307,7 +307,7 @@ export function PerspectivesDataProvider({
       console.debug(`Generating perspective "${schemaName}" with options:`, {
         providedOptions: options,
         contextOptions: captionOptions,
-        finalOptions: options || captionOptions || {},
+        finalOptions: options ?? captionOptions ?? {},
         provider: effectiveProvider
       });
       
@@ -336,7 +336,7 @@ export function PerspectivesDataProvider({
       const perspectiveData: PerspectiveData = {
         config_name: schemaName,
         version: '1.0',
-        model: result.metadata?.model || (() => {
+        model: result.metadata?.model ?? (() => {
           console.error(`CRITICAL ERROR: Missing model information in API response for perspective ${schemaName}`);
           return "MISSING_MODEL";
         })(),
@@ -356,7 +356,7 @@ export function PerspectivesDataProvider({
           metadata: {
             captioned_at: new Date().toISOString(), 
             provider: effectiveProvider,
-            model: result.metadata?.model || 'unknown'
+            model: result.metadata?.model ?? 'unknown'
           }
         };
         

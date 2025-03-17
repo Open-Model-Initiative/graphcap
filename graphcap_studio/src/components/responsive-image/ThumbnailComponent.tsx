@@ -10,6 +10,7 @@ interface ThumbnailComponentProps {
   readonly aspectRatio?: number;
   readonly width?: number;
   readonly height?: number;
+  readonly maxHeight?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ function InnerThumbnailComponent({
   aspectRatio = 1,
   width = 150,
   height,
+  maxHeight,
 }: ThumbnailComponentProps) {
   const { data: src } = useThumbnailSuspenseQuery(imagePath, {
     width,
@@ -47,13 +49,19 @@ function InnerThumbnailComponent({
   return (
     <div
       className={`relative overflow-hidden ${className}`}
-      style={{ aspectRatio: cssAspectRatio }}
+      style={{ 
+        aspectRatio: cssAspectRatio,
+        ...(maxHeight ? { maxHeight } : {})
+      }}
     >
       <img
         src={src}
         alt={alt}
         className="w-full h-full transition-opacity duration-200"
-        style={{ objectFit: 'cover' }}
+        style={{ 
+          objectFit: 'cover',
+          ...(maxHeight ? { maxHeight } : {})
+        }}
         loading="lazy"
         decoding="async"
       />
@@ -66,6 +74,11 @@ const MemoizedThumbnailComponent = memo(InnerThumbnailComponent);
 
 /**
  * A performant thumbnail component that uses Suspense for loading
+ * 
+ * Features:
+ * - Efficient loading with Suspense
+ * - Consistent aspect ratio handling
+ * - Height constraints for tall images
  */
 export function ThumbnailComponent(props: ThumbnailComponentProps) {
   const cssAspectRatio = formatAspectRatioForCSS(props.aspectRatio ?? 1);
