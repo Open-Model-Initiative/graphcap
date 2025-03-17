@@ -13,12 +13,14 @@ This module provides the following endpoints:
 
 import json
 import os
+import tempfile
 from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
 
+from ...utils.resizing import ResolutionPreset, resize_image, log_resize_options
 from .models import CaptionPathRequest, CaptionResponse, PerspectiveListResponse
 from .service import (
     generate_caption,
@@ -92,6 +94,7 @@ async def create_caption(
     repetition_penalty: Optional[float] = Form(1.15, description="Repetition penalty"),
     global_context: Optional[str] = Form(None, description="Global context for the caption"),
     context: Optional[str] = Form(None, description="Additional context for the caption as JSON array string"),
+    resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable resizing)")
 ) -> CaptionResponse:
     """
     Generate a caption for an image using a perspective.
@@ -109,6 +112,7 @@ async def create_caption(
         repetition_penalty: Repetition penalty (optional, default: 1.15)
         context: JSON array string of context items (optional)
         global_context: Global context string (optional)
+        resize_resolution: Resolution to resize to (optional, default: None - no resizing)
 
     Returns:
         Generated caption with structured result and optional raw text
@@ -122,6 +126,43 @@ async def create_caption(
 
         # Process the uploaded file
         image_path = await save_uploaded_file(file)
+
+        # Log resize options
+        options = {
+            'resize_resolution': resize_resolution
+        }
+        log_resize_options(options)
+
+        # Resize the image if resize_resolution is provided
+        if resize_resolution:
+            try:
+                # Get the resolution enum value
+                try:
+                    resolution = ResolutionPreset[resize_resolution]
+                except (KeyError, ValueError):
+                    logger.warning(f"Invalid resolution: {resize_resolution}. Using HD_720P.")
+                    resolution = ResolutionPreset.HD_720P
+
+                # Create temporary file for resized image
+                suffix = os.path.splitext(image_path)[1]
+                fd, resized_path = tempfile.mkstemp(suffix=suffix)
+                os.close(fd)
+
+                # Resize the image
+                logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
+                resized_img = resize_image(image_path, resolution)
+                resized_img.save(resized_path)
+
+                # Add cleanup task for original image
+                background_tasks.add_task(lambda: os.unlink(image_path) if os.path.exists(image_path) else None)
+
+                # Use the resized image
+                image_path = Path(resized_path)
+                logger.info(f"Image resized successfully to {resolution.name}")
+            except Exception as e:
+                logger.error(f"Error resizing image: {str(e)}")
+                logger.warning("Using original image instead")
+                # Continue with original image if resizing fails
 
         # Add cleanup task
         background_tasks.add_task(lambda: os.unlink(image_path) if os.path.exists(image_path) else None)
@@ -184,71 +225,84 @@ async def create_caption_from_path(
         HTTPException: If the request is invalid or processing fails
     """
     try:
-        # Validate the image path
-        image_path = request.image_path
+        # Create Path object from image path
+        image_path = Path(request.image_path)
+        temp_path = None
 
-        # Log the original path for debugging
-        logger.info(f"Original image path: {image_path}")
+        # Validate image path
+        if not image_path.exists():
+            raise HTTPException(status_code=404, detail=f"Image file not found: {image_path}")
 
-        # Check if the file exists directly
-        if os.path.exists(image_path):
-            logger.info(f"Image file exists at original path: {image_path}")
-        else:
-            # Try to handle workspace paths
-            if image_path.startswith('/workspace/'):
-                # In container, /workspace is the actual path
-                logger.info(f"Path starts with /workspace/: {image_path}")
-                # No need to modify the path as it should be correct in the container
-            else:
-                # Try to normalize the path
-                if not image_path.startswith('/'):
-                    image_path = f"/{image_path}"
-                    logger.info(f"Added leading slash: {image_path}")
+        # Log resize options
+        options = {
+            'resize_resolution': request.resize_resolution
+        }
+        log_resize_options(options)
 
-                # If path doesn't start with /workspace, add it
-                if not image_path.startswith('/workspace/'):
-                    # Check if it starts with /datasets
-                    if image_path.startswith('/datasets/'):
-                        image_path = f"/workspace{image_path}"
-                        logger.info(f"Converted /datasets/ path to /workspace/datasets/: {image_path}")
-                    else:
-                        image_path = f"/workspace{image_path}"
-                        logger.info(f"Added /workspace prefix: {image_path}")
+        # Resize the image if resize_resolution is provided
+        if request.resize_resolution:
+            try:
+                # Get the resolution enum value
+                try:
+                    resolution = ResolutionPreset[request.resize_resolution]
+                except (KeyError, ValueError):
+                    logger.warning(f"Invalid resolution: {request.resize_resolution}. Using HD_720P.")
+                    resolution = ResolutionPreset.HD_720P
 
-                # Check if the file exists with the normalized path
-                if not os.path.exists(image_path):
-                    logger.error(f"Image file not found at normalized path: {image_path}")
-                    raise HTTPException(
-                        status_code=404,
-                        detail=f"Image file not found at path: {image_path}"
-                    )
+                # Create temporary file for resized image
+                suffix = os.path.splitext(str(image_path))[1]
+                fd, resized_path = tempfile.mkstemp(suffix=suffix)
+                os.close(fd)
+                temp_path = Path(resized_path)
+
+                # Resize the image
+                logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
+                resized_img = resize_image(image_path, resolution)
+                resized_img.save(resized_path)
+
+                # Use the resized image
+                image_path = temp_path
+                logger.info(f"Image resized successfully to {resolution.name}")
+            except Exception as e:
+                logger.error(f"Error resizing image: {str(e)}")
+                logger.warning("Using original image instead")
+                # Continue with original image if resizing fails
+
+        # Process any provided context
+        context = request.context
+        if isinstance(context, str):
+            # Try to parse as JSON first
+            try:
+                parsed_context = json.loads(context)
+                # If it's a list of strings, use it directly
+                if isinstance(parsed_context, list):
+                    context = parsed_context
                 else:
-                    logger.info(f"Image file exists at normalized path: {image_path}")
-
-        # Parse context from JSON string if provided
-        parsed_context = None
-        if request.context:
-            if isinstance(request.context, list):
-                parsed_context = request.context
-            else:
-                parsed_context = [request.context]
-
-        # Convert string path to Path object
-        image_path_obj = Path(image_path)
-        logger.info(f"Final image path for caption generation: {image_path_obj}")
+                    # If not a list, wrap in a list
+                    context = [context]
+            except json.JSONDecodeError:
+                # If not valid JSON, treat as a single string
+                context = [context]
 
         # Generate the caption
         caption_data = await generate_caption(
             perspective_name=request.perspective,
-            image_path=image_path_obj,
+            image_path=image_path,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
             top_p=request.top_p,
             repetition_penalty=request.repetition_penalty,
-            context=parsed_context,
+            context=context,
             global_context=request.global_context,
             provider_name=request.provider,
         )
+
+        # Clean up temporary file if we created one
+        if temp_path and temp_path.exists():
+            try:
+                os.unlink(temp_path)
+            except Exception as e:
+                logger.error(f"Error removing temporary file: {str(e)}")
 
         # Log the caption data for debugging
         logger.debug(f"Caption data: {caption_data}")

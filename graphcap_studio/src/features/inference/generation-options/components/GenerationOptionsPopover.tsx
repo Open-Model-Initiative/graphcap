@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Popover, Portal, Box, VStack, HStack } from '@chakra-ui/react';
+import { Popover, Portal, Box, HStack, Flex } from '@chakra-ui/react';
 import { Button } from '@/components/ui';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
 import {
@@ -14,7 +14,8 @@ import {
   MaxTokensField,
   TopPField,
   RepetitionPenaltyField,
-  GlobalContextField
+  GlobalContextField,
+  ResizeResolutionField
 } from './fields';
 import { useGenerationOptions } from '../context';
 
@@ -50,7 +51,7 @@ export function GenerationOptionsPopover({ children }: GenerationOptionsPopoverP
             bg={bgColor}
             borderColor={borderColor}
             shadow="lg"
-            w="72"
+            w="120"
             zIndex={50}
           >
             <Popover.Header
@@ -78,13 +79,22 @@ export function GenerationOptionsPopover({ children }: GenerationOptionsPopoverP
             </Popover.Header>
             
             <Popover.Body p={4}>
-              <VStack gap={4} align="stretch">
-                <TemperatureField />
-                <MaxTokensField />
-                <TopPField />
-                <RepetitionPenaltyField />
-                <GlobalContextField />
-              </VStack>
+              <Flex gap={4}>
+                <Box flex="1">
+                  <Flex direction="column" gap={4}>
+                    <TemperatureField />
+                    <TopPField />
+                    <ResizeResolutionField />
+                  </Flex>
+                </Box>
+                <Box flex="1">
+                  <Flex direction="column" gap={4}>
+                    <MaxTokensField />
+                    <RepetitionPenaltyField />
+                    <GlobalContextField />
+                  </Flex>
+                </Box>
+              </Flex>
             </Popover.Body>
             
             <Popover.Footer p={3} borderTopWidth="1px">

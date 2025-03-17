@@ -64,7 +64,9 @@ export function useGeneratePerspectiveCaption() {
         top_p: options.top_p,
         repetition_penalty: options.repetition_penalty,
         context: options.context || [],
-        global_context: options.global_context ?? ''
+        global_context: options.global_context ?? '',
+        resize: options.resize ?? false,
+        resize_resolution: options.resize_resolution ?? 'HD_720P'
       };
       
       console.log(`Sending caption generation request to: ${url}`, {
@@ -77,7 +79,9 @@ export function useGeneratePerspectiveCaption() {
           top_p: requestBody.top_p,
           repetition_penalty: requestBody.repetition_penalty,
           context: requestBody.context,
-          global_context: requestBody.global_context
+          global_context: requestBody.global_context,
+          resize: requestBody.resize,
+          resize_resolution: requestBody.resize_resolution
         }
       });
       

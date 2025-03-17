@@ -24,9 +24,9 @@ import { useServerConnectionsContext } from '@/context';
 import { SERVER_IDS } from '@/features/server-connections/constants';
 import { useProviders } from '../../inference/services/providers';
 import {
-  saveCaptionToStorage,
-  getAllCaptionsForImage
-} from '../utils/localStorage';
+  savePerspectiveCaption,
+  getAllPerspectiveCaptions
+} from '../utils';
 
 // Local storage key for selected perspective provider
 const SELECTED_PERSPECTIVE_PROVIDER_KEY = 'graphcap-selected-perspective-provider';
@@ -261,17 +261,23 @@ export function PerspectivesDataProvider({
     }
     
     // Load all captions for this image from localStorage using the image path
-    const storedCaptions = getAllCaptionsForImage(currentImage.path);
+    const storedPerspectives = getAllPerspectiveCaptions(currentImage.path);
     
     // Format captions to match expected structure
-    if (Object.keys(storedCaptions).length > 0) {
+    if (Object.keys(storedPerspectives).length > 0) {
       setCaptions({
-        perspectives: storedCaptions
+        perspectives: storedPerspectives,
+        metadata: {
+          captioned_at: new Date().toISOString(),
+          // Use metadata from the first perspective as a fallback
+          provider: Object.values(storedPerspectives)[0]?.provider || selectedProvider,
+          model: Object.values(storedPerspectives)[0]?.model || 'unknown'
+        }
       });
     } else {
       setCaptions({});
     }
-  }, [currentImage]);
+  }, [currentImage, selectedProvider]);
   
   // Get generated perspectives based on captions
   const generatedPerspectives = React.useMemo(() => {
@@ -345,6 +351,9 @@ export function PerspectivesDataProvider({
         options: options || captionOptions
       };
       
+      // Save the perspective directly to localStorage
+      savePerspectiveCaption(imagePath, schemaName, perspectiveData);
+      
       // Update captions state with this new perspective data
       setCaptions((prev: Record<string, any>) => {
         const newCaptions = {
@@ -359,11 +368,6 @@ export function PerspectivesDataProvider({
             model: result.metadata?.model ?? 'unknown'
           }
         };
-        
-        // Save to localStorage for persistence
-        if (currentImage) {
-          saveCaptionToStorage(currentImage.path, newCaptions);
-        }
         
         return newCaptions;
       });

@@ -97,6 +97,8 @@ export const CaptionRequestSchema = z.object({
     repetition_penalty: z.number().optional(),
     global_context: z.string().optional(),
     context: z.array(z.string()).optional(),
+    resize: z.boolean().optional(),
+    resize_resolution: z.string().optional(),
   }).optional(),
 });
 
@@ -179,6 +181,8 @@ export type CaptionOptions = {
   repetition_penalty?: number;
   global_context?: string;
   context?: string[];
+  resize?: boolean;
+  resize_resolution?: string;
 };
 
 /**

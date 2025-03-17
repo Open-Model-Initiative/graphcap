@@ -85,6 +85,7 @@ class CaptionRequest(BaseModel):
     repetition_penalty: Optional[float] = Field(1.15, description="Repetition penalty")
     context: Optional[List[str]] = Field(None, description="Additional context for the caption")
     global_context: Optional[str] = Field(None, description="Global context for the caption")
+    resize_resolution: Optional[str] = Field(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
     
     class Config:
         schema_extra = {
@@ -94,7 +95,8 @@ class CaptionRequest(BaseModel):
                     "url": "https://example.com/image.jpg"
                 },
                 "max_tokens": 4096,
-                "temperature": 0.8
+                "temperature": 0.8,
+                "resize_resolution": "HD_720P"
             }
         }
 
@@ -123,7 +125,8 @@ class CaptionFormRequest:
         top_p: Optional[float] = Form(0.9, description="Top-p sampling parameter"),
         repetition_penalty: Optional[float] = Form(1.15, description="Repetition penalty"),
         global_context: Optional[str] = Form(None, description="Global context for the caption"),
-        context: Optional[str] = Form(None, description="Additional context for the caption (JSON array string)")
+        context: Optional[str] = Form(None, description="Additional context for the caption (JSON array string)"),
+        resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
     ):
         self.perspective = perspective
         self.file = file
@@ -134,6 +137,7 @@ class CaptionFormRequest:
         self.top_p = top_p
         self.repetition_penalty = repetition_penalty
         self.global_context = global_context
+        self.resize_resolution = resize_resolution
         
         # Parse context from JSON string if provided
         self.context = None
@@ -158,6 +162,7 @@ class CaptionPathRequest(BaseModel):
     repetition_penalty: Optional[float] = Field(1.15, description="Repetition penalty")
     context: Optional[Union[List[str], str]] = Field(None, description="Additional context for the caption")
     global_context: Optional[str] = Field(None, description="Global context for the caption")
+    resize_resolution: Optional[str] = Field(None, description="Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)")
     
     class Config:
         schema_extra = {
@@ -166,6 +171,7 @@ class CaptionPathRequest(BaseModel):
                 "image_path": "/workspace/datasets/example.jpg",
                 "provider": "gemini",
                 "max_tokens": 4096,
-                "temperature": 0.8
+                "temperature": 0.8,
+                "resize_resolution": "HD_720P"
             }
         } 

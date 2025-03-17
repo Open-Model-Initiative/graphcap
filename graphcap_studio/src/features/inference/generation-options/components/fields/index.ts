@@ -11,3 +11,4 @@ export * from './MaxTokensField';
 export * from './TopPField';
 export * from './RepetitionPenaltyField';
 export * from './GlobalContextField';
+export * from './ResizeResolutionField';
