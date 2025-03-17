@@ -6,4 +6,5 @@
  */
 
 export * from './localStorage';
-export * from './persist-perspective-caption'; 
+export * from './persist-perspective-caption';
+export * from './persist-perspective-settings'; 

@@ -10,7 +10,8 @@ import { FeatureFlagsPanel } from '@/features/app-settings/feature-flags';
 import { DatasetPanel } from '@/features/datasets';
 import { ProvidersPanel } from '@/features/inference/providers';
 import { SettingsPanel } from '@/features/app-settings';
-import { FlagIcon, DatasetIcon, ProviderIcon, SettingsIcon } from '@/components/icons';
+import { FlagIcon, DatasetIcon, ProviderIcon, SettingsIcon, FilterIcon } from '@/components/icons';
+import { PerspectiveFilterPanel } from '@/features/perspectives/components/PerspectiveFilterPanel';
 
 /**
  * Left action panel with multiple sections for the root layout
@@ -39,6 +40,12 @@ export function RootLeftActionPanel() {
           title: 'Providers',
           icon: <ProviderIcon />,
           content: <ProvidersPanel />
+        },
+        {
+          id: 'perspectives',
+          title: 'Perspectives',
+          icon: <FilterIcon />,
+          content: <PerspectiveFilterPanel />
         },
         {
           id: 'settings',

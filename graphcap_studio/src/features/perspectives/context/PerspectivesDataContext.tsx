@@ -25,7 +25,9 @@ import { SERVER_IDS } from '@/features/server-connections/constants';
 import { useProviders } from '../../inference/services/providers';
 import {
   savePerspectiveCaption,
-  getAllPerspectiveCaptions
+  getAllPerspectiveCaptions,
+  loadHiddenPerspectives,
+  saveHiddenPerspectives
 } from '../utils';
 
 // Local storage key for selected perspective provider
@@ -114,6 +116,12 @@ interface PerspectivesDataContextType {
   
   // Data helpers
   getPerspectiveData: (schemaName: string) => Record<string, unknown> | null;
+  
+  // Perspective visibility
+  hiddenPerspectives: string[];
+  togglePerspectiveVisibility: (perspectiveName: string) => void;
+  isPerspectiveVisible: (perspectiveName: string) => boolean;
+  setAllPerspectivesVisible: () => void;
 }
 
 /**
@@ -173,6 +181,9 @@ export function PerspectivesDataProvider({
   // Generation state
   const [generatingPerspectives, setGeneratingPerspectives] = useState<string[]>([]);
   
+  // Perspective visibility state
+  const [hiddenPerspectives, setHiddenPerspectives] = useState<string[]>(loadHiddenPerspectives());
+  
   // Data fetching - perspectives
   const { 
     data: perspectivesData, 
@@ -196,6 +207,11 @@ export function PerspectivesDataProvider({
   useEffect(() => {
     saveProviderNameToStorage(selectedProvider);
   }, [selectedProvider]);
+  
+  // Save hidden perspectives when they change
+  useEffect(() => {
+    saveHiddenPerspectives(hiddenPerspectives);
+  }, [hiddenPerspectives]);
   
   // Convert perspectives array to schemas record for easier access
   const schemas = React.useMemo(() => {
@@ -231,6 +247,29 @@ export function PerspectivesDataProvider({
       // Continue with undefined provider on error
       setSelectedProvider(undefined);
     }
+  }, []);
+  
+  // Toggle perspective visibility
+  const togglePerspectiveVisibility = useCallback((perspectiveName: string) => {
+    setHiddenPerspectives(prev => {
+      if (prev.includes(perspectiveName)) {
+        // If already hidden, make it visible (remove from hidden list)
+        return prev.filter(name => name !== perspectiveName);
+      } else {
+        // If visible, hide it (add to hidden list)
+        return [...prev, perspectiveName];
+      }
+    });
+  }, []);
+  
+  // Check if a perspective is visible
+  const isPerspectiveVisible = useCallback((perspectiveName: string) => {
+    return !hiddenPerspectives.includes(perspectiveName);
+  }, [hiddenPerspectives]);
+  
+  // Make all perspectives visible
+  const setAllPerspectivesVisible = useCallback(() => {
+    setHiddenPerspectives([]);
   }, []);
   
   // Method to fetch providers on demand
@@ -459,7 +498,13 @@ export function PerspectivesDataProvider({
     isPerspectiveGenerating,
     
     // Data helpers
-    getPerspectiveData
+    getPerspectiveData,
+    
+    // Perspective visibility
+    hiddenPerspectives,
+    togglePerspectiveVisibility,
+    isPerspectiveVisible,
+    setAllPerspectivesVisible
   }), [
     selectedProvider, 
     availableProviders, 
@@ -487,7 +532,11 @@ export function PerspectivesDataProvider({
     generatePerspective,
     isPerspectiveGenerated,
     isPerspectiveGenerating,
-    getPerspectiveData
+    getPerspectiveData,
+    hiddenPerspectives,
+    togglePerspectiveVisibility,
+    isPerspectiveVisible,
+    setAllPerspectivesVisible
   ]);
   
   return (

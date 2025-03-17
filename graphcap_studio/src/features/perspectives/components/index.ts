@@ -2,12 +2,14 @@
 /**
  * Perspectives Components
  * 
- * This module exports components for the perspectives feature.
+ * This module exports all component files from the perspectives feature.
  */
 
+export * from './EmptyPerspectives';
+export * from './PerspectivesErrorState';
+export * from './PerspectiveFilterPanel';
+export * from './ErrorMessage';
 export { PerspectiveHeader } from './PerspectiveNavigation/PerspectiveHeader';
-export { ErrorMessage } from './ErrorMessage';
+export { PerspectivesPager } from './PerspectiveNavigation/PerspectivesPager';
 export { MetadataDisplay } from './PerspectiveCard/MetadataDisplay';
-export { EmptyPerspectives } from './EmptyPerspectives';
-export { GenerateAllButton } from './PerspectiveActions/GenerateAllButton';
-export * from './PerspectiveNavigation/PerspectivesPager'; 
+export * from './PerspectiveActions'; 

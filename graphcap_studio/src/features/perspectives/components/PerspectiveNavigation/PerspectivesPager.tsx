@@ -5,10 +5,9 @@
  * This component displays perspectives in a paged layout with fixed header and footer.
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { PerspectiveCardTabbed } from '../PerspectiveCard/PerspectiveCardTabbed';
-import { PerspectiveSchema } from '@/features/perspectives/types';
 import { PerspectivesFooter } from '../PerspectiveActions/PerspectivesFooter';
 import { PerspectiveHeader } from './PerspectiveHeader';
 import { useColorModeValue } from '@/components/ui/theme/color-mode';
@@ -16,10 +15,10 @@ import { EmptyPerspectives } from '../EmptyPerspectives';
 import { usePerspectivesData, usePerspectiveUI } from '@/features/perspectives/context';
 
 interface OptionsControl {
-  isOpen: boolean;
-  onToggle: () => void;
-  buttonRef: React.RefObject<HTMLButtonElement | null>;
-  options: any;
+  readonly isOpen: boolean;
+  readonly onToggle: () => void;
+  readonly buttonRef: React.RefObject<HTMLButtonElement | null>;
+  readonly options: any;
 }
 
 /**
@@ -33,13 +32,14 @@ export function PerspectivesPager({
   // Get data context props
   const { 
     schemas,
-    selectedProviderId,
     isGenerating, 
     generatePerspective,
     isPerspectiveGenerated, 
     isPerspectiveGenerating,
     getPerspectiveData,
-    currentImage
+    currentImage,
+    isPerspectiveVisible,
+    selectedProvider
   } = usePerspectivesData();
   
   // Get UI-related props from UI context
@@ -48,8 +48,11 @@ export function PerspectivesPager({
     setActiveSchemaName
   } = usePerspectiveUI();
   
-  // Get the array of schema keys for navigation
-  const schemaKeys = Object.keys(schemas || {});
+  // Get the array of schema keys for navigation, filtered to only show visible perspectives
+  const schemaKeys = useMemo(() => {
+    const allKeys = Object.keys(schemas || {});
+    return allKeys.filter(key => isPerspectiveVisible(key));
+  }, [schemas, isPerspectiveVisible]);
   
   // Find the current index based on active schema
   const currentIndex = activeSchemaName ? schemaKeys.indexOf(activeSchemaName) : -1;
@@ -69,8 +72,13 @@ export function PerspectivesPager({
     return <EmptyPerspectives />;
   }
 
-  // Check if we have a valid activeSchemaName
-  if (!activeSchemaName || !schemas[activeSchemaName]) {
+  // Check if we have a valid activeSchemaName that is visible
+  if (!activeSchemaName || !schemas[activeSchemaName] || !isPerspectiveVisible(activeSchemaName)) {
+    // If current perspective is hidden or invalid, select the first visible one
+    if (schemaKeys.length > 0) {
+      setActiveSchemaName(schemaKeys[0]);
+      return <EmptyPerspectives />;
+    }
     return <EmptyPerspectives />;
   }
 
@@ -118,7 +126,7 @@ export function PerspectivesPager({
             isGenerated={isGenerated}
             onGenerate={() => {
               if (currentImage) {
-                generatePerspective(activeSchemaName, currentImage.path, selectedProviderId);
+                generatePerspective(activeSchemaName, currentImage.path, selectedProvider);
               }
             }}
             onSetActive={() => setActiveSchemaName(activeSchemaName)}
