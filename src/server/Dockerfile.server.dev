@@ -15,7 +15,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Create venv in a standard location
 ENV VIRTUAL_ENV=/opt/venv
-RUN uv venv $VIRTUAL_ENV
+RUN uv venv "$VIRTUAL_ENV"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Copy source code
