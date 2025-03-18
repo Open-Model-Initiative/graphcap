@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dataset } from "@/services/images";
 import { Box, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDatasetContext } from "../context/DatasetContext";
-import { DatasetInitializer } from "./DatasetInitializer";
 import { DatasetTree } from "./DatasetTree";
 
 /**
@@ -19,12 +17,12 @@ export function DatasetPanel() {
 		setCurrentDataset,
 		setSelectedSubfolder,
 	} = useDatasetContext();
-	const [isLoading, setIsLoading] = useState(false);
-	const [error, setError] = useState<Error | null>(null);
+	const [isLoading] = useState(false);
+	const [error] = useState<Error | null>(null);
 
 	const handleSelectNode = (datasetName: string, subfolder?: string) => {
 		setCurrentDataset(datasetName);
-		setSelectedSubfolder(subfolder || null);
+		setSelectedSubfolder(subfolder ?? null);
 	};
 
 	return (

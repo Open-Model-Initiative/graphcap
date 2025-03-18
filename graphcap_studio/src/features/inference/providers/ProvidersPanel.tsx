@@ -1,8 +1,7 @@
 import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Box, Button, Center, Flex, Text, VStack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect, useMemo } from "react";
-import { useDatabaseHealth } from "../hooks";
+import { useMemo } from "react";
 import { useProviders } from "../services/providers";
 import ProviderForm from "./ProviderForm";
 import {
@@ -15,7 +14,7 @@ import { ProviderSelect } from "./form";
  * Panel content that requires context
  */
 function PanelContent() {
-	const { mode, setMode, selectedProvider, setSelectedProvider, providers } =
+	const { setMode, providers } =
 		useInferenceProviderContext();
 
 	const { colorMode } = useColorMode();

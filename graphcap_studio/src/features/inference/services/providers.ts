@@ -11,7 +11,7 @@ import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { hc } from "hono/client";
 import type { AppType } from "../../../../../data_service/src/app"; // TODO: Refactor
-import {
+import type {
 	Provider,
 	ProviderApiKey,
 	ProviderCreate,

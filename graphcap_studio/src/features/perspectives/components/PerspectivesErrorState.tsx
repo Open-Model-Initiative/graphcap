@@ -63,12 +63,13 @@ export function PerspectivesErrorState({
 
 	// Handle general error
 	if (type === "general") {
-		const errorMessage =
-			error instanceof Error
-				? error.message
-				: typeof error === "string"
-					? error
-					: "An unknown error occurred";
+		const getErrorMessage = () => {
+			if (error instanceof Error) return error.message;
+			if (typeof error === "string") return error;
+			return "An unknown error occurred";
+		};
+
+		const errorMessage = getErrorMessage();
 
 		return (
 			<Center height="100%" p={8} bg={bgColor}>

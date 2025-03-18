@@ -1,5 +1,5 @@
-import {
-	Provider,
+// SPDX-License-Identifier: Apache-2.0
+import type {
 	ProviderCreate,
 	ProviderUpdate,
 } from "@/features/inference/providers/types";
@@ -7,7 +7,7 @@ import {
 	useCreateProvider,
 	useUpdateProvider,
 } from "@/features/inference/services/providers";
-// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { DEFAULT_PROVIDER_FORM_DATA } from "../constants";
@@ -25,7 +25,6 @@ export function useProviderForm(initialData: Partial<FormData> = {}) {
 		reset,
 		formState: { errors },
 		watch,
-		setValue,
 	} = useForm<FormData>({
 		defaultValues: {
 			...DEFAULT_PROVIDER_FORM_DATA,

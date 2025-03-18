@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Card, Tabs } from "@chakra-ui/react";
+import { Tabs } from "@chakra-ui/react";
 import styles from "./FormFields.module.css";
 import { ModelSelectionSection } from "./ModelSelectionSection";
-import { useInferenceProviderContext } from "./context";
 import { BasicInfoSection, ConnectionSection, RateLimitsSection } from "./form";
 
 /**
  * Component for rendering provider form fields in either view or edit mode
  */
 export function FormFields() {
-	const { isEditing } = useInferenceProviderContext();
-
 	return (
 		<Tabs.Root
 			defaultValue="basic"
