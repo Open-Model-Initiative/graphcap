@@ -45,5 +45,10 @@
       "style": "green"
     }
   ],
-  "context_template": "<ArtCriticAnalysis>\n{formal_analysis}\n</ArtCriticAnalysis>\n"
+  "context_template": "<ArtCriticAnalysis>\n{formal_analysis}\n</ArtCriticAnalysis>\n",
+  "module": "art",
+  "tags": ["art", "formal-analysis", "visual-elements", "objective"],
+  "description": "An art critic perspective that focuses on formal analysis principles, providing objective observations of visual elements, technical aspects, and stylistic choices without subjective interpretation.",
+  "deprecated": false,
+  "priority": 30
 } 

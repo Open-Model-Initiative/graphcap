@@ -62,7 +62,7 @@ class ProviderManager:
         logger.info(f"  - environment: {config.environment}")
         logger.info(f"  - base_url: {config.base_url}")
         logger.info(f"  - default_model: {config.default_model}")
-        
+
         try:
             client = get_client(
                 name=provider_name,
@@ -75,7 +75,9 @@ class ProviderManager:
 
             # Set rate limits if configured
             if config.rate_limits:
-                logger.debug(f"Setting rate limits for {provider_name} - requests: {config.rate_limits.requests_per_minute}/min, tokens: {config.rate_limits.tokens_per_minute}/min")
+                logger.debug(
+                    f"Setting rate limits for {provider_name} - requests: {config.rate_limits.requests_per_minute}/min, tokens: {config.rate_limits.tokens_per_minute}/min"
+                )
                 client.requests_per_minute = config.rate_limits.requests_per_minute
                 client.tokens_per_minute = config.rate_limits.tokens_per_minute
 
@@ -109,4 +111,4 @@ class ProviderManager:
             logger.error(f"Requested config for unknown provider: {provider_name}")
             raise ValueError(f"Unknown provider: {provider_name}")
         logger.debug(f"Returning config for provider: {provider_name}")
-        return self.providers[provider_name] 
+        return self.providers[provider_name]

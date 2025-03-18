@@ -133,13 +133,13 @@ class BaseClient(AsyncOpenAI, ABC):
         """Create a vision completion with rate limiting"""
         logger.info(f"Starting vision request for model: {model}")
         logger.debug(f"Vision parameters - max_tokens: {max_tokens}, temperature: {temperature}, top_p: {top_p}")
-        
+
         # Estimate token count - this is approximate
         estimated_tokens = len(prompt.split()) + 1000  # Base tokens + image tokens
         logger.debug(f"Estimated token count: {estimated_tokens}")
 
         await self._enforce_rate_limits(estimated_tokens)
-        
+
         # Handle image input
         if isinstance(image, (str, Path)) and not str(image).startswith("data:"):
             logger.debug(f"Loading image from path: {image}")

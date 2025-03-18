@@ -55,6 +55,7 @@ async def debug_perspective(perspective_name: str) -> dict:
         HTTPException: If the perspective is not found
     """
     from graphcap.perspectives import get_perspective
+
     try:
         perspective = get_perspective(perspective_name)
         # Get perspective attributes
@@ -68,9 +69,11 @@ async def debug_perspective(perspective_name: str) -> dict:
         # Get method signatures if available
         if attributes["has_process_single"]:
             import inspect
+
             attributes["process_single_signature"] = str(inspect.signature(perspective.process_single))
         if attributes["has_process_batch"]:
             import inspect
+
             attributes["process_batch_signature"] = str(inspect.signature(perspective.process_batch))
         return {
             "perspective": perspective_name,
@@ -94,7 +97,7 @@ async def create_caption(
     repetition_penalty: Optional[float] = Form(1.15, description="Repetition penalty"),
     global_context: Optional[str] = Form(None, description="Global context for the caption"),
     context: Optional[str] = Form(None, description="Additional context for the caption as JSON array string"),
-    resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable resizing)")
+    resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable resizing)"),
 ) -> CaptionResponse:
     """
     Generate a caption for an image using a perspective.
@@ -128,9 +131,7 @@ async def create_caption(
         image_path = await save_uploaded_file(file)
 
         # Log resize options
-        options = {
-            'resize_resolution': resize_resolution
-        }
+        options = {"resize_resolution": resize_resolution}
         log_resize_options(options)
 
         # Resize the image if resize_resolution is provided
@@ -230,10 +231,7 @@ async def create_caption_from_path(
         temp_path = None
 
         # Handle image resizing if requested
-        image_path, temp_path = await _resize_image_if_needed(
-            image_path,
-            request.resize_resolution
-        )
+        image_path, temp_path = await _resize_image_if_needed(image_path, request.resize_resolution)
 
         # Process context
         context = _process_context(request.context)
@@ -255,11 +253,7 @@ async def create_caption_from_path(
         _cleanup_temp_file(temp_path)
 
         # Prepare the response
-        return _prepare_caption_response(
-            caption_data,
-            request.perspective,
-            request.provider
-        )
+        return _prepare_caption_response(caption_data, request.perspective, request.provider)
     except Exception as e:
         logger.error(f"Error creating caption from path: {str(e)}")
         if isinstance(e, HTTPException):
@@ -275,15 +269,12 @@ def _validate_image_path(image_path_str: str) -> Path:
     return image_path
 
 
-async def _resize_image_if_needed(
-    image_path: Path,
-    resize_resolution: Optional[str]
-) -> tuple[Path, Optional[Path]]:
+async def _resize_image_if_needed(image_path: Path, resize_resolution: Optional[str]) -> tuple[Path, Optional[Path]]:
     """Resize the image if a resize resolution is provided."""
     temp_path = None
 
     # Log resize options
-    options = {'resize_resolution': resize_resolution}
+    options = {"resize_resolution": resize_resolution}
     log_resize_options(options)
 
     if not resize_resolution:
@@ -348,11 +339,7 @@ def _cleanup_temp_file(temp_path: Optional[Path]) -> None:
             logger.error(f"Error removing temporary file: {str(e)}")
 
 
-def _prepare_caption_response(
-    caption_data: dict,
-    perspective: str,
-    provider: str
-) -> CaptionResponse:
+def _prepare_caption_response(caption_data: dict, perspective: str, provider: str) -> CaptionResponse:
     """Prepare the caption response from the caption data."""
     # Log the caption data for debugging
     logger.debug(f"Caption data: {caption_data}")

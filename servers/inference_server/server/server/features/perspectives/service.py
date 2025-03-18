@@ -29,13 +29,10 @@ from .models import PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
 async def download_image(url: str) -> Path:
     """
     Download an image from a URL to a temporary file.
-    
     Args:
         url: URL of the image to download
-        
     Returns:
         Path to the downloaded image
-        
     Raises:
         HTTPException: If the image cannot be downloaded
     """
@@ -49,10 +46,7 @@ async def download_image(url: str) -> Path:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status != 200:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Failed to download image from URL: {response.status}"
-                    )
+                    raise HTTPException(status_code=400, detail=f"Failed to download image from URL: {response.status}")
 
                 content = await response.read()
                 with open(temp_file, "wb") as f:
@@ -67,13 +61,13 @@ async def download_image(url: str) -> Path:
 async def save_base64_image(base64_data: str) -> Path:
     """
     Save a base64-encoded image to a temporary file.
-    
+
     Args:
         base64_data: Base64-encoded image data
-        
+
     Returns:
         Path to the saved image
-        
+
     Raises:
         HTTPException: If the image cannot be saved
     """
@@ -104,26 +98,26 @@ async def save_base64_image(base64_data: str) -> Path:
 def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema]:
     """
     Load the schema for a perspective from its configuration file.
-    
+
     Args:
         perspective_name: Name of the perspective
-        
+
     Returns:
         Schema information for the perspective, or None if not found
     """
     try:
         # Construct the path to the schema file
-        schema_path = Path("/workspace/config/perspectives") / f"{perspective_name}.json"
-        
+        schema_path = Path("/workspace/perspective_library") / f"{perspective_name}.json"
+
         # Check if the schema file exists
         if not schema_path.exists():
             logger.warning(f"Schema file not found for perspective {perspective_name}")
             return None
-            
+
         # Load and parse the schema file
         with open(schema_path, "r") as f:
             schema_data = json.load(f)
-            
+
         # Convert the schema data to our models
         schema_fields = []
         for field_data in schema_data.get("schema_fields", []):
@@ -136,11 +130,11 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
                         type=f["type"],
                         description=f["description"],
                         is_list=f.get("is_list", False),
-                        is_complex=f.get("is_complex", False)
+                        is_complex=f.get("is_complex", False),
                     )
                     for f in field_data["fields"]
                 ]
-                
+
             schema_fields.append(
                 SchemaField(
                     name=field_data["name"],
@@ -148,15 +142,14 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
                     description=field_data["description"],
                     is_list=field_data.get("is_list", False),
                     is_complex=field_data.get("is_complex", False),
-                    fields=nested_fields
+                    fields=nested_fields,
                 )
             )
-            
+
         table_columns = [
-            TableColumn(name=col["name"], style=col["style"])
-            for col in schema_data.get("table_columns", [])
+            TableColumn(name=col["name"], style=col["style"]) for col in schema_data.get("table_columns", [])
         ]
-        
+
         return PerspectiveSchema(
             name=schema_data["name"],
             display_name=schema_data["display_name"],
@@ -164,7 +157,7 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
             prompt=schema_data["prompt"],
             schema_fields=schema_fields,
             table_columns=table_columns,
-            context_template=schema_data["context_template"]
+            context_template=schema_data["context_template"],
         )
     except Exception as e:
         logger.error(f"Error loading schema for perspective {perspective_name}: {str(e)}")
@@ -174,7 +167,7 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
 def get_available_perspectives() -> List[PerspectiveInfo]:
     """
     Get a list of available perspectives with their schemas.
-    
+
     Returns:
         List of perspective information including schemas
     """
@@ -185,14 +178,19 @@ def get_available_perspectives() -> List[PerspectiveInfo]:
         try:
             perspective = get_perspective(name)
             schema = load_perspective_schema(perspective.config_name)
-            
+
             perspectives.append(
                 PerspectiveInfo(
                     name=perspective.config_name,
                     display_name=perspective.display_name,
                     version=perspective.version,
-                    description="",  # Could be added to the perspective config in the future
-                    schema=schema
+                    description=perspective.description,
+                    schema=schema,
+                    module=perspective.module_name,
+                    tags=perspective.tags,
+                    deprecated=perspective.is_deprecated,
+                    replacement=perspective.replacement,
+                    priority=perspective.priority,
                 )
             )
         except Exception as e:
@@ -214,7 +212,7 @@ async def generate_caption(
 ) -> Dict:
     """
     Generate a caption for an image using a perspective.
-    
+
     Args:
         perspective_name: Name of the perspective to use
         image_path: Path to the image file
@@ -225,10 +223,10 @@ async def generate_caption(
         context: Additional context for the caption
         global_context: Global context for the caption
         provider_name: Name of the provider to use (default: "gemini")
-        
+
     Returns:
         Caption data
-        
+
     Raises:
         HTTPException: If the caption cannot be generated
     """
@@ -238,22 +236,22 @@ async def generate_caption(
 
         # Get the provider client from the provider manager
         provider_manager = get_provider_manager()
-        
+
         # Debug: Log available providers
         available_providers = provider_manager.available_providers()
         logger.debug(f"Available providers: {available_providers}")
-        
+
         # Debug: Try to resolve host.docker.internal
         try:
-            host_ip = socket.gethostbyname('host.docker.internal')
+            host_ip = socket.gethostbyname("host.docker.internal")
             logger.debug(f"host.docker.internal resolves to: {host_ip}")
         except socket.gaierror as e:
             logger.warning(f"Could not resolve host.docker.internal: {e}")
-        
+
         try:
             provider: BaseClient = provider_manager.get_client(provider_name)
             # Debug: Log provider details
-            logger.debug(f"Provider details:")
+            logger.debug("Provider details:")
             logger.debug(f"  - Name: {provider_name}")
             logger.debug(f"  - Kind: {provider.kind}")
             logger.debug(f"  - Environment: {provider.environment}")
@@ -263,16 +261,19 @@ async def generate_caption(
             logger.error(f"Provider '{provider_name}' not found: {str(e)}")
             raise HTTPException(
                 status_code=404,
-                detail=f"Provider '{provider_name}' not found. Available providers: {', '.join(provider_manager.available_providers())}"
+                detail=f"""Provider '{provider_name}' not found. 
+                Available providers: {', '.join(provider_manager.available_providers())}""",
             )
-        
+
         # Create a temporary output directory
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
-            
+
             # Generate the caption
-            logger.info(f"Generating caption for {image_path} using {perspective_name} perspective and {provider_name} provider")
-            
+            logger.info(
+                f"Generating caption for {image_path} using {perspective_name} perspective and {provider_name} provider"
+            )
+
             # Check if the perspective has process_batch method
             if hasattr(perspective, "process_batch"):
                 logger.info(f"Using process_batch method for {perspective_name}")
@@ -286,14 +287,14 @@ async def generate_caption(
                     top_p=top_p,
                     repetition_penalty=repetition_penalty,
                     global_context=global_context,
-                    name=perspective_name
+                    name=perspective_name,
                 )
-                
+
                 # Get the first (and only) result
                 if not caption_data_list or len(caption_data_list) == 0:
                     logger.error(f"No caption data returned for {image_path}")
                     raise HTTPException(status_code=500, detail="No caption data returned")
-                    
+
                 caption_data = caption_data_list[0]
             else:
                 # Fallback to process_single if process_batch is not available
@@ -308,10 +309,10 @@ async def generate_caption(
                     context=context,
                     global_context=global_context,
                 )
-            
+
             # Log the result
             logger.info(f"Caption generated successfully: {caption_data.keys() if caption_data else 'None'}")
-            
+
             return caption_data
     except ValueError as e:
         logger.error(f"Error getting perspective: {str(e)}")
@@ -324,13 +325,13 @@ async def generate_caption(
 async def save_uploaded_file(file: UploadFile) -> Path:
     """
     Save an uploaded file to a temporary location.
-    
+
     Args:
         file: Uploaded file object
-        
+
     Returns:
         Path to the saved file
-        
+
     Raises:
         HTTPException: If the file cannot be saved
     """

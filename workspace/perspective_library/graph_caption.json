@@ -57,5 +57,10 @@
       "style": "green"
     }
   ],
-  "context_template": "<GraphCaption>\n{short_caption}\n\nTags: {tags_list}\n</GraphCaption>\n"
+  "context_template": "<GraphCaption>\n{short_caption}\n\nTags: {tags_list}\n</GraphCaption>\n",
+  "module": "graph",
+  "tags": ["graph", "caption", "analysis"],
+  "description": "Graph caption analysis",
+  "deprecated": false,
+  "priority": 50
 } 

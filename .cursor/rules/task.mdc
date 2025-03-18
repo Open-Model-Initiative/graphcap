@@ -3,5 +3,172 @@ description: Current Task for the Agent
 globs: 
 alwaysApply: true
 ---
-# Feature Request: 
-We are reworking and cleaning up our ui architecture. Please utilize our best practices and style guidelines.
+### Is your feature request related to a problem?
+Currently perspectives are loaded from a flat directory from files with minimal metadata. We should add support for perspective directories to be able to toggle on and off different modules. We should also allow support for loading and writing to perspectives in a certain instance to allow for prototyping without comitting new code. 
+
+### Describe the solution you'd like
+- Add directory loading of perspectives
+- Add support for a local perspective directory
+- Add additional metadata tags to perspective schema
+- Add ability to add and edit perspectives to help with iteration 
+- Add route to ui for viewing, testing, and authoring new perspectives
+- Add basic versioning ui
+- Add graceful handling of deprecated / removed perspectives 
+
+## Current State Analysis
+
+1. The `load_all_perspectives` function in `perspective_loader.py` already recursively searches for JSON files using `config_dir.rglob("*.json")`.
+2. While it finds files in subdirectories, it doesn't appear to organize them in a hierarchical structure.
+3. The loader attempts to load each JSON file as a perspective but doesn't handle modules or grouping.
+4. The current implementation uses a flat dictionary to store perspectives by name.
+
+## Issues to Address
+
+1. The current code doesn't have a concept of perspective modules/groups.
+2. There's no mechanism to toggle modules on/off.
+3. No support for local perspective directory for prototyping.
+4. Missing metadata for categorization and organization.
+5. No versioning or handling of deprecated perspectives.
+
+## Implementation Plan
+
+### 1. Enhanced Perspective Metadata Structure
+
+We need to extend the `PerspectiveConfig` model to include:
+
+```python
+class PerspectiveConfig(BaseModel):
+    """Configuration for a perspective loaded from JSON."""
+    # Existing fields
+    name: str
+    display_name: str
+    version: str
+    prompt: str
+    schema_fields: List[SchemaField]
+    table_columns: List[Dict[str, str]]
+    context_template: str
+    
+    # New fields
+    module: str = Field(default="default", description="Module this perspective belongs to")
+    tags: List[str] = Field(default_factory=list, description="Tags for categorizing perspectives")
+    description: str = Field(default="", description="Detailed description of the perspective")
+    deprecated: bool = Field(default=False, description="Whether this perspective is deprecated")
+    replacement: Optional[str] = Field(default=None, description="Name of perspective that replaces this one")
+    priority: int = Field(default=100, description="Priority for sorting (lower is higher priority)")
+```
+
+### 2. Hierarchical Perspective Loading
+
+Create a new data structure to represent module-based perspectives:
+
+```python
+class PerspectiveModule:
+    """Represents a module of related perspectives."""
+    name: str
+    display_name: str
+    enabled: bool
+    perspectives: Dict[str, JsonPerspectiveProcessor]
+    
+    def toggle(self, enabled: bool) -> None:
+        """Toggle this module on or off."""
+        self.enabled = enabled
+```
+
+Modify the perspective loader to organize perspectives by module:
+
+```python
+def load_all_perspectives(config_dir: Union[str, Path]) -> Dict[str, PerspectiveModule]:
+    """Load perspectives organized by module."""
+    # Implementation details
+```
+
+### 3. Local Perspective Directory Support
+
+Create a mechanism to support local perspectives alongside the main ones:
+
+```python
+def get_perspective_directories() -> List[Path]:
+    """Get all directories where perspectives can be found."""
+    dirs = [WORKSPACE_PERSPECTIVES_DIR]
+    
+    # Check for local perspective directory
+    local_dir = Path.home() / ".graphcap" / "perspectives"
+    if local_dir.exists():
+        dirs.append(local_dir)
+        
+    return dirs
+```
+
+### 4. Configuration Update for Module Control
+
+Create a configuration file to control module enablement:
+
+```json
+{
+  "modules": {
+    "core": {"enabled": true},
+    "experimental": {"enabled": false},
+    "deprecated": {"enabled": false}
+  },
+  "local_override": true
+}
+```
+
+### 5. Testing Plan
+
+#### Unit Tests
+
+1. **Schema Loading Test**: Verify that perspectives with the new metadata fields load correctly.
+2. **Module Structure Test**: Ensure perspectives are properly organized into modules.
+3. **Directory Structure Test**: Test that the loader correctly handles nested directory structures.
+4. **Local Override Test**: Verify that local perspectives can override workspace perspectives.
+5. **Toggling Test**: Ensure that modules can be toggled on and off.
+
+#### Integration Tests
+
+1. **API Integration Test**: Test that the API correctly returns perspectives based on module enablement.
+2. **UI Integration Test**: Test that the UI correctly displays perspectives organized by module.
+3. **Versioning Test**: Test that versioning information is correctly displayed and used.
+
+#### Test Data Structure
+
+Create a test directory structure:
+```
+test_perspectives/
+├── core/
+│   ├── base_caption.json
+│   └── custom_caption.json
+├── experimental/
+│   ├── new_technique.json
+│   └── beta_feature.json
+└── local/
+    └── prototype_caption.json
+```
+
+## UI Component for Perspective Management
+
+Develop a React component for managing perspectives:
+- Allow viewing all perspectives organized by module
+- Enable toggling modules on/off
+- Provide UI for testing perspectives
+- Include version management interface
+- Display deprecation warnings for deprecated perspectives
+
+## Implementation Steps
+
+1. Update the `PerspectiveConfig` model with new metadata fields
+2. Implement the hierarchical perspective loading structure
+3. Add local perspective directory support
+4. Create configuration mechanism for module control
+5. Implement tests for all new functionality
+6. Develop UI components for perspective management
+7. Add APIs for perspective CRUD operations
+
+## Potential Challenges
+
+1. **Backward Compatibility**: Ensure old perspectives still work with the new system
+2. **Performance**: Loading many perspectives from nested directories might impact startup time
+3. **Conflict Resolution**: Handle conflicts between workspace and local perspectives
+4. **Schema Evolution**: Support for evolving perspective schemas across versions
+
+This plan addresses all the requirements in the task while maintaining compatibility with the existing codebase. The approach enhances the perspective loader to support modular organization, local development, versioning, and deprecation handling.

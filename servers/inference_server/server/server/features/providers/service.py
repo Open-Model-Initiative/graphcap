@@ -93,17 +93,15 @@ def get_available_providers() -> List[ProviderInfo]:
 
 def _create_model_info(model_id: str, default_model: str) -> ModelInfo:
     """Create a ModelInfo instance with the given ID and default model."""
-    return ModelInfo(
-        id=model_id,
-        name=model_id,
-        is_default=(model_id == default_model)
-    )
+    return ModelInfo(id=model_id, name=model_id, is_default=(model_id == default_model))
+
 
 def _extract_model_id(model: Any) -> str:
     """Extract model ID from a model object."""
     if hasattr(model, "id"):
         return model.id
     return model.name if hasattr(model, "name") else str(model)
+
 
 async def _fetch_models_from_available_models(client: Any, default_model: str) -> List[ModelInfo]:
     """Fetch models using get_available_models method."""
@@ -117,6 +115,7 @@ async def _fetch_models_from_available_models(client: Any, default_model: str) -
 
     return models
 
+
 async def _fetch_models_from_get_models(client: Any, default_model: str) -> List[ModelInfo]:
     """Fetch models using get_models method."""
     models = []
@@ -129,9 +128,11 @@ async def _fetch_models_from_get_models(client: Any, default_model: str) -> List
 
     return models
 
+
 def _get_configured_models(config: Any) -> List[ModelInfo]:
     """Get models from configuration."""
     return [_create_model_info(model_id, config.default_model) for model_id in config.models]
+
 
 async def _fetch_provider_models(client: Any, provider_name: str, config: Any) -> List[ModelInfo]:
     """Attempt to fetch models from the provider."""
@@ -152,10 +153,11 @@ async def _fetch_provider_models(client: Any, provider_name: str, config: Any) -
 
     return models
 
+
 async def get_provider_models(provider_name: str) -> List[ModelInfo]:
     """
     Get a list of available models for a specific provider.
-    
+
     Args:
         provider_name: Name of the provider to get models for
     Returns:

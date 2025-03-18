@@ -26,7 +26,7 @@ class ProviderListResponse(BaseModel):
 
 class ModelInfo(BaseModel):
     """Information about a model."""
-    
+
     id: str = Field(..., description="Unique identifier for the model")
     name: str = Field(..., description="Display name of the model")
     is_default: bool = Field(False, description="Whether this is the default model for the provider")
@@ -34,6 +34,6 @@ class ModelInfo(BaseModel):
 
 class ProviderModelsResponse(BaseModel):
     """Response model for listing available models for a provider."""
-    
+
     provider: str = Field(..., description="Name of the provider")
-    models: List[ModelInfo] = Field(..., description="List of available models") 
+    models: List[ModelInfo] = Field(..., description="List of available models")

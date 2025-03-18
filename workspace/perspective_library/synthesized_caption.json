@@ -51,5 +51,10 @@
         {"name": "Component", "style": "cyan"},
         {"name": "Content", "style": "green"}
       ],
-  "context_template": "<SynthesizedCaption>\n{short_caption}\n\nTags: {synthesis_tags}\n</SynthesizedCaption>\n"
+  "context_template": "<SynthesizedCaption>\n{short_caption}\n\nTags: {synthesis_tags}\n</SynthesizedCaption>\n",
+  "module": "core",
+  "tags": ["synthesis", "integration", "comprehensive", "multi-perspective"],
+  "description": "A meta-perspective that integrates insights from multiple other perspectives to create a comprehensive, cohesive analysis with multiple levels of detail and explicit reasoning.",
+  "deprecated": false,
+  "priority": 5
 }

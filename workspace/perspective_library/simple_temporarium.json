@@ -51,5 +51,10 @@
       "style": "green"
     }
   ],
-  "context_template": "<SimpleTimeCaption>\n{simple_caption}\n</SimpleTimeCaption>"
+  "context_template": "<SimpleTemporariumCaption>\n{temporal_caption}\n</SimpleTemporariumCaption>\n",
+  "module": "speculative",
+  "tags": ["time", "historical", "simplified", "era", "indicators"],
+  "description": "A simplified version of the Temporarium perspective that focuses on basic temporal analysis with less complexity and reasoning steps.",
+  "deprecated": false,
+  "priority": 45
 }

@@ -45,5 +45,10 @@
       "style": "green"
     }
   ],
-  "context_template": "<PoeticMetaphorCaption>\n{poetic_description}\n</PoeticMetaphorCaption>\n"
+  "context_template": "<PoeticMetaphorCaption>\n{poetic_description}\n</PoeticMetaphorCaption>\n",
+  "module": "artististic",
+  "tags": ["poetic", "metaphor", "imagery", "figurative"],
+  "description": "Poetic metaphor analysis",
+  "deprecated": false,
+  "priority": 50
 } 

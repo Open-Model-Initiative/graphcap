@@ -33,10 +33,10 @@ class OllamaClient(BaseClient):
         logger.info(f"  - environment: {environment}")
         logger.info(f"  - base_url: {base_url}")
         logger.info(f"  - default_model: {default_model}")
-        
+
         # Store the raw base URL for Ollama-specific endpoints
         base_url = base_url.rstrip("/")
-        
+
         # For OpenAI compatibility, we need /v1 in the URL
         # But we need to handle cases where it's already there
         if "/v1" in base_url:
@@ -50,7 +50,7 @@ class OllamaClient(BaseClient):
             self._raw_base_url = base_url
             openai_base_url = f"{base_url}/v1"
             logger.debug("Adding /v1 to base URL for OpenAI compatibility")
-        
+
         # Initialize with OpenAI-compatible base URL
         super().__init__(
             name=name,

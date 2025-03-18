@@ -62,5 +62,10 @@
       "style": "green"
     }
   ],
-  "context_template": "<CompositionGraph>\n{composition_summary}\nNodes: {nodes}\nEdges: {edges}\n</CompositionGraph>"
+  "context_template": "<CompositionGraph>\n{composition_summary}\nNodes: {nodes}\nEdges: {edges}\n</CompositionGraph>",
+  "module": "graph",
+  "tags": ["graph", "locality", "analysis"],
+  "description": "Graph locality analysis",
+  "deprecated": false,
+  "priority": 50
 }
