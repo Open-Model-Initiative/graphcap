@@ -5,7 +5,7 @@
  * This component displays and manages image perspectives from GraphCap.
  */
 
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
 import { Box, Flex } from "@chakra-ui/react";
 import React, { useCallback, useMemo, useEffect } from "react";
 import {
@@ -16,7 +16,7 @@ import { EmptyPerspectives } from "./components/EmptyPerspectives";
 import { PerspectivesPager } from "./components/PerspectiveNavigation/PerspectivesPager";
 import { PerspectivesErrorState } from "./components/PerspectivesErrorState";
 import { usePerspectiveUI, usePerspectivesData } from "./context";
-import { CaptionOptions } from "./types";
+import type { CaptionOptions } from "./types";
 
 interface PerspectivesProps {
 	readonly image: Image | null;

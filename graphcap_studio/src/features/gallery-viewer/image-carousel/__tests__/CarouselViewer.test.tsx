@@ -3,113 +3,22 @@ import { beforeAll, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom"; // Import jest-dom matchers
 import { MockImage, imageServiceMock } from "@/test/mocks/servicesMock";
 import { CarouselViewer } from "../CarouselViewer";
+import { createMockImages, mockComponents, setupCarouselTestEnvironment } from "./test-utils";
 
-// Mock declarations must come before any variable declarations
-// because vi.mock calls are hoisted to the top of the file
-vi.mock("@/common/components/responsive-image", () => ({
-	ResponsiveImage: ({
-		alt,
-		imagePath,
-		onError,
-	}: { alt: string; imagePath: string; onError?: () => void }) => (
-		<img
-			src={imagePath}
-			alt={alt}
-			data-testid="responsive-image"
-			onError={onError}
-		/>
-	),
-	ThumbnailImage: ({
-		alt,
-		imagePath,
-		isSelected,
-		onClick,
-	}: {
-		alt: string;
-		imagePath: string;
-		isSelected: boolean;
-		onClick: () => void;
-	}) => (
-		<button
-			data-testid="thumbnail-image"
-			data-selected={String(isSelected)}
-			onClick={onClick}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					onClick();
-				}
-			}}
-		>
-			<img src={imagePath} alt={alt} />
-		</button>
-	),
-}));
-
-// Mock the UploadDropzone component
-vi.mock("@/common/components/image-uploader", () => ({
-	UploadDropzone: ({
-		datasetName,
-		compact,
-	}: { datasetName: string; compact?: boolean }) => (
-		<div
-			data-testid="upload-dropzone"
-			data-dataset={datasetName}
-			data-compact={String(!!compact)}
-		>
-			Upload Dropzone
-		</div>
-	),
-}));
-
-// Mock the ImageCarouselContext
-vi.mock("../ImageCarouselContext", () => ({
-	ImageCarouselProvider: ({ children }: { children: React.ReactNode }) => (
-		<>{children}</>
-	),
-	useImageCarouselContext: () => ({ datasetName: "test-dataset" }),
-}));
+// Setup component mocks
+mockComponents.setupImageComponents();
+mockComponents.setupUploadDropzone();
+mockComponents.setupImageCarouselContext("../ImageCarouselContext");
 
 const preloadImageMock = imageServiceMock.preloadImage;
 
 // Sample test images
-const mockImages: MockImage[] = [
-	{
-		path: "/images/image1.jpg",
-		name: "Image 1",
-		directory: "test",
-		url: "test-url",
-	},
-	{
-		path: "/images/image2.jpg",
-		name: "Image 2",
-		directory: "test",
-		url: "test-url",
-	},
-	{
-		path: "/images/image3.jpg",
-		name: "Image 3",
-		directory: "test",
-		url: "test-url",
-	},
-];
+const mockImages = createMockImages(3);
 
 describe("CarouselViewer", () => {
-	// Setup a mock for ResizeObserver since it's used in the component's hooks
+	// Setup common test environment
 	beforeAll(() => {
-		// Create a mock implementation of ResizeObserver
-		class ResizeObserverMock {
-			observe = vi.fn();
-			unobserve = vi.fn();
-			disconnect = vi.fn();
-		}
-
-		// Assign the mock to the global object
-		global.ResizeObserver = ResizeObserverMock as any;
-
-		// Mock Element.scrollTo with unused parameters renamed to _x and _y
-		Element.prototype.scrollTo = function (_x: number, _y: number) {
-			// Mock implementation
-		} as any;
+		setupCarouselTestEnvironment();
 	});
 
 	// Test the loading state
