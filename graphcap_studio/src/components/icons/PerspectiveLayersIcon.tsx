@@ -21,6 +21,7 @@ export function PerspectiveLayersIcon({ className = "" }: Readonly<IconProps>) {
 			strokeLinejoin="round"
 			className={className}
 		>
+			<title id="perspectiveLayersIconTitle">Perspectives</title>
 			<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
 			<circle cx="12" cy="12" r="3" />
 			<path d="M4 21v-4" />

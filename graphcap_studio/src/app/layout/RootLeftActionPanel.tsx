@@ -17,7 +17,6 @@ import { SettingsPanel } from "@/features/app-settings";
 import { FeatureFlagsPanel } from "@/features/app-settings/feature-flags";
 import { DatasetPanel } from "@/features/datasets";
 import { ProvidersPanel } from "@/features/inference/providers";
-import { PerspectiveFilterPanel } from "@/features/perspectives/components/PerspectiveFilterPanel";
 import { PerspectiveManagementPanel } from "@/features/perspectives/components/PerspectiveManagementPanel";
 import { ActionPanel } from "./ActionPanel";
 
@@ -48,12 +47,6 @@ export function RootLeftActionPanel() {
 					title: "Providers",
 					icon: <ProviderIcon />,
 					content: <ProvidersPanel />,
-				},
-				{
-					id: "perspectives",
-					title: "Perspectives",
-					icon: <FilterIcon />,
-					content: <PerspectiveFilterPanel />,
 				},
 				{
 					id: "perspective-management",

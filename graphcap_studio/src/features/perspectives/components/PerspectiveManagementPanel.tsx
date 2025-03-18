@@ -6,8 +6,11 @@
  */
 
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
+import { Box } from "@chakra-ui/react";
+import { Tabs } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
 import { usePerspectiveModules } from "../hooks";
+import { PerspectiveFilterPanel } from "./PerspectiveFilterPanel";
 
 /**
  * Panel component for perspective management
@@ -19,70 +22,91 @@ export function PerspectiveManagementPanel() {
   // Handle loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full items-center justify-center">
+      <Box display="flex" flexDirection="column" height="full" alignItems="center" justifyContent="center">
         <LoadingSpinner size="md" />
-        <p className="text-sm mt-2">Loading perspectives...</p>
-      </div>
+        <Box mt={2} fontSize="sm">Loading perspectives...</Box>
+      </Box>
     );
   }
 
   // Handle error state
   if (error) {
     return (
-      <div className="flex flex-col h-full p-4">
-        <p className="text-sm text-red-500">Error loading perspectives:</p>
-        <p className="text-xs mt-1">{error.message}</p>
-      </div>
+      <Box display="flex" flexDirection="column" height="full" p={4}>
+        <Box fontSize="sm" color="red.500">Error loading perspectives:</Box>
+        <Box fontSize="xs" mt={1}>{error.message}</Box>
+      </Box>
     );
   }
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
-      <div className="p-2">
-        <h3 className="font-semibold text-sm mb-2">Perspective Management</h3>
-        
-        {modules.length === 0 ? (
-          <p className="text-sm text-gray-500">No perspectives found.</p>
-        ) : (
-          <div className="space-y-4">
-            {modules.map((module) => (
-              <div key={module.id} className="space-y-2">
-                <Link
-                  to="/perspectives/module/$moduleName"
-                  params={{ moduleName: module.id }}
-                  className="text-sm font-medium hover:underline"
-                >
-                  {module.name}
-                </Link>
-                
-                <ul className="pl-4 space-y-1">
-                  {module.perspectives.map((perspective) => {
-                    // Extract perspective ID from the full name
-                    const perspectiveId = perspective.name.includes("/") 
-                      ? perspective.name.split("/").pop() 
-                      : perspective.name;
+    <Box display="flex" flexDirection="column" height="full" overflow="hidden">
+      <Tabs.Root 
+        defaultValue="modules" 
+        variant="enclosed" 
+        colorPalette="blue"
+        height="100%"
+      >
+        <Tabs.List borderBottomColor="gray.700">
+          <Tabs.Trigger value="modules">Modules</Tabs.Trigger>
+          <Tabs.Trigger value="visibility">Visibility</Tabs.Trigger>
+          <Tabs.Indicator />
+        </Tabs.List>
+
+        <Box flex="1" overflow="auto">
+          <Tabs.Content value="modules">
+            <Box p={2}>
+              <Box fontWeight="semibold" fontSize="sm" mb={2}>Perspective Modules</Box>
+              
+              {modules.length === 0 ? (
+                <Box fontSize="sm" color="gray.500">No perspectives found.</Box>
+              ) : (
+                <Box display="flex" flexDirection="column" gap={4}>
+                  {modules.map((module) => (
+                    <Box key={module.id} display="flex" flexDirection="column" gap={2}>
+                      <Link
+                        to="/perspectives/module/$moduleName"
+                        params={{ moduleName: module.id }}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {module.name}
+                      </Link>
                       
-                    return (
-                      <li key={perspective.name}>
-                        <Link
-                          to="/perspectives/module/$moduleName/perspective/$perspectiveName"
-                          params={{ 
-                            moduleName: module.id,
-                            perspectiveName: perspectiveId
-                          }}
-                          className="text-xs hover:underline text-gray-700"
-                        >
-                          {perspective.display_name}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+                      <Box as="ul" pl={4} display="flex" flexDirection="column" gap={1}>
+                        {module.perspectives.map((perspective) => {
+                          // Extract perspective ID from the full name
+                          const perspectiveId = perspective.name.includes("/") 
+                            ? perspective.name.split("/").pop() || perspective.name
+                            : perspective.name;
+                            
+                          return (
+                            <Box as="li" key={perspective.name}>
+                              <Link
+                                to="/perspectives/module/$moduleName/perspective/$perspectiveName"
+                                params={{ 
+                                  moduleName: module.id,
+                                  perspectiveName: perspectiveId
+                                }}
+                                className="text-xs hover:underline text-gray-700"
+                              >
+                                {perspective.display_name}
+                              </Link>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Tabs.Content>
+
+          <Tabs.Content value="visibility">
+            <PerspectiveFilterPanel />
+          </Tabs.Content>
+        </Box>
+      </Tabs.Root>
+    </Box>
   );
 } 

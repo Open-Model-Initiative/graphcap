@@ -10,123 +10,218 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as AboutImport } from "./routes/about";
-import { Route as GalleryDatasetIdImport } from "./routes/gallery/$datasetId";
-import { Route as GalleryIndexImport } from "./routes/gallery/index";
-import { Route as IndexImport } from "./routes/index";
+import { Route as rootRoute } from './routes/__root'
+import { Route as AboutImport } from './routes/about'
+import { Route as IndexImport } from './routes/index'
+import { Route as PerspectivesIndexImport } from './routes/perspectives/index'
+import { Route as GalleryIndexImport } from './routes/gallery/index'
+import { Route as GalleryDatasetIdImport } from './routes/gallery/$datasetId'
+import { Route as PerspectivesModuleModuleNameImport } from './routes/perspectives/module/$moduleName'
+import { Route as PerspectivesModuleModuleNamePerspectivePerspectiveNameImport } from './routes/perspectives/module/$moduleName/perspective/$perspectiveName'
 
 // Create/Update Routes
 
 const AboutRoute = AboutImport.update({
-	id: "/about",
-	path: "/about",
-	getParentRoute: () => rootRoute,
-} as any);
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => rootRoute,
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PerspectivesIndexRoute = PerspectivesIndexImport.update({
+  id: '/perspectives/',
+  path: '/perspectives/',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const GalleryIndexRoute = GalleryIndexImport.update({
-	id: "/gallery/",
-	path: "/gallery/",
-	getParentRoute: () => rootRoute,
-} as any);
+  id: '/gallery/',
+  path: '/gallery/',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const GalleryDatasetIdRoute = GalleryDatasetIdImport.update({
-	id: "/gallery/$datasetId",
-	path: "/gallery/$datasetId",
-	getParentRoute: () => rootRoute,
-} as any);
+  id: '/gallery/$datasetId',
+  path: '/gallery/$datasetId',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PerspectivesModuleModuleNameRoute =
+  PerspectivesModuleModuleNameImport.update({
+    id: '/perspectives/module/$moduleName',
+    path: '/perspectives/module/$moduleName',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute =
+  PerspectivesModuleModuleNamePerspectivePerspectiveNameImport.update({
+    id: '/perspective/$perspectiveName',
+    path: '/perspective/$perspectiveName',
+    getParentRoute: () => PerspectivesModuleModuleNameRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
-	interface FileRoutesByPath {
-		"/": {
-			id: "/";
-			path: "/";
-			fullPath: "/";
-			preLoaderRoute: typeof IndexImport;
-			parentRoute: typeof rootRoute;
-		};
-		"/about": {
-			id: "/about";
-			path: "/about";
-			fullPath: "/about";
-			preLoaderRoute: typeof AboutImport;
-			parentRoute: typeof rootRoute;
-		};
-		"/gallery/$datasetId": {
-			id: "/gallery/$datasetId";
-			path: "/gallery/$datasetId";
-			fullPath: "/gallery/$datasetId";
-			preLoaderRoute: typeof GalleryDatasetIdImport;
-			parentRoute: typeof rootRoute;
-		};
-		"/gallery/": {
-			id: "/gallery/";
-			path: "/gallery";
-			fullPath: "/gallery";
-			preLoaderRoute: typeof GalleryIndexImport;
-			parentRoute: typeof rootRoute;
-		};
-	}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutImport
+      parentRoute: typeof rootRoute
+    }
+    '/gallery/$datasetId': {
+      id: '/gallery/$datasetId'
+      path: '/gallery/$datasetId'
+      fullPath: '/gallery/$datasetId'
+      preLoaderRoute: typeof GalleryDatasetIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/gallery/': {
+      id: '/gallery/'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/perspectives/': {
+      id: '/perspectives/'
+      path: '/perspectives'
+      fullPath: '/perspectives'
+      preLoaderRoute: typeof PerspectivesIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/perspectives/module/$moduleName': {
+      id: '/perspectives/module/$moduleName'
+      path: '/perspectives/module/$moduleName'
+      fullPath: '/perspectives/module/$moduleName'
+      preLoaderRoute: typeof PerspectivesModuleModuleNameImport
+      parentRoute: typeof rootRoute
+    }
+    '/perspectives/module/$moduleName/perspective/$perspectiveName': {
+      id: '/perspectives/module/$moduleName/perspective/$perspectiveName'
+      path: '/perspective/$perspectiveName'
+      fullPath: '/perspectives/module/$moduleName/perspective/$perspectiveName'
+      preLoaderRoute: typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameImport
+      parentRoute: typeof PerspectivesModuleModuleNameImport
+    }
+  }
 }
 
 // Create and export the route tree
 
+interface PerspectivesModuleModuleNameRouteChildren {
+  PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute: typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
+}
+
+const PerspectivesModuleModuleNameRouteChildren: PerspectivesModuleModuleNameRouteChildren =
+  {
+    PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute:
+      PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute,
+  }
+
+const PerspectivesModuleModuleNameRouteWithChildren =
+  PerspectivesModuleModuleNameRoute._addFileChildren(
+    PerspectivesModuleModuleNameRouteChildren,
+  )
+
 export interface FileRoutesByFullPath {
-	"/": typeof IndexRoute;
-	"/about": typeof AboutRoute;
-	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
-	"/gallery": typeof GalleryIndexRoute;
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
+  '/gallery': typeof GalleryIndexRoute
+  '/perspectives': typeof PerspectivesIndexRoute
+  '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
 export interface FileRoutesByTo {
-	"/": typeof IndexRoute;
-	"/about": typeof AboutRoute;
-	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
-	"/gallery": typeof GalleryIndexRoute;
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
+  '/gallery': typeof GalleryIndexRoute
+  '/perspectives': typeof PerspectivesIndexRoute
+  '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
 export interface FileRoutesById {
-	__root__: typeof rootRoute;
-	"/": typeof IndexRoute;
-	"/about": typeof AboutRoute;
-	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
-	"/gallery/": typeof GalleryIndexRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
+  '/gallery/': typeof GalleryIndexRoute
+  '/perspectives/': typeof PerspectivesIndexRoute
+  '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
 export interface FileRouteTypes {
-	fileRoutesByFullPath: FileRoutesByFullPath;
-	fullPaths: "/" | "/about" | "/gallery/$datasetId" | "/gallery";
-	fileRoutesByTo: FileRoutesByTo;
-	to: "/" | "/about" | "/gallery/$datasetId" | "/gallery";
-	id: "__root__" | "/" | "/about" | "/gallery/$datasetId" | "/gallery/";
-	fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/gallery/$datasetId'
+    | '/gallery'
+    | '/perspectives'
+    | '/perspectives/module/$moduleName'
+    | '/perspectives/module/$moduleName/perspective/$perspectiveName'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/about'
+    | '/gallery/$datasetId'
+    | '/gallery'
+    | '/perspectives'
+    | '/perspectives/module/$moduleName'
+    | '/perspectives/module/$moduleName/perspective/$perspectiveName'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/gallery/$datasetId'
+    | '/gallery/'
+    | '/perspectives/'
+    | '/perspectives/module/$moduleName'
+    | '/perspectives/module/$moduleName/perspective/$perspectiveName'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-	IndexRoute: typeof IndexRoute;
-	AboutRoute: typeof AboutRoute;
-	GalleryDatasetIdRoute: typeof GalleryDatasetIdRoute;
-	GalleryIndexRoute: typeof GalleryIndexRoute;
+  IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  GalleryDatasetIdRoute: typeof GalleryDatasetIdRoute
+  GalleryIndexRoute: typeof GalleryIndexRoute
+  PerspectivesIndexRoute: typeof PerspectivesIndexRoute
+  PerspectivesModuleModuleNameRoute: typeof PerspectivesModuleModuleNameRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-	IndexRoute: IndexRoute,
-	AboutRoute: AboutRoute,
-	GalleryDatasetIdRoute: GalleryDatasetIdRoute,
-	GalleryIndexRoute: GalleryIndexRoute,
-};
+  IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  GalleryDatasetIdRoute: GalleryDatasetIdRoute,
+  GalleryIndexRoute: GalleryIndexRoute,
+  PerspectivesIndexRoute: PerspectivesIndexRoute,
+  PerspectivesModuleModuleNameRoute:
+    PerspectivesModuleModuleNameRouteWithChildren,
+}
 
 export const routeTree = rootRoute
-	._addFileChildren(rootRouteChildren)
-	._addFileTypes<FileRouteTypes>();
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* ROUTE_MANIFEST_START
 {
@@ -137,7 +232,9 @@ export const routeTree = rootRoute
         "/",
         "/about",
         "/gallery/$datasetId",
-        "/gallery/"
+        "/gallery/",
+        "/perspectives/",
+        "/perspectives/module/$moduleName"
       ]
     },
     "/": {
@@ -151,6 +248,19 @@ export const routeTree = rootRoute
     },
     "/gallery/": {
       "filePath": "gallery/index.tsx"
+    },
+    "/perspectives/": {
+      "filePath": "perspectives/index.tsx"
+    },
+    "/perspectives/module/$moduleName": {
+      "filePath": "perspectives/module/$moduleName.tsx",
+      "children": [
+        "/perspectives/module/$moduleName/perspective/$perspectiveName"
+      ]
+    },
+    "/perspectives/module/$moduleName/perspective/$perspectiveName": {
+      "filePath": "perspectives/module/$moduleName/perspective/$perspectiveName.tsx",
+      "parent": "/perspectives/module/$moduleName"
     }
   }
 }

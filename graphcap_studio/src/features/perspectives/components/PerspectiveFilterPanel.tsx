@@ -88,9 +88,11 @@ export function PerspectiveFilterPanel() {
 						size="xs"
 						variant="outline"
 						colorScheme="blue"
-						onClick={() =>
-							perspectives.forEach((p) => togglePerspectiveVisibility(p.name))
-						}
+						onClick={() => {
+							for (const p of perspectives) {
+								togglePerspectiveVisibility(p.name);
+							}
+						}}
 					>
 						Toggle All
 					</Button>
