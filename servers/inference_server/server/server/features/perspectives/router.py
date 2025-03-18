@@ -9,22 +9,32 @@ This module provides the following endpoints:
 - POST /perspectives/caption - Generate a caption for an image using file upload
 - GET /perspectives/debug/{perspective_name} - Get debug information about a perspective
 - POST /perspectives/caption-from-path - Generate a caption for an image using a file path
+- GET /perspectives/modules - List all available perspective modules
+- GET /perspectives/modules/{module_name} - Get perspectives for a specific module
 """
 
 import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
 
 from ...utils.resizing import ResolutionPreset, log_resize_options, resize_image
-from .models import CaptionPathRequest, CaptionResponse, PerspectiveListResponse
+from .models import (
+    CaptionPathRequest,
+    CaptionResponse,
+    ModuleListResponse,
+    ModulePerspectivesResponse,
+    PerspectiveListResponse,
+)
 from .service import (
     generate_caption,
+    get_available_modules,
     get_available_perspectives,
+    get_perspectives_by_module,
     save_uploaded_file,
 )
 
@@ -41,48 +51,6 @@ async def list_perspectives() -> PerspectiveListResponse:
     """
     perspectives = get_available_perspectives()
     return PerspectiveListResponse(perspectives=perspectives)
-
-
-@router.get("/debug/{perspective_name}")
-async def debug_perspective(perspective_name: str) -> dict:
-    """
-    Get debug information about a perspective.
-    Args:
-        perspective_name: Name of the perspective to debug
-    Returns:
-        Debug information about the perspective
-    Raises:
-        HTTPException: If the perspective is not found
-    """
-    from graphcap.perspectives import get_perspective
-
-    try:
-        perspective = get_perspective(perspective_name)
-        # Get perspective attributes
-        attributes = {
-            "config_name": perspective.config_name,
-            "display_name": perspective.display_name,
-            "version": perspective.version,
-            "has_process_single": hasattr(perspective, "process_single"),
-            "has_process_batch": hasattr(perspective, "process_batch"),
-        }
-        # Get method signatures if available
-        if attributes["has_process_single"]:
-            import inspect
-
-            attributes["process_single_signature"] = str(inspect.signature(perspective.process_single))
-        if attributes["has_process_batch"]:
-            import inspect
-
-            attributes["process_batch_signature"] = str(inspect.signature(perspective.process_batch))
-        return {
-            "perspective": perspective_name,
-            "attributes": attributes,
-            "type": str(type(perspective)),
-        }
-    except Exception as e:
-        logger.error(f"Error getting perspective debug info: {str(e)}")
-        raise HTTPException(status_code=404, detail=f"Error getting perspective debug info: {str(e)}")
 
 
 @router.post("/caption", response_model=CaptionResponse, status_code=status.HTTP_200_OK)
@@ -376,55 +344,55 @@ def _parse_context(context_str) -> Optional[List[str]]:
         return [context_str]
 
 
-@router.get("/debug", response_model=Dict[str, Any], tags=["perspectives"])
-async def debug_perspectives() -> Dict[str, Any]:
-    """
-    Get debug information about perspectives and their configurations.
-    This is intended for troubleshooting issues with perspective schemas.
-    """
 
-    from graphcap.perspectives import get_perspective, get_perspective_directories, get_perspective_list
 
-    debug_info = {
-        "perspective_dirs": [str(p) for p in get_perspective_directories()],
-        "perspective_count": 0,
-        "available_files": [],
-        "perspectives": {}
-    }
+@router.get("/modules", response_model=ModuleListResponse)
+async def list_modules() -> ModuleListResponse:
+    """
+    List all available perspective modules.
+
+    Returns:
+        List of available modules with metadata
+    """
+    modules = get_available_modules()
+    return ModuleListResponse(modules=modules)
+
+
+@router.get("/modules/{module_name}", response_model=ModulePerspectivesResponse)
+async def get_module_perspectives(module_name: str) -> ModulePerspectivesResponse:
+    """
+    Get all perspectives that belong to a specific module.
+
+    Args:
+        module_name: Name of the module to get perspectives for
+
+    Returns:
+        Module information and list of perspectives in the module
     
-    # List all JSON files in perspective directories
-    for directory in get_perspective_directories():
-        if directory.exists():
-            json_files = list(directory.glob("*.json"))
-            debug_info["available_files"].extend([str(f) for f in json_files])
-    
-    # Get info about registered perspectives
-    perspective_names = get_perspective_list()
-    debug_info["perspective_count"] = len(perspective_names)
-    
-    # Get detailed info about each perspective
-    for name in perspective_names:
-        try:
-            perspective = get_perspective(name)
-            # Get attributes from the perspective object
-            attrs = {}
-            for attr in ["config_name", "display_name", "version", "description", "module_name"]:
-                if hasattr(perspective, attr):
-                    attrs[attr] = getattr(perspective, attr)
-            
-            debug_info["perspectives"][name] = {
-                "attributes": attrs,
-                "schema_found": False
-            }
-            
-            # Check if we can load the schema
-            from ..perspectives.service import load_perspective_schema
-            schema = load_perspective_schema(name)
-            if schema:
-                debug_info["perspectives"][name]["schema_found"] = True
-        except Exception as e:
-            debug_info["perspectives"][name] = {
-                "error": str(e)
-            }
-    
-    return debug_info
+    Raises:
+        HTTPException: If the module is not found
+    """
+    try:
+        # Get perspectives for the module
+        perspectives = get_perspectives_by_module(module_name)
+        
+        # Get module info
+        modules = get_available_modules()
+        module = next((m for m in modules if m.name == module_name), None)
+        
+        if not module:
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+        
+        return ModulePerspectivesResponse(
+            module=module,
+            perspectives=perspectives
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error getting perspectives for module '{module_name}': {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting perspectives for module '{module_name}': {str(e)}"
+        )

@@ -76,6 +76,29 @@ class PerspectiveListResponse(BaseModel):
     perspectives: List[PerspectiveInfo] = Field(..., description="List of available perspectives")
 
 
+class ModuleInfo(BaseModel):
+    """Information about a perspective module."""
+    
+    name: str = Field(..., description="Unique identifier for the module")
+    display_name: str = Field(..., description="Human-readable name for the module")
+    description: str = Field("", description="Description of the module")
+    enabled: bool = Field(True, description="Whether the module is enabled")
+    perspective_count: int = Field(0, description="Number of perspectives in this module")
+
+
+class ModuleListResponse(BaseModel):
+    """Response model for listing available modules."""
+    
+    modules: List[ModuleInfo] = Field(..., description="List of available modules")
+
+
+class ModulePerspectivesResponse(BaseModel):
+    """Response model for perspectives in a module."""
+    
+    module: ModuleInfo = Field(..., description="Information about the module")
+    perspectives: List[PerspectiveInfo] = Field(..., description="List of perspectives in the module")
+
+
 class ImageSource(BaseModel):
     """Source of an image for captioning."""
 

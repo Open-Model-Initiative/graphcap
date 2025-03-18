@@ -11,6 +11,7 @@ import socket
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
+from collections import defaultdict
 
 import aiohttp
 from fastapi import HTTPException, UploadFile
@@ -22,7 +23,7 @@ from graphcap.providers.clients.base_client import BaseClient
 from loguru import logger
 
 from ..providers.service import get_provider_manager
-from .models import PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
+from .models import ModuleInfo, PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
 
 
 async def download_image(url: str) -> Path:
@@ -190,6 +191,73 @@ def get_available_perspectives() -> List[PerspectiveInfo]:
             logger.error(f"Error getting perspective {name}: {str(e)}")
 
     return perspectives
+
+
+def get_available_modules() -> List[ModuleInfo]:
+    """
+    Get a list of available modules and their metadata.
+
+    Returns:
+        List of module information
+    """
+    perspectives = get_available_perspectives()
+    
+    # Group perspectives by module
+    module_map = defaultdict(list)
+    for perspective in perspectives:
+        module_map[perspective.module].append(perspective)
+    
+    # Create module info objects
+    modules = []
+    for module_name, module_perspectives in module_map.items():
+        # Try to find a display name, falling back to the module name
+        display_name = module_name.replace("_", " ").title()
+        
+        modules.append(
+            ModuleInfo(
+                name=module_name,
+                display_name=display_name,
+                description=f"Contains {len(module_perspectives)} perspectives",
+                enabled=True,  # Default to enabled
+                perspective_count=len(module_perspectives)
+            )
+        )
+    
+    # Sort modules by name
+    modules.sort(key=lambda m: m.name)
+    
+    return modules
+
+
+def get_perspectives_by_module(module_name: str) -> List[PerspectiveInfo]:
+    """
+    Get a list of perspectives that belong to a specific module.
+
+    Args:
+        module_name: Name of the module to filter by
+
+    Returns:
+        List of perspective information in the specified module
+        
+    Raises:
+        HTTPException: If the module is not found
+    """
+    perspectives = get_available_perspectives()
+    
+    # Filter perspectives by module name
+    module_perspectives = [p for p in perspectives if p.module == module_name]
+    
+    # If no perspectives were found for this module, the module might not exist
+    if not module_perspectives:
+        # Check if the module exists
+        all_modules = get_available_modules()
+        if not any(m.name == module_name for m in all_modules):
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+    
+    # Sort perspectives by priority, then name
+    module_perspectives.sort(key=lambda p: (p.priority, p.name))
+    
+    return module_perspectives
 
 
 async def generate_caption(
