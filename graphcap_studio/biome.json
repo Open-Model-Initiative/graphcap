@@ -1,13 +1,13 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
-	"files": { "ignoreUnknown": false, "ignore": [] },
+	"files": { "ignoreUnknown": false, "ignore": ["node_modules", "**/node_modules/**"] },
 	"formatter": { "enabled": true, "indentStyle": "tab" },
 	"organizeImports": { "enabled": true },
 	"linter": {
 		"enabled": true,
 		"rules": { "recommended": false },
-		"ignore": ["dist"]
+		"ignore": ["dist", "node_modules", "**/node_modules/**"]
 	},
 	"javascript": { "formatter": { "quoteStyle": "double" } },
 	"overrides": [

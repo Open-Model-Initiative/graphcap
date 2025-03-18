@@ -7,7 +7,7 @@
  * inferred types, domain types, and utility types in one location.
  */
 
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
 import { z } from "zod";
 
 // ============================================================================

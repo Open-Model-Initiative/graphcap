@@ -9,9 +9,14 @@
 import { Button } from "@/components/ui";
 import { Slider } from "@/components/ui/slider";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { CaptionOptions } from "@/features/perspectives/types";
+import type { CaptionOptions } from "@/features/perspectives/types";
 import { Box, HStack, Input, VStack } from "@chakra-ui/react";
-import React, { useCallback, useState, useEffect, ChangeEvent } from "react";
+import React, {
+	useCallback,
+	useState,
+	useEffect,
+	type ChangeEvent,
+} from "react";
 
 // Default options for caption generation
 export const DEFAULT_OPTIONS: CaptionOptions = {
@@ -93,7 +98,7 @@ export function GenerationOptionForm({
 	// Handle direct input changes
 	const handleInputChange =
 		(name: NumericOptionKey) => (e: ChangeEvent<HTMLInputElement>) => {
-			const valueAsNumber = parseFloat(e.target.value);
+			const valueAsNumber = Number.parseFloat(e.target.value);
 			if (isNaN(valueAsNumber)) return;
 
 			const config = OPTION_CONFIGS[name];

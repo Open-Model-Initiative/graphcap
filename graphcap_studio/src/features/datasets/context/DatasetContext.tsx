@@ -1,9 +1,9 @@
-import { Dataset } from "@/services/dataset";
-import { useAddImageToDataset, useCreateDataset } from "@/services/dataset";
-import { Image } from "@/services/images";
 // SPDX-License-Identifier: Apache-2.0
+import type { Dataset } from "@/services/dataset";
+import { useAddImageToDataset, useCreateDataset } from "@/services/dataset";
+import type { Image } from "@/services/images";
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useCallback,
 	useContext,
@@ -122,11 +122,11 @@ export function DatasetProvider({
 
 				if (result.success) {
 					toast.success(
-						result.message ||
+						result.message ??
 							`Image added to dataset ${targetDataset} successfully`,
 					);
 				} else {
-					toast.error(result.message || "Failed to add image to dataset");
+					toast.error(result.message ?? "Failed to add image to dataset");
 				}
 			} catch (error) {
 				toast.error(

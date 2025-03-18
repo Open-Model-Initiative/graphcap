@@ -2,7 +2,13 @@ import zIndex from "@/common/styles/z-index.module.css";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { Box, Button, Stack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import styles from "./ActionPanel.module.css";
 import { useActionPanel } from "./hooks";
 

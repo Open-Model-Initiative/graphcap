@@ -144,9 +144,8 @@ export function useCreateDataset() {
 					// Handle specific error cases
 					if (response.status === 409) {
 						throw new Error(`Dataset "${name}" already exists (409)`);
-					} else {
-						throw new Error(`Failed to create dataset: ${response.statusText}`);
 					}
+					throw new Error(`Failed to create dataset: ${response.statusText}`);
 				}
 
 				const data = await response.json();
@@ -217,18 +216,19 @@ export function useAddImageToDataset() {
 						errorText.includes("Dataset not found")
 					) {
 						throw new Error(`Dataset "${datasetName}" not found`);
-					} else if (
+					}
+					if (
 						response.status === 404 &&
 						errorText.includes("Image not found")
 					) {
 						throw new Error(`Image "${imagePath}" not found`);
-					} else if (response.status === 409) {
-						throw new Error(`Image already exists in the dataset`);
-					} else {
-						throw new Error(
-							`Failed to add image to dataset: ${response.statusText}`,
-						);
 					}
+					if (response.status === 409) {
+						throw new Error("Image already exists in the dataset");
+					}
+					throw new Error(
+						`Failed to add image to dataset: ${response.statusText}`,
+					);
 				}
 
 				const data = await response.json();
@@ -299,9 +299,8 @@ export function useDeleteDataset() {
 					// Handle specific error cases
 					if (response.status === 404) {
 						throw new Error(`Dataset "${name}" not found (404)`);
-					} else {
-						throw new Error(`Failed to delete dataset: ${response.statusText}`);
 					}
+					throw new Error(`Failed to delete dataset: ${response.statusText}`);
 				}
 
 				const data = await response.json();
