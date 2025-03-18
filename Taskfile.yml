@@ -6,6 +6,7 @@ includes:
   inference: ./src/server/Taskfile.inference.yml
   graphcap: ./src/Taskfile.graphcap.yml
   studio: ./graphcap_studio/Taskfile.studio.yml
+
 tasks:
   dev:
     desc: Start the Docker Compose services in watch mode
@@ -23,13 +24,9 @@ tasks:
       - docker compose --env-file ./workspace/config/.env down 
 
   setup:
-    desc: Setup the project [TODO: Update to use uv]
+    desc: Setup the project 
     cmds:
-      - echo "TODO: Update to current setup workflow"
-      # - uv venv --python 3.11
-      # - uv pip install -e ".[dev]"
-      # - uv pip install -e ./src
-      # - uv run python -m src.scripts
-      # - task studio:update-deps
+      - echo "TODO Update to current setup workflow"
+
 
 
