@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Install pnpm and other required tools
-RUN npm install -g pnpm && \
+RUN npm install --ignore-scripts  -g pnpm && \
     apk add --no-cache bash curl
 
 WORKDIR /app
@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json pnpm-lock.yaml ./
 
 # Install dependencies at build time
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy entrypoint script and make it executable
 COPY _scripts/client_entrypoint.sh /usr/local/bin/

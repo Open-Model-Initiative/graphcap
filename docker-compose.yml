@@ -5,7 +5,7 @@ services:
     container_name: graphcap_server
     build:
       context: ./src
-      dockerfile: ./server/Dockerfile.server
+      dockerfile: ./server/Dockerfile.server.dev
     ports:
       - 32100:32100
     volumes:
@@ -46,7 +46,7 @@ services:
     container_name: graphcap_ui
     build:
       context: ./graphcap_studio
-      dockerfile: Dockerfile.client
+      dockerfile: Dockerfile.client.dev
       args:
         - VITE_API_URL=http://localhost:32200/api
     ports:
@@ -96,7 +96,7 @@ services:
     container_name: graphcap_media_server
     build:
       context: ./servers/media_server
-      dockerfile: Dockerfile.media_server
+      dockerfile: Dockerfile.media_server.dev
     ports:
       - "32400:32400"
     volumes:
@@ -129,7 +129,7 @@ services:
   graphcap_pipelines:
     build:
       context: ./src
-      dockerfile: pipelines/Dockerfile.pipelines
+      dockerfile: pipelines/Dockerfile.pipelines.dev
     container_name: graphcap_pipelines
     volumes:
       - ./workspace:/workspace
@@ -154,7 +154,7 @@ services:
     container_name: graphcap_data_service
     build:
       context: ./servers/data_service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.data_service.dev
     ports:
       - "32550:32550"
       - "32501:32501"  # Drizzle Kit Studio port
