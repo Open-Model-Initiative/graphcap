@@ -4,13 +4,13 @@ services:
   graphcap_server:
     container_name: graphcap_server
     build:
-      context: ./src
+      context: ./servers/inference_server
       dockerfile: ./server/Dockerfile.server.dev
     ports:
       - 32100:32100
     volumes:
-      - ./src/graphcap:/app/graphcap
-      - ./src/server/server:/app/server/server
+      - ./servers/inference_server/graphcap:/app/graphcap
+      - ./servers/inference_server/server/server:/app/server/server
       - ./workspace:/workspace
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
@@ -128,12 +128,12 @@ services:
 
   graphcap_pipelines:
     build:
-      context: ./src
+      context: ./servers/inference_server
       dockerfile: pipelines/Dockerfile.pipelines.dev
     container_name: graphcap_pipelines
     volumes:
       - ./workspace:/workspace
-      - ./src:/app
+      - ./servers/inference_server:/app
     environment:
       - DAGSTER_HOME=/workspace/.local/.dagster
       - DAGSTER_PORT=32300

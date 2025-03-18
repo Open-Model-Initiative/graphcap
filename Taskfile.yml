@@ -2,10 +2,9 @@ version: "3"
 dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 includes:
-  data: ./servers/data_service/Taskfile.data.yml
-  inference: ./src/server/Taskfile.inference.yml
-  graphcap: ./src/Taskfile.graphcap.yml
-  studio: ./graphcap_studio/Taskfile.studio.yml
+  data:      ./servers/data_service/Taskfile.data.yml
+  inference: ./servers/inference_server/server/Taskfile.inference.yml
+  studio:    ./graphcap_studio/Taskfile.studio.yml
 
 tasks:
   dev:
