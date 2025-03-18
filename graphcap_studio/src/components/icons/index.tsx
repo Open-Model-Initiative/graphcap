@@ -172,3 +172,6 @@ export function DatasetIcon({ className = "" }: Readonly<IconProps>) {
 		</svg>
 	);
 }
+
+// Export for PerspectiveLayersIcon
+export { PerspectiveLayersIcon } from "./PerspectiveLayersIcon";

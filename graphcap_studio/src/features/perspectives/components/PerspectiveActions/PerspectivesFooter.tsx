@@ -16,7 +16,7 @@ import {
 	usePerspectiveUI,
 	usePerspectivesData,
 } from "@/features/perspectives/context";
-import { CaptionOptions } from "@/features/perspectives/types";
+import type { CaptionOptions } from "@/features/perspectives/types";
 import {
 	Box,
 	Button,

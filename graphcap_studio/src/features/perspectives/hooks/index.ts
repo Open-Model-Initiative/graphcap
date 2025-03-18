@@ -12,6 +12,7 @@ export { usePerspectiveUI } from "./usePerspectiveUI";
 export { usePerspectives } from "./usePerspectives";
 export { useGeneratePerspectiveCaption } from "./useGeneratePerspectiveCaption";
 export { useImagePerspectives } from "./useImagePerspectives";
+export { usePerspectiveModules } from "./usePerspectiveModules";
 
 // Utilities
 export * from "./utils";

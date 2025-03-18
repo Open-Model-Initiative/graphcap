@@ -13,3 +13,4 @@ export { PerspectiveHeader } from "./PerspectiveNavigation/PerspectiveHeader";
 export { PerspectivesPager } from "./PerspectiveNavigation/PerspectivesPager";
 export { MetadataDisplay } from "./PerspectiveCard/MetadataDisplay";
 export * from "./PerspectiveActions";
+export * from "./PerspectiveManagementPanel";
