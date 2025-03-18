@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Install pnpm and other required tools
-RUN npm install -g pnpm --ignore-scripts && \
+RUN npm install --ignore-scripts  -g pnpm && \
     apk add --no-cache bash curl
 
 WORKDIR /app
