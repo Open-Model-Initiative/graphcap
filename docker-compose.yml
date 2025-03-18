@@ -4,12 +4,13 @@ services:
   graphcap_server:
     container_name: graphcap_server
     build:
-      context: ./src
-      dockerfile: ./server/Dockerfile.server
+      context: ./servers/inference_server
+      dockerfile: ./server/Dockerfile.server.dev
     ports:
       - 32100:32100
     volumes:
-      - ./src:/app
+      - ./servers/inference_server/graphcap:/app/graphcap
+      - ./servers/inference_server/server/server:/app/server/server
       - ./workspace:/workspace
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
@@ -45,17 +46,17 @@ services:
     container_name: graphcap_ui
     build:
       context: ./graphcap_studio
-      dockerfile: Dockerfile.client
+      dockerfile: Dockerfile.client.dev
       args:
         - VITE_API_URL=http://localhost:32200/api
     ports:
       - "32200:32200"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32200"]
-      interval: 10s
-      timeout: 5s
+      interval: 5m
+      timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     volumes:
       - ./.local/logs/graphcap_studio:/workspace/logs
       - ./workspace:/workspace
@@ -94,8 +95,8 @@ services:
   graphcap_media_server:
     container_name: graphcap_media_server
     build:
-      context: ./graphcap_studio/media_server
-      dockerfile: Dockerfile.media_server
+      context: ./servers/media_server
+      dockerfile: Dockerfile.media_server.dev
     ports:
       - "32400:32400"
     volumes:
@@ -108,31 +109,31 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./graphcap_studio/media_server
+          path: ./servers/media_server
           target: /app
           ignore:
             - "**/.git"
             - "**/node_modules"
             - "**/.DS_Store"
         - action: rebuild
-          path: ./graphcap_studio/media_server/package.json
+          path: ./servers/media_server/package.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 5m
+      timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     networks:
       - graphcap
 
   graphcap_pipelines:
     build:
-      context: ./src
-      dockerfile: pipelines/Dockerfile.pipelines
+      context: ./servers/inference_server
+      dockerfile: pipelines/Dockerfile.pipelines.dev
     container_name: graphcap_pipelines
     volumes:
       - ./workspace:/workspace
-      - ./src:/app
+      - ./servers/inference_server:/app
     environment:
       - DAGSTER_HOME=/workspace/.local/.dagster
       - DAGSTER_PORT=32300
@@ -152,8 +153,8 @@ services:
   graphcap_data_service:
     container_name: graphcap_data_service
     build:
-      context: ./data_service
-      dockerfile: Dockerfile
+      context: ./servers/data_service
+      dockerfile: Dockerfile.data_service.dev
     ports:
       - "32550:32550"
       - "32501:32501"  # Drizzle Kit Studio port
@@ -165,7 +166,7 @@ services:
       - DEBUG=true  # Enable debug mode
     volumes:
       - ./workspace:/workspace
-      - ./data_service/src:/app/src  # Mount src directory directly
+      - ./servers/data_service/src:/app/src  # Mount src directory directly
     networks:
       - graphcap
     depends_on:

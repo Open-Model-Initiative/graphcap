@@ -1,0 +1,54 @@
+/* MainLayout.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 100vw; /* Ensure container doesn't exceed viewport width */
+  overflow: hidden;
+  background-color: var(--bg-color, #f9fafb);
+  box-sizing: border-box; /* Include padding and border in the element's width and height */
+}
+
+.header {
+  flex-shrink: 0;
+  z-index: 10;
+  width: 100%;
+  padding: 0 40px;
+}
+
+.content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width calculation */
+  z-index: 1; /* Ensure content is below action panels */
+}
+
+.contentWithLeftSidebar {
+  padding-left: 16rem; /* 64 in tailwind units */
+}
+
+.contentWithRightSidebar {
+  padding-right: 16rem; /* 64 in tailwind units */
+}
+
+.contentInner {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.footer {
+  flex-shrink: 0;
+  z-index: 10;
+  width: 100%;
+  padding: 0 40px;
+}
+
+/* Dark mode support */
+:global(.dark) .container {
+  --bg-color: #030712;
+} 

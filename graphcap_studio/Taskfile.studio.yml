@@ -1,0 +1,24 @@
+version: "3"
+
+tasks:
+  update-deps:
+    desc: Update the pnpm-lock.yaml file for the graphcap_studio project
+    dir: ./graphcap_studio
+    cmds:
+      - pnpm install --no-frozen-lockfile
+      
+  dev:
+    desc: Start only the graphcap_studio and graphcap_media_server services with hot module reloading
+    cmds:
+      - docker compose up graphcap_studio graphcap_media_server --build --watch
+      
+  rebuild:
+    desc: Rebuild and restart the graphcap_studio and graphcap_media_server services
+    cmds:
+      - docker compose build graphcap_studio graphcap_media_server
+      - docker compose up graphcap_studio graphcap_media_server --force-recreate
+      
+  restart:
+    desc: Restart just the graphcap_studio service for quicker development iterations
+    cmds:
+      - docker compose restart graphcap_studio

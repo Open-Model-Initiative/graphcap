@@ -1,4 +1,4 @@
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm run build
 
 # Production stage
-FROM nginx:1.25.4-alpine-slim as prod
+FROM nginx:1.25.4-alpine-slim AS prod
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html

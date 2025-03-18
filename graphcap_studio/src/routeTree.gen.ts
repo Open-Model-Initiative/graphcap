@@ -10,256 +10,123 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as GalleryImport } from './pages/gallery'
-import { Route as DebugImport } from './routes/debug'
-import { Route as AboutImport } from './routes/about'
-import { Route as IndexImport } from './routes/index'
-import { Route as WorkflowsIndexImport } from './routes/workflows/index'
-import { Route as WorkflowsWorkflowIdImport } from './routes/workflows/$workflowId'
-import { Route as WorkflowsWorkflowIdIndexImport } from './routes/workflows/$workflowId/index'
-import { Route as WorkflowsWorkflowIdJobsIndexImport } from './routes/workflows/$workflowId/jobs/index'
-import { Route as WorkflowsWorkflowIdJobsJobIdIndexImport } from './routes/workflows/$workflowId/jobs/$jobId/index'
+import { Route as rootRoute } from "./routes/__root";
+import { Route as AboutImport } from "./routes/about";
+import { Route as GalleryDatasetIdImport } from "./routes/gallery/$datasetId";
+import { Route as GalleryIndexImport } from "./routes/gallery/index";
+import { Route as IndexImport } from "./routes/index";
 
 // Create/Update Routes
 
-const GalleryRoute = GalleryImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const DebugRoute = DebugImport.update({
-  id: '/debug',
-  path: '/debug',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
+	id: "/about",
+	path: "/about",
+	getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRoute,
-} as any)
+	id: "/",
+	path: "/",
+	getParentRoute: () => rootRoute,
+} as any);
 
-const WorkflowsIndexRoute = WorkflowsIndexImport.update({
-  id: '/workflows/',
-  path: '/workflows/',
-  getParentRoute: () => rootRoute,
-} as any)
+const GalleryIndexRoute = GalleryIndexImport.update({
+	id: "/gallery/",
+	path: "/gallery/",
+	getParentRoute: () => rootRoute,
+} as any);
 
-const WorkflowsWorkflowIdRoute = WorkflowsWorkflowIdImport.update({
-  id: '/workflows/$workflowId',
-  path: '/workflows/$workflowId',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const WorkflowsWorkflowIdIndexRoute = WorkflowsWorkflowIdIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => WorkflowsWorkflowIdRoute,
-} as any)
-
-const WorkflowsWorkflowIdJobsIndexRoute =
-  WorkflowsWorkflowIdJobsIndexImport.update({
-    id: '/jobs/',
-    path: '/jobs/',
-    getParentRoute: () => WorkflowsWorkflowIdRoute,
-  } as any)
-
-const WorkflowsWorkflowIdJobsJobIdIndexRoute =
-  WorkflowsWorkflowIdJobsJobIdIndexImport.update({
-    id: '/jobs/$jobId/',
-    path: '/jobs/$jobId/',
-    getParentRoute: () => WorkflowsWorkflowIdRoute,
-  } as any)
+const GalleryDatasetIdRoute = GalleryDatasetIdImport.update({
+	id: "/gallery/$datasetId",
+	path: "/gallery/$datasetId",
+	getParentRoute: () => rootRoute,
+} as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
-      parentRoute: typeof rootRoute
-    }
-    '/debug': {
-      id: '/debug'
-      path: '/debug'
-      fullPath: '/debug'
-      preLoaderRoute: typeof DebugImport
-      parentRoute: typeof rootRoute
-    }
-    '/gallery': {
-      id: '/gallery'
-      path: '/gallery'
-      fullPath: '/gallery'
-      preLoaderRoute: typeof GalleryImport
-      parentRoute: typeof rootRoute
-    }
-    '/workflows/$workflowId': {
-      id: '/workflows/$workflowId'
-      path: '/workflows/$workflowId'
-      fullPath: '/workflows/$workflowId'
-      preLoaderRoute: typeof WorkflowsWorkflowIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/workflows/': {
-      id: '/workflows/'
-      path: '/workflows'
-      fullPath: '/workflows'
-      preLoaderRoute: typeof WorkflowsIndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/workflows/$workflowId/': {
-      id: '/workflows/$workflowId/'
-      path: '/'
-      fullPath: '/workflows/$workflowId/'
-      preLoaderRoute: typeof WorkflowsWorkflowIdIndexImport
-      parentRoute: typeof WorkflowsWorkflowIdImport
-    }
-    '/workflows/$workflowId/jobs/': {
-      id: '/workflows/$workflowId/jobs/'
-      path: '/jobs'
-      fullPath: '/workflows/$workflowId/jobs'
-      preLoaderRoute: typeof WorkflowsWorkflowIdJobsIndexImport
-      parentRoute: typeof WorkflowsWorkflowIdImport
-    }
-    '/workflows/$workflowId/jobs/$jobId/': {
-      id: '/workflows/$workflowId/jobs/$jobId/'
-      path: '/jobs/$jobId'
-      fullPath: '/workflows/$workflowId/jobs/$jobId'
-      preLoaderRoute: typeof WorkflowsWorkflowIdJobsJobIdIndexImport
-      parentRoute: typeof WorkflowsWorkflowIdImport
-    }
-  }
+declare module "@tanstack/react-router" {
+	interface FileRoutesByPath {
+		"/": {
+			id: "/";
+			path: "/";
+			fullPath: "/";
+			preLoaderRoute: typeof IndexImport;
+			parentRoute: typeof rootRoute;
+		};
+		"/about": {
+			id: "/about";
+			path: "/about";
+			fullPath: "/about";
+			preLoaderRoute: typeof AboutImport;
+			parentRoute: typeof rootRoute;
+		};
+		"/gallery/$datasetId": {
+			id: "/gallery/$datasetId";
+			path: "/gallery/$datasetId";
+			fullPath: "/gallery/$datasetId";
+			preLoaderRoute: typeof GalleryDatasetIdImport;
+			parentRoute: typeof rootRoute;
+		};
+		"/gallery/": {
+			id: "/gallery/";
+			path: "/gallery";
+			fullPath: "/gallery";
+			preLoaderRoute: typeof GalleryIndexImport;
+			parentRoute: typeof rootRoute;
+		};
+	}
 }
 
 // Create and export the route tree
 
-interface WorkflowsWorkflowIdRouteChildren {
-  WorkflowsWorkflowIdIndexRoute: typeof WorkflowsWorkflowIdIndexRoute
-  WorkflowsWorkflowIdJobsIndexRoute: typeof WorkflowsWorkflowIdJobsIndexRoute
-  WorkflowsWorkflowIdJobsJobIdIndexRoute: typeof WorkflowsWorkflowIdJobsJobIdIndexRoute
-}
-
-const WorkflowsWorkflowIdRouteChildren: WorkflowsWorkflowIdRouteChildren = {
-  WorkflowsWorkflowIdIndexRoute: WorkflowsWorkflowIdIndexRoute,
-  WorkflowsWorkflowIdJobsIndexRoute: WorkflowsWorkflowIdJobsIndexRoute,
-  WorkflowsWorkflowIdJobsJobIdIndexRoute:
-    WorkflowsWorkflowIdJobsJobIdIndexRoute,
-}
-
-const WorkflowsWorkflowIdRouteWithChildren =
-  WorkflowsWorkflowIdRoute._addFileChildren(WorkflowsWorkflowIdRouteChildren)
-
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/debug': typeof DebugRoute
-  '/gallery': typeof GalleryRoute
-  '/workflows/$workflowId': typeof WorkflowsWorkflowIdRouteWithChildren
-  '/workflows': typeof WorkflowsIndexRoute
-  '/workflows/$workflowId/': typeof WorkflowsWorkflowIdIndexRoute
-  '/workflows/$workflowId/jobs': typeof WorkflowsWorkflowIdJobsIndexRoute
-  '/workflows/$workflowId/jobs/$jobId': typeof WorkflowsWorkflowIdJobsJobIdIndexRoute
+	"/": typeof IndexRoute;
+	"/about": typeof AboutRoute;
+	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
+	"/gallery": typeof GalleryIndexRoute;
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/debug': typeof DebugRoute
-  '/gallery': typeof GalleryRoute
-  '/workflows': typeof WorkflowsIndexRoute
-  '/workflows/$workflowId': typeof WorkflowsWorkflowIdIndexRoute
-  '/workflows/$workflowId/jobs': typeof WorkflowsWorkflowIdJobsIndexRoute
-  '/workflows/$workflowId/jobs/$jobId': typeof WorkflowsWorkflowIdJobsJobIdIndexRoute
+	"/": typeof IndexRoute;
+	"/about": typeof AboutRoute;
+	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
+	"/gallery": typeof GalleryIndexRoute;
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/debug': typeof DebugRoute
-  '/gallery': typeof GalleryRoute
-  '/workflows/$workflowId': typeof WorkflowsWorkflowIdRouteWithChildren
-  '/workflows/': typeof WorkflowsIndexRoute
-  '/workflows/$workflowId/': typeof WorkflowsWorkflowIdIndexRoute
-  '/workflows/$workflowId/jobs/': typeof WorkflowsWorkflowIdJobsIndexRoute
-  '/workflows/$workflowId/jobs/$jobId/': typeof WorkflowsWorkflowIdJobsJobIdIndexRoute
+	__root__: typeof rootRoute;
+	"/": typeof IndexRoute;
+	"/about": typeof AboutRoute;
+	"/gallery/$datasetId": typeof GalleryDatasetIdRoute;
+	"/gallery/": typeof GalleryIndexRoute;
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/debug'
-    | '/gallery'
-    | '/workflows/$workflowId'
-    | '/workflows'
-    | '/workflows/$workflowId/'
-    | '/workflows/$workflowId/jobs'
-    | '/workflows/$workflowId/jobs/$jobId'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/about'
-    | '/debug'
-    | '/gallery'
-    | '/workflows'
-    | '/workflows/$workflowId'
-    | '/workflows/$workflowId/jobs'
-    | '/workflows/$workflowId/jobs/$jobId'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/debug'
-    | '/gallery'
-    | '/workflows/$workflowId'
-    | '/workflows/'
-    | '/workflows/$workflowId/'
-    | '/workflows/$workflowId/jobs/'
-    | '/workflows/$workflowId/jobs/$jobId/'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths: "/" | "/about" | "/gallery/$datasetId" | "/gallery";
+	fileRoutesByTo: FileRoutesByTo;
+	to: "/" | "/about" | "/gallery/$datasetId" | "/gallery";
+	id: "__root__" | "/" | "/about" | "/gallery/$datasetId" | "/gallery/";
+	fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  DebugRoute: typeof DebugRoute
-  GalleryRoute: typeof GalleryRoute
-  WorkflowsWorkflowIdRoute: typeof WorkflowsWorkflowIdRouteWithChildren
-  WorkflowsIndexRoute: typeof WorkflowsIndexRoute
+	IndexRoute: typeof IndexRoute;
+	AboutRoute: typeof AboutRoute;
+	GalleryDatasetIdRoute: typeof GalleryDatasetIdRoute;
+	GalleryIndexRoute: typeof GalleryIndexRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  DebugRoute: DebugRoute,
-  GalleryRoute: GalleryRoute,
-  WorkflowsWorkflowIdRoute: WorkflowsWorkflowIdRouteWithChildren,
-  WorkflowsIndexRoute: WorkflowsIndexRoute,
-}
+	IndexRoute: IndexRoute,
+	AboutRoute: AboutRoute,
+	GalleryDatasetIdRoute: GalleryDatasetIdRoute,
+	GalleryIndexRoute: GalleryIndexRoute,
+};
 
 export const routeTree = rootRoute
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();
 
 /* ROUTE_MANIFEST_START
 {
@@ -269,10 +136,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/about",
-        "/debug",
-        "/gallery",
-        "/workflows/$workflowId",
-        "/workflows/"
+        "/gallery/$datasetId",
+        "/gallery/"
       ]
     },
     "/": {
@@ -281,34 +146,11 @@ export const routeTree = rootRoute
     "/about": {
       "filePath": "about.tsx"
     },
-    "/debug": {
-      "filePath": "debug.tsx"
+    "/gallery/$datasetId": {
+      "filePath": "gallery/$datasetId.tsx"
     },
-    "/gallery": {
-      "filePath": "gallery.tsx"
-    },
-    "/workflows/$workflowId": {
-      "filePath": "workflows/$workflowId.tsx",
-      "children": [
-        "/workflows/$workflowId/",
-        "/workflows/$workflowId/jobs/",
-        "/workflows/$workflowId/jobs/$jobId/"
-      ]
-    },
-    "/workflows/": {
-      "filePath": "workflows/index.tsx"
-    },
-    "/workflows/$workflowId/": {
-      "filePath": "workflows/$workflowId/index.tsx",
-      "parent": "/workflows/$workflowId"
-    },
-    "/workflows/$workflowId/jobs/": {
-      "filePath": "workflows/$workflowId/jobs/index.tsx",
-      "parent": "/workflows/$workflowId"
-    },
-    "/workflows/$workflowId/jobs/$jobId/": {
-      "filePath": "workflows/$workflowId/jobs/$jobId/index.tsx",
-      "parent": "/workflows/$workflowId"
+    "/gallery/": {
+      "filePath": "gallery/index.tsx"
     }
   }
 }

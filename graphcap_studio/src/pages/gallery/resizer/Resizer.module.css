@@ -1,17 +1,17 @@
 /* Resizer component styles */
 .resizerButton {
-  border-radius: 0 !important;
-  border: none !important;
-  padding: .2em !important;
-  transition: none !important;
-  background-color: rgb(17, 47, 77) !important;
+	border-radius: 0 !important;
+	border: none !important;
+	padding: .2em !important;
+	transition: none !important;
+	background-color: rgb(17, 47, 77) !important;
 }
 
 .resizerButton:hover {
-  border-color: transparent !important;
+	border-color: transparent !important;
 }
 
 .resizerButton:focus,
 .resizerButton:focus-visible {
-  outline: none !important;
-} 
+	outline: none !important;
+}

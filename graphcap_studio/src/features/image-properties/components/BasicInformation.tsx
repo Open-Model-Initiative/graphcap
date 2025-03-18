@@ -1,169 +1,239 @@
+import { Field } from "@/components/ui/field";
+import {
+	SelectContent,
+	SelectItem,
+	SelectRoot,
+	SelectTrigger,
+} from "@/components/ui/select";
+import { useColorModeValue } from "@/components/ui/theme/color-mode";
 // SPDX-License-Identifier: Apache-2.0
-import { ImagePropertiesData } from '../hooks/useImageProperties';
+import {
+	Box,
+	Button,
+	Tag as ChakraTag,
+	Flex,
+	Heading,
+	Input,
+	Text,
+	Textarea,
+	createListCollection,
+} from "@chakra-ui/react";
+import type { SelectValueChangeDetails } from "@chakra-ui/react";
+import { ImagePropertiesData } from "../hooks/useImageProperties";
 
 interface BasicInformationProps {
-  readonly properties: ImagePropertiesData;
-  readonly isEditing: boolean;
-  readonly newTag: string;
-  readonly onPropertyChange: (key: keyof ImagePropertiesData, value: any) => void;
-  readonly onNewTagChange: (value: string) => void;
-  readonly onAddTag: () => void;
-  readonly onRemoveTag: (tag: string) => void;
-  readonly onSave: () => void;
-  readonly onToggleEdit: () => void;
+	readonly properties: ImagePropertiesData;
+	readonly isEditing: boolean;
+	readonly newTag: string;
+	readonly onPropertyChange: (
+		key: keyof ImagePropertiesData,
+		value: any,
+	) => void;
+	readonly onNewTagChange: (value: string) => void;
+	readonly onAddTag: () => void;
+	readonly onRemoveTag: (tag: string) => void;
+	readonly onSave: () => void;
+	readonly onToggleEdit: () => void;
 }
 
 /**
  * Component for displaying and editing basic image information
  */
 export function BasicInformation({
-  properties,
-  isEditing,
-  newTag,
-  onPropertyChange,
-  onNewTagChange,
-  onAddTag,
-  onRemoveTag,
-  onSave,
-  onToggleEdit
+	properties,
+	isEditing,
+	newTag,
+	onPropertyChange,
+	onNewTagChange,
+	onAddTag,
+	onRemoveTag,
+	onSave,
+	onToggleEdit,
 }: BasicInformationProps) {
-  return (
-    <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-medium text-gray-200">Basic Information</h3>
-        <button
-          className="text-sm text-blue-400 hover:text-blue-300"
-          onClick={onToggleEdit}
-        >
-          {isEditing ? 'Cancel' : 'Edit'}
-        </button>
-      </div>
-      
-      {isEditing ? (
-        <div className="space-y-3">
-          <div>
-            <label htmlFor="image-title" className="mb-1 block text-sm font-medium text-gray-300">
-              Title
-            </label>
-            <input
-              id="image-title"
-              type="text"
-              value={properties.title}
-              onChange={(e) => onPropertyChange('title', e.target.value)}
-              className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
-            />
-          </div>
-          <div>
-            <label htmlFor="image-description" className="mb-1 block text-sm font-medium text-gray-300">
-              Description
-            </label>
-            <textarea
-              id="image-description"
-              value={properties.description}
-              onChange={(e) => onPropertyChange('description', e.target.value)}
-              className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
-              rows={3}
-            />
-          </div>
-          <div>
-            <label htmlFor="image-rating" className="mb-1 block text-sm font-medium text-gray-300">
-              Rating
-            </label>
-            <select
-              id="image-rating"
-              value={properties.rating}
-              onChange={(e) => onPropertyChange('rating', Number(e.target.value))}
-              className="w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
-            >
-              <option value={0}>Not rated</option>
-              <option value={1}>★</option>
-              <option value={2}>★★</option>
-              <option value={3}>★★★</option>
-              <option value={4}>★★★★</option>
-              <option value={5}>★★★★★</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="image-tags" className="mb-1 block text-sm font-medium text-gray-300">
-              Tags
-            </label>
-            <div className="flex">
-              <input
-                id="image-tags"
-                type="text"
-                value={newTag}
-                onChange={(e) => onNewTagChange(e.target.value)}
-                className="flex-1 rounded-l-md border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white"
-                placeholder="Add a tag"
-                onKeyDown={(e) => e.key === 'Enter' && onAddTag()}
-              />
-              <button
-                onClick={onAddTag}
-                className="rounded-r-md bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-              >
-                Add
-              </button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {properties.tags.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center rounded-full bg-blue-900/50 px-2.5 py-0.5 text-xs font-medium text-blue-200"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-blue-300 hover:bg-blue-800 hover:text-blue-100"
-                    onClick={() => onRemoveTag(tag)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-          <button
-            onClick={onSave}
-            className="mt-2 w-full rounded-md bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Save Changes
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div>
-            <span className="text-sm font-medium text-gray-400">Title:</span>
-            <p className="text-sm text-gray-200">{properties.title || 'No title'}</p>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-400">Description:</span>
-            <p className="text-sm text-gray-200">{properties.description || 'No description'}</p>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-400">Rating:</span>
-            <p className="text-sm text-gray-200">
-              {properties.rating ? '★'.repeat(properties.rating) : 'Not rated'}
-            </p>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-400">Tags:</span>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {properties.tags.length > 0 ? (
-                properties.tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center rounded-full bg-blue-900/50 px-2 py-0.5 text-xs font-medium text-blue-200"
-                  >
-                    {tag}
-                  </span>
-                ))
-              ) : (
-                <span className="text-sm text-gray-500">No tags</span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-} 
+	const bgColor = useColorModeValue("gray.50", "gray.800");
+	const borderColor = useColorModeValue("gray.200", "gray.700");
+	const labelColor = useColorModeValue("gray.600", "gray.400");
+	const textColor = useColorModeValue("gray.800", "gray.200");
+
+	const ratingItems = [
+		{ label: "Not rated", value: "0" },
+		{ label: "★", value: "1" },
+		{ label: "★★", value: "2" },
+		{ label: "★★★", value: "3" },
+		{ label: "★★★★", value: "4" },
+		{ label: "★★★★★", value: "5" },
+	];
+
+	const ratingCollection = createListCollection({
+		items: ratingItems,
+	});
+
+	const handleRatingChange = (
+		details: SelectValueChangeDetails<(typeof ratingItems)[0]>,
+	) => {
+		onPropertyChange("rating", Number(details.value[0]));
+	};
+
+	return (
+		<Box
+			borderRadius="lg"
+			bg={bgColor}
+			p={4}
+			shadow="sm"
+			borderWidth="1px"
+			borderColor={borderColor}
+		>
+			<Flex mb={2} alignItems="center" justifyContent="space-between">
+				<Heading size="sm" color={textColor}>
+					Basic Information
+				</Heading>
+				<Button
+					variant="ghost"
+					size="sm"
+					colorScheme="blue"
+					onClick={onToggleEdit}
+				>
+					{isEditing ? "Cancel" : "Edit"}
+				</Button>
+			</Flex>
+
+			{isEditing ? (
+				<Box>
+					<Field label="Title">
+						<Input
+							value={properties.title}
+							onChange={(e) => onPropertyChange("title", e.target.value)}
+							size="sm"
+						/>
+					</Field>
+
+					<Field label="Description" mt={3}>
+						<Textarea
+							value={properties.description}
+							onChange={(e) => onPropertyChange("description", e.target.value)}
+							size="sm"
+							rows={3}
+						/>
+					</Field>
+
+					<Field label="Rating" mt={3}>
+						<SelectRoot
+							value={[properties.rating.toString()]}
+							onValueChange={handleRatingChange}
+							collection={ratingCollection}
+						>
+							<SelectTrigger>
+								{properties.rating
+									? "★".repeat(properties.rating)
+									: "Not rated"}
+							</SelectTrigger>
+							<SelectContent>
+								{ratingItems.map((item) => (
+									<SelectItem key={item.value} item={item}>
+										{item.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</SelectRoot>
+					</Field>
+
+					<Field label="Tags" mt={3}>
+						<Flex>
+							<Input
+								value={newTag}
+								onChange={(e) => onNewTagChange(e.target.value)}
+								placeholder="Add a tag"
+								size="sm"
+								onKeyDown={(e) => e.key === "Enter" && onAddTag()}
+								borderEndRadius={0}
+							/>
+							<Button
+								onClick={onAddTag}
+								size="sm"
+								colorScheme="blue"
+								borderStartRadius={0}
+							>
+								Add
+							</Button>
+						</Flex>
+						<Flex mt={2} gap={2} flexWrap="wrap">
+							{properties.tags.map((tag: string) => (
+								<ChakraTag.Root
+									key={tag}
+									size="sm"
+									variant="subtle"
+									colorScheme="blue"
+								>
+									<ChakraTag.Label>{tag}</ChakraTag.Label>
+									<ChakraTag.EndElement>
+										<ChakraTag.CloseTrigger onClick={() => onRemoveTag(tag)} />
+									</ChakraTag.EndElement>
+								</ChakraTag.Root>
+							))}
+						</Flex>
+					</Field>
+
+					<Button
+						onClick={onSave}
+						colorScheme="blue"
+						width="full"
+						mt={4}
+						size="sm"
+					>
+						Save Changes
+					</Button>
+				</Box>
+			) : (
+				<Box>
+					<Box mb={2}>
+						<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+							Title:
+						</Text>
+						<Text fontSize="sm" color={textColor}>
+							{properties.title || "No title"}
+						</Text>
+					</Box>
+					<Box mb={2}>
+						<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+							Description:
+						</Text>
+						<Text fontSize="sm" color={textColor}>
+							{properties.description || "No description"}
+						</Text>
+					</Box>
+					<Box mb={2}>
+						<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+							Rating:
+						</Text>
+						<Text fontSize="sm" color={textColor}>
+							{properties.rating ? "★".repeat(properties.rating) : "Not rated"}
+						</Text>
+					</Box>
+					<Box>
+						<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+							Tags:
+						</Text>
+						<Flex mt={1} gap={1} flexWrap="wrap">
+							{properties.tags.length > 0 ? (
+								properties.tags.map((tag: string) => (
+									<ChakraTag.Root
+										key={tag}
+										size="sm"
+										variant="subtle"
+										colorScheme="blue"
+									>
+										<ChakraTag.Label>{tag}</ChakraTag.Label>
+									</ChakraTag.Root>
+								))
+							) : (
+								<Text fontSize="sm" color="gray.500">
+									No tags
+								</Text>
+							)}
+						</Flex>
+					</Box>
+				</Box>
+			)}
+		</Box>
+	);
+}

@@ -1,6 +1,7 @@
 ---
-description: 
+description: Current Task for the Agent
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
-Add your task here.
+# Feature Request: 
+We are reworking and cleaning up our ui architecture. Please utilize our best practices and style guidelines.

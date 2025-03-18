@@ -1,0 +1,38 @@
+:root {
+	/* Base layers */
+	--z-background: 0;
+	--z-default: 1;
+
+	/* UI Components */
+	--z-header: 10;
+	--z-footer: 10;
+	--z-sidebar: 20;
+	--z-modal: 30;
+	--z-tooltip: 40;
+	--z-dropdown: 50;
+}
+
+.background {
+	z-index: var(--z-background);
+}
+.default {
+	z-index: var(--z-default);
+}
+.header {
+	z-index: var(--z-header);
+}
+.footer {
+	z-index: var(--z-footer);
+}
+.sidebar {
+	z-index: var(--z-sidebar);
+}
+.modal {
+	z-index: var(--z-modal);
+}
+.tooltip {
+	z-index: var(--z-tooltip);
+}
+.dropdown {
+	z-index: var(--z-dropdown);
+}

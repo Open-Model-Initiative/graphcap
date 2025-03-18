@@ -1,127 +1,117 @@
+import { Perspectives } from "@/features/perspectives";
+import { Box, Tabs } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from 'react';
-import { Image } from '@/services/images';
-import { useImageProperties } from './hooks';
-import { 
-  BasicInformation, 
-  FileInformation, 
-  LoadingState, 
-  ErrorState,
-  Perspectives,
-  Segments
-} from './components';
-
-interface ImagePropertiesProps {
-  readonly image: Image;
-  readonly onSave?: (properties: Record<string, any>) => void;
-}
-
-type TabType = 'basic' | 'perspectives' | 'segments';
+import { useEffect, useState } from "react";
+import {
+	BasicInformation,
+	ErrorState,
+	FileInformation,
+	LoadingState,
+	Segments,
+} from "./components";
+import { useImagePropertiesContext } from "./context";
+import { getSelectedTab, saveSelectedTab } from "./utils/localStorage";
 
 /**
- * A component for displaying and editing image properties
- * 
- * This component uses the EditorContext through the useImageProperties hook
- * to access datasets and other shared state.
+ * Component for displaying image properties and metadata
+ *
+ * This component uses the ImagePropertiesContext to access and manage
+ * image properties data.
  */
-export function ImageProperties({ 
-  image, 
-  onSave 
-}: ImagePropertiesProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('basic');
-  
-  const {
-    properties,
-    newTag,
-    isEditing,
-    isLoading,
-    error,
-    setNewTag,
-    handlePropertyChange,
-    handleAddTag,
-    handleRemoveTag,
-    handleSave,
-    toggleEditing
-  } = useImageProperties(image);
+export function ImageProperties() {
+	// Get context data and methods
+	const {
+		properties,
+		isLoading,
+		error,
+		image,
+		newTag,
+		isEditing,
+		setNewTag,
+		handlePropertyChange,
+		handleAddTag,
+		handleRemoveTag,
+		handleSave,
+		toggleEditing,
+	} = useImagePropertiesContext();
 
-  // Call the onSave prop if provided
-  const handleSaveWithCallback = () => {
-    handleSave();
-    if (onSave) {
-      onSave(properties);
-    }
-  };
+	// Get saved tab from localStorage or default to "basic"
+	const [activeTab, setActiveTab] = useState(() => {
+		return getSelectedTab() ?? "basic";
+	});
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+	// Save tab selection to localStorage when it changes
+	useEffect(() => {
+		saveSelectedTab(activeTab);
+	}, [activeTab]);
 
-  if (error) {
-    return <ErrorState message={error} />;
-  }
+	// Render loading state
+	if (isLoading) {
+		return <LoadingState />;
+	}
 
-  return (
-    <div className="space-y-4">
-      {/* Tabs */}
-      <div className="flex border-b border-gray-700">
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'basic'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('basic')}
-        >
-          Basic
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'perspectives'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('perspectives')}
-        >
-          Perspectives
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium ${
-            activeTab === 'segments'
-              ? 'text-blue-400 border-b-2 border-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-          onClick={() => setActiveTab('segments')}
-        >
-          Segments
-        </button>
-      </div>
+	// Render error state
+	if (error) {
+		return <ErrorState message={error} />;
+	}
 
-      {/* Tab Content */}
-      {activeTab === 'basic' && (
-        <>
-          <BasicInformation
-            properties={properties}
-            isEditing={isEditing}
-            newTag={newTag}
-            onPropertyChange={handlePropertyChange}
-            onNewTagChange={setNewTag}
-            onAddTag={handleAddTag}
-            onRemoveTag={handleRemoveTag}
-            onSave={handleSaveWithCallback}
-            onToggleEdit={toggleEditing}
-          />
+	// Render no image selected state
+	if (!image) {
+		return (
+			<Box p={4} textAlign="center" color="gray.400">
+				<p>No image selected</p>
+			</Box>
+		);
+	}
 
-          <FileInformation image={image} />
-        </>
-      )}
+	return (
+		<Box height="full" display="flex" flexDirection="column" overflow="hidden">
+			<Tabs.Root
+				defaultValue={activeTab}
+				variant="line"
+				colorPalette="blue"
+				size="md"
+				height="100%"
+				onValueChange={(details) => setActiveTab(details.value)}
+			>
+				<Tabs.List borderBottomColor="gray.700" flexShrink={0}>
+					<Tabs.Trigger value="basic">Basic</Tabs.Trigger>
+					<Tabs.Trigger value="file">File</Tabs.Trigger>
+					<Tabs.Trigger value="segments">Segments</Tabs.Trigger>
+					<Tabs.Trigger value="perspectives">Perspectives</Tabs.Trigger>
+					<Tabs.Indicator />
+				</Tabs.List>
 
-      {activeTab === 'perspectives' && (
-        <Perspectives image={image} />
-      )}
+				<Box flex="1" overflow="auto" p={1}>
+					<Tabs.Content value="basic">
+						{properties && (
+							<BasicInformation
+								properties={properties}
+								isEditing={isEditing}
+								newTag={newTag}
+								onNewTagChange={setNewTag}
+								onAddTag={handleAddTag}
+								onRemoveTag={handleRemoveTag}
+								onPropertyChange={handlePropertyChange}
+								onSave={handleSave}
+								onToggleEdit={toggleEditing}
+							/>
+						)}
+					</Tabs.Content>
 
-      {activeTab === 'segments' && (
-        <Segments image={image} />
-      )}
-    </div>
-  );
-} 
+					<Tabs.Content value="file">
+						<FileInformation image={image} />
+					</Tabs.Content>
+
+					<Tabs.Content value="segments">
+						<Segments image={image} />
+					</Tabs.Content>
+
+					<Tabs.Content value="perspectives">
+						<Perspectives image={image} />
+					</Tabs.Content>
+				</Box>
+			</Tabs.Root>
+		</Box>
+	);
+}

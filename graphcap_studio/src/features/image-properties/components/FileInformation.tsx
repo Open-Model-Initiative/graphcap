@@ -1,31 +1,59 @@
+import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { Image } from "@/services/images";
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from '@/services/images';
+import { Box, Heading, Text } from "@chakra-ui/react";
 
 interface FileInformationProps {
-  readonly image: Image;
+	readonly image: Image;
 }
 
 /**
  * Component for displaying file information
  */
 export function FileInformation({ image }: FileInformationProps) {
-  return (
-    <div className="rounded-lg bg-gray-800 p-4 shadow-sm border border-gray-700">
-      <h3 className="mb-2 font-medium text-gray-200">File Information</h3>
-      <div className="space-y-2">
-        <div>
-          <span className="text-sm font-medium text-gray-400">Filename:</span>
-          <p className="text-sm break-all text-gray-200">{image.name}</p>
-        </div>
-        <div>
-          <span className="text-sm font-medium text-gray-400">Path:</span>
-          <p className="text-sm break-all text-gray-200">{image.path}</p>
-        </div>
-        <div>
-          <span className="text-sm font-medium text-gray-400">Directory:</span>
-          <p className="text-sm break-all text-gray-200">{image.directory}</p>
-        </div>
-      </div>
-    </div>
-  );
-} 
+	const bgColor = useColorModeValue("gray.50", "gray.800");
+	const borderColor = useColorModeValue("gray.200", "gray.700");
+	const labelColor = useColorModeValue("gray.600", "gray.400");
+	const textColor = useColorModeValue("gray.800", "gray.200");
+
+	return (
+		<Box
+			borderRadius="lg"
+			bg={bgColor}
+			p={4}
+			shadow="sm"
+			borderWidth="1px"
+			borderColor={borderColor}
+		>
+			<Heading size="sm" mb={2} color={textColor}>
+				File Information
+			</Heading>
+			<Box display="flex" flexDirection="column" gap={2}>
+				<Box>
+					<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+						Filename:
+					</Text>
+					<Text fontSize="sm" wordBreak="break-all" color={textColor}>
+						{image.name}
+					</Text>
+				</Box>
+				<Box>
+					<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+						Path:
+					</Text>
+					<Text fontSize="sm" wordBreak="break-all" color={textColor}>
+						{image.path}
+					</Text>
+				</Box>
+				<Box>
+					<Text fontSize="sm" fontWeight="medium" color={labelColor}>
+						Directory:
+					</Text>
+					<Text fontSize="sm" wordBreak="break-all" color={textColor}>
+						{image.directory}
+					</Text>
+				</Box>
+			</Box>
+		</Box>
+	);
+}

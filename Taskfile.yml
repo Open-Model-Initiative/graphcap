@@ -2,44 +2,11 @@ version: "3"
 dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 includes:
-  data: ./data_service/Taskfile.data.yml
+  data:      ./servers/data_service/Taskfile.data.yml
+  inference: ./servers/inference_server/server/Taskfile.inference.yml
+  studio:    ./graphcap_studio/Taskfile.studio.yml
 
 tasks:
-  build:
-    cmds:
-      - uv run python -m build --outdir ./dist 
-
-  lint:
-    cmds:
-      - uv run ruff check ./src
-      - uv run ruff format --check ./src
-
-  test:
-    cmds:
-      - uv run pytest
-
-  lint:
-    desc: Run Ruff linter on all Python files
-    cmds:
-      - uv run ruff check 
-
-  format:
-    desc: Run Ruff formatter on all Python files
-    cmds:
-      - uv run ruff format 
-
-  check:all:
-    desc: Run both linter and formatter in check mode
-    cmds:
-      - uv run ruff check 
-      - uv run ruff format --check 
-
-  fix:all:
-    desc: Run both linter and formatter with fixes
-    cmds:
-      - uv run ruff check --fix ./src
-      - uv run ruff format ./src
-
   dev:
     desc: Start the Docker Compose services in watch mode
     cmds:
@@ -56,32 +23,9 @@ tasks:
       - docker compose --env-file ./workspace/config/.env down 
 
   setup:
-    desc: Setup the project
+    desc: Setup the project 
     cmds:
-      - uv venv --python 3.11
-      - uv pip install -e ".[dev]"
-      - uv pip install -e ./src
-      - uv run python -m src.scripts
-      - task update-studio-deps
+      - echo "TODO Update to current setup workflow"
 
-  update-studio-deps:
-    desc: Update the pnpm-lock.yaml file for the graphcap_studio project
-    dir: ./graphcap_studio
-    cmds:
-      - pnpm install --no-frozen-lockfile
-      
-  studio-dev:
-    desc: Start only the graphcap_studio and graphcap_media_server services with hot module reloading
-    cmds:
-      - docker compose up graphcap_studio graphcap_media_server --build --watch
-      
-  studio-rebuild:
-    desc: Rebuild and restart the graphcap_studio and graphcap_media_server services
-    cmds:
-      - docker compose build graphcap_studio graphcap_media_server
-      - docker compose up graphcap_studio graphcap_media_server --force-recreate
-      
-  studio-restart:
-    desc: Restart just the graphcap_studio service for quicker development iterations
-    cmds:
-      - docker compose restart graphcap_studio
+
+

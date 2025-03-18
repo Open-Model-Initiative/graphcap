@@ -1,0 +1,31 @@
+FROM node:20-alpine
+
+# Install pnpm and other required tools
+RUN npm install --ignore-scripts  -g pnpm && \
+    apk add --no-cache bash curl
+
+WORKDIR /app
+
+# Copy package files first
+COPY package*.json pnpm-lock.yaml ./
+
+# Install dependencies at build time
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Copy entrypoint script and make it executable
+COPY _scripts/client_entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/client_entrypoint.sh
+
+# Copy the rest of the application
+# Note: In development, we'll mount these directories as volumes
+COPY . .
+
+# Set environment variables for better HMR
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+ENV FAST_REFRESH=true
+
+EXPOSE 32200
+
+# Use the entrypoint script
+ENTRYPOINT ["client_entrypoint.sh"]

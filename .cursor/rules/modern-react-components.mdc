@@ -1,7 +1,7 @@
 ---
-description: Creating react components and features
-globs: graphcap_studio/src/**
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 
 # Creating Modern React Components in 2025
@@ -17,6 +17,7 @@ React has evolved significantly over the years, and with it, the way we write co
 5. Keep components small and focused
 6. Utilize Context api for UI state
 
+Utilize the Chakra UI Component Library and our ui [index.ts](mdc:graphcap_studio/src/common/ui/index.ts) . Lookup Chakra v3 docs from your internal retrieval engine.
 
 <Warning>
 1. **Constants:**  
@@ -63,7 +64,7 @@ React has evolved significantly over the years, and with it, the way we write co
     - Split effects if they manage unrelated tasks.
 
 12. **Data Fetching:**  
-    - Prefer React Query/SWR or Next.js data fetching methods over manual useEffect fetching.
+    - Prefer React Query fetching methods over manual useEffect fetching.
 
 13. **Performance:**  
     - Use `useMemo` for expensive calculations/objects.
@@ -101,8 +102,6 @@ All new code must comply with these guidelines to ensure a modular, maintainable
 Here's the basic structure of a modern React component:
 
 ```tsx
-import React from 'react';
-
 type ComponentProps = {
   // Define your props here
 };
@@ -236,43 +235,4 @@ NavigationBar.tsx
 
 ### 8. Implement Error Boundaries
 
-Use error boundaries to catch and handle errors in component trees.
-
-```tsx
-import React, { ErrorInfo } from 'react';
-
-type ErrorBoundaryProps = {
-  children: React.ReactNode;
-  fallback: React.ReactNode;
-};
-
-type ErrorBoundaryState = {
-  hasError: boolean;
-};
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;
-```
-
+Use error boundaries to catch and handle errors in component trees with react-error-boundary.
