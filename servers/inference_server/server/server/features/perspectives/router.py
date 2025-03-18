@@ -15,7 +15,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
 from loguru import logger
@@ -374,3 +374,57 @@ def _parse_context(context_str) -> Optional[List[str]]:
         return [context_str]
     except json.JSONDecodeError:
         return [context_str]
+
+
+@router.get("/debug", response_model=Dict[str, Any], tags=["perspectives"])
+async def debug_perspectives() -> Dict[str, Any]:
+    """
+    Get debug information about perspectives and their configurations.
+    This is intended for troubleshooting issues with perspective schemas.
+    """
+
+    from graphcap.perspectives import get_perspective, get_perspective_directories, get_perspective_list
+
+    debug_info = {
+        "perspective_dirs": [str(p) for p in get_perspective_directories()],
+        "perspective_count": 0,
+        "available_files": [],
+        "perspectives": {}
+    }
+    
+    # List all JSON files in perspective directories
+    for directory in get_perspective_directories():
+        if directory.exists():
+            json_files = list(directory.glob("*.json"))
+            debug_info["available_files"].extend([str(f) for f in json_files])
+    
+    # Get info about registered perspectives
+    perspective_names = get_perspective_list()
+    debug_info["perspective_count"] = len(perspective_names)
+    
+    # Get detailed info about each perspective
+    for name in perspective_names:
+        try:
+            perspective = get_perspective(name)
+            # Get attributes from the perspective object
+            attrs = {}
+            for attr in ["config_name", "display_name", "version", "description", "module_name"]:
+                if hasattr(perspective, attr):
+                    attrs[attr] = getattr(perspective, attr)
+            
+            debug_info["perspectives"][name] = {
+                "attributes": attrs,
+                "schema_found": False
+            }
+            
+            # Check if we can load the schema
+            from ..perspectives.service import load_perspective_schema
+            schema = load_perspective_schema(name)
+            if schema:
+                debug_info["perspectives"][name]["schema_found"] = True
+        except Exception as e:
+            debug_info["perspectives"][name] = {
+                "error": str(e)
+            }
+    
+    return debug_info

@@ -22,8 +22,8 @@ export function FlagIcon({ className = "" }: Readonly<IconProps>) {
 			width="20"
 			height="20"
 		>
-			<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-			<line x1="4" y1="22" x2="4" y2="15"></line>
+			<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+			<line x1="4" y1="22" x2="4" y2="15"/>
 		</svg>
 	);
 }
@@ -45,7 +45,7 @@ export function FilterIcon({ className = "" }: Readonly<IconProps>) {
 			width="20"
 			height="20"
 		>
-			<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+			<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
 		</svg>
 	);
 }

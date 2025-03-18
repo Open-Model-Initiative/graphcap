@@ -6,7 +6,6 @@ Provides services for working with perspective captions.
 """
 
 import base64
-import json
 import os
 import socket
 import tempfile
@@ -106,59 +105,53 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
         Schema information for the perspective, or None if not found
     """
     try:
-        # Construct the path to the schema file
-        schema_path = Path("/workspace/perspective_library") / f"{perspective_name}.json"
-
-        # Check if the schema file exists
-        if not schema_path.exists():
-            logger.warning(f"Schema file not found for perspective {perspective_name}")
-            return None
-
-        # Load and parse the schema file
-        with open(schema_path, "r") as f:
-            schema_data = json.load(f)
-
-        # Convert the schema data to our models
-        schema_fields = []
-        for field_data in schema_data.get("schema_fields", []):
-            # Convert nested fields for complex types
-            nested_fields = None
-            if field_data.get("fields"):
-                nested_fields = [
+        # Import perspective function
+        from graphcap.perspectives import get_perspective
+        
+        # Get the perspective processor
+        perspective = get_perspective(perspective_name)
+        if perspective and hasattr(perspective, 'config'):
+            # Extract config directly from the processor
+            config = perspective.config
+            
+            # Create schema fields
+            schema_fields = []
+            for field in config.schema_fields:
+                schema_fields.append(
                     SchemaField(
-                        name=f["name"],
-                        type=f["type"],
-                        description=f["description"],
-                        is_list=f.get("is_list", False),
-                        is_complex=f.get("is_complex", False),
+                        name=field.name,
+                        type=field.type,
+                        description=field.description,
+                        is_list=getattr(field, "is_list", False),
+                        is_complex=getattr(field, "is_complex", False),
+                        fields=None
                     )
-                    for f in field_data["fields"]
-                ]
-
-            schema_fields.append(
-                SchemaField(
-                    name=field_data["name"],
-                    type=field_data["type"],
-                    description=field_data["description"],
-                    is_list=field_data.get("is_list", False),
-                    is_complex=field_data.get("is_complex", False),
-                    fields=nested_fields,
                 )
+
+            # Create table columns
+            table_columns = [
+                TableColumn(name=col["name"], style=col["style"])
+                for col in config.table_columns
+            ]
+
+            # Create the schema
+            schema = PerspectiveSchema(
+                name=config.name,
+                display_name=config.display_name,
+                version=config.version,
+                prompt=config.prompt,
+                schema_fields=schema_fields,
+                table_columns=table_columns,
+                context_template=config.context_template
             )
-
-        table_columns = [
-            TableColumn(name=col["name"], style=col["style"]) for col in schema_data.get("table_columns", [])
-        ]
-
-        return PerspectiveSchema(
-            name=schema_data["name"],
-            display_name=schema_data["display_name"],
-            version=schema_data["version"],
-            prompt=schema_data["prompt"],
-            schema_fields=schema_fields,
-            table_columns=table_columns,
-            context_template=schema_data["context_template"],
-        )
+            
+            logger.info(f"Successfully loaded schema for perspective '{perspective_name}'")
+            return schema
+        
+        logger.warning(f"""Could not load schema for perspective '{perspective_name}':
+                        Perspective not found or does not have config attribute""")
+        return None
+            
     except Exception as e:
         logger.error(f"Error loading schema for perspective {perspective_name}: {str(e)}")
         return None
