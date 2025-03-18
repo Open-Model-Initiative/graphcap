@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 import "@testing-library/jest-dom"; // Import jest-dom matchers
-import { MockImage, imageServiceMock } from "@/test/mocks/servicesMock";
+import { imageServiceMock } from "@/test/mocks/servicesMock";
 import { CarouselViewer } from "../CarouselViewer";
 import { createMockImages, mockComponents, setupCarouselTestEnvironment } from "./test-utils";
 

@@ -24,7 +24,7 @@ const ThumbnailSkeleton = ({
 		className={`relative overflow-hidden bg-gray-800/10 flex items-center justify-center ${className}`}
 		style={aspectRatio ? { aspectRatio } : undefined}
 	>
-		<div className="h-4 w-4 animate-pulse rounded-full bg-gray-600/50"></div>
+		<div className="h-4 w-4 animate-pulse rounded-full bg-gray-600/50" />
 	</div>
 );
 

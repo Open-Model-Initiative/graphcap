@@ -25,8 +25,8 @@ export function FormActions() {
 	const cancelHoverBg = isDark ? "gray.600" : "gray.200";
 	const cancelColor = isDark ? "gray.200" : "gray.800";
 
-	const primaryBg = isDark ? "blue.500" : "blue.500";
-	const primaryHoverBg = isDark ? "blue.600" : "blue.600";
+	const primaryBg = "blue.500";
+	const primaryHoverBg = "blue.600";
 
 	return (
 		<Flex justify="flex-end" mt={6}>

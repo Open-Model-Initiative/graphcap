@@ -165,8 +165,8 @@ export function ActionPanel({
 			right={side === "right" ? 0 : "auto"}
 			width={`${width}px`}
 			bg={bgColor}
-			borderLeft={side === "right" ? `1px solid` : undefined}
-			borderRight={side === "left" ? `1px solid` : undefined}
+			borderLeft={side === "right" ? "1px solid" : undefined}
+			borderRight={side === "left" ? "1px solid" : undefined}
 			borderColor={borderColor}
 			transition="width 0.2s"
 			className={`${styles.panel} ${zIndex.sidebar}`}

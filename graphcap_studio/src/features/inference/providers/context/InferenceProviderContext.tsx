@@ -13,7 +13,7 @@
  * - Form actions and callbacks
  */
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useCallback,
 	useContext,
@@ -23,7 +23,7 @@ import {
 } from "react";
 import { DEFAULT_PROVIDER_FORM_DATA } from "../../constants";
 import { useModelSelection, useProviderForm } from "../../hooks";
-import { Provider, ProviderCreate, ProviderUpdate } from "../types";
+import type { Provider, ProviderCreate, ProviderUpdate } from "../types";
 
 // Local storage key for selected provider
 const SELECTED_PROVIDER_STORAGE_KEY = "graphcap-selected-provider";
@@ -69,7 +69,7 @@ type InferenceProviderContextType = {
 	isCreating: boolean;
 
 	// Form callbacks
-	onSubmit: (data: FormData) => void;
+	onSubmit: (data: FormData) => Promise<void>;
 	onCancel: () => void;
 };
 
@@ -108,7 +108,7 @@ const defaultContextValue: InferenceProviderContextType = {
 	isCreating: false,
 
 	// Form callbacks
-	onSubmit: async () => {},
+	onSubmit: async () => Promise.resolve(),
 	onCancel: () => {},
 };
 
@@ -278,7 +278,7 @@ export function InferenceProviderProvider({
 		isModelsError,
 		modelsError,
 		handleModelSelect: handleModelSelectBase,
-	} = useModelSelection(selectedProvider?.name || "", onModelSelect);
+	} = useModelSelection(selectedProvider?.name ?? "", onModelSelect);
 
 	// Create a memoized version of handleModelSelect
 	const handleModelSelect = useCallback(() => {

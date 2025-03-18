@@ -99,7 +99,7 @@ export function GenerationOptionForm({
 	const handleInputChange =
 		(name: NumericOptionKey) => (e: ChangeEvent<HTMLInputElement>) => {
 			const valueAsNumber = Number.parseFloat(e.target.value);
-			if (isNaN(valueAsNumber)) return;
+			if (Number.isNaN(valueAsNumber)) return;
 
 			const config = OPTION_CONFIGS[name];
 			// Ensure value is within bounds
