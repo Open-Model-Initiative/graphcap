@@ -30,4 +30,3 @@ __all__ = [
     "perspective_pipeline_run_config",
     "basic_perspective_pipeline",
 ]
-

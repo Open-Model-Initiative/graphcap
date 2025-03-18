@@ -14,6 +14,7 @@ from .common.resources import FileSystemConfig, PerspectiveConfig, PostgresConfi
 from .huggingface import huggingface_client
 from .huggingface.types import HfUploadManifestConfig
 from .perspectives.jobs import PerspectivePipelineRunConfig
+
 # Import jobs
 from .jobs import JOBS
 

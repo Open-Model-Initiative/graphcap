@@ -48,6 +48,7 @@ class PerspectiveConfig:
     global_context: str
     enabled_perspectives: Dict[str, bool] = Field(default_factory=dict)
 
+
 class PerspectivePipelineConfig(BaseModel):
     """Configuration for pipeline runs loaded from TOML file."""
 
@@ -75,7 +76,7 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
         # Create perspective config with enabled perspectives
         perspective = PerspectiveConfig(
             global_context=config["perspective"]["global_context"],
-            enabled_perspectives=config["perspective"]["enabled"]
+            enabled_perspectives=config["perspective"]["enabled"],
         )
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         run_dir = config["io"]["output_dir"] + "/" + timestamp
@@ -106,12 +107,7 @@ class PerspectivePipelineRunConfig(dg.ConfigurableResource):
         )
 
         # Return the complete config object
-        return PerspectivePipelineConfig(
-            perspective=perspective,
-            io=io,
-            provider=provider,
-            filesystem=filesystem
-        )
+        return PerspectivePipelineConfig(perspective=perspective, io=io, provider=provider, filesystem=filesystem)
 
 
 @dg.asset

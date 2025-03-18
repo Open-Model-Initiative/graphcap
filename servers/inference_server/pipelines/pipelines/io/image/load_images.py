@@ -141,14 +141,9 @@ def image_dataset_config(context: dg.AssetExecutionContext, config: DatasetIOCon
     return config
 
 
-@asset(
-    group_name="image_load",
-    compute_kind="python",
-    deps=["perspective_pipeline_run_config"]
-)
+@asset(group_name="image_load", compute_kind="python", deps=["perspective_pipeline_run_config"])
 def perspective_image_list(
-    context: dg.AssetExecutionContext,
-    perspective_pipeline_run_config: PerspectivePipelineConfig
+    context: dg.AssetExecutionContext, perspective_pipeline_run_config: PerspectivePipelineConfig
 ) -> list[str]:
     """
     Load raw images from directory using the perspective pipeline configuration.
@@ -160,7 +155,7 @@ def perspective_image_list(
         list[str]: A list of image paths.
     """
     io_config = perspective_pipeline_run_config.io
-    
+
     context.log.info(f"Loading image list for dataset {io_config.dataset_name}")
 
     image_files = get_image_list(
@@ -170,14 +165,16 @@ def perspective_image_list(
         sampling_strategy=SamplingStrategy(io_config.sampling_strategy),
         num_samples=io_config.num_samples,
     )
-    
+
     copied_image_files: list[str] = copy_images(context, image_files, io_config.output_dir)
-    
-    context.add_output_metadata({
-        "dataset_name": io_config.dataset_name,
-        "input_dir": io_config.input_dir,
-        "output_dir": io_config.output_dir,
-        "num_images": len(copied_image_files)
-    })
-    
+
+    context.add_output_metadata(
+        {
+            "dataset_name": io_config.dataset_name,
+            "input_dir": io_config.input_dir,
+            "output_dir": io_config.output_dir,
+            "num_images": len(copied_image_files),
+        }
+    )
+
     return copied_image_files

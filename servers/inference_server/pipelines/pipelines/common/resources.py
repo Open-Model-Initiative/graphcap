@@ -28,6 +28,7 @@ class ProviderConfigFile(dg.ConfigurableResource):
     provider_config: str = "/workspace/config/provider.config.toml"
     default_provider: str = "gemini"
 
+
 class PerspectiveConfig(dg.ConfigurableResource):
     """Configuration for perspective operations."""
 

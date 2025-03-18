@@ -48,6 +48,7 @@ class StructuredVisionConfig:
     prompt: str
     schema: BaseModel
 
+
 class TestStructuredOutput(BaseModel):
     is_cat: bool
     caption: str
@@ -155,7 +156,6 @@ class TestGeminiProvider:
         await run_structured_vision(client, test_logger, image_path)
 
 
-
 @pytest.mark.integration
 @pytest.mark.vllm
 class TestVLLMProvider:
@@ -225,7 +225,6 @@ class TestVLLMProvider:
         client = provider_manager.get_client("vllm-pixtral")
         image_path = provider_artifacts_dir / "test_image.png"
         await run_structured_vision(client, test_logger, image_path)
-
 
 
 @pytest.mark.asyncio

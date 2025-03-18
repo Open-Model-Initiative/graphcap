@@ -13,4 +13,4 @@ Key features:
 from .config_writer import write_toml_config
 from .setup import cli
 
-__all__ = ['write_toml_config', 'cli']
+__all__ = ["write_toml_config", "cli"]

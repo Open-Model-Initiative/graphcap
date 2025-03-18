@@ -34,10 +34,7 @@ async def perspective_caption(
     perspective_config = perspective_pipeline_run_config.perspective
 
     # Get enabled perspectives
-    enabled_perspectives = [
-        name for name, enabled in perspective_config.enabled_perspectives.items()
-        if enabled
-    ]
+    enabled_perspectives = [name for name, enabled in perspective_config.enabled_perspectives.items() if enabled]
     context.log.info(f"Processing enabled perspectives: {enabled_perspectives}")
 
     # Instantiate the client
@@ -51,9 +48,11 @@ async def perspective_caption(
             # Process images in batch
             image_paths = [Path(image) for image in perspective_image_list]
             caption_data_list = await processor.process_batch(
-                client, image_paths, output_dir=Path(io_config.run_dir),
+                client,
+                image_paths,
+                output_dir=Path(io_config.run_dir),
                 global_context=perspective_config.global_context,
-                name=perspective
+                name=perspective,
             )
 
             # Aggregate results
@@ -81,6 +80,7 @@ async def perspective_caption(
     context.add_output_metadata(metadata)
     return all_results
 
+
 @dg.asset(
     group_name="perspectives",
     compute_kind="python",
@@ -92,7 +92,7 @@ def caption_contexts(
     perspective_pipeline_run_config: PerspectivePipelineConfig,
 ) -> Dict[str, List[str]]:
     """Extracts contexts from the perspective caption data and adds to a dictionary of path:List[str].
-       if the path exists, the context is appended to the list."""
+    if the path exists, the context is appended to the list."""
     contexts = {}
     for item in perspective_caption:
         context.log.info(f"Processing {item['image_filename']} ({item['perspective']})")
@@ -105,6 +105,7 @@ def caption_contexts(
     context.log.info(f"Found {len(contexts)} contexts")
     context.log.info(contexts)
     return contexts
+
 
 @dg.asset(
     group_name="perspectives",
@@ -125,25 +126,27 @@ async def synthesizer_caption(
     client = get_provider(provider_config.provider_config_file, provider_config.default)
     synthesizer = get_synthesizer()
 
-    image_dir = Path(io_config.output_dir)/"images"
+    image_dir = Path(io_config.output_dir) / "images"
     paths = [image_dir / path for path in caption_contexts.keys()]
-    results = await synthesizer.process_batch(client, paths,
-                                          output_dir=Path(io_config.run_dir),
-                                          contexts=caption_contexts,
-                                          name="synthesized_caption")
+    results = await synthesizer.process_batch(
+        client, paths, output_dir=Path(io_config.run_dir), contexts=caption_contexts, name="synthesized_caption"
+    )
 
     # Format the results to match the perspective_caption output
     formatted_results = []
     for path, caption_data in zip(paths, results):
         image_filename = path.name
-        formatted_results.append({
-            "perspective": "synthesized_caption",
-            "image_filename": image_filename,
-            "caption_data": caption_data,
-            "context": synthesizer.to_context(caption_data),
-        })
+        formatted_results.append(
+            {
+                "perspective": "synthesized_caption",
+                "image_filename": image_filename,
+                "caption_data": caption_data,
+                "context": synthesizer.to_context(caption_data),
+            }
+        )
     context.log.info(f"Synthesizer caption results: {formatted_results}")
     return formatted_results
+
 
 @dg.asset(
     group_name="perspectives",
@@ -164,8 +167,7 @@ def caption_output_files(
     run_dir.mkdir(parents=True, exist_ok=True)
     # Get enabled perspectives
     enabled_perspectives = [
-        name for name, enabled in perspective_pipeline_run_config.perspective.enabled_perspectives.items()
-        if enabled
+        name for name, enabled in perspective_pipeline_run_config.perspective.enabled_perspectives.items() if enabled
     ]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Prepare data for DataFrame
@@ -232,4 +234,3 @@ def caption_output_files(
             "parquet_output_path": str(parquet_path),
         }
     )
-
