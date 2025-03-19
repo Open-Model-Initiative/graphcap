@@ -8,8 +8,9 @@
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import type { Perspective } from "@/features/perspectives/types";
-import { Box } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 
 type PerspectiveModuleFilterProps = {
 	readonly moduleName: string;
@@ -40,6 +41,31 @@ export function PerspectiveModuleFilter({
 	const checkboxActiveBg = useColorModeValue("blue.500", "blue.400");
 	const checkboxBorderColor = useColorModeValue("gray.300", "gray.600");
 	const itemHoverBg = useColorModeValue("gray.50", "#2A3749");
+	const buttonColor = useColorModeValue("blue.500", "blue.400");
+
+	// Compute the module's visibility state
+	const moduleVisibilityState = useMemo(() => {
+		if (!perspectives || perspectives.length === 0) return { checked: false, indeterminate: false };
+		
+		const visibleCount = perspectives.filter(p => isPerspectiveVisible(p.name)).length;
+		
+		if (visibleCount === 0) return { checked: false, indeterminate: false };
+		if (visibleCount === perspectives.length) return { checked: true, indeterminate: false };
+		return { checked: false, indeterminate: true };
+	}, [perspectives, isPerspectiveVisible]);
+
+	// Toggle all perspectives in the module
+	const toggleAllPerspectives = () => {
+		// If all are visible or indeterminate, hide all; otherwise show all
+		const shouldShow = !moduleVisibilityState.checked && !moduleVisibilityState.indeterminate;
+		
+		for (const perspective of perspectives) {
+			// Only toggle if the current state doesn't match what we want
+			if (isPerspectiveVisible(perspective.name) !== shouldShow) {
+				togglePerspectiveVisibility(perspective.name);
+			}
+		}
+	};
 
 	return (
 		<Box
@@ -51,37 +77,111 @@ export function PerspectiveModuleFilter({
 			overflow="hidden"
 			bg={headerBgColor}
 		>
-			<Box
-				as="button"
-				display="flex"
+			<Flex
 				alignItems="center"
-				justifyContent="space-between"
 				width="full"
-				textAlign="left"
-				fontSize="sm"
-				fontWeight="medium"
 				p={2}
 				bg={headerBgColor}
 				color={textColor}
-				_hover={{ bg: hoverBgColor }}
-				onClick={() => onTogglePanel(moduleName)}
 			>
+				{/* Module toggle checkbox */}
+				<Box
+					as="label"
+					display="flex"
+					alignItems="center"
+					mr={2}
+					cursor="pointer"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<input
+						type="checkbox"
+						checked={moduleVisibilityState.checked}
+						onChange={toggleAllPerspectives}
+						style={{ display: "none" }}
+					/>
+					<Box
+						width="16px"
+						height="16px"
+						borderWidth="1px"
+						borderColor={moduleVisibilityState.checked ? checkboxActiveBg : checkboxBorderColor}
+						bg={moduleVisibilityState.checked ? checkboxActiveBg : "transparent"}
+						borderRadius="sm"
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
+						transition="all 0.2s"
+						position="relative"
+					>
+						{moduleVisibilityState.checked && (
+							<Box as="span" color="white" fontSize="10px" lineHeight="1">
+								✓
+							</Box>
+						)}
+						{moduleVisibilityState.indeterminate && (
+							<Box
+								position="absolute"
+								width="8px"
+								height="2px"
+								bg={checkboxActiveBg}
+								top="50%"
+								left="50%"
+								transform="translate(-50%, -50%)"
+							/>
+						)}
+					</Box>
+				</Box>
+
+				{/* Accordion toggle button */}
+				<Box
+					as="button"
+					display="flex"
+					alignItems="center"
+					justifyContent="space-between"
+					width="full"
+					textAlign="left"
+					fontSize="sm"
+					fontWeight="medium"
+					_hover={{ bg: hoverBgColor }}
+					onClick={() => onTogglePanel(moduleName)}
+					mr={2}
+				>
+					<Box flex="1">{displayName}</Box>
+					<Box
+						as="span"
+						display="inline-block"
+						transform={isOpen ? "rotate(180deg)" : "rotate(0deg)"}
+						transition="transform 0.2s"
+					>
+						▼
+					</Box>
+				</Box>
+				
+				{/* View module button */}
 				<Link
 					to="/perspectives/module/$moduleName"
 					params={{ moduleName }}
-					className="hover:underline flex-1"
+					className="flex items-center"
+					title="View module details"
 				>
-					{displayName}
+					<Box
+						as="span"
+						fontSize="xs"
+						display="inline-flex"
+						alignItems="center"
+						justifyContent="center"
+						color={buttonColor}
+						width="20px"
+						height="20px"
+						borderWidth="1px"
+						borderColor="currentColor"
+						borderRadius="md"
+						ml={1}
+						_hover={{ bg: hoverBgColor }}
+					>
+						→
+					</Box>
 				</Link>
-				<Box
-					as="span"
-					display="inline-block"
-					transform={isOpen ? "rotate(180deg)" : "rotate(0deg)"}
-					transition="transform 0.2s"
-				>
-					▼
-				</Box>
-			</Box>
+			</Flex>
 			<Box
 				display={isOpen ? "flex" : "none"}
 				flexDirection="column"
@@ -97,16 +197,15 @@ export function PerspectiveModuleFilter({
 						: perspective.name;
 
 					return (
-						<Box
-							as="div"
+						<Flex
 							key={perspective.name}
-							display="flex"
 							alignItems="center"
 							px={2}
 							py={1}
 							_hover={{ bg: itemHoverBg }}
 							borderRadius="sm"
 						>
+							{/* Checkbox for toggling visibility */}
 							<Box
 								as="label"
 								display="flex"
@@ -147,18 +246,44 @@ export function PerspectiveModuleFilter({
 									)}
 								</Box>
 							</Box>
+							
+							{/* Perspective name (not a link) */}
+							<Box
+								flex="1"
+								fontSize="xs"
+								color={mutedTextColor}
+							>
+								{perspective.display_name}
+							</Box>
+							
+							{/* View perspective button */}
 							<Link
 								to="/perspectives/module/$moduleName/perspective/$perspectiveName"
-								params={{
+								params={{ 
 									moduleName,
 									perspectiveName: perspectiveId,
 								}}
-								className="text-xs hover:underline flex-1"
-								style={{ color: mutedTextColor }}
+								className="flex items-center"
+								title="View perspective details"
 							>
-								{perspective.display_name}
+								<Box
+									as="span"
+									fontSize="xs"
+									display="inline-flex"
+									alignItems="center"
+									justifyContent="center"
+									color={buttonColor}
+									width="16px"
+									height="16px"
+									borderWidth="1px"
+									borderColor="currentColor"
+									borderRadius="md"
+									_hover={{ bg: itemHoverBg }}
+								>
+									→
+								</Box>
 							</Link>
-						</Box>
+						</Flex>
 					);
 				})}
 			</Box>
