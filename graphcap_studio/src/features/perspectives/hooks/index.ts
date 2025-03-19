@@ -14,7 +14,6 @@ export { usePerspectiveModules } from "./usePerspectiveModules";
 export { useGeneratePerspectiveCaption } from "./useGeneratePerspectiveCaption";
 export { useImagePerspectives } from "./useImagePerspectives";
 export { useModules } from "./useModules";
-export { useModulePerspectives } from "./useModulePerspectives";
 
 // Utilities
 export * from "./utils";

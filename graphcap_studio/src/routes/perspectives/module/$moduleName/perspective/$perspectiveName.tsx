@@ -1,5 +1,5 @@
 import { ErrorDisplay, LoadingDisplay, NotFound, PerspectiveDetail } from "@/features/perspectives/components/PerspectiveModules";
-import { useModulePerspectives } from "@/features/perspectives/hooks";
+import { usePerspectiveModules } from "@/features/perspectives/hooks";
 import {
   Box,
 } from "@chakra-ui/react";
@@ -12,31 +12,32 @@ export const Route = createFileRoute("/perspectives/module/$moduleName/perspecti
 
 function PerspectiveDetailPage() {
   const { moduleName, perspectiveName } = Route.useParams();
-  const { data, isLoading, error } = useModulePerspectives(moduleName);
+  const { getModulePerspectives } = usePerspectiveModules();
+  const { module, perspectives, isLoading, error } = getModulePerspectives(moduleName);
   
   // Find the specific perspective
   const perspective = useMemo(() => {
-    if (!data || !data.perspectives) return null;
+    if (!perspectives || perspectives.length === 0) return null;
 
     // First try direct match on the perspective name
-    let foundPerspective = data.perspectives.find(p => p.name === perspectiveName);
+    let foundPerspective = perspectives.find(p => p.name === perspectiveName);
 
     // If not found, try to match with module prefix
     if (!foundPerspective) {
       const fullName = `${moduleName}/${perspectiveName}`;
-      foundPerspective = data.perspectives.find(p => p.name === fullName);
+      foundPerspective = perspectives.find(p => p.name === fullName);
     }
 
     // Also try matching just the last part of the name (for module-prefixed perspectives)
     if (!foundPerspective) {
-      foundPerspective = data.perspectives.find(p => {
+      foundPerspective = perspectives.find(p => {
         const parts = p.name.split('/');
         return parts[parts.length - 1] === perspectiveName;
       });
     }
 
     return foundPerspective;
-  }, [data, perspectiveName, moduleName]);
+  }, [perspectives, perspectiveName, moduleName]);
 
   // Handle loading state
   if (isLoading) {
@@ -49,7 +50,7 @@ function PerspectiveDetailPage() {
   }
 
   // Handle case when module data is missing
-  if (!data) {
+  if (!module) {
     return <NotFound type="module" name={moduleName} />;
   }
 

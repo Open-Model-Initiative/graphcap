@@ -1,18 +1,18 @@
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
 import { ErrorDisplay, LoadingDisplay, ModuleInfo, ModuleList, NotFound } from "@/features/perspectives/components/PerspectiveModules";
 import { usePerspectiveModules } from "@/features/perspectives/hooks";
 import type { PerspectiveModule } from "@/features/perspectives/types";
 import {
 	Box,
 	Button,
+	Code,
 	Flex,
 	Heading,
 	Text,
-	Code,
 } from "@chakra-ui/react";
-import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
 import { createListCollection } from "@chakra-ui/react";
-import { Outlet, createFileRoute, useNavigate, useMatches } from "@tanstack/react-router";
-import { useEffect, useState, useMemo } from "react";
+import { Outlet, createFileRoute, useMatches, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/perspectives/module/$moduleName")({
 	component: ModulePage,

@@ -3,24 +3,55 @@
  * usePerspectiveModules Hook
  *
  * This hook fetches available perspective modules and their perspectives from the server.
+ * It combines functionality from both useModules and useModulePerspectives.
  */
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import type { ServerConnection } from "@/features/server-connections/types";
 import { useQuery } from "@tanstack/react-query";
-import { perspectivesQueryKeys } from "../services/constants";
-import type { PerspectiveModule } from "../types";
+import { useEffect, useMemo } from "react";
+import {
+  API_ENDPOINTS,
+  CACHE_TIMES,
+  perspectivesQueryKeys,
+} from "../services/constants";
+import { getGraphCapServerUrl, handleApiError } from "../services/utils";
+import type { ModulePerspectivesResponse, Perspective, PerspectiveModule } from "../types";
 import { useModules } from "./useModules";
+import { PerspectiveError } from "./usePerspectives";
+
+type ModuleQueryResult = {
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  data: PerspectiveModule[];
+  modules: PerspectiveModule[];
+  hasModules: boolean;
+  refetch: () => void;
+  
+  // Methods for accessing specific module data
+  getModule: (moduleName: string) => PerspectiveModule | undefined;
+  getModulePerspectives: (moduleName: string) => {
+    module: PerspectiveModule | undefined;
+    perspectives: Perspective[];
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+    refetch: () => void;
+  };
+};
 
 /**
- * Hook to fetch modules and their perspectives
+ * Enhanced hook to fetch modules and their perspectives
  * 
- * This hook now uses the dedicated module API endpoints instead of
- * client-side grouping of perspectives.
+ * This combined hook provides the functionality of both usePerspectiveModules
+ * and useModulePerspectives, allowing for both listing all modules and 
+ * accessing a specific module's data.
  * 
- * @returns Query result with a list of modules and their perspectives
+ * @returns Query result with a list of modules and their perspectives, plus methods to access specific module data
  */
-export function usePerspectiveModules() {
+export function usePerspectiveModules(): ModuleQueryResult {
   const { connections } = useServerConnectionsContext();
   const graphcapServerConnection = connections.find(
     (conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER
@@ -97,20 +128,97 @@ export function usePerspectiveModules() {
     placeholderData: (prev) => prev || []
   });
   
+  /**
+   * Function to get a specific module by name
+   * 
+   * @param moduleName - Name of the module to retrieve
+   * @returns The module if found, undefined otherwise
+   */
+  const getModule = useMemo(() => {
+    return (moduleName: string): PerspectiveModule | undefined => {
+      if (!modulesWithPerspectivesQuery.data) return undefined;
+      return modulesWithPerspectivesQuery.data.find(m => m.name === moduleName);
+    };
+  }, [modulesWithPerspectivesQuery.data]);
+  
+  /**
+   * Function to get perspectives for a specific module
+   * 
+   * This functionality replaces the previous useModulePerspectives hook
+   * 
+   * @param moduleName - Name of the module to get perspectives for
+   * @returns Object with module data, perspectives, and query state
+   */
+  const getModulePerspectives = useMemo(() => {
+    return (moduleName: string) => {
+      // Try to get the module from our already-loaded data first
+      const cachedModule = getModule(moduleName);
+      
+      // If modules are still loading, return loading state with the data we have
+      if (modulesWithPerspectivesQuery.isLoading) {
+        return {
+          module: cachedModule,
+          perspectives: cachedModule?.perspectives || [],
+          isLoading: true,
+          isError: false,
+          error: null,
+          refetch: () => modulesWithPerspectivesQuery.refetch()
+        };
+      }
+      
+      // If we have an error fetching modules, return that error
+      if (modulesWithPerspectivesQuery.isError) {
+        return {
+          module: cachedModule,
+          perspectives: cachedModule?.perspectives || [],
+          isLoading: false,
+          isError: true,
+          error: modulesWithPerspectivesQuery.error,
+          refetch: () => modulesWithPerspectivesQuery.refetch()
+        };
+      }
+      
+      // If we have the module data, return it
+      if (cachedModule) {
+        return {
+          module: cachedModule,
+          perspectives: cachedModule.perspectives,
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: () => modulesWithPerspectivesQuery.refetch()
+        };
+      }
+      
+      // If we don't have the module data, it might not exist
+      return {
+        module: undefined,
+        perspectives: [],
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: () => modulesWithPerspectivesQuery.refetch()
+      };
+    };
+  }, [getModule, modulesWithPerspectivesQuery]);
+  
   // Always return a valid array of modules, even during loading
   const modules = modulesWithPerspectivesQuery.data || [];
   
   return {
     isLoading: modulesQuery.isLoading || modulesWithPerspectivesQuery.isLoading,
     isError: modulesQuery.isError || modulesWithPerspectivesQuery.isError,
-    error: modulesQuery.error || modulesWithPerspectivesQuery.error,
+    error: modulesQuery.error || modulesWithPerspectivesQuery.error || null,
     data: modules,
-    modules: modules,
+    modules,
     // Add a hasModules flag to easily check if we have modules
     hasModules: modules.length > 0,
     refetch: () => {
       modulesQuery.refetch();
       modulesWithPerspectivesQuery.refetch();
-    }
+    },
+    // Add methods for accessing specific module data
+    getModule,
+    getModulePerspectives
   };
 } 
