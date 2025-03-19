@@ -1,5 +1,5 @@
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
-import { ErrorDisplay, LoadingDisplay, ModuleInfo, ModuleList, NotFound } from "@/features/perspectives/components/PerspectiveModules";
+import { LoadingDisplay, ModuleInfo, ModuleList, NotFound } from "@/features/perspectives/components/PerspectiveModules";
 import { usePerspectiveModules } from "@/features/perspectives/hooks";
 import type { PerspectiveModule } from "@/features/perspectives/types";
 import {
@@ -9,8 +9,8 @@ import {
 	Flex,
 	Heading,
 	Text,
+    createListCollection
 } from "@chakra-ui/react";
-import { createListCollection } from "@chakra-ui/react";
 import { Outlet, createFileRoute, useMatches, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
@@ -65,7 +65,8 @@ function SchemaValidationError({ error }: { error: Error }) {
 
 function ModulePage() {
 	const { moduleName } = Route.useParams();
-	const { modules, isLoading, error, refetch } = usePerspectiveModules();
+	const perspectiveModules = usePerspectiveModules();
+	const { modules, isLoading, error, refetch, getModule } = perspectiveModules;
 	const [selectedModule, setSelectedModule] =
 		useState<PerspectiveModule | null>(null);
 	const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -96,7 +97,8 @@ function ModulePage() {
 	// Find the selected module when data is loaded
 	useEffect(() => {
 		if (modules && modules.length > 0) {
-			const module = modules.find((m) => m.name === moduleName);
+			// Use getModule to find the module directly
+			const module = getModule(moduleName);
 			setSelectedModule(module || null);
 			
 			// If module exists but has no perspectives, check if it might be an API error
@@ -123,10 +125,10 @@ function ModulePage() {
 				}
 			}
 		}
-	}, [modules, moduleName, navigate, isModuleRoot]);
+	}, [modules, moduleName, navigate, isModuleRoot, getModule]);
 
 	// Handle module change
-	const handleModuleChange = (details: any) => {
+	const handleModuleChange = (details: { value: string[] }) => {
 		const newModuleName = details.value[0];
 		if (newModuleName && newModuleName !== moduleName) {
 			navigate({ to: "/perspectives/module/$moduleName", params: { moduleName: newModuleName } });

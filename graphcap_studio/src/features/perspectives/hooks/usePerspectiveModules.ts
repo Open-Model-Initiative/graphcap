@@ -8,7 +8,6 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import type { ServerConnection } from "@/features/server-connections/types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import {
@@ -17,8 +16,7 @@ import {
   perspectivesQueryKeys,
 } from "../services/constants";
 import { getGraphCapServerUrl, handleApiError } from "../services/utils";
-import type { ModulePerspectivesResponse, Perspective, PerspectiveModule } from "../types";
-import { useModules } from "./useModules";
+import type { ModuleInfo, ModuleListResponse, Perspective, PerspectiveModule } from "../types";
 import { PerspectiveError } from "./usePerspectives";
 
 type ModuleQueryResult = {
@@ -43,10 +41,43 @@ type ModuleQueryResult = {
 };
 
 /**
- * Enhanced hook to fetch modules and their perspectives
+ * Utility function to convert PerspectiveModule to ModuleInfo
+ * This maintains compatibility with the older data structure
+ */
+function perspectiveModuleToModuleInfo(module: PerspectiveModule): ModuleInfo {
+  return {
+    name: module.name,
+    display_name: module.display_name,
+    description: module.description,
+    enabled: module.enabled,
+    perspective_count: module.perspectives.length
+  };
+}
+
+/**
+ * Hook to get just the module info without perspectives
+ * This is useful for components that only need the basic module data
  * 
- * This combined hook provides the functionality of both usePerspectiveModules
- * and useModulePerspectives, allowing for both listing all modules and 
+ * @returns Query result with basic module information
+ */
+export function useModuleInfo() {
+  const { modules, isLoading, isError, error, refetch } = usePerspectiveModules();
+  
+  const moduleInfos = useMemo(() => {
+    return modules.map(perspectiveModuleToModuleInfo);
+  }, [modules]);
+  
+  return {
+    data: moduleInfos,
+    isLoading,
+    isError,
+    error,
+    refetch
+  };
+}
+
+/**
+ * This hook provides listing all modules and 
  * accessing a specific module's data.
  * 
  * @returns Query result with a list of modules and their perspectives, plus methods to access specific module data
@@ -58,12 +89,97 @@ export function usePerspectiveModules(): ModuleQueryResult {
   );
   const isConnected = graphcapServerConnection?.status === "connected";
   
-  // First, fetch all available modules
-  const modulesQuery = useModules();
+  // Fetch all available modules (previously provided by useModules)
+  const modulesQuery = useQuery<ModuleInfo[], Error>({
+    queryKey: perspectivesQueryKeys.modules,
+    queryFn: async () => {
+      try {
+        // Handle case when server connection is not established
+        if (!isConnected) {
+          console.warn("Server connection not established");
+          throw new PerspectiveError("Server connection not established", {
+            code: "SERVER_CONNECTION_ERROR",
+            context: { connections },
+          });
+        }
+
+        const baseUrl = getGraphCapServerUrl(connections);
+        if (!baseUrl) {
+          console.warn("No GraphCap server URL available");
+          throw new PerspectiveError("No GraphCap server URL available", {
+            code: "MISSING_SERVER_URL",
+            context: { connections },
+          });
+        }
+
+        const endpoint = API_ENDPOINTS.LIST_MODULES;
+        const url = `${baseUrl}${endpoint}`;
+
+        console.debug(`Fetching modules from server: ${url}`);
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          return handleApiError(response, "Failed to fetch modules");
+        }
+
+        const data = (await response.json()) as ModuleListResponse;
+
+        console.debug(
+          `Successfully fetched ${data.modules.length} modules`,
+        );
+
+        return data.modules;
+      } catch (error) {
+        // Improve error handling - log the error and rethrow
+        console.error("Error fetching modules:", error);
+
+        // If it's already a PerspectiveError, just rethrow it
+        if (error instanceof PerspectiveError) {
+          throw error;
+        }
+
+        // Otherwise, wrap it in a PerspectiveError
+        throw new PerspectiveError(
+          error instanceof Error
+            ? error.message
+            : "Unknown error fetching modules",
+          {
+            code: "MODULE_FETCH_ERROR",
+            context: { error },
+          },
+        );
+      }
+    },
+    // Only enable the query when the server is connected
+    enabled: isConnected,
+    staleTime: CACHE_TIMES.MODULES,
+    retry: (failureCount, error) => {
+      // Don't retry for connection errors or missing URLs
+      if (error instanceof PerspectiveError) {
+        if (
+          ["SERVER_CONNECTION_ERROR", "MISSING_SERVER_URL"].includes(error.code)
+        ) {
+          return false;
+        }
+      }
+
+      // Retry other errors up to 3 times
+      return failureCount < 3;
+    },
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+  });
+
+  // Watch for changes in connection status and refetch when connected
+  useEffect(() => {
+    if (isConnected && modulesQuery.isError) {
+      modulesQuery.refetch();
+    }
+  }, [isConnected, modulesQuery]);
   
   // Then fetch all module details in a single query
   const modulesWithPerspectivesQuery = useQuery<PerspectiveModule[]>({
-    // Use a different query key to avoid conflicts with useModules
+    // Use a different query key to avoid conflicts with the modules query
     queryKey: [...perspectivesQueryKeys.modules, 'with-perspectives'],
     queryFn: async () => {
       // If we don't have modules data yet, return empty array
