@@ -8,7 +8,7 @@ import { Box, Stack } from "@chakra-ui/react";
  * including its data, options, and metadata.
  */
 import { useEffect } from "react";
-import { PerspectiveData, PerspectiveSchema } from "../../types";
+import type { PerspectiveData, PerspectiveSchema } from "../../../types";
 import {
 	DataStatistics,
 	MetadataSection,

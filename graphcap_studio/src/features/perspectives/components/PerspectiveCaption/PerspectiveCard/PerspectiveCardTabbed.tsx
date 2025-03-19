@@ -8,7 +8,7 @@ import { useColorModeValue } from "@/components/ui/theme/color-mode";
  * This component uses Chakra UI tabs for the tabbed interface.
  */
 import { Box, Card, Stack, Tabs, Text } from "@chakra-ui/react";
-import { PerspectiveSchema } from "../../types";
+import type { PerspectiveSchema } from "../../../types";
 import { PerspectiveDebug } from "./PerspectiveDebug";
 import { SchemaView } from "./SchemaView";
 import { CaptionRenderer } from "./schema-fields";

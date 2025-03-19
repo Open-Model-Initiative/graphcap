@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { PerspectiveSchema } from "../../types";
+import type { PerspectiveSchema } from "../../../types";
 import { SchemaFieldFactory } from "./schema-fields";
 
 interface SchemaViewProps {

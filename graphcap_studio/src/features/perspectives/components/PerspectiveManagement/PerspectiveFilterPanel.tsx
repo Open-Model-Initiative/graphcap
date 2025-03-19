@@ -16,7 +16,7 @@ import {
 	VStack,
 } from "@chakra-ui/react";
 import { useMemo } from "react";
-import { usePerspectivesData } from "../context/PerspectivesDataContext";
+import { usePerspectivesData } from "../../context/PerspectivesDataContext";
 
 /**
  * Component for filtering which perspectives are visible in the UI

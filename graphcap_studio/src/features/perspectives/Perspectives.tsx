@@ -12,8 +12,8 @@ import {
 	DEFAULT_OPTIONS,
 	GenerationOptionForm,
 } from "../inference/generation-options/components/GenerationOptionForm";
-import { EmptyPerspectives } from "./components/EmptyPerspectives";
-import { PerspectivesPager } from "./components/PerspectiveNavigation/PerspectivesPager";
+import { EmptyPerspectives } from "./components/PerspectiveCaption/EmptyPerspectives";
+import { PerspectivesPager } from "./components/PerspectiveCaption/PerspectiveNavigation/PerspectivesPager";
 import { PerspectivesErrorState } from "./components/PerspectivesErrorState";
 import { usePerspectiveUI, usePerspectivesData } from "./context";
 import type { CaptionOptions } from "./types";

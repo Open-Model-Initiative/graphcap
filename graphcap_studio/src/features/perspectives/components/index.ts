@@ -5,12 +5,12 @@
  * This module exports all component files from the perspectives feature.
  */
 
-export * from "./EmptyPerspectives";
+export * from "./PerspectiveCaption/EmptyPerspectives";
 export * from "./PerspectivesErrorState";
-export * from "./PerspectiveFilterPanel";
-export * from "./ErrorMessage";
-export { PerspectiveHeader } from "./PerspectiveNavigation/PerspectiveHeader";
-export { PerspectivesPager } from "./PerspectiveNavigation/PerspectivesPager";
-export { MetadataDisplay } from "./PerspectiveCard/MetadataDisplay";
-export * from "./PerspectiveActions";
-export * from "./PerspectiveManagementPanel";
+export * from "./PerspectiveManagement/PerspectiveFilterPanel";
+export * from "./PerspectiveCaption/ErrorMessage";
+export { PerspectiveHeader } from "./PerspectiveCaption/PerspectiveNavigation/PerspectiveHeader";
+export { PerspectivesPager } from "./PerspectiveCaption/PerspectiveNavigation/PerspectivesPager";
+export { MetadataDisplay } from "./PerspectiveCaption/PerspectiveCard/MetadataDisplay";
+export * from "./PerspectiveCaption/PerspectiveActions";
+export * from "./PerspectiveManagement/PerspectiveManagementPanel";

@@ -9,7 +9,7 @@ import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
 import { Box } from "@chakra-ui/react";
 import { Tabs } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
-import { usePerspectiveModules } from "../hooks";
+import { usePerspectiveModules } from "../../hooks";
 import { PerspectiveFilterPanel } from "./PerspectiveFilterPanel";
 
 /**

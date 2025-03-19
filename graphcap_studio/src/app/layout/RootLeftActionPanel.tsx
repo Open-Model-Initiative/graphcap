@@ -16,7 +16,7 @@ import { SettingsPanel } from "@/features/app-settings";
 import { FeatureFlagsPanel } from "@/features/app-settings/feature-flags";
 import { DatasetPanel } from "@/features/datasets";
 import { ProvidersPanel } from "@/features/inference/providers";
-import { PerspectiveManagementPanel } from "@/features/perspectives/components/PerspectiveManagementPanel";
+import { PerspectiveManagementPanel } from "@/features/perspectives/components/PerspectiveManagement/PerspectiveManagementPanel";
 import { ActionPanel } from "./ActionPanel";
 
 /**
