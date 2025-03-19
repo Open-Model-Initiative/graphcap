@@ -5,14 +5,58 @@
  * This module defines types related to perspective modules and management.
  */
 
+import { z } from "zod";
+import { PerspectiveSchema } from "./perspectivesTypes";
 import type { Perspective } from "./perspectivesTypes";
+
+/**
+ * Schema for module information
+ */
+export const ModuleInfoSchema = z.object({
+	name: z.string(),
+	display_name: z.string(),
+	description: z.string(),
+	enabled: z.boolean(),
+	perspective_count: z.number()
+});
+
+/**
+ * Schema for module list response
+ */
+export const ModuleListResponseSchema = z.object({
+	modules: z.array(ModuleInfoSchema)
+});
+
+/**
+ * Schema for module perspectives response
+ */
+export const ModulePerspectivesResponseSchema = z.object({
+	module: ModuleInfoSchema,
+	perspectives: z.array(PerspectiveSchema)
+});
+
+/**
+ * Type representing module information
+ */
+export type ModuleInfo = z.infer<typeof ModuleInfoSchema>;
+
+/**
+ * Type representing a module list response
+ */
+export type ModuleListResponse = z.infer<typeof ModuleListResponseSchema>;
+
+/**
+ * Type representing a module perspectives response
+ */
+export type ModulePerspectivesResponse = z.infer<typeof ModulePerspectivesResponseSchema>;
 
 /**
  * Represents a module containing multiple perspectives
  */
 export interface PerspectiveModule {
-	id: string;
 	name: string;
+	display_name: string;
+	description: string;
 	enabled: boolean;
 	perspectives: Perspective[];
 }
@@ -22,51 +66,4 @@ export interface PerspectiveModule {
  */
 export interface PerspectiveModuleList {
 	modules: PerspectiveModule[];
-}
-
-/**
- * Groups perspectives by module
- * @param perspectives Array of all perspectives
- * @returns Map of modules with their perspectives
- */
-export function groupPerspectivesByModule(
-	perspectives: Perspective[],
-): PerspectiveModule[] {
-	// Initialize with default modules
-	const moduleMap = new Map<string, PerspectiveModule>();
-
-	// Add core module as default
-	moduleMap.set("core", {
-		id: "core",
-		name: "Core",
-		enabled: true,
-		perspectives: [],
-	});
-
-	// Group perspectives by module
-	perspectives.forEach((perspective) => {
-		// Extract module from perspective name or use "core" as default
-		// The module can be detected by checking for "/" in the perspective name
-		const moduleId = perspective.name.includes("/")
-			? perspective.name.split("/")[0]
-			: "core";
-
-		const moduleName = moduleId.charAt(0).toUpperCase() + moduleId.slice(1);
-
-		// Create module if it doesn't exist
-		if (!moduleMap.has(moduleId)) {
-			moduleMap.set(moduleId, {
-				id: moduleId,
-				name: moduleName,
-				enabled: true,
-				perspectives: [],
-			});
-		}
-
-		// Add perspective to module
-		moduleMap.get(moduleId)?.perspectives.push(perspective);
-	});
-
-	// Convert map to array
-	return Array.from(moduleMap.values());
 }

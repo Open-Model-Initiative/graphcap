@@ -47,7 +47,7 @@ export function ModuleList({ module }: ModuleListProps) {
             <Link 
               to="/perspectives/module/$moduleName/perspective/$perspectiveName"
               params={{ 
-                moduleName: module.id,
+                moduleName: module.name,
                 perspectiveName: perspective.name.includes("/") 
                   ? perspective.name.split("/").pop() || perspective.name
                   : perspective.name

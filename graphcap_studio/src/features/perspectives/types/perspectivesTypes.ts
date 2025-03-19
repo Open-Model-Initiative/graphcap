@@ -30,14 +30,14 @@ export const SchemaFieldSchema: z.ZodType<{
 		description: string;
 		is_list?: boolean;
 		is_complex?: boolean;
-	}>;
+	}> | null;
 }> = z.object({
 	name: z.string(),
 	type: z.enum(["str", "float"]),
 	description: z.string(),
 	is_list: z.boolean().optional(),
 	is_complex: z.boolean().optional(),
-	fields: z.array(z.lazy(() => SchemaFieldSchema)).optional(),
+	fields: z.nullable(z.array(z.lazy(() => SchemaFieldSchema))).optional(),
 });
 
 /**

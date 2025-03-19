@@ -17,11 +17,16 @@ export function getGraphCapServerUrl(connections: ServerConnection[]): string {
 		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
 	);
 
-	return (
-		graphcapServerConnection?.url ??
-		import.meta.env.VITE_GRAPHCAP_SERVER_URL ??
-		DEFAULTS.SERVER_URL
-	);
+	// Get URL from connection, environment variable, or default
+	const serverUrl = graphcapServerConnection?.url ||
+		import.meta.env.VITE_GRAPHCAP_SERVER_URL ||
+		import.meta.env.VITE_API_URL ||
+		DEFAULTS.SERVER_URL;
+	
+	// Log the server URL being used for debugging
+	console.debug(`Using GraphCap server URL: ${serverUrl}`);
+	
+	return serverUrl;
 }
 
 /**
@@ -60,11 +65,14 @@ export async function handleApiError(
 	defaultMessage: string,
 ): Promise<never> {
 	let errorMessage = `${defaultMessage}: ${response.status}`;
+	let errorDetails = null;
 
 	try {
-		const contentType = response.headers.get("content-type");
+		const contentType = response.headers.get("content-type") || "";
 
-		if (contentType && contentType.includes("application/json")) {
+		// Handle different content types appropriately
+		if (contentType.includes("application/json")) {
+			// JSON response - parse and extract error details
 			const errorData = await response.json();
 
 			// FastAPI error format
@@ -79,24 +87,53 @@ export async function handleApiError(
 				} else {
 					errorMessage = JSON.stringify(errorData.detail);
 				}
+				errorDetails = errorData;
 			} else if (errorData.message) {
 				errorMessage = errorData.message;
+				errorDetails = errorData;
 			} else {
 				errorMessage = JSON.stringify(errorData);
+				errorDetails = errorData;
 			}
+		} else if (contentType.includes("text/html")) {
+			// HTML response - likely a server error page or redirect
+			const textError = await response.text();
+			// Extract just a small portion to avoid huge error messages
+			const excerpt = textError.substring(0, 200) + (textError.length > 200 ? "..." : "");
+			errorMessage = `${defaultMessage}: Received HTML response (Status: ${response.status})`;
+			errorDetails = { htmlExcerpt: excerpt };
+			console.warn("Received HTML response instead of expected JSON:", excerpt);
 		} else {
-			// Try to get text response
+			// Other content type - try to get text
 			const textError = await response.text();
 			if (textError) {
-				errorMessage = textError;
+				errorMessage = textError.substring(0, 500); // Limit size
+				errorDetails = { text: textError };
 			}
 		}
 	} catch (e) {
-		// If we can't parse the error as JSON, use the status text
+		// If we can't parse the error, use the status text
 		console.error("Error parsing API error response", e);
-		errorMessage = `${defaultMessage}: ${response.statusText}`;
+		errorMessage = `${defaultMessage}: ${response.statusText} (Status: ${response.status})`;
+		errorDetails = { parseError: e instanceof Error ? e.message : "Unknown error" };
 	}
 
-	console.error(`API Error: ${errorMessage}`);
-	throw new Error(errorMessage);
+	// Create a more informative error
+	console.error(`API Error: ${errorMessage}`, { 
+		status: response.status, 
+		url: response.url,
+		details: errorDetails
+	});
+	
+	// Create an error with additional properties
+	const error = new Error(errorMessage) as Error & { 
+		status?: number; 
+		details?: any;
+		url?: string;
+	};
+	error.status = response.status;
+	error.details = errorDetails;
+	error.url = response.url;
+	
+	throw error;
 }

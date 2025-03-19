@@ -21,7 +21,7 @@ export function ModuleInfo({ module }: ModuleInfoProps) {
   return (
     <>
       <Flex alignItems="center" mb={4} gap={3}>
-        <Heading size="lg">{module.name}</Heading>
+        <Heading size="lg">{module.display_name}</Heading>
         <Badge colorScheme={module.enabled ? "green" : "red"}>
           {module.enabled ? "Enabled" : "Disabled"}
         </Badge>
@@ -37,6 +37,11 @@ export function ModuleInfo({ module }: ModuleInfoProps) {
           This module contains {module.perspectives.length}{" "}
           perspectives.
         </Text>
+        {module.description && (
+          <Text mb={2}>
+            {module.description}
+          </Text>
+        )}
       </Box>
     </>
   );
