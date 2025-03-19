@@ -1,0 +1,67 @@
+{
+  "name": "style_preset",
+  "display_name": "Structured Style Presets",
+  "version": "1",
+  "prompt": "Generate a **structured style preset** that defines a unique visual and thematic quality. Each preset should be concise yet richly descriptive, covering:\n\n1. **Theme**: Clearly state the overarching aesthetic or concept.\n2. **Color Palette**: Define the primary color tones, contrast, and saturation.\n3. **Camera Type & Film Stock**: Specify the camera style, film stock, or digital settings used to achieve the look.\n4. **Lighting**: Describe the lighting setup that enhances the mood (e.g., high-key, soft diffused, chiaroscuro).\n5. **Texture & Rendering**: Highlight key textures, grain, or surface qualities that define the preset.\n6. **Vibe**: Summarize the emotional tone and intended effect.\n\nThe result should be structured as a **formatted preset block**, ensuring clarity and usability.",
+  "schema_fields": [
+    {
+      "name": "theme",
+      "type": "str",
+      "description": "The central artistic or conceptual theme defining the preset.",
+      "is_list": false
+    },
+    {
+      "name": "color_palette",
+      "type": "str",
+      "description": "The dominant colors, contrast, and saturation levels that shape the aesthetic.",
+      "is_list": false
+    },
+    {
+      "name": "camera_and_film",
+      "type": "str",
+      "description": "The type of camera, film stock, or digital settings that define the visual style.",
+      "is_list": false
+    },
+    {
+      "name": "lighting",
+      "type": "str",
+      "description": "Description of the lighting setup and how it interacts with the scene.",
+      "is_list": false
+    },
+    {
+      "name": "texture_and_rendering",
+      "type": "str",
+      "description": "Key textures, grain, or material properties that contribute to the look.",
+      "is_list": false
+    },
+    {
+      "name": "vibe",
+      "type": "str",
+      "description": "The overall emotional tone or impact of the preset.",
+      "is_list": false
+    },
+    {
+      "name": "final_preset",
+      "type": "str",
+      "description": "A structured, formatted preset encapsulating all key elements.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Component",
+      "style": "cyan"
+    },
+    {
+      "name": "Description",
+      "style": "green"
+    }
+  ],
+  "context_template": "<StylePreset>\n{final_preset}\n</StylePreset>",
+  "module": "core",
+  "type": "perspective",
+  "tags": ["style", "preset", "aesthetic", "cinematic"],
+  "description": "A perspective that generates structured style presets for detailed, thematic image and video generation.",
+  "deprecated": false,
+  "priority": 50
+}

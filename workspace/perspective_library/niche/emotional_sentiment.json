@@ -28,7 +28,7 @@
     }
   ],
   "context_template": "<EmotionalSentimentCaption>\n{sentiment_caption}\n</EmotionalSentimentCaption>\n",
-  "module": "focused",
+  "module": "niche",
   "type": "perspective",
   "tags": ["emotion", "sentiment", "mood", "affective"],
   "description": "A perspective focused on analyzing the emotional tone conveyed by an image, providing insights into mood and sentiment through descriptive language.",

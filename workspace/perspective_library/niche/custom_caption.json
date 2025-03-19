@@ -28,7 +28,7 @@
     }
   ],
   "context_template": "<CustomCaption>\n{caption}\n</CustomCaption>\n",
-  "module": "core",
+  "module": "niche",
   "type": "custom",
   "tags": ["customizable", "general-purpose", "flexible"],
   "description": "A customizable perspective that allows users to provide their own instructions for image analysis, supporting versatile use cases and custom analysis approaches.",
