@@ -6,6 +6,7 @@ from loguru import logger
 
 params = RepositoryParams()
 
+
 class DagsterClientWrapper:
     def __init__(self, params: RepositoryParams = RepositoryParams()):
         """

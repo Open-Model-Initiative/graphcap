@@ -8,7 +8,7 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { ServerConnection } from "@/features/server-connections/types";
+import type { ServerConnection } from "@/features/server-connections/types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
@@ -17,7 +17,7 @@ import {
 	perspectivesQueryKeys,
 } from "../services/constants";
 import { getGraphCapServerUrl, handleApiError } from "../services/utils";
-import { Perspective, PerspectiveListResponse } from "../types";
+import type { Perspective, PerspectiveListResponse } from "../types";
 
 /**
  * Custom error class for perspective fetching errors

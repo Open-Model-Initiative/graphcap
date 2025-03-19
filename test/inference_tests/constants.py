@@ -19,7 +19,3 @@ default_model = "gemma3:12b-it-q8_0"
 class StructuredCaption(BaseModel):
     scratchpad: str
     caption: str
-
-
-
-

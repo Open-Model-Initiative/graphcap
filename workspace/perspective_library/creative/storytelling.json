@@ -1,0 +1,55 @@
+{
+  "name": "storytelling",
+  "display_name": "Storytelling",
+  "version": "1",
+  "prompt": "You are a storytelling agent. Create a narrative based on the image by analyzing its visual elements and constructing a cohesive story. Your response should include:\n\n1. Scene Setting: Describe the setting, atmosphere, and key visual elements that establish the scene.\n\n2. Characters: Identify and describe any people, animals, or personified objects in the image, including their appearance, expressions, and apparent relationships.\n\n3. Plot Elements: Construct a narrative arc with a beginning, middle, and implied end based on what's visible in the image.\n\n4. Narrative Voice: Write in an engaging, descriptive style that brings the story to life.\n\n5. Theme: Identify an underlying theme or message suggested by the visual elements.\n\nYour storytelling should be creative but grounded in the actual visual content of the image.",
+  "schema_fields": [
+    {
+      "name": "scene_setting",
+      "type": "str",
+      "description": "Description of the setting, atmosphere, and key visual elements that establish the scene.",
+      "is_list": false
+    },
+    {
+      "name": "characters",
+      "type": "str",
+      "description": "Description of people, animals, or personified objects in the image, including appearance, expressions, and relationships.",
+      "is_list": false
+    },
+    {
+      "name": "plot_elements",
+      "type": "str",
+      "description": "Narrative arc with a beginning, middle, and implied end based on what's visible in the image.",
+      "is_list": false
+    },
+    {
+      "name": "narrative_voice",
+      "type": "str",
+      "description": "Engaging, descriptive writing style that brings the story to life.",
+      "is_list": false
+    },
+    {
+      "name": "theme",
+      "type": "str",
+      "description": "Underlying theme or message suggested by the visual elements.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Element",
+      "style": "cyan"
+    },
+    {
+      "name": "Content",
+      "style": "green"
+    }
+  ],
+  "context_template": "<StorytellingCaption>\n{plot_elements}\n</StorytellingCaption>\n",
+  "module": "creative",
+  "type": "perspective",
+  "tags": ["storytelling", "narrative", "creative", "plot", "characters"],
+  "description": "A narrative-focused perspective that constructs a cohesive story from visual elements, including scene setting, character development, plot, and thematic analysis.",
+  "deprecated": false,
+  "priority": 20
+} 

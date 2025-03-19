@@ -13,7 +13,6 @@ Classes:
     None (contains test functions only)
 """
 
-
 import pytest
 
 from graphcap.providers.provider_config import _load_provider_config, get_providers_config, validate_config

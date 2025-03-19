@@ -1,0 +1,61 @@
+{
+  "name": "simple_temporarium",
+  "display_name": "Simple Temporarium",
+  "version": "1",
+  "prompt": "Look at the image carefully and describe it in simple, clear language. Focus on things related to time and history. Your response should clearly answer these questions:\n\n1. What You See: Describe clearly what is in the image.\n\n2. Time Setting: Decide if the image is from the past, present, or future, and explain your choice simply.\n\n3. Background: Give a short explanation of what life might have been like at the time shown in the image.\n\n4. Key Details: Explain how the main objects or people you see match with the time you chose.\n\n5. Historical Connections: Explain simply how this image connects with things we know happened in history or things we think could happen in the future.\n\n6. Extra Thoughts: Guess simply about other possible details or events related to this scene but not shown in the image.\n\n7. Simple Caption: Write a short paragraph clearly summarizing the whole image and what it shows about its time.\n\nYour answer should be simple, clear, and only based on what you can see or logically guess about the time and place shown in the image.",
+  "schema_fields": [
+    {
+      "name": "what_you_see",
+      "type": "str",
+      "description": "Clear description of what is directly visible in the image.",
+      "is_list": false
+    },
+    {
+      "name": "time_setting",
+      "type": "str",
+      "description": "Explanation of whether the image looks like it’s from the past, present, or future.",
+      "is_list": false
+    },
+    {
+      "name": "time_context",
+      "type": "str",
+      "description": "Short summary of the historical or future setting shown or suggested by the image.",
+      "is_list": false
+    },
+    {
+      "name": "history_connection",
+      "type": "str",
+      "description": "Explanation of how this scene connects with real historical events or likely future events.",
+      "is_list": false
+    },
+    {
+      "name": "extra_thoughts",
+      "type": "str",
+      "description": "Simple guesses about other details or events related to the scene but not visible in the image.",
+      "is_list": false
+    },
+    {
+      "name": "simple_caption",
+      "type": "str",
+      "description": "Short paragraph clearly summarizing the whole image based on the observations and explanations given.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Question",
+      "style": "cyan"
+    },
+    {
+      "name": "Description",
+      "style": "green"
+    }
+  ],
+  "context_template": "<SimpleTemporariumCaption>\n{temporal_caption}\n</SimpleTemporariumCaption>\n",
+  "module": "creative",
+  "type": "perspective",
+  "tags": ["time", "historical", "simplified", "era", "indicators"],
+  "description": "A simplified version of the Temporarium perspective that focuses on basic temporal analysis with less complexity and reasoning steps.",
+  "deprecated": false,
+  "priority": 45
+}

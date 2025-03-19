@@ -9,6 +9,8 @@ This module provides the following endpoints:
 - POST /perspectives/caption - Generate a caption for an image using file upload
 - GET /perspectives/debug/{perspective_name} - Get debug information about a perspective
 - POST /perspectives/caption-from-path - Generate a caption for an image using a file path
+- GET /perspectives/modules - List all available perspective modules
+- GET /perspectives/modules/{module_name} - Get perspectives for a specific module
 """
 
 import json
@@ -21,10 +23,18 @@ from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, Uploa
 from loguru import logger
 
 from ...utils.resizing import ResolutionPreset, log_resize_options, resize_image
-from .models import CaptionPathRequest, CaptionResponse, PerspectiveListResponse
+from .models import (
+    CaptionPathRequest,
+    CaptionResponse,
+    ModuleListResponse,
+    ModulePerspectivesResponse,
+    PerspectiveListResponse,
+)
 from .service import (
     generate_caption,
+    get_available_modules,
     get_available_perspectives,
+    get_perspectives_by_module,
     save_uploaded_file,
 )
 
@@ -43,45 +53,6 @@ async def list_perspectives() -> PerspectiveListResponse:
     return PerspectiveListResponse(perspectives=perspectives)
 
 
-@router.get("/debug/{perspective_name}")
-async def debug_perspective(perspective_name: str) -> dict:
-    """
-    Get debug information about a perspective.
-    Args:
-        perspective_name: Name of the perspective to debug
-    Returns:
-        Debug information about the perspective
-    Raises:
-        HTTPException: If the perspective is not found
-    """
-    from graphcap.perspectives import get_perspective
-    try:
-        perspective = get_perspective(perspective_name)
-        # Get perspective attributes
-        attributes = {
-            "config_name": perspective.config_name,
-            "display_name": perspective.display_name,
-            "version": perspective.version,
-            "has_process_single": hasattr(perspective, "process_single"),
-            "has_process_batch": hasattr(perspective, "process_batch"),
-        }
-        # Get method signatures if available
-        if attributes["has_process_single"]:
-            import inspect
-            attributes["process_single_signature"] = str(inspect.signature(perspective.process_single))
-        if attributes["has_process_batch"]:
-            import inspect
-            attributes["process_batch_signature"] = str(inspect.signature(perspective.process_batch))
-        return {
-            "perspective": perspective_name,
-            "attributes": attributes,
-            "type": str(type(perspective)),
-        }
-    except Exception as e:
-        logger.error(f"Error getting perspective debug info: {str(e)}")
-        raise HTTPException(status_code=404, detail=f"Error getting perspective debug info: {str(e)}")
-
-
 @router.post("/caption", response_model=CaptionResponse, status_code=status.HTTP_200_OK)
 async def create_caption(
     background_tasks: BackgroundTasks,
@@ -94,7 +65,7 @@ async def create_caption(
     repetition_penalty: Optional[float] = Form(1.15, description="Repetition penalty"),
     global_context: Optional[str] = Form(None, description="Global context for the caption"),
     context: Optional[str] = Form(None, description="Additional context for the caption as JSON array string"),
-    resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable resizing)")
+    resize_resolution: Optional[str] = Form(None, description="Resolution to resize to (None to disable resizing)"),
 ) -> CaptionResponse:
     """
     Generate a caption for an image using a perspective.
@@ -128,9 +99,7 @@ async def create_caption(
         image_path = await save_uploaded_file(file)
 
         # Log resize options
-        options = {
-            'resize_resolution': resize_resolution
-        }
+        options = {"resize_resolution": resize_resolution}
         log_resize_options(options)
 
         # Resize the image if resize_resolution is provided
@@ -230,10 +199,7 @@ async def create_caption_from_path(
         temp_path = None
 
         # Handle image resizing if requested
-        image_path, temp_path = await _resize_image_if_needed(
-            image_path,
-            request.resize_resolution
-        )
+        image_path, temp_path = await _resize_image_if_needed(image_path, request.resize_resolution)
 
         # Process context
         context = _process_context(request.context)
@@ -255,11 +221,7 @@ async def create_caption_from_path(
         _cleanup_temp_file(temp_path)
 
         # Prepare the response
-        return _prepare_caption_response(
-            caption_data,
-            request.perspective,
-            request.provider
-        )
+        return _prepare_caption_response(caption_data, request.perspective, request.provider)
     except Exception as e:
         logger.error(f"Error creating caption from path: {str(e)}")
         if isinstance(e, HTTPException):
@@ -275,15 +237,12 @@ def _validate_image_path(image_path_str: str) -> Path:
     return image_path
 
 
-async def _resize_image_if_needed(
-    image_path: Path,
-    resize_resolution: Optional[str]
-) -> tuple[Path, Optional[Path]]:
+async def _resize_image_if_needed(image_path: Path, resize_resolution: Optional[str]) -> tuple[Path, Optional[Path]]:
     """Resize the image if a resize resolution is provided."""
     temp_path = None
 
     # Log resize options
-    options = {'resize_resolution': resize_resolution}
+    options = {"resize_resolution": resize_resolution}
     log_resize_options(options)
 
     if not resize_resolution:
@@ -348,11 +307,7 @@ def _cleanup_temp_file(temp_path: Optional[Path]) -> None:
             logger.error(f"Error removing temporary file: {str(e)}")
 
 
-def _prepare_caption_response(
-    caption_data: dict,
-    perspective: str,
-    provider: str
-) -> CaptionResponse:
+def _prepare_caption_response(caption_data: dict, perspective: str, provider: str) -> CaptionResponse:
     """Prepare the caption response from the caption data."""
     # Log the caption data for debugging
     logger.debug(f"Caption data: {caption_data}")
@@ -387,3 +342,57 @@ def _parse_context(context_str) -> Optional[List[str]]:
         return [context_str]
     except json.JSONDecodeError:
         return [context_str]
+
+
+
+
+@router.get("/modules", response_model=ModuleListResponse)
+async def list_modules() -> ModuleListResponse:
+    """
+    List all available perspective modules.
+
+    Returns:
+        List of available modules with metadata
+    """
+    modules = get_available_modules()
+    return ModuleListResponse(modules=modules)
+
+
+@router.get("/modules/{module_name}", response_model=ModulePerspectivesResponse)
+async def get_module_perspectives(module_name: str) -> ModulePerspectivesResponse:
+    """
+    Get all perspectives that belong to a specific module.
+
+    Args:
+        module_name: Name of the module to get perspectives for
+
+    Returns:
+        Module information and list of perspectives in the module
+    
+    Raises:
+        HTTPException: If the module is not found
+    """
+    try:
+        # Get perspectives for the module
+        perspectives = get_perspectives_by_module(module_name)
+        
+        # Get module info
+        modules = get_available_modules()
+        module = next((m for m in modules if m.name == module_name), None)
+        
+        if not module:
+            raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+        
+        return ModulePerspectivesResponse(
+            module=module,
+            perspectives=perspectives
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error getting perspectives for module '{module_name}': {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting perspectives for module '{module_name}': {str(e)}"
+        )

@@ -7,4 +7,4 @@ Provides functionality for working with AI providers.
 
 from .router import router
 
-__all__ = ["router"] 
+__all__ = ["router"]

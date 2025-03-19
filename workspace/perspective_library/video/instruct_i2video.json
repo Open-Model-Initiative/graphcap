@@ -1,0 +1,85 @@
+{
+  "name": "instruct_i2video",
+  "display_name": "Image to Video with Custom Instructions",
+  "version": "1",
+  "prompt": "Analyze the image and extract key visual elements. Then, integrate the provided custom instructions into the video generation prompt to enhance relevance and specificity. The final caption should be concise (one to two sentences) yet highly descriptive, incorporating:\n\n1. **Core Scene**: Identify the main subject and setting with dynamic potential (e.g., action, transformation, movement).\n\n2. **Subject Details**: Describe key visual traits of the subject(s), including clothing, physical features, and expressions.\n\n3. **Environmental Layers**: Capture foreground, midground, and background details to ensure depth and spatial clarity.\n\n4. **Action Sequence**: Define the subject's movement or events in a way that emphasizes realistic physics, momentum, or cinematic flow.\n\n5. **Mood & Atmosphere**: Establish the tone using descriptive words that evoke emotions (e.g., 'ominous storm brewing,' 'serene sunset glow').\n\n6. **Artistic Style & Cinematography**: Specify the visual aesthetic (e.g., 'photorealistic cyberpunk city with neon reflections') and include relevant camera directions (e.g., 'dynamic tracking shot from below').\n\nThe final caption must seamlessly **merge insights from the custom instructions** with the image analysis, ensuring a **natural, engaging, and highly optimized** prompt for video generation.",
+  "schema_fields": [
+    {
+      "name": "image_analysis",
+      "type": "str",
+      "description": "A breakdown of key visual elements in the image, including main subjects, setting, and composition.",
+      "is_list": false
+    },
+    {
+      "name": "instruction_integration",
+      "type": "str",
+      "description": "A structured plan for incorporating the custom instructions into the video prompt while preserving coherence.",
+      "is_list": false
+    },
+    {
+      "name": "core_scene",
+      "type": "str",
+      "description": "A brief but clear definition of the main subject and setting, ensuring visual dynamism.",
+      "is_list": false
+    },
+    {
+      "name": "subject_details",
+      "type": "str",
+      "description": "Distinctive features of the subject, including appearance, attire, posture, or expressions.",
+      "is_list": false
+    },
+    {
+      "name": "environmental_layers",
+      "type": "str",
+      "description": "Layered description of foreground, midground, and background to establish depth.",
+      "is_list": false
+    },
+    {
+      "name": "action_sequence",
+      "type": "str",
+      "description": "Specific, dynamic movements or events occurring in the scene.",
+      "is_list": false
+    },
+    {
+      "name": "mood_and_atmosphere",
+      "type": "str",
+      "description": "Descriptive elements that establish the emotional tone and ambiance.",
+      "is_list": false
+    },
+    {
+      "name": "artistic_style",
+      "type": "str",
+      "description": "The visual style and cinematographic choices, such as lighting, color schemes, and perspective.",
+      "is_list": false
+    },
+    {
+      "name": "camera_directions",
+      "type": "str",
+      "description": "Optional cinematic techniques like tracking shots, zooms, or slow-motion effects.",
+      "is_list": false
+    },
+    {
+      "name": "final_caption",
+      "type": "str",
+      "description": "A refined, short, yet highly descriptive video caption integrating both the image analysis and custom instructions.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Component",
+      "style": "cyan"
+    },
+    {
+      "name": "Description",
+      "style": "green"
+    }
+  ],
+  "context_template": "<VideoCaption>\n{final_caption}\n</VideoCaption>",
+  "module": "creative",
+  "type": "perspective",
+  "tags": ["video", "caption", "video_generation", "custom_integration"],
+  "description": "A perspective that generates a high-quality, dense video caption by analyzing an image and incorporating custom user instructions.",
+  "deprecated": false,
+  "priority": 50
+}

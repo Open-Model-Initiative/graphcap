@@ -1,0 +1,37 @@
+{
+  "modules": {
+    "core": {
+      "enabled": true,
+      "display_name": "Core Perspectives"
+    },
+    "narrative": {
+      "enabled": true,
+      "display_name": "Narrative Perspectives"
+    },
+    "emotional": {
+      "enabled": true,
+      "display_name": "Emotional Perspectives"
+    },
+    "art": {
+      "enabled": true,
+      "display_name": "Art Analysis"
+    },
+    "temporal": {
+      "enabled": true,
+      "display_name": "Temporal Analysis"
+    },
+    "speculative": {
+      "enabled": true,
+      "display_name": "Speculative Perspectives"
+    },
+    "experimental": {
+      "enabled": false,
+      "display_name": "Experimental Perspectives"
+    },
+    "deprecated": {
+      "enabled": false,
+      "display_name": "Deprecated Perspectives"
+    }
+  },
+  "local_override": true
+} 

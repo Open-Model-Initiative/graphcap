@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         # If provider config not set, default to config directory
         if not self.PROVIDER_CONFIG_PATH:
             self.PROVIDER_CONFIG_PATH = self.CONFIG_PATH / "provider.config.toml"
-            
+
         # Construct DATABASE_URL if not provided
         if not self.DATABASE_URL:
             self.DATABASE_URL = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

@@ -21,7 +21,7 @@ logger.remove()  # Remove default handler
 logger.add(
     sys.stderr,
     level="DEBUG",
-    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
 )
 
 # Constants
@@ -34,8 +34,10 @@ IMAGE_PATH = "/workspace/datasets/os_img/big-buddha-5587706_1280.jpg"
 logger.debug(f"Using Ollama host: {OLLAMA_HOST}")
 logger.debug(f"Full Ollama URL: {OLLAMA_BASE_URL}")
 
+
 class CaptionRequest(BaseModel):
     """Request model for caption generation."""
+
     perspective: str
     image_path: str
     provider: str
@@ -46,10 +48,13 @@ class CaptionRequest(BaseModel):
     context: Optional[List[str]] = ["string"]
     global_context: str = "You are a structured captioning model."
 
+
 class StructuredCaption(BaseModel):
     """Response model for structured caption."""
+
     scratchpad: str
     caption: str
+
 
 async def check_ollama_health():
     """Check if Ollama is running and healthy."""
@@ -80,13 +85,14 @@ async def check_ollama_health():
         logger.debug(f"Exception details: {e.__cause__ if hasattr(e, '__cause__') else 'No cause info'}")
         return False
 
+
 async def test_caption_generation(provider: str):
     """Test the caption generation REST API endpoint.
-    
+
     Args:
         provider: The provider to use for caption generation (e.g., 'ollama' or 'gemini')
     """
-    logger.info(f"\n{'='*50}\nTesting with {provider.upper()} provider\n{'='*50}")
+    logger.info(f"\n{'=' * 50}\nTesting with {provider.upper()} provider\n{'=' * 50}")
 
     # For Ollama provider, check health first
     if provider == "ollama":
@@ -107,7 +113,7 @@ async def test_caption_generation(provider: str):
         top_p=0.9,
         repetition_penalty=1.15,
         context=["string"],
-        global_context="You are a structured captioning model."
+        global_context="You are a structured captioning model.",
     )
 
     endpoint = f"{API_BASE_URL}/perspectives/caption-from-path"
@@ -122,10 +128,7 @@ async def test_caption_generation(provider: str):
             response = await client.post(
                 endpoint,
                 json=request.model_dump(),
-                headers={
-                    "accept": "application/json",
-                    "Content-Type": "application/json"
-                }
+                headers={"accept": "application/json", "Content-Type": "application/json"},
             )
 
             # Log response details
@@ -165,6 +168,7 @@ async def test_caption_generation(provider: str):
         logger.debug(f"Exception details: {e.__cause__ if hasattr(e, '__cause__') else 'No cause info'}")
         raise
 
+
 async def run_tests():
     """Run tests with different providers."""
     logger.debug("Starting test run")
@@ -178,6 +182,7 @@ async def run_tests():
     await test_caption_generation("gemini")
 
     logger.debug("Test run completed")
+
 
 if __name__ == "__main__":
     # Run all tests

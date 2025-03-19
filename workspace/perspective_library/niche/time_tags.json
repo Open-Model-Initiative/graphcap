@@ -1,0 +1,67 @@
+{
+  "name": "time_tags",
+  "display_name": "Time Tags",
+  "version": "1",
+  "prompt": "Look carefully at the image. Focus ONLY on finding things clearly connected to history, mythology, or fantasy timelines. Follow these steps:\n\nStep 1: Clearly list each thing you see in the image that helps you understand the historical, mythical, or fantasy timeframe. \n\nStep 2: For each thing you listed, briefly explain why it helps you identify a particular time or fantasy setting. Your explanation should directly mention visual clues.\n\nStep 3: Sort these items by how clearly the visual clues support the timeframe, putting the clearest first.\n\nGive your answer as structured tags in this format:\n- \"tag\": Short, clear description of what you see.\n- \"category\": Pick one category from:\n  - \"Era\" (historical time period like medieval, ancient, modern)\n  - \"Technology\" (tools, weapons, armor clearly tied to a specific time)\n  - \"Culture\" (clothes, styles, symbols clearly from a certain culture or time)\n  - \"Mythical/Fantasy\" (magical or legendary things clearly fantasy-based)\n  - \"Event\" (a clear historical or mythical event)\n  - \"Condition\" (situations clearly showing a certain historical or fantasy context)\n- \"reason\": Brief explanation based on visual clues.\n- \"confidence\": A number (0-1) showing how clear the visual clues are.\n\nAt the end, briefly summarize why these details about time or fantasy make this image interesting or important.",
+  
+  "schema_fields": [
+    {
+      "name": "time_tags",
+      "type": "str",
+      "description": "Simple, clear tags describing things directly related to historical, mythical, or fantasy timeframes, sorted by how clearly visible they are.",
+      "is_list": true,
+      "is_complex": true,
+      "fields": [
+        {
+          "name": "tag",
+          "type": "str",
+          "description": "Short, clear description of a visible time-related detail."
+        },
+        {
+          "name": "category",
+          "type": "str",
+          "description": "Era, Technology, Culture, Mythical/Fantasy, Event, or Condition."
+        },
+        {
+          "name": "reason",
+          "type": "str",
+          "description": "Brief explanation directly from visible clues."
+        },
+        {
+          "name": "confidence",
+          "type": "float",
+          "description": "How clearly visual clues support this tag (0-1)."
+        }
+      ]
+    },
+    {
+      "name": "why_important",
+      "type": "str",
+      "description": "Simple explanation of why these time-related details are interesting or valuable to understanding the image.",
+      "is_list": false
+    }
+  ],
+
+  "table_columns": [
+    {
+      "name": "Confidence",
+      "style": "yellow"
+    },
+    {
+      "name": "Category",
+      "style": "cyan"
+    },
+    {
+      "name": "Tag",
+      "style": "green"
+    }
+  ],
+
+  "context_template": "<TimeTagsAnalysis>\nPeriod: {time_period_tags}\nCategory: {temporal_category}\nQualities: {time_quality_tags}\n</TimeTagsAnalysis>\n",
+  "module": "niche",
+  "type": "perspective",
+  "tags": ["time", "tagging", "classification", "historical", "periods"],
+  "description": "A tagging-focused perspective that categorizes images based on time periods, temporal indicators, and time-related qualities for easier image classification.",
+  "deprecated": false,
+  "priority": 50
+}

@@ -1,0 +1,55 @@
+{
+  "name": "out_of_frame",
+  "display_name": "Out of Frame",
+  "version": "1",
+  "prompt": "You are an imaginative analysis agent. Create a speculative interpretation of what might exist beyond the boundaries of the image. Your response should include:\n\n1. Visible Context: Briefly describe what is actually visible in the image to establish context.\n\n2. Immediate Surroundings: Speculate about what might reasonably exist just beyond the frame's edges based on visual cues and context.\n\n3. Broader Environment: Imagine the wider environment or setting that this image might be situated within.\n\n4. Temporal Extension: Consider what might have happened just before or might happen just after the moment captured in the image.\n\n5. Narrative Possibilities: Suggest potential stories or scenarios that could explain the full context of what's partially shown in the image.\n\nYour speculation should be creative but plausible, grounded in visual cues from the image while extending thoughtfully beyond what's directly observable.",
+  "schema_fields": [
+    {
+      "name": "visible_context",
+      "type": "str",
+      "description": "Brief description of what is actually visible in the image to establish context.",
+      "is_list": false
+    },
+    {
+      "name": "immediate_surroundings",
+      "type": "str",
+      "description": "Speculation about what might reasonably exist just beyond the frame's edges based on visual cues and context.",
+      "is_list": false
+    },
+    {
+      "name": "broader_environment",
+      "type": "str",
+      "description": "Imagination of the wider environment or setting that this image might be situated within.",
+      "is_list": false
+    },
+    {
+      "name": "temporal_extension",
+      "type": "str",
+      "description": "Consideration of what might have happened just before or might happen just after the moment captured in the image.",
+      "is_list": false
+    },
+    {
+      "name": "narrative_possibilities",
+      "type": "str",
+      "description": "Potential stories or scenarios that could explain the full context of what's partially shown in the image.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Element",
+      "style": "cyan"
+    },
+    {
+      "name": "Content",
+      "style": "green"
+    }
+  ],
+  "context_template": "<OutOfFrameCaption>\n{narrative_possibilities}\n</OutOfFrameCaption>\n",
+  "module": "creative",
+  "type": "perspective",
+  "tags": ["speculative", "imagination", "beyond-frame"],
+  "description": "Speculative interpretation of what might exist beyond the boundaries of the image",
+  "deprecated": false,
+  "priority": 50
+} 

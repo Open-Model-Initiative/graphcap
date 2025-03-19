@@ -1,0 +1,37 @@
+{
+  "name": "emotional_sentiment",
+  "display_name": "Emotional Sentiment",
+  "version": "1",
+  "prompt": "<Task>You are an emotion analysis agent. Generate a caption that captures the emotional tone of the image.</Task>\n<EmotionAnalysis note=\"Analyze the image to identify its emotional tone (e.g., joyful, somber, tranquil, melancholic, etc.).\">\n<SentimentCaption note=\"Compose a caption that reflects this emotional tone using descriptive and sentiment-laden language.\">",
+  "schema_fields": [
+    {
+      "name": "emotion_analysis",
+      "type": "str",
+      "description": "Analysis of the emotional tone conveyed by the image (e.g., joyful, somber, melancholic).",
+      "is_list": false
+    },
+    {
+      "name": "sentiment_caption",
+      "type": "str",
+      "description": "A caption that reflects the image's mood using descriptive, sentiment-laden language.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Emotion Analysis",
+      "style": "cyan"
+    },
+    {
+      "name": "Sentiment Caption",
+      "style": "green"
+    }
+  ],
+  "context_template": "<EmotionalSentimentCaption>\n{sentiment_caption}\n</EmotionalSentimentCaption>\n",
+  "module": "niche",
+  "type": "perspective",
+  "tags": ["emotion", "sentiment", "mood", "affective"],
+  "description": "A perspective focused on analyzing the emotional tone conveyed by an image, providing insights into mood and sentiment through descriptive language.",
+  "deprecated": false,
+  "priority": 25
+} 

@@ -39,6 +39,9 @@ export const PERSPECTIVE_CLASSES = {
 // Query keys for TanStack Query
 export const perspectivesQueryKeys = {
 	perspectives: ["perspectives"] as const,
+	modules: ["perspectives", "modules"] as const,
+	modulePerspectives: (moduleName: string) => 
+		["perspectives", "modules", moduleName] as const,
 	caption: (imagePath: string, perspective: string) =>
 		[
 			...perspectivesQueryKeys.perspectives,
@@ -55,11 +58,15 @@ export const API_ENDPOINTS = {
 	VIEW_IMAGE: "/images/view",
 	REST_LIST_PERSPECTIVES: "/perspectives/list",
 	REST_GENERATE_CAPTION: "/perspectives/caption-from-path",
+	// Module API endpoints
+	LIST_MODULES: "/perspectives/modules",
+	MODULE_PERSPECTIVES: "/perspectives/modules/{module_name}",
 };
 
 // Cache stale times (in milliseconds)
 export const CACHE_TIMES = {
 	PERSPECTIVES_STALE_TIME: 1000 * 60 * 5, // 5 minutes
+	MODULES_STALE_TIME: 1000 * 60 * 5, // 5 minutes
 };
 
 // Default values

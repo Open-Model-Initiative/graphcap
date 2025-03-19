@@ -10,6 +10,7 @@ dependencies = [
     "openai>=1.63.2",
     "pydantic>=2.10.6",
     "rich>=13.9.4",
+    "tenacity>=9.0.0",
 ]
 
 [dependency-groups]
@@ -71,7 +72,7 @@ target-version = "py311"
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default
 select = ["E", "F", "W", "I001"]
-ignore = []
+ignore = ["W293"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided
 fixable = ["ALL"]

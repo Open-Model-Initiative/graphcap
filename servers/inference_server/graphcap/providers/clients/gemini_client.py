@@ -54,7 +54,6 @@ class GeminiClient(BaseClient):
         json_schema = self._get_schema_from_input(schema)
 
         try:
-
             completion = self.chat.completions.create(
                 model=model, messages=messages, response_format={"type": "json_schema", "schema": json_schema}, **kwargs
             )

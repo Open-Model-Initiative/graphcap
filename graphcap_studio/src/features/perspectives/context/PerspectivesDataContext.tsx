@@ -11,11 +11,11 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
 import React, {
 	createContext,
 	useContext,
-	ReactNode,
+	type ReactNode,
 	useState,
 	useCallback,
 	useEffect,
@@ -24,7 +24,7 @@ import React, {
 import { useProviders } from "../../inference/services/providers";
 import { useGeneratePerspectiveCaption } from "../hooks/useGeneratePerspectiveCaption";
 import { usePerspectives } from "../hooks/usePerspectives";
-import {
+import type {
 	CaptionOptions,
 	Perspective,
 	PerspectiveData,

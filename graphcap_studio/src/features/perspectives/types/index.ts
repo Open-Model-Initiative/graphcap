@@ -3,7 +3,8 @@
  * Perspectives Types
  *
  * This module exports all types used by the perspectives feature.
- * All type definitions are consolidated in the perspectivesTypes.ts file.
+ * Type definitions are consolidated in their respective files.
  */
 
 export * from "./perspectivesTypes";
+export * from "./perspectiveModuleTypes";

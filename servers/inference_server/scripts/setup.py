@@ -106,14 +106,12 @@ def check_existing_files() -> tuple[bool, bool]:
 
     if os.path.exists(dotenv_path):
         overwrite_env = Confirm.ask(
-            "[bold blue].env file already exists. Do you want to overwrite it?[/]",
-            default=False
+            "[bold blue].env file already exists. Do you want to overwrite it?[/]", default=False
         )
 
     if os.path.exists(provider_config_path):
         overwrite_config = Confirm.ask(
-            "[bold blue]provider.config.toml file already exists. Do you want to overwrite it?[/]",
-            default=False
+            "[bold blue]provider.config.toml file already exists. Do you want to overwrite it?[/]", default=False
         )
 
     return overwrite_env, overwrite_config
@@ -130,6 +128,7 @@ def get_provider_selections() -> tuple[bool, bool, bool, bool, bool]:
 
     return enable_hugging_face, enable_openai, enable_google, enable_vllm, enable_ollama
 
+
 def get_postgres_selections() -> tuple[str, str, str]:
     """Collect user selections for what values to use for Postgres variables."""
     console.print("\n[bold]Set the following values for the Postgres installation:[/]")
@@ -139,7 +138,10 @@ def get_postgres_selections() -> tuple[str, str, str]:
 
     return postgres_user_value, postgres_password_value, postgres_database_value
 
-def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool], postgres: tuple[str, str, str]) -> Mapping[str, str | None]:
+
+def collect_env_variables(
+    providers: tuple[bool, bool, bool, bool, bool], postgres: tuple[str, str, str]
+) -> Mapping[str, str | None]:
     """Collect environment variables based on enabled providers."""
     enable_hugging_face, enable_openai, enable_google, enable_vllm, enable_ollama = providers
     postgres_user_value, postgres_password_value, postgres_database_value = postgres
@@ -162,8 +164,7 @@ def collect_env_variables(providers: tuple[bool, bool, bool, bool, bool], postgr
     if enable_vllm and not env_vars["VLLM_BASE_URL"]:
         cprint("VLLM_BASE_URL not set.", "yellow")
         env_vars["VLLM_BASE_URL"] = Prompt.ask(
-            "[bold blue]Please enter the vLLM base URL[/]",
-            default="http://localhost:12434"
+            "[bold blue]Please enter the vLLM base URL[/]", default="http://localhost:12434"
         )
         os.environ["VLLM_BASE_URL"] = env_vars["VLLM_BASE_URL"]
 
@@ -205,7 +206,7 @@ def cli():
 
     # Get provider selections
     provider_selections = get_provider_selections()
-    
+
     # Get postgres selections
     postgres_selections = get_postgres_selections()
 
@@ -225,9 +226,11 @@ def cli():
     console.print("[bold green]Provider configuration has been saved to workspace/config/provider.config.toml![/]")
     console.print("[bold magenta]Graphcap instance is ready to be launched![/]")
 
+
 def main():
     """Entry point for the script"""
     cli()
+
 
 if __name__ == "__main__":
     main()

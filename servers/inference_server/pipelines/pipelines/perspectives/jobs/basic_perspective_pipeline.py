@@ -15,5 +15,5 @@ basic_perspective_pipeline = dg.define_asset_job(
         "synthesizer_caption",
         "caption_output_files",
     ],
-    description="Basic perspective pipeline, graphcap's \"hello world\" example",
+    description='Basic perspective pipeline, graphcap\'s "hello world" example',
 )

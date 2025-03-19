@@ -4,13 +4,16 @@ from openai import OpenAI
 import openai
 from pydantic import BaseModel
 from constants import PROVIDER_CONFIG_PATH, EXAMPLE_CONFIG, StructuredCaption, IMAGE_PATH, OLLAMA_DEFAULT_MODEL
+
 # Initialize the client using the OpenAI compatibility layer.
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+
 
 # Define the StructuredCaption schema.
 class StructuredCaption(BaseModel):
     scratchpad: str
     caption: str
+
 
 # Define the prompt for generating a structured caption.
 prompt = (
@@ -33,7 +36,7 @@ try:
                 "content": [
                     {"type": "text", "text": prompt},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"}},
-                ]
+                ],
             }
         ],
         response_format=StructuredCaption,

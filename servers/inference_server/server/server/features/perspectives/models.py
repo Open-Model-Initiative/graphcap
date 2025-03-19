@@ -5,7 +5,7 @@ Perspectives API Models
 Defines data models for the perspectives API endpoints.
 """
 
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import File, Form, UploadFile
 from pydantic import BaseModel, Field
@@ -19,8 +19,7 @@ DESC_REPETITION_PENALTY = "Repetition penalty"
 DESC_GLOBAL_CONTEXT = "Global context for the caption"
 DESC_ADDITIONAL_CONTEXT = "Additional context for the caption"
 DESC_RESIZE_RESOLUTION = (
-    "Resolution to resize to (None to disable, or SD_VGA, HD_720P, "
-    "FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)"
+    "Resolution to resize to (None to disable, or SD_VGA, HD_720P, FHD_1080P, QHD_1440P, UHD_4K, UHD_8K)"
 )
 
 
@@ -28,11 +27,11 @@ class SchemaField(BaseModel):
     """Schema field information for a perspective."""
 
     name: str = Field(..., description="Name of the field")
-    type: str = Field(..., description="Type of the field (str, float)")
+    type: Union[str, Dict[str, Any]] = Field(..., description="Type of the field (str, float, or complex object)")
     description: str = Field(..., description="Description of the field")
     is_list: bool = Field(False, description="Whether the field is a list")
     is_complex: bool = Field(False, description="Whether the field is a complex type")
-    fields: Optional[List['SchemaField']] = Field(None, description="Fields for complex types")
+    fields: Optional[List["SchemaField"]] = Field(None, description="Fields for complex types")
 
 
 class TableColumn(BaseModel):
@@ -62,12 +61,42 @@ class PerspectiveInfo(BaseModel):
     version: str = Field(..., description="Version of the perspective")
     description: str = Field("", description="Description of what the perspective analyzes")
     schema: Optional[PerspectiveSchema] = Field(None, description="Schema information for the perspective")
+    
+    # New metadata fields
+    module: str = Field("default", description="Module this perspective belongs to")
+    tags: List[str] = Field(default_factory=list, description="Tags for categorizing perspectives")
+    deprecated: bool = Field(False, description="Whether this perspective is deprecated")
+    replacement: Optional[str] = Field(None, description="Name of perspective that replaces this one")
+    priority: int = Field(100, description="Priority for sorting (lower is higher priority)")
 
 
 class PerspectiveListResponse(BaseModel):
     """Response model for listing available perspectives."""
 
     perspectives: List[PerspectiveInfo] = Field(..., description="List of available perspectives")
+
+
+class ModuleInfo(BaseModel):
+    """Information about a perspective module."""
+    
+    name: str = Field(..., description="Unique identifier for the module")
+    display_name: str = Field(..., description="Human-readable name for the module")
+    description: str = Field("", description="Description of the module")
+    enabled: bool = Field(True, description="Whether the module is enabled")
+    perspective_count: int = Field(0, description="Number of perspectives in this module")
+
+
+class ModuleListResponse(BaseModel):
+    """Response model for listing available modules."""
+    
+    modules: List[ModuleInfo] = Field(..., description="List of available modules")
+
+
+class ModulePerspectivesResponse(BaseModel):
+    """Response model for perspectives in a module."""
+    
+    module: ModuleInfo = Field(..., description="Information about the module")
+    perspectives: List[PerspectiveInfo] = Field(..., description="List of perspectives in the module")
 
 
 class ImageSource(BaseModel):
@@ -77,11 +106,7 @@ class ImageSource(BaseModel):
     base64: Optional[str] = Field(None, description="Base64-encoded image data")
 
     class Config:
-        schema_extra = {
-            "example": {
-                "url": "https://example.com/image.jpg"
-            }
-        }
+        schema_extra = {"example": {"url": "https://example.com/image.jpg"}}
 
 
 class CaptionRequest(BaseModel):
@@ -101,12 +126,10 @@ class CaptionRequest(BaseModel):
         schema_extra = {
             "example": {
                 "perspective": "custom_caption",
-                "image": {
-                    "url": "https://example.com/image.jpg"
-                },
+                "image": {"url": "https://example.com/image.jpg"},
                 "max_tokens": 4096,
                 "temperature": 0.8,
-                "resize_resolution": "HD_720P"
+                "resize_resolution": "HD_720P",
             }
         }
 
@@ -136,7 +159,7 @@ class CaptionFormRequest:
         repetition_penalty: Optional[float] = Form(1.15, description=DESC_REPETITION_PENALTY),
         global_context: Optional[str] = Form(None, description=DESC_GLOBAL_CONTEXT),
         context: Optional[str] = Form(None, description="Additional context for the caption (JSON array string)"),
-        resize_resolution: Optional[str] = Form(None, description=DESC_RESIZE_RESOLUTION)
+        resize_resolution: Optional[str] = Form(None, description=DESC_RESIZE_RESOLUTION),
     ):
         self.perspective = perspective
         self.file = file
@@ -153,6 +176,7 @@ class CaptionFormRequest:
         self.context = None
         if context:
             import json
+
             try:
                 self.context = json.loads(context)
             except json.JSONDecodeError:
@@ -182,6 +206,6 @@ class CaptionPathRequest(BaseModel):
                 "provider": "gemini",
                 "max_tokens": 4096,
                 "temperature": 0.8,
-                "resize_resolution": "HD_720P"
+                "resize_resolution": "HD_720P",
             }
         }

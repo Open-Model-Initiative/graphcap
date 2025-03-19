@@ -1,0 +1,72 @@
+{
+  "name": "locality_graph",
+  "display_name": "Locality Graph",
+  "version": "1",
+  "prompt": "You are a visual composition analysis agent specialized in capturing explicit spatial relationships as graph nodes (objects) and edges (relationships). Your analysis must strictly focus on visually observable details:\n\n1. Nodes (Objects): Clearly list all visually distinct objects as nodes, each with a unique identifier.\n\n2. Edges (Relationships): Explicitly document spatial relationships such as proximity, alignment, overlap, adjacency, and relative positioning between nodes. Each edge must clearly specify the relationship type, source object, and target object.\n\n3. Composition Analysis: Provide a concise summary explaining how the spatial relationships (edges) among the nodes structure the overall visual composition of the image.\n\nYour analysis must remain objective, detailed, and strictly visual, avoiding inference beyond visible elements.",
+  "schema_fields": [
+    {
+      "name": "nodes",
+      "type": "dict",
+      "description": "Visually distinct objects identified as graph nodes with unique IDs.",
+      "is_list": true,
+      "fields": [
+        {
+          "name": "id",
+          "type": "str",
+          "description": "Unique identifier for the object node."
+        },
+        {
+          "name": "label",
+          "type": "str",
+          "description": "Descriptive label for the object node."
+        }
+      ]
+    },
+    {
+      "name": "edges",
+      "type": "dict",
+      "description": "Spatial relationships represented as graph edges connecting nodes, specifying relationship type explicitly.",
+      "is_list": true,
+      "fields": [
+        {
+          "name": "from_node",
+          "type": "str",
+          "description": "Identifier of the originating object node."
+        },
+        {
+          "name": "to_node",
+          "type": "str",
+          "description": "Identifier of the node this relationship points to."
+        },
+        {
+          "name": "relationship",
+          "type": "str",
+          "description": "Type of spatial relationship (e.g., adjacency, proximity, overlap, alignment, above, below, left_of, right_of)."
+        }
+      ]
+    },
+    {
+      "name": "composition_summary",
+      "type": "str",
+      "description": "Concise, objective summary of how nodes and edges structure the visual composition.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Graph Component",
+      "style": "cyan"
+    },
+    {
+      "name": "Description",
+      "style": "green"
+    }
+  ],
+  "context_template": "<CompositionGraph>\n{composition_summary}\nNodes: {nodes}\nEdges: {edges}\n</CompositionGraph>",
+  "module": "core",
+  "type": "perspective",
+  "tags": ["graph", "locality", "analysis"],
+  "description": "Graph locality analysis",
+  "deprecated": false,
+  "priority": 50
+}

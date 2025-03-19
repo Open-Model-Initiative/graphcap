@@ -29,7 +29,7 @@ from .openrouter_client import OpenRouterClient
 from .vllm_client import VLLMClient
 
 
-def get_client(kind:  str, **kwargs) -> BaseClient:
+def get_client(kind: str, **kwargs) -> BaseClient:
     client: BaseClient
     logger.info(f"Creating client for {kind} with args: {kwargs}")
     if kind == "openai":
@@ -45,6 +45,7 @@ def get_client(kind:  str, **kwargs) -> BaseClient:
     else:
         raise ValueError(f"Unknown provider kind: {kind}")
     return client
+
 
 __all__ = [
     "BaseClient",
