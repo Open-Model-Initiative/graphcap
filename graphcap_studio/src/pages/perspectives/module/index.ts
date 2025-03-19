@@ -1,2 +1,2 @@
 export { ModulePage } from './ModulePage';
-export { PerspectiveDetailPage } from './PerspectiveDetailPage'; 
+export { PerspectiveEditorPage } from './PerspectiveEditorPage'; 

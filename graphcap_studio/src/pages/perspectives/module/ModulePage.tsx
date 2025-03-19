@@ -1,5 +1,5 @@
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
-import { LoadingDisplay, ModuleInfo, ModuleList, NotFound, SchemaValidationError } from "@/features/perspectives/components/PerspectiveManagement";
+import { LoadingDisplay, ModuleList, NotFound, SchemaValidationError } from "@/features/perspectives/components/PerspectiveManagement";
 import { usePerspectiveModules } from "@/features/perspectives/hooks";
 import type { PerspectiveModule } from "@/features/perspectives/types";
 import {

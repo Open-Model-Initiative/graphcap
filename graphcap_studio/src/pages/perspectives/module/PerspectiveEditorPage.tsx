@@ -1,9 +1,9 @@
-import { ErrorDisplay, LoadingDisplay, NotFound, PerspectiveDetail } from "@/features/perspectives/components/PerspectiveManagement";
+import { ErrorDisplay, LoadingDisplay, NotFound, PerspectiveEditor } from "@/features/perspectives/components/PerspectiveManagement";
 import { usePerspectiveModules } from "@/features/perspectives/hooks";
 import { Box } from "@chakra-ui/react";
 import { useMemo } from "react";
 
-interface PerspectiveDetailPageProps {
+interface PerspectiveEditorPageProps {
   readonly moduleName: string;
   readonly perspectiveName: string;
 }
@@ -11,10 +11,10 @@ interface PerspectiveDetailPageProps {
 /**
  * Page component that displays the details of a specific perspective
  */
-export function PerspectiveDetailPage({ 
+export function PerspectiveEditorPage({ 
   moduleName, 
   perspectiveName 
-}: PerspectiveDetailPageProps) {
+}: PerspectiveEditorPageProps) {
   const { getModulePerspectives } = usePerspectiveModules();
   const { module, perspectives, isLoading, error } = getModulePerspectives(moduleName);
   
@@ -64,7 +64,7 @@ export function PerspectiveDetailPage({
 
   return (
     <Box height="100%">
-      <PerspectiveDetail 
+      <PerspectiveEditor 
         perspective={perspective} 
         moduleName={moduleName}
       />

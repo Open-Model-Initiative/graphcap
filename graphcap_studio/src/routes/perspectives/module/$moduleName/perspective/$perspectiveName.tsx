@@ -1,11 +1,11 @@
-import { PerspectiveDetailPage } from "@/pages/perspectives";
+import { PerspectiveEditorPage } from "@/pages/perspectives";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/perspectives/module/$moduleName/perspective/$perspectiveName")({
-  component: PerspectiveDetailPageWrapper,
+  component: PerspectiveEditorPageWrapper,
 });
 
-function PerspectiveDetailPageWrapper() {
+function PerspectiveEditorPageWrapper() {
   const { moduleName, perspectiveName } = Route.useParams();
-  return <PerspectiveDetailPage moduleName={moduleName} perspectiveName={perspectiveName} />;
+  return <PerspectiveEditorPage moduleName={moduleName} perspectiveName={perspectiveName} />;
 } 

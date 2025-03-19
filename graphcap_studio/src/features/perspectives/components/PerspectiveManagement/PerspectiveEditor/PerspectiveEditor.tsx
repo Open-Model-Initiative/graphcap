@@ -7,17 +7,15 @@ import {
 	Code,
 	Flex,
 	Heading,
-	Icon,
 	Stack,
 	Tabs,
 	Text,
 } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
-import { ReactNode } from "react";
 
 interface PerspectiveEditorProps {
-	perspective: Perspective;
-	moduleName: string;
+	readonly perspective: Perspective;
+	readonly moduleName: string;
 }
 
 /**
@@ -297,7 +295,7 @@ export function PerspectiveEditor({
 																		{column.style}
 																	</Box>
 																	<Box as="td" p={3}>
-																		{column.description || "-"}
+																		{column.description ?? "-"}
 																	</Box>
 																</Box>
 															))}
