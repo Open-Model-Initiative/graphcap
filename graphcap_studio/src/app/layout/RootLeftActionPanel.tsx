@@ -7,7 +7,6 @@
 
 import {
 	DatasetIcon,
-	FilterIcon,
 	FlagIcon,
 	PerspectiveLayersIcon,
 	ProviderIcon,

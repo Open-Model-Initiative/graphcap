@@ -1,4 +1,3 @@
-import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { ErrorDisplay, LoadingDisplay, NotFound, PerspectiveDetail } from "@/features/perspectives/components/PerspectiveModules";
 import { useModulePerspectives } from "@/features/perspectives/hooks";
 import {
@@ -15,9 +14,6 @@ function PerspectiveDetailPage() {
   const { moduleName, perspectiveName } = Route.useParams();
   const { data, isLoading, error } = useModulePerspectives(moduleName);
   
-  // Color mode values
-  const bgColor = useColorModeValue("white", "gray.800");
-
   // Find the specific perspective
   const perspective = useMemo(() => {
     if (!data || !data.perspectives) return null;

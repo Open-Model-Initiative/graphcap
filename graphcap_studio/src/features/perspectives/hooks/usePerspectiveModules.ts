@@ -5,11 +5,11 @@
  * This hook fetches available perspective modules and their perspectives from the server.
  */
 
-import { useQuery } from "@tanstack/react-query";
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useQuery } from "@tanstack/react-query";
 import { perspectivesQueryKeys } from "../services/constants";
-import { PerspectiveModule } from "../types";
+import type { PerspectiveModule } from "../types";
 import { useModules } from "./useModules";
 
 /**

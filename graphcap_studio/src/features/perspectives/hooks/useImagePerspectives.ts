@@ -8,10 +8,10 @@
 import { useServerConnectionsContext } from "@/context";
 import { useProviders } from "@/features/inference/services/providers";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
 import { useCallback, useEffect, useState } from "react";
 
-import {
+import type {
 	CaptionOptions,
 	ImageCaptions,
 	ImagePerspectivesResult,

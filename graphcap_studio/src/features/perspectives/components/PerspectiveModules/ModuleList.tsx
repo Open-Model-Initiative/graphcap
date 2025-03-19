@@ -12,7 +12,7 @@ import {
 import { Link } from "@tanstack/react-router";
 
 interface ModuleListProps {
-  module: PerspectiveModule;
+  readonly module: PerspectiveModule;
 }
 
 /**
@@ -41,7 +41,7 @@ export function ModuleList({ module }: ModuleListProps) {
             <Badge colorScheme="blue" fontSize="xs">{perspective.version}</Badge>
           </Flex>
           <Text fontSize="xs" mb={2} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-            {perspective.schema?.prompt?.substring(0, 60) || "No prompt available"}...
+            {perspective.schema?.prompt?.substring(0, 60) ?? "No prompt available"}...
           </Text>
           {perspective.name && (
             <Link 
@@ -49,7 +49,7 @@ export function ModuleList({ module }: ModuleListProps) {
               params={{ 
                 moduleName: module.name,
                 perspectiveName: perspective.name.includes("/") 
-                  ? perspective.name.split("/").pop() || perspective.name
+                  ? perspective.name.split("/").pop() ?? perspective.name
                   : perspective.name
               }}
             >

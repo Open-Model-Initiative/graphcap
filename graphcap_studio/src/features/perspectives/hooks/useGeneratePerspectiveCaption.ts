@@ -7,7 +7,7 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { ServerConnection } from "@/features/server-connections/types";
+import type { ServerConnection } from "@/features/server-connections/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_ENDPOINTS, perspectivesQueryKeys } from "../services/constants";
 import {
@@ -15,7 +15,7 @@ import {
 	getGraphCapServerUrl,
 	handleApiError,
 } from "../services/utils";
-import { CaptionOptions, CaptionResponse } from "../types";
+import type { CaptionOptions, CaptionResponse } from "../types";
 
 /**
  * Hook to generate a perspective caption for an image
