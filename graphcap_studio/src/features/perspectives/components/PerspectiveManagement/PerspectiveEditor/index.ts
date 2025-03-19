@@ -1,1 +1,2 @@
-export { PerspectiveEditor } from './PerspectiveEditor';
+export * from "./PerspectiveEditor";
+export * from "./context/PerspectiveEditorContext";
