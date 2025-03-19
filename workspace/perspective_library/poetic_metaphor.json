@@ -46,7 +46,7 @@
     }
   ],
   "context_template": "<PoeticMetaphorCaption>\n{poetic_description}\n</PoeticMetaphorCaption>\n",
-  "module": "artististic",
+  "module": "artistic",
   "tags": ["poetic", "metaphor", "imagery", "figurative"],
   "description": "Poetic metaphor analysis",
   "deprecated": false,

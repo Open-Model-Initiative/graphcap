@@ -58,7 +58,7 @@
   ],
 
   "context_template": "<TimeTagsAnalysis>\nPeriod: {time_period_tags}\nCategory: {temporal_category}\nQualities: {time_quality_tags}\n</TimeTagsAnalysis>\n",
-  "module": "temporal",
+  "module": "speculative",
   "tags": ["time", "tagging", "classification", "historical", "periods"],
   "description": "A tagging-focused perspective that categorizes images based on time periods, temporal indicators, and time-related qualities for easier image classification.",
   "deprecated": false,

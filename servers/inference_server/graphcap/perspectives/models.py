@@ -5,7 +5,7 @@ Perspective Models Module
 Contains the data models used for perspective configuration and management.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 from typing_extensions import override
@@ -17,9 +17,11 @@ class SchemaField(BaseModel):
     """Definition of a field in a perspective schema."""
 
     name: str
-    type: str
+    type: Union[str, Dict[str, Any]]  # Changed from str to accept either string or dictionary
     description: str
     is_list: bool = False
+    is_complex: bool = False
+    fields: Optional[List['SchemaField']] = None
 
 
 class PerspectiveConfig(BaseModel):

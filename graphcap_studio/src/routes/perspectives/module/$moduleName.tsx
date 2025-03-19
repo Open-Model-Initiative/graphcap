@@ -6,13 +6,62 @@ import {
 	Button,
 	Flex,
 	Heading,
+	Text,
+	Code,
 } from "@chakra-ui/react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValueText } from "@/components/ui/select";
+import { createListCollection } from "@chakra-ui/react";
+import { Outlet, createFileRoute, useNavigate, useMatches } from "@tanstack/react-router";
+import { useEffect, useState, useMemo } from "react";
 
 export const Route = createFileRoute("/perspectives/module/$moduleName")({
 	component: ModulePage,
 });
+
+/**
+ * Component to display detailed schema validation errors
+ */
+function SchemaValidationError({ error }: { error: Error }) {
+	// Check if the error contains validation information
+	const isSchemaError = error.message.includes("Invalid enum value") || 
+		error.message.includes("schema_fields") ||
+		error.message.includes("Expected 'str' | 'float'");
+
+	return (
+		<Box
+			p={5}
+			borderRadius="md"
+			border="1px"
+			borderColor="red.500"
+			bg="red.50"
+		>
+			<Flex alignItems="center" mb={3}>
+				<Heading size="md" color="red.700">Schema Validation Error</Heading>
+			</Flex>
+			<Box>
+				{isSchemaError ? (
+					<>
+						<Text mb={3}>
+							There was an error loading perspectives due to schema validation issues with complex fields.
+							The system is expecting only simple field types ('str' or 'float') but found complex nested objects.
+						</Text>
+						<Text fontWeight="bold" mb={2}>Possible Solutions:</Text>
+						<Box as="ul" pl={5} mb={3}>
+							<Box as="li" mb={2}>Update the server to support complex field structures (recommended)</Box>
+							<Box as="li" mb={2}>Simplify perspective schemas to avoid nested fields</Box>
+						</Box>
+						<Text fontWeight="bold" mb={2}>Technical Details:</Text>
+						<Code p={3} borderRadius="md" display="block" whiteSpace="pre-wrap" fontSize="sm" mb={3}>
+							{error.message}
+						</Code>
+					</>
+				) : (
+					<Text>{error.message}</Text>
+				)}
+			</Box>
+		</Box>
+	);
+}
 
 function ModulePage() {
 	const { moduleName } = Route.useParams();
@@ -20,6 +69,29 @@ function ModulePage() {
 	const [selectedModule, setSelectedModule] =
 		useState<PerspectiveModule | null>(null);
 	const [errorDetails, setErrorDetails] = useState<string | null>(null);
+	const navigate = useNavigate();
+	const matches = useMatches();
+	
+	// Check if we're currently at the module root (no perspective selected)
+	const isModuleRoot = useMemo(() => {
+		return matches.some(match => 
+			match.routeId === '/perspectives/module/$moduleName' && 
+			match.pathname === `/perspectives/module/${moduleName}`
+		);
+	}, [matches, moduleName]);
+
+	// Create collection for the select component
+	const modulesCollection = useMemo(() => {
+		if (!modules) return createListCollection({ items: [] });
+		
+		return createListCollection({
+			items: modules.map(module => ({
+				label: module.display_name || module.name,
+				value: module.name,
+				module: module,
+			})),
+		});
+	}, [modules]);
 
 	// Find the selected module when data is loaded
 	useEffect(() => {
@@ -36,9 +108,30 @@ function ModulePage() {
 				);
 			} else {
 				setErrorDetails(null);
+				
+				// If we're at the module root and the module has perspectives, 
+				// automatically navigate to the first perspective
+				if (isModuleRoot && module && module.perspectives.length > 0) {
+					const firstPerspective = module.perspectives[0];
+					navigate({ 
+						to: "/perspectives/module/$moduleName/perspective/$perspectiveName",
+						params: { 
+							moduleName: moduleName,
+							perspectiveName: firstPerspective.name 
+						}
+					});
+				}
 			}
 		}
-	}, [modules, moduleName]);
+	}, [modules, moduleName, navigate, isModuleRoot]);
+
+	// Handle module change
+	const handleModuleChange = (details: any) => {
+		const newModuleName = details.value[0];
+		if (newModuleName && newModuleName !== moduleName) {
+			navigate({ to: "/perspectives/module/$moduleName", params: { moduleName: newModuleName } });
+		}
+	};
 
 	// Handle loading state
 	if (isLoading) {
@@ -48,26 +141,17 @@ function ModulePage() {
 	// Handle error state
 	if (error) {
 		return (
-			<Box
-				p={4}
-				borderRadius="md"
-				border="1px"
-				borderColor="red.500"
-				bg="red.50"
-				color="red.900"
-				m={4}
-			>
-				<Heading size="md" mb={2}>
-					Error Loading Module
-				</Heading>
-				<Box mb={4}>{error.message}</Box>
-				<Button 
-					colorScheme="red" 
-					size="sm" 
-					onClick={() => refetch()}
-				>
-					Try Again
-				</Button>
+			<Box p={4}>
+				<SchemaValidationError error={error} />
+				<Box mt={4} textAlign="center">
+					<Button 
+						colorScheme="red" 
+						size="sm" 
+						onClick={() => refetch()}
+					>
+						Try Again
+					</Button>
+				</Box>
 			</Box>
 		);
 	}
@@ -78,9 +162,31 @@ function ModulePage() {
 	}
 
 	return (
-		<Flex direction="column" h="100%" overflow="hidden">
-			{/* Module information at the top */}
-			<Box p={4}>
+		<Flex direction="row" h="100%" overflow="hidden">
+			{/* Left sidebar with module info and perspectives list (20% width) */}
+			<Box w="25%" p={4} overflow="auto" borderRight="1px" borderColor="gray.200">
+				{/* Module selector */}
+				<Box mb={4}>
+					<SelectRoot 
+						collection={modulesCollection} 
+						value={moduleName ? [moduleName] : []} 
+						onValueChange={handleModuleChange}
+						size="sm"
+					>
+						<SelectTrigger>
+							<SelectValueText placeholder="Select module..." />
+						</SelectTrigger>
+						<SelectContent>
+							{modulesCollection.items.map((item) => (
+								<SelectItem key={item.value} item={item}>
+									{item.label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</SelectRoot>
+				</Box>
+				
+				{/* Module information */}
 				<ModuleInfo module={selectedModule} />
 				
 				{/* Show warning if we have a module with no perspectives */}
@@ -95,8 +201,9 @@ function ModulePage() {
 						color="yellow.900"
 						display="flex"
 						alignItems="center"
+						flexDirection="column"
 					>
-						<Box flex="1">{errorDetails}</Box>
+						<Box mb={2}>{errorDetails}</Box>
 						<Button 
 							size="sm" 
 							colorScheme="yellow" 
@@ -106,23 +213,18 @@ function ModulePage() {
 						</Button>
 					</Box>
 				)}
+				
+				{/* Perspectives list */}
+				<Heading size="md" mt={4} mb={4}>
+					Perspectives
+				</Heading>
+				<ModuleList module={selectedModule} />
 			</Box>
 			
-			{/* Main content area with list and outlet */}
-			<Flex flex="1" overflow="hidden">
-				{/* Left sidebar with perspectives list (20% width) */}
-				<Box w="20%" p={4} overflow="auto" borderRight="1px" borderColor="gray.200">
-					<Heading size="md" mb={4}>
-						Perspectives
-					</Heading>
-					<ModuleList module={selectedModule} />
-				</Box>
-				
-				{/* Right content area with outlet (80% width) */}
-				<Box w="80%" p={4} overflow="auto">
-					<Outlet />
-				</Box>
-			</Flex>
+			{/* Right content area with outlet (80% width) */}
+			<Box w="75%" h="100%" overflow="auto">
+				<Outlet />
+			</Box>
 		</Flex>
 	);
 }

@@ -5,7 +5,7 @@ Perspectives API Models
 Defines data models for the perspectives API endpoints.
 """
 
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from fastapi import File, Form, UploadFile
 from pydantic import BaseModel, Field
@@ -27,7 +27,7 @@ class SchemaField(BaseModel):
     """Schema field information for a perspective."""
 
     name: str = Field(..., description="Name of the field")
-    type: str = Field(..., description="Type of the field (str, float)")
+    type: Union[str, Dict[str, Any]] = Field(..., description="Type of the field (str, float, or complex object)")
     description: str = Field(..., description="Description of the field")
     is_list: bool = Field(False, description="Whether the field is a list")
     is_complex: bool = Field(False, description="Whether the field is a complex type")

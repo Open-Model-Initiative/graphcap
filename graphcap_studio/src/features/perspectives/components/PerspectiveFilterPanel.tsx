@@ -51,7 +51,7 @@ export function PerspectiveFilterPanel() {
 
 				<Box borderBottom="1px solid" borderColor="gray.200" />
 
-				<VStack gap={2} alignItems="stretch">
+				<VStack gap={2} alignItems="stretch" overflowY="auto" maxHeight="300px">
 					{perspectives.map((perspective) => (
 						<Checkbox
 							key={perspective.name}

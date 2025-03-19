@@ -15,25 +15,34 @@ import { z } from "zod";
 // ============================================================================
 
 /**
+ * Defines the field type for a schema field.
+ * This allows for either primitive types or complex nested types.
+ */
+export const FieldTypeSchema = z.union([
+	z.enum(["str", "float"]),
+	z.object({}).passthrough(), // Allow any object structure
+]);
+
+/**
  * Defines the structure of a schema field with properties like name, type,
  * description, and optional flags for lists or complex types.
  */
 export const SchemaFieldSchema: z.ZodType<{
 	name: string;
-	type: "str" | "float";
+	type: string | object;  // Changed from enum to accept any type
 	description: string;
 	is_list?: boolean;
 	is_complex?: boolean;
 	fields?: Array<{
 		name: string;
-		type: "str" | "float";
+		type: string | object;  // Changed from enum to accept any type
 		description: string;
 		is_list?: boolean;
 		is_complex?: boolean;
 	}> | null;
 }> = z.object({
 	name: z.string(),
-	type: z.enum(["str", "float"]),
+	type: z.union([z.string(), z.object({}).passthrough()]),  // Accept string or object
 	description: z.string(),
 	is_list: z.boolean().optional(),
 	is_complex: z.boolean().optional(),
