@@ -76,7 +76,8 @@
     }
   ],
   "context_template": "<TemporariumCaption>\n{detailed_caption}\n</TemporariumCaption>\n",
-  "module": "speculative",
+  "module": "creative",
+  "type": "perspective",
   "tags": ["time", "historical", "futuristic", "epoch", "continuity", "speculative"],
   "description": "A perspective focused on temporal analysis, examining historical or futuristic elements, epoch context, historical continuity, and temporal speculation with chain-of-thought reasoning.",
   "deprecated": false,

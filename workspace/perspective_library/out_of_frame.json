@@ -46,7 +46,8 @@
     }
   ],
   "context_template": "<OutOfFrameCaption>\n{narrative_possibilities}\n</OutOfFrameCaption>\n",
-  "module": "speculative",
+  "module": "creative",
+  "type": "perspective",
   "tags": ["speculative", "imagination", "beyond-frame"],
   "description": "Speculative interpretation of what might exist beyond the boundaries of the image",
   "deprecated": false,

@@ -46,7 +46,8 @@
     }
   ],
   "context_template": "<StorytellingCaption>\n{plot_elements}\n</StorytellingCaption>\n",
-  "module": "narrative",
+  "module": "creative",
+  "type": "perspective",
   "tags": ["storytelling", "narrative", "creative", "plot", "characters"],
   "description": "A narrative-focused perspective that constructs a cohesive story from visual elements, including scene setting, character development, plot, and thematic analysis.",
   "deprecated": false,

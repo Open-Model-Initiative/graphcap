@@ -63,7 +63,8 @@
     }
   ],
   "context_template": "<CompositionGraph>\n{composition_summary}\nNodes: {nodes}\nEdges: {edges}\n</CompositionGraph>",
-  "module": "graph",
+  "module": "core",
+  "type": "perspective",
   "tags": ["graph", "locality", "analysis"],
   "description": "Graph locality analysis",
   "deprecated": false,
