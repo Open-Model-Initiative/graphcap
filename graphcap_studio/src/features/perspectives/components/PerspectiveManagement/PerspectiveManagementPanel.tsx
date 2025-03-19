@@ -6,8 +6,7 @@
  */
 
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
-import { Box } from "@chakra-ui/react";
-import { Tabs } from "@chakra-ui/react";
+import { Box, Tabs } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
 import { usePerspectiveModules } from "../../hooks";
 import { PerspectiveFilterPanel } from "./PerspectiveFilterPanel";
@@ -73,10 +72,10 @@ export function PerspectiveManagementPanel() {
                       </Link>
                       
                       <Box as="ul" pl={4} display="flex" flexDirection="column" gap={1}>
-                        {module.perspectives && module.perspectives.map((perspective) => {
+                        {module.perspectives?.map((perspective) => {
                           // Extract perspective ID from the full name
                           const perspectiveId = perspective.name.includes("/") 
-                            ? perspective.name.split("/").pop() || perspective.name
+                            ? perspective.name.split("/").pop() ?? perspective.name
                             : perspective.name;
                             
                           return (
