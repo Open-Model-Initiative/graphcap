@@ -1,0 +1,73 @@
+{
+  "name": "i2storyboard_3beat",
+  "display_name": "Image-to-Storyboard (3-Beat)",
+  "version": "1",
+  "prompt": "Analyze the image and generate a **three-beat storyboard prompt**, capturing a compelling narrative sequence. Each beat should:\n\n1. **Define a distinct moment** that progresses naturally into the next.\n2. **Describe the key subject(s), action, and state** for visual clarity.\n3. **Establish setting, mood, and atmosphere** to enhance storytelling.\n4. **Ensure smooth narrative and visual transitions** between beats.\n5. **Use cinematic framing** to guide visual composition.\n\nEach beat must be short yet impactful, maintaining strong **visual clarity, narrative flow, and cinematic appeal**.",
+  "schema_fields": [
+    {
+      "name": "beat_1",
+      "type": "str",
+      "description": "The first key moment—sets the stage, introduces the subject, and establishes context.",
+      "is_list": false
+    },
+    {
+      "name": "beat_2",
+      "type": "str",
+      "description": "The second key moment—presents a shift, action, or escalation in the scene.",
+      "is_list": false
+    },
+    {
+      "name": "beat_3",
+      "type": "str",
+      "description": "The final key moment—concludes the sequence, resolving tension or setting up further events.",
+      "is_list": false
+    },
+    {
+      "name": "key_subjects",
+      "type": "str",
+      "description": "A concise description of the primary characters or objects driving the scene.",
+      "is_list": false
+    },
+    {
+      "name": "setting_and_mood",
+      "type": "str",
+      "description": "A description of the environment and its emotional tone to reinforce storytelling.",
+      "is_list": false
+    },
+    {
+      "name": "transition",
+      "type": "str",
+      "description": "A short description of how each beat flows into the next.",
+      "is_list": false
+    },
+    {
+      "name": "cinematic_framing",
+      "type": "str",
+      "description": "Suggested camera angles, movement, or framing techniques to enhance visual storytelling.",
+      "is_list": false
+    },
+    {
+      "name": "final_storyboard_prompt",
+      "type": "str",
+      "description": "A refined, structured prompt that integrates all beats and transitions smoothly.",
+      "is_list": false
+    }
+  ],
+  "table_columns": [
+    {
+      "name": "Component",
+      "style": "cyan"
+    },
+    {
+      "name": "Description",
+      "style": "green"
+    }
+  ],
+  "context_template": "<Storyboard3Beat>\n{final_storyboard_prompt}\n</Storyboard3Beat>",
+  "module": "creative",
+  "type": "perspective",
+  "tags": ["storyboard", "video", "narrative"],
+  "description": "A perspective that generates a three-beat storyboard prompt for video generation.",
+  "deprecated": false,
+  "priority": 50
+}

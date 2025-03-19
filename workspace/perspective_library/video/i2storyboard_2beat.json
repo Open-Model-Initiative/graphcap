@@ -1,0 +1,68 @@
+{
+    "name": "i2storyboard_2beat",
+    "display_name": "Image-to-Storyboard (2-Beat)",
+    "version": "1",
+    "prompt": "Analyze the image and generate a **two-beat storyboard prompt**, capturing a compelling narrative progression. Each beat should:\n\n1. **Identify a distinct moment** within the image that can transition into another.\n2. **Describe the key subject(s) and their action or state** in a visually engaging way.\n3. **Establish the setting, mood, and atmosphere** to enhance storytelling.\n4. **Define a clear transition between the two beats**, ensuring narrative flow.\n5. **Use cinematic framing** to guide visual composition.\n\nEach beat should be short and impactful, maintaining strong **visual clarity and storytelling flow**.",
+    "schema_fields": [
+      {
+        "name": "beat_1",
+        "type": "str",
+        "description": "The first major moment in the storyboard—describes the initial state, action, or tension.",
+        "is_list": false
+      },
+      {
+        "name": "beat_2",
+        "type": "str",
+        "description": "The second major moment—describes the transformation, reaction, or escalation from Beat 1.",
+        "is_list": false
+      },
+      {
+        "name": "key_subjects",
+        "type": "str",
+        "description": "A concise description of the primary characters or objects driving the scene.",
+        "is_list": false
+      },
+      {
+        "name": "setting_and_mood",
+        "type": "str",
+        "description": "A description of the environment and its emotional tone to reinforce storytelling.",
+        "is_list": false
+      },
+      {
+        "name": "transition",
+        "type": "str",
+        "description": "A short description of how Beat 1 transitions into Beat 2 visually or thematically.",
+        "is_list": false
+      },
+      {
+        "name": "cinematic_framing",
+        "type": "str",
+        "description": "Suggested camera angles, movement, or framing techniques to enhance visual storytelling.",
+        "is_list": false
+      },
+      {
+        "name": "final_storyboard_prompt",
+        "type": "str",
+        "description": "A refined, structured prompt that integrates both beats and transitions smoothly.",
+        "is_list": false
+      }
+    ],
+    "table_columns": [
+      {
+        "name": "Component",
+        "style": "cyan"
+      },
+      {
+        "name": "Description",
+        "style": "green"
+      }
+    ],
+    "context_template": "<Storyboard2Beat>\n{final_storyboard_prompt}\n</Storyboard2Beat>",
+    "module": "creative",
+    "type": "perspective",
+    "tags": ["storyboard", "video", "narrative"],
+    "description": "A perspective that generates a two-beat storyboard prompt for video generation.",
+    "deprecated": false,
+    "priority": 50
+  }
+  
