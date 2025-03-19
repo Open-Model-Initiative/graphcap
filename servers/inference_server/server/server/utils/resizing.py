@@ -6,10 +6,11 @@ This module provides utility functions for resizing images to standard display
 and video resolutions while maintaining aspect ratio.
 """
 
-from loguru import logger
 from enum import Enum
-from typing import Tuple, Union, Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple, Union
+
+from loguru import logger
 
 try:
     from PIL import Image, ImageFile
@@ -50,7 +51,6 @@ def resize_image(
     resolution: Union[ResolutionPreset, Tuple[int, int]],
     maintain_aspect_ratio: bool = True,
     upscale: bool = False,
-    output_format: Optional[str] = None,
 ) -> Image.Image:
     """
     Resize an image to a target resolution while maintaining aspect ratio.
@@ -60,7 +60,6 @@ def resize_image(
         resolution: Target resolution as ResolutionPreset enum or (width, height) tuple
         maintain_aspect_ratio: If True, preserve aspect ratio; if False, force to exact dimensions
         upscale: If True, allow upscaling of images smaller than target resolution
-        output_format: Output format (e.g., 'JPEG', 'PNG'). If None, uses input format.
 
     Returns:
         Resized PIL Image object

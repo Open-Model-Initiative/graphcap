@@ -7,16 +7,18 @@
 
 import { API_ENDPOINTS } from "../constants/index";
 import {
-	CaptionRequest,
 	CaptionRequestSchema,
-	CaptionResponse,
 	CaptionResponseSchema,
-	ModuleListResponse,
 	ModuleListResponseSchema,
-	ModulePerspectivesResponse,
 	ModulePerspectivesResponseSchema,
-	Perspective,
 	PerspectiveListResponseSchema,
+} from "../types";
+import type {
+	CaptionRequest,
+	CaptionResponse,
+	ModuleListResponse,
+	ModulePerspectivesResponse,
+	Perspective,
 } from "../types";
 import { ensureWorkspacePath, getGraphCapServerUrl, handleApiError } from "./utils";
 
@@ -138,22 +140,26 @@ export const perspectivesApi = {
 			if (!response.ok) {
 				// Check if we got HTML instead of JSON
 				const contentType = response.headers.get("content-type");
-				if (contentType && contentType.includes("text/html")) {
-					throw new Error(`Received HTML response instead of JSON. Status: ${response.status}. This typically indicates a routing issue or server error.`);
+				if (contentType?.includes("text/html")) {
+					throw new Error(
+						`Received HTML response instead of JSON. Status: ${response.status}. This typically indicates a routing issue or server error.`,
+					);
 				}
-				
+
 				await handleApiError(response, `Failed to fetch perspectives for module '${moduleName}'`);
 			}
 
 			// Check content type before parsing
 			const contentType = response.headers.get("content-type");
-			if (!contentType || !contentType.includes("application/json")) {
+			if (!contentType?.includes("application/json")) {
 				console.error(`Unexpected content type: ${contentType}`);
-				throw new Error(`Expected JSON response but got ${contentType || "unknown content type"}`);
+				throw new Error(
+					`Expected JSON response but got ${contentType ?? "unknown content type"}`,
+				);
 			}
 
 			const data = await response.json();
-			
+
 			// Use looser validation to handle the complex fields
 			// We'll validate but ignore validation errors to allow the data through
 			try {
