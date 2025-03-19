@@ -12,20 +12,45 @@ At its core, a perspective is about asking specific questions about an image. Fo
 - What objects and relationships can we see? (Graph Caption)
 - How does the composition work? (Art Critic)
 - What feelings does it evoke? (Emotional Sentiment)
-- What story does it tell? (Temporarium)
+- What story does it tell? (Storytelling)
+- What poetic metaphors might arise? (Poetic Metaphor)
+- How does this image relate to time? (Temporarium)
 
 Each perspective has its own:
-- Focus (what it looks for)
-- Language (how it describes things)
-- Structure (how it organizes information)
-- Balance between describing what's visible and what it means
+
+- **Focus**: what it looks for in the image
+- **Language**: how it describes what it sees
+- **Structure**: how it organizes information
+- **Balance**: between describing what's visible and interpreting meaning
+- **Module**: which family of perspectives it belongs to
+- **Tags**: categories that help organize and find perspectives
+
+The Perspective Ecosystem
+========================
+
+Perspectives in GraphCap are organized into modules that group related perspectives together. This organization makes it easier to:
+
+- Find perspectives relevant to your interests
+- Enable or disable entire families of perspectives
+- Understand relationships between similar perspectives
+
+Examples of modules include:
+
+- **Core**: Essential perspectives like Graph Caption and Custom Caption
+- **Artistic**: Art Critic, Poetic Metaphor, and other artistic interpretations
+- **Narrative**: Storytelling and related perspectives
+- **Technical**: Specialized analytical perspectives
+- **Synthesizer**: Perspectives that combine multiple captions into a focused output.
 
 Built-in Perspectives
 ===================
 
+GraphCap comes with a diverse set of built-in perspectives, each designed for specific use cases:
+
 Graph Caption
 ------------
-The "just the facts" perspective. It looks at what's actually in the image:
+The "just the facts" perspective that captures objective elements:
+
 - Objects and their relationships
 - Clear, verifiable descriptions
 - Confidence scores for each observation
@@ -36,7 +61,8 @@ Example output:
 
 Art Critic
 ---------
-The formal analysis perspective. It examines:
+The formal analysis perspective for visual arts:
+
 - Composition and framing
 - Color relationships
 - Technical execution
@@ -47,7 +73,8 @@ Example output:
 
 Emotional Sentiment
 -----------------
-The feeling-focused perspective. It considers:
+The feeling-focused perspective:
+
 - Mood and atmosphere
 - Emotional impact
 - Human elements
@@ -56,16 +83,40 @@ The feeling-focused perspective. It considers:
 Example output:
 "A serene moment capturing the quiet joy of a peaceful afternoon"
 
-Temporarium
-----------
-A temporal contextperspective. It explores:
-- Historical or cultural context
-- Potential narratives
-- Broader implications
-- Time-based elements
 
-Example output:
-"A snapshot of urban life in transition, where modern architecture meets historical preservation"
+Working with Perspectives
+=======================
+
+Discovering and Selecting
+------------------------
+GraphCap offers an intuitive way to browse and select perspectives:
+
+- Browse by module to find related perspectives
+- Filter by tags to find perspectives for specific needs
+- Search by name or description
+- View detailed descriptions to understand what each perspective offers
+
+Combining Perspectives
+--------------------
+Perspectives work best when they complement each other. You might use:
+
+- Graph Caption + Art Critic for detailed artwork analysis
+- Emotional Sentiment + Temporarium for storytelling
+- Multiple perspectives for training data generation
+
+Local Development and Customization
+=================================
+
+GraphCap allows you to create and test new perspectives locally before sharing them more broadly:
+
+Perspective Workspace
+-------------------
+Your perspective library can include both:
+
+- Standard perspectives from the GraphCap library
+- Local perspectives you're developing or customizing
+
+This separation lets you experiment with new ideas while keeping the main system stable.
 
 Creating Your Own Perspective
 ===========================
@@ -73,160 +124,38 @@ Creating Your Own Perspective
 Before You Start
 --------------
 Ask yourself:
+
 - What unique angle are you trying to capture?
 - Who will use this perspective and why?
 - How literal vs. interpretative should it be?
 - What kind of output will be most useful?
+- Which module does it belong to?
+- What tags would help users find it?
 
-How to create a perspective
+How to Create a Perspective
 --------------------------
 
-Define a config file for the perspective. Following these examples: 
+Every perspective is defined by:
 
+1. **Basic Information**:
+   - Name and display name
+   - Version
+   - Description
+   - Module assignment
+   - Tags for categorization
+   - Priority level
 
-   .. code-block:: json
-        {
-        "name": "graph_caption",
-        "display_name": "Graph Caption",
-        "version": "1",
-        "prompt": "Analyze this image and provide a structured analysis with the following components:\n\n1. Tags: Generate a list of categorized tags with confidence scores for key elements in the image. Each tag should include the tag name, category, and a confidence score between 0 and 1.\n\n2. Short Caption: Create a concise single-sentence caption (max 100 characters) that summarizes the main content of the image.\n\n3. Verification: Provide a brief verification of the tag accuracy and visual grounding, noting any potential issues or uncertainties.\n\n4. Dense Caption: Create a detailed narrative description that incorporates the tagged elements and provides a comprehensive understanding of the image content.\n\nYour analysis should be objective, detailed, and based solely on what is visible in the image.",
-        "schema_fields": [
-            {
-            "name": "tags_list",
-            "type": "str",
-            "description": "List of categorized tags with confidence scores",
-            "is_list": true,
-            "is_complex": true,
-            "fields": [
-                {
-                "name": "tag",
-                "type": "str",
-                "description": "Description of the tagged element"
-                },
-                {
-                "name": "category",
-                "type": "str",
-                "description": "Category the tag belongs to"
-                },
-                {
-                "name": "confidence",
-                "type": "float",
-                "description": "Confidence score between 0 and 1"
-                }
-            ]
-            },
-            {
-            "name": "short_caption",
-            "type": "str",
-            "description": "Concise single sentence caption (max 100 chars)",
-            "is_list": false
-            },
-            {
-            "name": "verification",
-            "type": "str",
-            "description": "Verification of tag accuracy and visual grounding",
-            "is_list": false
-            },
-            {
-            "name": "dense_caption",
-            "type": "str",
-            "description": "Detailed narrative description incorporating tagged elements",
-            "is_list": false
-            }
-        ],
-        "table_columns": [
-            {
-            "name": "Category",
-            "style": "cyan"
-            },
-            {
-            "name": "Content",
-            "style": "green"
-            }
-        ],
-        "context_template": "<GraphCaption>\n{short_caption}\n\nTags: {tags_list}\n</GraphCaption>\n"
-        } 
+2. **Prompt**:
+   Clear instructions for how to analyze the image
 
-    .. code-block:: json
-            {
-        "name": "temporarium",
-        "display_name": "Temporarium",
-        "version": "1",
-        "prompt": "You are a temporal analysis agent. Analyze this image with a focus on time-related aspects and temporal dimensions. Your response should include a chain-of-thought reasoning process with the following components:\n\n1. Visual Analysis: Provide observations based solely on visible image details.\n\n2. Epoch Reasoning: Present logical reasoning about the implied historical or futuristic epoch.\n\n3. Epoch Context: Provide a concise summary of the inferred epoch context.\n\n4. Narrative Reasoning: Explain how key elements fit within the epoch context.\n\n5. Narrative Elements: Provide a factual description of key visible subjects or objects, linked to the epoch.\n\n6. Continuity Reasoning: Reason on how the scene connects to known historical trends or plausible futures.\n\n7. Continuity Elements: Provide a brief summary of historical or futuristic continuity.\n\n8. Speculative Reasoning: Present step-by-step reasoning behind any imaginative extrapolation.\n\n9. Temporal Speculation: Provide imaginative yet plausible speculative details derived from reasoning.\n\n10. Detailed Caption: Create a final cohesive caption integrating all chain-of-thought steps.\n\nYour analysis should be thoughtful and consider both explicit and implicit temporal elements in the image.",
-        "schema_fields": [
-            {
-            "name": "visual_analysis",
-            "type": "str",
-            "description": "Observations based solely on visible image details.",
-            "is_list": false
-            },
-            {
-            "name": "epoch_reasoning",
-            "type": "str",
-            "description": "Logical reasoning about the implied historical or futuristic epoch.",
-            "is_list": false
-            },
-            {
-            "name": "epoch_context",
-            "type": "str",
-            "description": "Concise summary of the inferred epoch context.",
-            "is_list": false
-            },
-            {
-            "name": "narrative_reasoning",
-            "type": "str",
-            "description": "Explanation of how key elements fit within the epoch context.",
-            "is_list": false
-            },
-            {
-            "name": "narrative_elements",
-            "type": "str",
-            "description": "Factual description of key visible subjects or objects, linked to the epoch.",
-            "is_list": false
-            },
-            {
-            "name": "continuity_reasoning",
-            "type": "str",
-            "description": "Reasoning on how the scene connects to known historical trends or plausible futures.",
-            "is_list": false
-            },
-            {
-            "name": "continuity_elements",
-            "type": "str",
-            "description": "Brief summary of historical or futuristic continuity.",
-            "is_list": false
-            },
-            {
-            "name": "speculative_reasoning",
-            "type": "str",
-            "description": "Step-by-step reasoning behind any imaginative extrapolation.",
-            "is_list": false
-            },
-            {
-            "name": "temporal_speculation",
-            "type": "str",
-            "description": "Imaginative yet plausible speculative details derived from reasoning.",
-            "is_list": false
-            },
-            {
-            "name": "detailed_caption",
-            "type": "str",
-            "description": "Final cohesive caption integrating all chain-of-thought steps.",
-            "is_list": false
-            }
-        ],
-        "table_columns": [
-            {
-            "name": "Component",
-            "style": "cyan"
-            },
-            {
-            "name": "Content",
-            "style": "green"
-            }
-        ],
-        "context_template": "<TemporariumCaption>\n{detailed_caption}\n</TemporariumCaption>\n"
-        } 
+3. **Schema**:
+   The structured fields that will contain the analysis
+
+4. **Presentation**:
+   How the results will be displayed
+
+5. **Context Template**:
+   How the perspective's output can be used in broader contexts
 
 Tips for Good Perspectives
 ========================
@@ -246,20 +175,30 @@ Quality Matters
 - Get feedback from potential users
 - Have clear ways to measure success
 
-Make It Useful
-------------
-- Write clear documentation
-- Include examples
-- Make it easy to understand when to use this perspective
-- Consider how it fits with other perspectives
+Make It Discoverable
+------------------
+- Place it in the appropriate module
+- Use descriptive tags
+- Write a clear, concise description
+- Consider including example outputs in the description
+
+Evolution and Deprecation
+-----------------------
+As your needs evolve, perspectives can too:
+
+- Update existing perspectives with new versions
+- Mark outdated perspectives as deprecated
+- Suggest replacement perspectives when deprecating old ones
 
 Real-World Usage
 ==============
 
-Perspectives work best when they complement each other. You might use:
+GraphCap perspectives are designed to be useful in real-world applications:
 
-- Graph Caption + Art Critic for detailed artwork analysis
-- Emotional Sentiment + Temporarium for storytelling
-- Multiple perspectives for training data generation
+- **Content Creation**: Generate rich, varied descriptions for creative projects
+- **Accessibility**: Provide detailed image descriptions for visually impaired users
+- **Data Analysis**: Extract structured information from visual content
+- **Education**: Teach different ways of seeing and analyzing visual material
+- **Creative Inspiration**: Generate diverse interpretations to spark new ideas
 
 Remember: The goal isn't to replace human understanding, but to provide useful, structured ways of describing and analyzing images for different purposes.
