@@ -5,4 +5,5 @@
  * This file exports all database schema definitions for use with Drizzle ORM.
  */
 
-export * from './providers'; 
+export * from './providers';
+export * from './batch_queue'; 

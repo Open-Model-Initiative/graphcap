@@ -10,7 +10,7 @@ export default defineConfig({
   },
   verbose: true,
   strict: true,
-  tablesFilter: ['providers*', 'provider_*'],
+  tablesFilter: ['providers*', 'provider_*', 'batch_*'],
   schemaFilter: 'public',
   migrations: {
     prefix: 'timestamp',
