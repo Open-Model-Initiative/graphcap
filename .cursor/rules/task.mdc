@@ -14,7 +14,7 @@ alwaysApply: true
 - Add capability to batch by perspective (i.e run this perspective on this dataset) 
 - Ensure UI updates as captions come in
 
-# GraphCap Batch Captioning - Refined Implementation Plan
+# graphcap Batch Captioning - Refined Implementation Plan
 
 ## Core Components
 
@@ -139,7 +139,7 @@ alwaysApply: true
    - Visual indicators for job progress and status
 
    
-# GraphCap Batch Captioning - WebSocket Integration Overview
+# graphcap Batch Captioning - WebSocket Integration Overview
 
 ## Architecture
 ```

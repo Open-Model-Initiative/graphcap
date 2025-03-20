@@ -1,14 +1,14 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 
-# GraphCap Batch Captioning: WebSocket Implementation Design
+# graphcap Batch Captioning: WebSocket Implementation Design
 
 ## 1. Overview
 
-This document outlines the WebSocket implementation for real-time updates in the GraphCap batch captioning queue system. The WebSocket server will provide push notifications for job status changes, allowing the frontend to display live updates without polling.
+This document outlines the WebSocket implementation for real-time updates in the graphcap batch captioning queue system. The WebSocket server will provide push notifications for job status changes, allowing the frontend to display live updates without polling.
 
 ## 2. Architecture
 
@@ -98,7 +98,7 @@ websocketServer.on('connection', (socket, request) => {
   socket.send(JSON.stringify({
     type: 'CONNECTED',
     clientId,
-    message: 'Connected to GraphCap batch queue WebSocket server'
+    message: 'Connected to graphcap batch queue WebSocket server'
   }));
   
   // Handle incoming messages

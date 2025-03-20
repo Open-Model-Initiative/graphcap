@@ -50,7 +50,7 @@ export function setupWebSocketServer(app: Hono, port: number) {
     // Send welcome message
     ws.send(JSON.stringify({
       type: 'CONNECTED',
-      data: { message: 'Connected to GraphCap Batch Queue' }
+      data: { message: 'Connected to graphcap Batch Queue' }
     }));
     
     // Handle incoming messages

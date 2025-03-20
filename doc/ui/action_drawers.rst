@@ -1,10 +1,10 @@
 Action Drawers
 =============
 
-GraphCap Studio now features collapsible action drawers on both sides of the interface for quick access to configuration and tools.
+graphcap Studio now features collapsible action drawers on both sides of the interface for quick access to configuration and tools.
 
 .. image:: /static/images/action-drawers.png
-   :alt: GraphCap Studio action drawers showing left and right panels
+   :alt: graphcap Studio action drawers showing left and right panels
    :align: center
    :width: 100%
 
@@ -27,7 +27,7 @@ The right drawer houses advanced options and developer tools:
 * Contains workspace file browser
 * Server connection management
   * Media server status and configuration
-  * GraphCap server status and configuration
+  * graphcap server status and configuration
 * Advanced configuration options
 
 Usage

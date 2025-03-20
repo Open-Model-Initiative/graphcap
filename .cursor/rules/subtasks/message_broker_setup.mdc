@@ -1,0 +1,185 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Task Definition: GraphCap Message Broker Initial Setup
+
+## Objective
+Set up the core GraphCap Message Broker with essential functionality to enable basic message passing between services, particularly for a simple caption request flow between the Data Service and Inference Bridge.
+
+## Scope
+This task focuses on establishing the foundation of the message broker, implementing the minimum viable functionality to support a basic use case. More advanced features will be implemented in subsequent phases.
+
+## Requirements
+
+### Functional
+1. Implement the basic message broker infrastructure using RabbitMQ
+2. Create essential queues for caption requests and responses
+3. Implement a simple HTTP API for interacting with the broker
+4. Develop a minimal test client for validation
+
+### Technical
+1. Containerized deployment using Docker
+2. Integration with existing GraphCap network
+3. Basic monitoring and health checks
+4. Configuration via environment variables
+
+## Implementation Stack
+- RabbitMQ (4.x) as the core AMQP server
+- Node.js (20+) for the HTTP API layer
+- Express for the REST API
+- amqplib for RabbitMQ client interaction
+- Docker for containerization
+
+## Simple Use Case
+Implement a basic image caption request flow:
+1. Data Service sends an image caption request (containing image path and perspective) to the broker
+2. Inference Bridge retrieves the request from the queue
+3. Inference Bridge processes the request (mock implementation for now)
+4. Inference Bridge sends the result back via the response queue
+5. Data Service receives the caption result
+
+## Implementation Steps
+
+### 1. Project Structure Setup
+Create the basic directory structure:
+```
+servers/message_broker/
+├── src/
+│   ├── api/             # HTTP API endpoints
+│   ├── config/          # Configuration
+│   ├── services/        # Business logic
+│   ├── models/          # Data structures
+│   ├── utils/           # Utilities
+│   └── index.ts         # Entry point
+├── test/                # Tests
+├── Dockerfile.message_broker.dev
+├── docker-compose.yml   # For local testing
+├── package.json
+└── tsconfig.json
+```
+
+### 2. RabbitMQ Configuration
+Set up the basic RabbitMQ configuration with essential exchanges and queues:
+
+- Direct exchange: `caption.direct`
+- Queues:
+  - `caption.request`: For image caption requests
+  - `caption.response`: For caption results
+
+### 3. HTTP API Development
+Implement the core HTTP API endpoints:
+
+- `POST /api/messages/publish`: Publish a message to a queue
+- `GET /api/messages/get/:queue`: Get messages from a queue
+- `POST /api/messages/ack/:id`: Acknowledge message processing
+- `GET /health`: Health check endpoint
+
+### 4. Basic Client SDKs
+Develop minimal client interfaces for:
+
+- Message producers (for Data Service)
+- Message consumers (for Inference Bridge)
+
+### 5. Docker & Deployment
+Create Docker configuration files:
+- Dockerfile for the message broker service
+- Update docker-compose.yml to include the message broker
+
+### 6. Test Client
+Implement a simple test client that:
+1. Publishes a caption request message
+2. Consumes the message
+3. Processes it (mock)
+4. Publishes a response
+5. Verifies the response is received
+
+## Docker Configuration
+Update the GraphCap docker-compose.yml file to include:
+
+```yaml
+graphcap_message_broker:
+  container_name: graphcap_message_broker
+  build:
+    context: ./servers/message_broker
+    dockerfile: Dockerfile.message_broker.dev
+  ports:
+    - "32552:32552"  # HTTP API
+    - "5672:5672"    # AMQP protocol
+    - "15672:15672"  # Management interface
+  environment:
+    - NODE_ENV=development
+    - PORT=32552
+    - RABBITMQ_DEFAULT_USER=guest
+    - RABBITMQ_DEFAULT_PASSWORD=guest
+  volumes:
+    - rabbitmq_data:/var/lib/rabbitmq
+    - ./servers/message_broker:/app
+  networks:
+    - graphcap
+  healthcheck:
+    test: ["CMD", "wget", "--spider", "http://localhost:32552/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+```
+
+## Message Format Examples
+
+### Caption Request
+```json
+{
+  "messageId": "req-123456",
+  "type": "caption.request",
+  "data": {
+    "imagePath": "/workspace/datasets/local/image1.jpg",
+    "perspective": "graph_caption",
+    "options": {
+      "provider": "default",
+      "model": "default"
+    }
+  },
+  "timestamp": "2023-06-15T12:34:56.789Z"
+}
+```
+
+### Caption Response
+```json
+{
+  "messageId": "res-123456",
+  "correlationId": "req-123456",
+  "type": "caption.response",
+  "data": {
+    "imagePath": "/workspace/datasets/local/image1.jpg",
+    "perspective": "graph_caption",
+    "caption": "A detailed graph showing network connections between nodes.",
+    "metadata": {
+      "processingTime": 234,
+      "provider": "mock",
+      "model": "test-model"
+    }
+  },
+  "timestamp": "2023-06-15T12:35:01.234Z"
+}
+```
+
+## Success Criteria
+1. Message broker container starts successfully and is accessible
+2. Basic HTTP API endpoints are functional
+3. Messages can be published to and consumed from queues
+4. The test client successfully demonstrates the end-to-end flow
+5. Health check endpoint returns OK status
+
+## Next Steps
+After this initial implementation:
+1. Implement more comprehensive error handling
+2. Add authentication and authorization
+3. Enhance monitoring and metrics collection
+4. Implement additional exchange patterns
+5. Integrate with the actual Data Service and Inference Bridge
+
+## Timeline
+Estimated implementation time: 3-5 days

@@ -4,7 +4,7 @@ globs:
 alwaysApply: false
 ---
 
-# GraphCap Batch Captioning: API Endpoint Design
+# graphcap Batch Captioning: API Endpoint Design
 
 ## Overview
 
