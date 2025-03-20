@@ -1,0 +1,647 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# GraphCap Batch Captioning: WebSocket Implementation Design
+
+## 1. Overview
+
+This document outlines the WebSocket implementation for real-time updates in the GraphCap batch captioning queue system. The WebSocket server will provide push notifications for job status changes, allowing the frontend to display live updates without polling.
+
+## 2. Architecture
+
+### 2.1 Server Components
+
+```
+                                ┌───────────────────┐
+                                │                   │
+                                │  Hono HTTP API    │
+                                │                   │
+                                └──────┬────────────┘
+                                       │
+                                       │ Shares
+                                       │ 
+                       ┌───────────────▼───────────────┐
+                       │                               │
+                       │     Job Queue Database        │
+                       │                               │
+                       └───────────┬───────────────────┘
+                                   │
+                                   │ Publishes events to
+                                   │
+┌──────────────────┐   ┌───────────▼───────────────┐    ┌─────────────────────┐
+│                  │   │                           │    │                     │
+│  WebSocket       │◄──┤ Event Bus / Message Queue │◄───┤  Job Processor      │
+│  Server          │   │                           │    │                     │
+│                  │   └───────────────────────────┘    └─────────────────────┘
+└────────┬─────────┘
+         │
+         │ Broadcasts to
+         │
+┌────────▼─────────┐  ┌─────────────────────┐  ┌─────────────────────┐
+│                  │  │                     │  │                     │
+│  Client 1        │  │  Client 2           │  │  Client N           │
+│                  │  │                     │  │                     │
+└──────────────────┘  └─────────────────────┘  └─────────────────────┘
+```
+
+### 2.2 Core Components
+
+1. **WebSocket Server**: Handles WebSocket connections and message distribution
+2. **Event Bus**: In-memory message queue for event publishing and subscribing
+3. **Message Handler**: Processes incoming messages and routes them to appropriate handlers
+4. **Client Session Manager**: Tracks active client connections and their states
+
+## 3. Implementation Details
+
+### 3.1 WebSocket Server Setup
+
+```typescript
+// src/websocket/server.ts
+import { Server } from 'ws';
+import { createServer } from 'http';
+import { EventEmitter } from 'events';
+import { nanoid } from 'nanoid';
+
+// Event bus for communication between HTTP API and WebSocket server
+export const eventBus = new EventEmitter();
+
+// HTTP server for the WebSocket server
+const server = createServer();
+
+// WebSocket server instance
+export const websocketServer = new Server({ 
+  server,
+  path: '/api/ws/job-queue'
+});
+
+// Track client connections
+const clients = new Map();
+
+// Handle incoming connections
+websocketServer.on('connection', (socket, request) => {
+  const clientId = nanoid();
+  
+  // Store client information
+  clients.set(clientId, {
+    socket,
+    connectedAt: new Date(),
+    lastActive: new Date(),
+    ip: request.socket.remoteAddress
+  });
+  
+  console.log(`Client ${clientId} connected from ${request.socket.remoteAddress}`);
+
+  // Welcome message
+  socket.send(JSON.stringify({
+    type: 'CONNECTED',
+    clientId,
+    message: 'Connected to GraphCap batch queue WebSocket server'
+  }));
+  
+  // Handle incoming messages
+  socket.on('message', (data) => {
+    try {
+      const message = JSON.parse(data.toString());
+      handleClientMessage(clientId, message);
+      
+      // Update last active time
+      const client = clients.get(clientId);
+      if (client) {
+        client.lastActive = new Date();
+      }
+    } catch (error) {
+      console.error(`Error processing message from client ${clientId}:`, error);
+      socket.send(JSON.stringify({
+        type: 'ERROR',
+        error: 'Invalid message format'
+      }));
+    }
+  });
+  
+  // Handle client disconnection
+  socket.on('close', () => {
+    console.log(`Client ${clientId} disconnected`);
+    clients.delete(clientId);
+  });
+  
+  // Handle errors
+  socket.on('error', (error) => {
+    console.error(`Error with client ${clientId}:`, error);
+    clients.delete(clientId);
+  });
+});
+
+// Listen for events from the HTTP API and job processor
+eventBus.on('JOB_EVENT', (event) => {
+  broadcastEvent(event);
+});
+
+// Broadcast event to all connected clients
+export function broadcastEvent(event) {
+  const message = JSON.stringify(event);
+  
+  websocketServer.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+  
+  console.log(`Broadcasted event ${event.type} to ${websocketServer.clients.size} clients`);
+}
+
+// Handle messages from clients
+function handleClientMessage(clientId, message) {
+  const { type, data } = message;
+  
+  switch (type) {
+    case 'PING':
+      // Handle ping from client
+      const client = clients.get(clientId);
+      if (client) {
+        client.socket.send(JSON.stringify({
+          type: 'PONG',
+          timestamp: Date.now()
+        }));
+      }
+      break;
+      
+    case 'SUBSCRIBE':
+      // Future: handle subscription to specific job updates
+      break;
+      
+    default:
+      console.warn(`Unknown message type from client ${clientId}: ${type}`);
+  }
+}
+
+// Start the WebSocket server
+export function startWebSocketServer(port = 32551) {
+  server.listen(port, () => {
+    console.log(`WebSocket server running on port ${port}`);
+  });
+  
+  // Heartbeat to keep connections alive
+  setInterval(() => {
+    websocketServer.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.ping();
+      }
+    });
+  }, 30000);
+}
+```
+
+### 3.2 Integration with Job Queue
+
+```typescript
+// src/services/job-processor.ts
+import { db } from '../db';
+import { captionJobs, jobItems } from '../schema/job_queue';
+import { eq, and } from 'drizzle-orm';
+import { eventBus } from '../websocket/server';
+
+// Add event emission to job processing
+async function startJob(jobId: string) {
+  // Update job status
+  await db.update(captionJobs)
+    .set({ 
+      status: 'running',
+      started_at: new Date()
+    })
+    .where(eq(captionJobs.jobId, jobId));
+  
+  // Emit event
+  eventBus.emit('JOB_EVENT', {
+    type: 'JOB_STARTED',
+    jobId,
+    startedAt: new Date().toISOString()
+  });
+  
+  // Start processing items
+  processJobItems(jobId);
+}
+
+// Add event emission to progress updates
+async function updateJobProgress(jobId: string, completedImages: number, failedImages: number, progress: number) {
+  await db.update(captionJobs)
+    .set({ 
+      processed_images: completedImages,
+      failed_images: failedImages,
+      progress,
+    })
+    .where(eq(captionJobs.jobId, jobId));
+  
+  // Emit event
+  eventBus.emit('JOB_EVENT', {
+    type: 'JOB_PROGRESS',
+    jobId,
+    progress,
+    processedImages: completedImages,
+    failedImages: failedImages,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Add event emission for item updates
+async function updateItemStatus(itemId: number, status: string, result?: any, error?: string) {
+  const item = await db.select().from(jobItems).where(eq(jobItems.id, itemId)).limit(1);
+  
+  if (item.length === 0) return;
+  
+  const completedAt = new Date();
+  
+  await db.update(jobItems)
+    .set({ 
+      status,
+      result,
+      error,
+      completed_at: completedAt,
+      processing_time: item[0].started_at 
+        ? completedAt.getTime() - new Date(item[0].started_at).getTime() 
+        : null
+    })
+    .where(eq(jobItems.id, itemId));
+  
+  // Emit event
+  eventBus.emit('JOB_EVENT', {
+    type: 'JOB_ITEM_COMPLETED',
+    jobId: item[0].job_id,
+    itemId,
+    imagePath: item[0].image_path,
+    perspective: item[0].perspective,
+    status,
+    error,
+    completedAt: completedAt.toISOString()
+  });
+}
+```
+
+### 3.3 Event Types
+
+```typescript
+// src/websocket/event-types.ts
+export type JobEventType = 
+  | 'JOB_CREATED' 
+  | 'JOB_STARTED' 
+  | 'JOB_PROGRESS' 
+  | 'JOB_COMPLETED' 
+  | 'JOB_CANCELLED'
+  | 'JOB_ITEM_COMPLETED'
+  | 'QUEUE_REORDERED';
+
+export type ClientEventType =
+  | 'PING'
+  | 'SUBSCRIBE';
+
+export type ServerEventType =
+  | JobEventType
+  | 'CONNECTED'
+  | 'ERROR'
+  | 'PONG';
+
+export interface JobEvent {
+  type: JobEventType;
+  jobId: string;
+  [key: string]: any;
+}
+
+export interface ServerEvent {
+  type: ServerEventType;
+  [key: string]: any;
+}
+
+export interface ClientEvent {
+  type: ClientEventType;
+  data?: any;
+}
+```
+
+## 4. WebSocket Message Protocol
+
+### 4.1 Server-to-Client Messages
+
+#### Job Created
+```json
+{
+  "type": "JOB_CREATED",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "position": 3,
+  "createdAt": "2025-03-20T12:34:56.789Z",
+  "jobType": "MULTI_PERSPECTIVE",
+  "imageCount": 5,
+  "perspectiveCount": 3
+}
+```
+
+#### Job Started
+```json
+{
+  "type": "JOB_STARTED",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "startedAt": "2025-03-20T12:35:02.123Z"
+}
+```
+
+#### Job Progress
+```json
+{
+  "type": "JOB_PROGRESS",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "progress": 45,
+  "processedImages": 7,
+  "failedImages": 1,
+  "currentItem": {
+    "itemId": 123,
+    "imagePath": "/workspace/datasets/local/image1.jpg",
+    "perspective": "graph_caption"
+  },
+  "timestamp": "2025-03-20T12:35:15.456Z"
+}
+```
+
+#### Job Completed
+```json
+{
+  "type": "JOB_COMPLETED",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "status": "completed",
+  "completedAt": "2025-03-20T12:38:45.789Z",
+  "totalProcessed": 14,
+  "totalFailed": 1,
+  "processingTime": 223456 // milliseconds
+}
+```
+
+#### Job Cancelled
+```json
+{
+  "type": "JOB_CANCELLED",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "cancelledAt": "2025-03-20T12:36:12.345Z",
+  "reason": "USER_CANCELLED"
+}
+```
+
+#### Job Item Completed
+```json
+{
+  "type": "JOB_ITEM_COMPLETED",
+  "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+  "itemId": 123,
+  "imagePath": "/workspace/datasets/local/image1.jpg",
+  "perspective": "graph_caption",
+  "status": "completed",
+  "completedAt": "2025-03-20T12:35:35.678Z",
+  "processingTime": 31234 // milliseconds
+}
+```
+
+#### Queue Reordered
+```json
+{
+  "type": "QUEUE_REORDERED",
+  "jobIds": [
+    "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+    "d290f1ee-6c54-4b01-90e6-d701748f0851",
+    "5678efgh-9012-ijkl-3456-mnopqrstuvwx"
+  ],
+  "timestamp": "2025-03-20T12:40:15.123Z"
+}
+```
+
+### 4.2 Client-to-Server Messages
+
+#### Ping
+```json
+{
+  "type": "PING",
+  "timestamp": 1710930615123
+}
+```
+
+#### Subscribe (Future Implementation)
+```json
+{
+  "type": "SUBSCRIBE",
+  "data": {
+    "jobId": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+  }
+}
+```
+
+## 5. Client Implementation
+
+### 5.1 React Hook for WebSocket Connection
+
+```typescript
+// src/hooks/useQueueWebSocket.ts
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+interface QueueWebSocketOptions {
+  onOpen?: () => void;
+  onClose?: () => void;
+  onError?: (error: Event) => void;
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
+}
+
+export function useQueueWebSocket(url: string, options: QueueWebSocketOptions = {}) {
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  
+  const socketRef = useRef<WebSocket | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectIntervalRef = useRef<number | null>(null);
+  
+  const {
+    onOpen,
+    onClose,
+    onError,
+    reconnectInterval = 3000,
+    maxReconnectAttempts = 10
+  } = options;
+  
+  // Connect to WebSocket
+  const connect = useCallback(() => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+    
+    try {
+      const socket = new WebSocket(url);
+      
+      socket.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        reconnectAttemptsRef.current = 0;
+        if (reconnectIntervalRef.current) {
+          clearInterval(reconnectIntervalRef.current);
+          reconnectIntervalRef.current = null;
+        }
+        onOpen?.();
+      };
+      
+      socket.onclose = (event) => {
+        console.log('WebSocket disconnected', event);
+        setIsConnected(false);
+        onClose?.();
+        
+        // Try to reconnect
+        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+          if (reconnectIntervalRef.current === null) {
+            reconnectIntervalRef.current = window.setInterval(() => {
+              reconnectAttemptsRef.current += 1;
+              connect();
+            }, reconnectInterval);
+          }
+        }
+      };
+      
+      socket.onerror = (error) => {
+        console.error('WebSocket error', error);
+        onError?.(error);
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          setLastMessage(message);
+          
+          // Add to events array if it's a job event
+          if (
+            message.type.startsWith('JOB_') || 
+            message.type === 'QUEUE_REORDERED'
+          ) {
+            setEvents((prev) => [...prev, message]);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message', error);
+        }
+      };
+      
+      socketRef.current = socket;
+    } catch (error) {
+      console.error('Error connecting to WebSocket', error);
+    }
+  }, [url, onOpen, onClose, onError, reconnectInterval, maxReconnectAttempts]);
+  
+  // Send message
+  const sendMessage = useCallback((message: any) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(message));
+    } else {
+      console.warn('WebSocket not connected, cannot send message');
+    }
+  }, []);
+  
+  // Send ping
+  const sendPing = useCallback(() => {
+    sendMessage({
+      type: 'PING',
+      timestamp: Date.now()
+    });
+  }, [sendMessage]);
+  
+  // Clean up events
+  const clearEvents = useCallback(() => {
+    setEvents([]);
+  }, []);
+  
+  // Connect on mount
+  useEffect(() => {
+    connect();
+    
+    // Set up ping interval
+    const pingInterval = setInterval(() => {
+      if (isConnected) {
+        sendPing();
+      }
+    }, 30000);
+    
+    // Clean up on unmount
+    return () => {
+      clearInterval(pingInterval);
+      
+      if (reconnectIntervalRef.current) {
+        clearInterval(reconnectIntervalRef.current);
+      }
+      
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, [connect, isConnected, sendPing]);
+  
+  return {
+    isConnected,
+    lastMessage,
+    events,
+    sendMessage,
+    clearEvents
+  };
+}
+```
+
+## 6. Integration with Hono API
+
+```typescript
+// src/index.ts
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import batchQueueRoutes from './routes/batch-queue';
+import { startWebSocketServer } from './websocket/server';
+
+const app = new Hono();
+
+// Middleware
+app.use('*', cors());
+
+// Routes
+app.route('/api/perspectives/batch', batchQueueRoutes);
+
+// Health check
+app.get('/health', (c) => c.text('OK'));
+
+// Start server
+const port = parseInt(process.env.PORT || '32550', 10);
+console.log(`Starting server on port ${port}`);
+
+// Start WebSocket server
+startWebSocketServer(parseInt(process.env.WEBSOCKET_PORT || '32551', 10));
+
+// Export for serverless environments
+export default {
+  port,
+  fetch: app.fetch
+};
+```
+
+## 7. Performance and Scaling Considerations
+
+1. **Memory Usage**: The current EventEmitter-based approach works well for moderate loads. For high-scale deployments, consider using Redis Pub/Sub or similar for event distribution.
+
+2. **Connection Limits**: Each WebSocket connection consumes server resources. Implement connection limits and timeouts to prevent resource exhaustion.
+
+3. **Message Size**: Keep messages compact and only send essential data to minimize bandwidth usage.
+
+4. **Reconnection Strategy**: The client implementation uses an exponential backoff strategy to prevent connection storms during server restarts.
+
+5. **Authentication**: For future implementation, add authentication to the WebSocket connection to ensure only authorized clients can connect.
+
+## 8. Testing Strategy
+
+1. **Unit Tests**: Test individual components of the WebSocket server and message handlers.
+2. **Integration Tests**: Test the integration between the WebSocket server and the job processor.
+3. **Load Tests**: Simulate multiple clients connecting and receiving messages to ensure performance under load.
+4. **Failure Recovery Tests**: Test reconnection behavior when the server goes down and comes back up.
+
+## 9. Monitoring and Logging
+
+1. **Connection Metrics**: Track number of active connections, connection rates, and disconnection rates.
+2. **Message Metrics**: Monitor message throughput and size distribution.
+3. **Error Rates**: Track and alert on connection errors and message parsing errors.
+4. **Latency**: Measure and monitor message delivery latency.
+
+This WebSocket implementation provides the real-time updates needed for the batch captioning queue system, ensuring users have an up-to-date view of job status and progress without constant polling.

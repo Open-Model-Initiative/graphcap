@@ -1,0 +1,548 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# GraphCap Batch Captioning: API Endpoint Design
+
+## Overview
+
+This document details the API endpoints for the batch captioning queue system. These endpoints will be implemented in the data service using Hono.js and will interface with the PostgreSQL database to manage the job queue.
+
+## Base URL
+
+All endpoints will be prefixed with:
+```
+/api/perspectives/batch
+```
+
+## Endpoint Specifications
+
+### 1. Create Batch Job
+
+**Endpoint:** `POST /api/perspectives/batch/create`
+
+**Purpose:** Submit a new batch captioning job to the queue.
+
+**Request Body:**
+```typescript
+{
+  type: "MULTI_PERSPECTIVE" | "DATASET_PERSPECTIVE" | "BACKFILL" | "DEPENDENCY_CHAIN",
+  images: string[],          // Array of image paths
+  perspectives: string[],    // Array of perspective names
+  options: {                 // Caption generation options
+    max_tokens?: number,
+    temperature?: number,
+    top_p?: number,
+    repetition_penalty?: number,
+    provider?: string,       // Provider name (e.g., "ollama-mac")
+    global_context?: string,
+    resize?: boolean,
+    resize_resolution?: string
+  },
+  priority?: number,         // Optional priority (default: 100)
+  dependencies?: string[]    // Optional array of job IDs this job depends on
+}
+```
+
+**Response:**
+```typescript
+{
+  jobId: string,             // UUID of the created job
+  status: "pending",
+  createdAt: string,         // ISO timestamp
+  position: number,          // Position in queue
+  estimatedStartTime?: string // Estimated start time based on queue
+}
+```
+
+**Status Codes:**
+- 201: Job created successfully
+- 400: Invalid request body
+- 409: Dependency validation failed
+- 500: Server error
+
+### 2. List Jobs
+
+**Endpoint:** `GET /api/perspectives/batch/list`
+
+**Purpose:** Retrieve a list of active jobs in the queue.
+
+**Query Parameters:**
+```
+status?="pending"|"running"|"completed"|"failed"|"cancelled"|"all"
+limit?=number (default: 20)
+offset?=number (default: 0)
+include_archived?=boolean (default: false)
+```
+
+**Response:**
+```typescript
+{
+  jobs: [
+    {
+      jobId: string,
+      type: string,
+      status: string,
+      createdAt: string,
+      startedAt?: string,
+      completedAt?: string,
+      priority: number,
+      totalImages: number,
+      processedImages: number,
+      failedImages: number,
+      progress: number,      // 0-100
+      archived: boolean
+    }
+  ],
+  total: number,            // Total number of jobs matching query
+  offset: number,
+  limit: number
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 500: Server error
+
+### 3. Get Job Status
+
+**Endpoint:** `GET /api/perspectives/batch/status/:jobId`
+
+**Purpose:** Get detailed status information for a specific job.
+
+**URL Parameters:**
+- jobId: UUID of the job
+
+**Query Parameters:**
+```
+includeItems?=boolean (default: false) // Whether to include individual job items
+```
+
+**Response:**
+```typescript
+{
+  job: {
+    jobId: string,
+    type: string,
+    status: string,
+    createdAt: string,
+    startedAt?: string,
+    completedAt?: string,
+    priority: number,
+    totalImages: number,
+    processedImages: number,
+    failedImages: number,
+    progress: number,
+    config: {
+      // Original job configuration
+    },
+    dependencies: string[],
+    dependentJobs: string[]
+  },
+  items?: [                // Only included if includeItems=true
+    {
+      id: number,
+      imagePath: string,
+      perspective: string,
+      status: string,
+      startedAt?: string,
+      completedAt?: string,
+      error?: string,
+      processingTime?: number
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 404: Job not found
+- 500: Server error
+
+### 4. Cancel Job
+
+**Endpoint:** `POST /api/perspectives/batch/cancel/:jobId`
+
+**Purpose:** Cancel a pending or running job.
+
+**URL Parameters:**
+- jobId: UUID of the job
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  jobId: string,
+  status: string        // New status ("cancelled")
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 400: Job cannot be cancelled (already completed or cancelled)
+- 404: Job not found
+- 500: Server error
+
+### 5. Reorder Queue
+
+**Endpoint:** `POST /api/perspectives/batch/reorder`
+
+**Purpose:** Change the order of jobs in the queue.
+
+**Request Body:**
+```typescript
+{
+  // Option 1: Ordered list of job IDs
+  jobIds: string[],  // Jobs in desired order (first = highest priority)
+  
+  // Option 2: Update specific job priority
+  jobId?: string,    // Single job to update
+  priority?: number  // New priority value
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  updatedJobs: number // Number of jobs updated
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 400: Invalid request body
+- 500: Server error
+
+### 6. Analyze Images
+
+**Endpoint:** `POST /api/perspectives/batch/analyze-images`
+
+**Purpose:** Analyze images to determine what perspectives are missing (for backfill operations).
+
+**Request Body:**
+```typescript
+{
+  images: string[],              // Image paths to analyze
+  perspectives?: string[]        // Optional subset of perspectives to check
+}
+```
+
+**Response:**
+```typescript
+{
+  results: [
+    {
+      imagePath: string,
+      existingPerspectives: string[],
+      missingPerspectives: string[]
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 400: Invalid request body
+- 500: Server error
+
+### 7. Archive Management
+
+**Endpoint:** `POST /api/perspectives/batch/archive/:jobId`
+
+**Purpose:** Manually archive a completed job.
+
+**URL Parameters:**
+- jobId: UUID of the job
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  jobId: string,
+  archived: boolean
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 400: Job cannot be archived (not completed/failed/cancelled)
+- 404: Job not found
+- 500: Server error
+
+### 8. Restore Archived Job
+
+**Endpoint:** `POST /api/perspectives/batch/restore/:jobId`
+
+**Purpose:** Restore an archived job to the active queue.
+
+**URL Parameters:**
+- jobId: UUID of the job
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  jobId: string,
+  archived: boolean
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 404: Job not found
+- 500: Server error
+
+### 9. Retry Failed Items
+
+**Endpoint:** `POST /api/perspectives/batch/retry-failed/:jobId`
+
+**Purpose:** Retry failed items within a job.
+
+**URL Parameters:**
+- jobId: UUID of the job
+
+**Request Body:**
+```typescript
+{
+  itemIds?: number[]    // Optional specific item IDs to retry, all failed items if omitted
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  jobId: string,
+  retriedItems: number,
+  status: string        // New job status
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 400: No failed items to retry
+- 404: Job not found
+- 500: Server error
+
+### 10. Get Queue Statistics
+
+**Endpoint:** `GET /api/perspectives/batch/statistics`
+
+**Purpose:** Get overall statistics about the job queue.
+
+**Response:**
+```typescript
+{
+  activeJobs: number,
+  pendingJobs: number,
+  runningJobs: number,
+  completedJobs: number,
+  failedJobs: number,
+  cancelledJobs: number,
+  archivedJobs: number,
+  averageWaitTime: number,      // In seconds
+  averageProcessingTime: number, // In seconds
+  historicalJobCounts: {
+    last24Hours: number,
+    last7Days: number,
+    last30Days: number
+  },
+  perspectiveUsage: [
+    {
+      perspective: string,
+      count: number,
+      averageTime: number  // Average processing time in ms
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- 200: Success
+- 500: Server error
+
+## WebSocket API
+
+In addition to REST endpoints, the system will provide real-time updates via WebSocket:
+
+**WebSocket Endpoint:** `ws://server:port/api/ws/job-queue`
+
+**Server-to-Client Events:**
+
+1. **Job Created**
+   ```typescript
+   {
+     type: "JOB_CREATED",
+     jobId: string,
+     position: number
+   }
+   ```
+
+2. **Job Started**
+   ```typescript
+   {
+     type: "JOB_STARTED",
+     jobId: string,
+     startedAt: string
+   }
+   ```
+
+3. **Job Progress**
+   ```typescript
+   {
+     type: "JOB_PROGRESS",
+     jobId: string,
+     progress: number,
+     processedImages: number,
+     failedImages: number,
+     currentItem?: {
+       imagePath: string,
+       perspective: string
+     }
+   }
+   ```
+
+4. **Job Completed**
+   ```typescript
+   {
+     type: "JOB_COMPLETED",
+     jobId: string,
+     status: "completed" | "failed" | "partial",
+     completedAt: string,
+     totalProcessed: number,
+     totalFailed: number
+   }
+   ```
+
+5. **Job Cancelled**
+   ```typescript
+   {
+     type: "JOB_CANCELLED",
+     jobId: string,
+     cancelledAt: string
+   }
+   ```
+
+6. **Queue Reordered**
+   ```typescript
+   {
+     type: "QUEUE_REORDERED",
+     jobIds: string[]
+   }
+   ```
+
+7. **Job Item Completed**
+   ```typescript
+   {
+     type: "JOB_ITEM_COMPLETED",
+     jobId: string,
+     itemId: number,
+     imagePath: string,
+     perspective: string,
+     status: "completed" | "failed",
+     error?: string
+   }
+   ```
+
+## Implementation Details
+
+### Hono Route Implementation
+
+```typescript
+// src/routes/batch-queue.ts
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { 
+  createJob, 
+  listJobs, 
+  getJobStatus, 
+  cancelJob, 
+  reorderJobs,
+  analyzeImages,
+  archiveJob,
+  restoreJob,
+  retryFailedItems,
+  getQueueStats
+} from '../services/job-queue';
+
+// Initialize router
+const app = new Hono();
+
+// Define validation schemas
+const createJobSchema = z.object({
+  type: z.enum(['MULTI_PERSPECTIVE', 'DATASET_PERSPECTIVE', 'BACKFILL', 'DEPENDENCY_CHAIN']),
+  images: z.array(z.string()).min(1),
+  perspectives: z.array(z.string()).min(1),
+  options: z.object({
+    max_tokens: z.number().optional(),
+    temperature: z.number().optional(),
+    top_p: z.number().optional(),
+    repetition_penalty: z.number().optional(),
+    provider: z.string().optional(),
+    global_context: z.string().optional(),
+    resize: z.boolean().optional(),
+    resize_resolution: z.string().optional()
+  }),
+  priority: z.number().optional(),
+  dependencies: z.array(z.string()).optional()
+});
+
+// Create batch job endpoint
+app.post('/create', zValidator('json', createJobSchema), async (c) => {
+  const data = c.req.valid('json');
+  const result = await createJob(data);
+  return c.json(result, 201);
+});
+
+// List jobs endpoint
+app.get('/list', async (c) => {
+  const status = c.req.query('status') || 'all';
+  const limit = parseInt(c.req.query('limit') || '20');
+  const offset = parseInt(c.req.query('offset') || '0');
+  const includeArchived = c.req.query('include_archived') === 'true';
+  
+  const result = await listJobs(status, limit, offset, includeArchived);
+  return c.json(result);
+});
+
+// Get job status endpoint
+app.get('/status/:jobId', async (c) => {
+  const jobId = c.req.param('jobId');
+  const includeItems = c.req.query('includeItems') === 'true';
+  
+  const result = await getJobStatus(jobId, includeItems);
+  if (!result) {
+    return c.json({ error: 'Job not found' }, 404);
+  }
+  
+  return c.json(result);
+});
+
+// Cancel job endpoint
+app.post('/cancel/:jobId', async (c) => {
+  const jobId = c.req.param('jobId');
+  
+  try {
+    const result = await cancelJob(jobId);
+    return c.json(result);
+  } catch (error) {
+    if (error.message === 'Job not found') {
+      return c.json({ error: 'Job not found' }, 404);
+    }
+    if (error.message === 'Cannot cancel job') {
+      return c.json({ error: 'Job cannot be cancelled' }, 400);
+    }
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Other endpoints follow the same pattern...
+
+export default app;
+```
+
+This design provides a comprehensive set of API endpoints for managing the batch captioning queue, supporting all required functionality from job creation to monitoring and control.

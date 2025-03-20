@@ -1,0 +1,642 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Queue Panel Implementation Notes
+
+## Overview
+Add a new "Queue" panel to the left action sidebar to display and manage batch caption jobs, following the existing component pattern in `RootLeftActionPanel.tsx`.
+
+## Integration Details
+
+### 1. Component Location and Structure
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/QueuePanel.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Queue Panel
+ *
+ * This component displays the batch caption job queue with job status and controls.
+ */
+
+import { Box, VStack, Heading, Text, HStack, Switch, Badge } from "@chakra-ui/react";
+import { useQueueWebSocket } from "../hooks/useQueueWebSocket";
+import { JobList } from "./JobList";
+import { QueueStats } from "./QueueStats";
+
+interface QueuePanelProps {
+  initialView?: "simple" | "advanced";
+}
+
+/**
+ * Panel for displaying and managing batch caption jobs
+ */
+export function QueuePanel({ initialView = "simple" }: QueuePanelProps) {
+  const [view, setView] = useState<"simple" | "advanced">(initialView);
+  const { isConnected, events } = useQueueWebSocket(
+    `ws://${window.location.hostname}:32551/api/ws/job-queue`
+  );
+
+  return (
+    <VStack spacing={4} align="stretch" h="100%" overflow="auto" p={3}>
+      <HStack justifyContent="space-between" alignItems="center">
+        <Heading size="md">Caption Queue</Heading>
+        <HStack>
+          <Text fontSize="sm">Advanced</Text>
+          <Switch 
+            isChecked={view === "advanced"}
+            onChange={() => setView(view === "simple" ? "advanced" : "simple")}
+          />
+        </HStack>
+      </HStack>
+      
+      <Box>
+        <HStack spacing={2} mb={2}>
+          <Badge colorScheme={isConnected ? "green" : "red"}>
+            {isConnected ? "Connected" : "Disconnected"}
+          </Badge>
+        </HStack>
+        
+        <QueueStats view={view} />
+      </Box>
+
+      <JobList view={view} />
+    </VStack>
+  );
+}
+```
+
+### 2. RootLeftActionPanel Integration
+
+Modify the existing `RootLeftActionPanel.tsx` to include the new Queue panel:
+
+```typescript
+// graphcap_studio/src/app/layout/RootLeftActionPanel.tsx
+
+import {
+  DatasetIcon,
+  FlagIcon,
+  PerspectiveLayersIcon,
+  ProviderIcon,
+  QueueIcon, // New icon component needed
+  SettingsIcon,
+} from "@/components/icons";
+import { SettingsPanel } from "@/features/app-settings";
+import { FeatureFlagsPanel } from "@/features/app-settings/feature-flags";
+import { DatasetPanel } from "@/features/datasets";
+import { ProvidersPanel } from "@/features/inference/providers";
+import { PerspectiveManagementPanel } from "@/features/perspectives/components/PerspectiveManagement/PerspectiveManagementPanel";
+import { QueuePanel } from "@/features/batch-queue/components/QueuePanel"; // Import new component
+import { ActionPanel } from "./ActionPanel";
+
+/**
+ * Left action panel with multiple sections for the root layout
+ */
+export function RootLeftActionPanel() {
+  return (
+    <ActionPanel
+      side="left"
+      defaultExpanded={false}
+      expandedWidth={350}
+      sections={[
+        {
+          id: "feature-flags",
+          title: "Feature Flags",
+          icon: <FlagIcon />,
+          content: <FeatureFlagsPanel />,
+        },
+        {
+          id: "datasets",
+          title: "Datasets",
+          icon: <DatasetIcon />,
+          content: <DatasetPanel />,
+        },
+        {
+          id: "providers",
+          title: "Providers",
+          icon: <ProviderIcon />,
+          content: <ProvidersPanel />,
+        },
+        {
+          id: "queue", // New queue section
+          title: "Job Queue",
+          icon: <QueueIcon />,
+          content: <QueuePanel />,
+        },
+        {
+          id: "perspective-management",
+          title: "Perspective Management",
+          icon: <PerspectiveLayersIcon />,
+          content: <PerspectiveManagementPanel />,
+        },
+        {
+          id: "settings",
+          title: "Settings",
+          icon: <SettingsIcon />,
+          content: <SettingsPanel />,
+        },
+      ]}
+    />
+  );
+}
+```
+
+### 3. Job List Component
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/JobList.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Job List
+ *
+ * This component displays a list of batch caption jobs with status and controls.
+ */
+
+import { useState, useEffect } from "react";
+import { 
+  VStack, Box, Text, Progress, Badge, IconButton, 
+  Menu, MenuButton, MenuList, MenuItem, Spinner,
+  Accordion, AccordionItem, AccordionButton, AccordionPanel,
+  Flex
+} from "@chakra-ui/react";
+import { ChevronDownIcon, DeleteIcon, RepeatIcon } from "@chakra-ui/icons";
+import { formatDistanceToNow } from "date-fns";
+import { useJobs } from "../hooks/useJobs";
+
+interface JobListProps {
+  view: "simple" | "advanced";
+}
+
+export function JobList({ view }: JobListProps) {
+  const { jobs, isLoading, error, cancelJob, retryFailedItems } = useJobs();
+  
+  if (isLoading) {
+    return <Spinner />;
+  }
+  
+  if (error) {
+    return <Text color="red.500">Error loading jobs: {error}</Text>;
+  }
+  
+  if (!jobs || jobs.length === 0) {
+    return <Text>No jobs in queue</Text>;
+  }
+  
+  return (
+    <VStack spacing={3} align="stretch">
+      {jobs.map((job) => (
+        <JobItem 
+          key={job.jobId} 
+          job={job} 
+          view={view}
+          onCancel={() => cancelJob(job.jobId)}
+          onRetry={() => retryFailedItems(job.jobId)}
+        />
+      ))}
+    </VStack>
+  );
+}
+
+function JobItem({ job, view, onCancel, onRetry }) {
+  const statusColors = {
+    pending: "blue",
+    running: "yellow",
+    completed: "green",
+    failed: "red",
+    cancelled: "gray"
+  };
+  
+  // Simple view for completed jobs just shows basic info
+  if (view === "simple" && (job.status === "completed" || job.status === "cancelled")) {
+    return (
+      <Box p={2} borderWidth="1px" borderRadius="md">
+        <Flex justifyContent="space-between" alignItems="center">
+          <Box>
+            <Text fontWeight="bold">{job.type}</Text>
+            <Badge colorScheme={statusColors[job.status]}>{job.status}</Badge>
+          </Box>
+          <Text fontSize="xs">{formatDistanceToNow(new Date(job.completedAt))} ago</Text>
+        </Flex>
+      </Box>
+    );
+  }
+  
+  // Advanced view or active jobs
+  return (
+    <Accordion allowToggle>
+      <AccordionItem borderWidth="1px" borderRadius="md">
+        <AccordionButton>
+          <Box flex="1" textAlign="left">
+            <Flex justifyContent="space-between" alignItems="center">
+              <Box>
+                <Text fontWeight="bold">{job.type}</Text>
+                <Badge colorScheme={statusColors[job.status]}>{job.status}</Badge>
+              </Box>
+              {job.status === "running" && (
+                <Text fontSize="xs">{job.processedImages}/{job.totalImages} images</Text>
+              )}
+            </Flex>
+            
+            {job.status === "running" && (
+              <Progress 
+                value={job.progress} 
+                size="sm" 
+                colorScheme="blue" 
+                mt={2}
+              />
+            )}
+          </Box>
+          <ChevronDownIcon />
+        </AccordionButton>
+        
+        <AccordionPanel>
+          {/* Job details */}
+          <VStack align="stretch" spacing={2}>
+            <Box>
+              <Text fontSize="sm">Created: {new Date(job.createdAt).toLocaleString()}</Text>
+              {job.startedAt && (
+                <Text fontSize="sm">Started: {new Date(job.startedAt).toLocaleString()}</Text>
+              )}
+              {job.completedAt && (
+                <Text fontSize="sm">Completed: {new Date(job.completedAt).toLocaleString()}</Text>
+              )}
+            </Box>
+            
+            <Box>
+              <Text fontSize="sm">Images: {job.totalImages}</Text>
+              <Text fontSize="sm">Processed: {job.processedImages}</Text>
+              {job.failedImages > 0 && (
+                <Text fontSize="sm" color="red.500">Failed: {job.failedImages}</Text>
+              )}
+            </Box>
+            
+            <Flex justifyContent="flex-end" mt={2}>
+              {job.status === "pending" && (
+                <IconButton
+                  aria-label="Cancel job"
+                  icon={<DeleteIcon />}
+                  size="sm"
+                  colorScheme="red"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel();
+                  }}
+                />
+              )}
+              
+              {(job.status === "completed" || job.status === "failed") && job.failedImages > 0 && (
+                <IconButton
+                  aria-label="Retry failed items"
+                  icon={<RepeatIcon />}
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRetry();
+                  }}
+                />
+              )}
+            </Flex>
+          </VStack>
+        </AccordionPanel>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+```
+
+### 4. Queue Stats Component
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/QueueStats.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Queue Stats
+ *
+ * This component displays statistics for the batch caption job queue.
+ */
+
+import { Box, HStack, VStack, Text, Stat, StatLabel, StatNumber, StatGroup } from "@chakra-ui/react";
+import { useQueueStats } from "../hooks/useQueueStats";
+
+interface QueueStatsProps {
+  view: "simple" | "advanced";
+}
+
+export function QueueStats({ view }: QueueStatsProps) {
+  const { stats, isLoading } = useQueueStats();
+  
+  if (isLoading || !stats) {
+    return <Text fontSize="sm">Loading queue statistics...</Text>;
+  }
+  
+  // Simple view just shows active job counts
+  if (view === "simple") {
+    return (
+      <HStack spacing={4} p={2} bg="gray.50" borderRadius="md">
+        <Stat size="sm">
+          <StatLabel>Running</StatLabel>
+          <StatNumber>{stats.runningJobs}</StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel>Pending</StatLabel>
+          <StatNumber>{stats.pendingJobs}</StatNumber>
+        </Stat>
+      </HStack>
+    );
+  }
+  
+  // Advanced view shows more detailed stats
+  return (
+    <Box p={3} bg="gray.50" borderRadius="md">
+      <StatGroup>
+        <Stat size="sm">
+          <StatLabel>Running</StatLabel>
+          <StatNumber>{stats.runningJobs}</StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel>Pending</StatLabel>
+          <StatNumber>{stats.pendingJobs}</StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel>Completed</StatLabel>
+          <StatNumber>{stats.completedJobs}</StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel>Failed</StatLabel>
+          <StatNumber>{stats.failedJobs}</StatNumber>
+        </Stat>
+      </StatGroup>
+      
+      <VStack align="stretch" mt={3} spacing={1}>
+        <Text fontSize="xs">Avg. Wait Time: {formatTime(stats.averageWaitTime)}</Text>
+        <Text fontSize="xs">Avg. Processing Time: {formatTime(stats.averageProcessingTime)}</Text>
+        <Text fontSize="xs">Jobs (24h): {stats.historicalJobCounts.last24Hours}</Text>
+      </VStack>
+    </Box>
+  );
+}
+
+function formatTime(seconds: number): string {
+  if (seconds < 60) {
+    return `${seconds.toFixed(0)}s`;
+  }
+  
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  
+  return `${minutes}m ${remainingSeconds.toFixed(0)}s`;
+}
+```
+
+### 5. Queue Icon Component
+
+```typescript
+// graphcap_studio/src/components/icons/QueueIcon.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Queue Icon
+ *
+ * This component renders a queue icon for use in the UI.
+ */
+
+import { Icon, IconProps } from "@chakra-ui/react";
+
+export function QueueIcon(props: IconProps) {
+  return (
+    <Icon viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0-3h8v2h-8zm0 6h8v2h-8z"
+      />
+    </Icon>
+  );
+}
+```
+
+### 6. Data Hooks Implementation
+
+```typescript
+// graphcap_studio/src/features/batch-queue/hooks/useJobs.ts
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * useJobs Hook
+ *
+ * This hook provides access to batch caption jobs data and operations.
+ */
+
+import { useState, useEffect, useCallback } from "react";
+import { useQueueWebSocket } from "./useQueueWebSocket";
+
+export function useJobs() {
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const { events } = useQueueWebSocket(
+    `ws://${window.location.hostname}:32551/api/ws/job-queue`
+  );
+  
+  // Fetch initial jobs
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        const response = await fetch("/api/perspectives/batch/list");
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch jobs: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setJobs(data.jobs);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchJobs();
+  }, []);
+  
+  // Update jobs based on WebSocket events
+  useEffect(() => {
+    if (!events.length) return;
+    
+    // Process each event
+    const lastEvent = events[events.length - 1];
+    
+    switch (lastEvent.type) {
+      case "JOB_CREATED":
+        // Refetch jobs when a new job is created
+        fetch("/api/perspectives/batch/list")
+          .then(res => res.json())
+          .then(data => setJobs(data.jobs))
+          .catch(err => console.error("Failed to update jobs:", err));
+        break;
+        
+      case "JOB_PROGRESS":
+        // Update progress for a specific job
+        setJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.jobId === lastEvent.jobId
+              ? {
+                  ...job,
+                  progress: lastEvent.progress,
+                  processedImages: lastEvent.processedImages,
+                  failedImages: lastEvent.failedImages
+                }
+              : job
+          )
+        );
+        break;
+        
+      case "JOB_COMPLETED":
+      case "JOB_CANCELLED":
+        // Update status for a completed/cancelled job
+        setJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.jobId === lastEvent.jobId
+              ? {
+                  ...job,
+                  status: lastEvent.type === "JOB_COMPLETED" ? "completed" : "cancelled",
+                  completedAt: lastEvent.completedAt,
+                  processedImages: lastEvent.totalProcessed,
+                  failedImages: lastEvent.totalFailed,
+                  progress: 100
+                }
+              : job
+          )
+        );
+        break;
+        
+      case "JOB_STARTED":
+        // Update status for a started job
+        setJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.jobId === lastEvent.jobId
+              ? {
+                  ...job,
+                  status: "running",
+                  startedAt: lastEvent.startedAt
+                }
+              : job
+          )
+        );
+        break;
+        
+      case "QUEUE_REORDERED":
+        // Refetch jobs when queue is reordered
+        fetch("/api/perspectives/batch/list")
+          .then(res => res.json())
+          .then(data => setJobs(data.jobs))
+          .catch(err => console.error("Failed to update jobs:", err));
+        break;
+        
+      default:
+        // Ignore other events
+        break;
+    }
+  }, [events]);
+  
+  // Cancel a job
+  const cancelJob = useCallback(async (jobId) => {
+    try {
+      const response = await fetch(`/api/perspectives/batch/cancel/${jobId}`, {
+        method: "POST"
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to cancel job: ${response.status}`);
+      }
+      
+      // Update job status optimistically
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.jobId === jobId
+            ? { ...job, status: "cancelled", completedAt: new Date().toISOString() }
+            : job
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+  
+  // Retry failed items in a job
+  const retryFailedItems = useCallback(async (jobId) => {
+    try {
+      const response = await fetch(`/api/perspectives/batch/retry-failed/${jobId}`, {
+        method: "POST"
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to retry job: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Update jobs after retry
+      fetch("/api/perspectives/batch/list")
+        .then(res => res.json())
+        .then(data => setJobs(data.jobs))
+        .catch(err => console.error("Failed to update jobs:", err));
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+  
+  return {
+    jobs,
+    isLoading,
+    error,
+    cancelJob,
+    retryFailedItems
+  };
+}
+```
+
+## Implementation Steps
+
+1. **Create Component Directory Structure**
+   - Create `/src/features/batch-queue/` directory
+   - Set up subdirectories for components, hooks, services, and types
+
+2. **Implement WebSocket Integration**
+   - Create WebSocket hook for real-time updates
+   - Connect to the backend WebSocket server
+   - Handle event processing
+
+3. **Develop UI Components**
+   - Create QueuePanel main component with simple/advanced toggle
+   - Implement JobList to display jobs with appropriate detail level
+   - Create QueueStats to show aggregate statistics
+   - Design queue icon for left panel navigation
+
+4. **Add Queue Panel to Left Action Panel**
+   - Update RootLeftActionPanel.tsx to include the queue section
+   - Set appropriate positioning in the panel order
+   - Configure default expanded state
+
+5. **Connect to Backend API**
+   - Implement API calls for fetching, cancelling, and retrying jobs
+   - Handle WebSocket events to update job status in real-time
+   - Implement error handling for API failures
+
+6. **Implement Progressive Disclosure**
+   - Create simple view with minimal information
+   - Create advanced view with detailed job statistics and controls
+   - Allow toggling between views based on user preference
+
+7. **Add Action Integration**
+   - Connect batch creation dialog to queue panel
+   - Implement job management actions (cancel, retry, reorder)
+   - Add notifications for important queue events

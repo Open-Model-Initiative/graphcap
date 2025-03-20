@@ -1,0 +1,790 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Job Creation Dialog Design Notes
+
+## Overview
+
+The Job Creation Dialog will provide an interface for users to configure and submit batch caption jobs, supporting all four operation patterns with progressive disclosure of options.
+
+## Main Components
+
+### 1. Base Dialog Structure
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/JobCreationDialog.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Job Creation Dialog
+ *
+ * This component provides an interface for creating batch caption jobs with different operation patterns.
+ */
+
+import { useState, useEffect } from "react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Box,
+  VStack,
+  HStack,
+  Text,
+  Switch,
+  useToast
+} from "@chakra-ui/react";
+
+import { MultiPerspectiveForm } from "./job-patterns/MultiPerspectiveForm";
+import { DatasetPerspectiveForm } from "./job-patterns/DatasetPerspectiveForm";
+import { BackfillForm } from "./job-patterns/BackfillForm";
+import { DependencyChainForm } from "./job-patterns/DependencyChainForm";
+import { AdvancedOptionsPanel } from "./AdvancedOptionsPanel";
+
+interface JobCreationDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialImage?: string;
+  initialPerspective?: string;
+}
+
+export function JobCreationDialog({
+  isOpen,
+  onClose,
+  initialImage,
+  initialPerspective
+}: JobCreationDialogProps) {
+  const [tabIndex, setTabIndex] = useState(0);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [jobConfig, setJobConfig] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
+  
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      // Set initial tab based on provided params
+      if (initialImage && !initialPerspective) {
+        setTabIndex(0); // Multi-perspective for single image
+      } else if (!initialImage && initialPerspective) {
+        setTabIndex(1); // Dataset-perspective
+      } else {
+        setTabIndex(0);
+      }
+      
+      setShowAdvanced(false);
+      setJobConfig({});
+    }
+  }, [isOpen, initialImage, initialPerspective]);
+  
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch("/api/perspectives/batch/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(jobConfig)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      toast({
+        title: "Job created",
+        description: `Job #${result.jobId} has been added to the queue`,
+        status: "success",
+        duration: 5000,
+        isClosable: true
+      });
+      
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create job: ${error.message}`,
+        status: "error",
+        duration: 5000,
+        isClosable: true
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Create Batch Caption Job</ModalHeader>
+        <ModalCloseButton />
+        
+        <ModalBody>
+          <Tabs index={tabIndex} onChange={setTabIndex} variant="enclosed">
+            <TabList>
+              <Tab>Multi-Perspective</Tab>
+              <Tab>Dataset-Perspective</Tab>
+              <Tab>Backfill</Tab>
+              <Tab>Dependency Chain</Tab>
+            </TabList>
+            
+            <TabPanels>
+              <TabPanel>
+                <MultiPerspectiveForm 
+                  initialImage={initialImage}
+                  onChange={(config) => setJobConfig({
+                    type: "MULTI_PERSPECTIVE",
+                    ...config
+                  })}
+                />
+              </TabPanel>
+              
+              <TabPanel>
+                <DatasetPerspectiveForm
+                  initialPerspective={initialPerspective}
+                  onChange={(config) => setJobConfig({
+                    type: "DATASET_PERSPECTIVE",
+                    ...config
+                  })}
+                />
+              </TabPanel>
+              
+              <TabPanel>
+                <BackfillForm
+                  onChange={(config) => setJobConfig({
+                    type: "BACKFILL",
+                    ...config
+                  })}
+                />
+              </TabPanel>
+              
+              <TabPanel>
+                <DependencyChainForm
+                  onChange={(config) => setJobConfig({
+                    type: "DEPENDENCY_CHAIN",
+                    ...config
+                  })}
+                />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+          
+          <Box mt={6}>
+            <HStack justifyContent="space-between">
+              <Text>Advanced Options</Text>
+              <Switch isChecked={showAdvanced} onChange={() => setShowAdvanced(!showAdvanced)} />
+            </HStack>
+            
+            {showAdvanced && (
+              <Box mt={4}>
+                <AdvancedOptionsPanel 
+                  onChange={(advancedOptions) => setJobConfig(prev => ({
+                    ...prev,
+                    options: {
+                      ...(prev.options || {}),
+                      ...advancedOptions
+                    }
+                  }))}
+                />
+              </Box>
+            )}
+          </Box>
+        </ModalBody>
+        
+        <ModalFooter>
+          <Button variant="ghost" mr={3} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button 
+            colorScheme="blue" 
+            onClick={handleSubmit}
+            isLoading={isSubmitting}
+            loadingText="Creating Job"
+            isDisabled={!jobConfig.images || !jobConfig.perspectives || 
+                       (jobConfig.images.length === 0) || (jobConfig.perspectives.length === 0)}
+          >
+            Create Job
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+```
+
+### 2. Multi-Perspective Form Pattern
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/job-patterns/MultiPerspectiveForm.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Multi-Perspective Form
+ *
+ * Form for creating a job that applies multiple perspectives to a single image.
+ */
+
+import { useState, useEffect } from "react";
+import {
+  VStack,
+  FormControl,
+  FormLabel,
+  Input,
+  Button,
+  Box,
+  Text,
+  SimpleGrid,
+  Checkbox,
+  CheckboxGroup,
+  Divider,
+  Heading,
+  Spinner,
+  Alert,
+  AlertIcon
+} from "@chakra-ui/react";
+import { usePerspectives } from "../../hooks/usePerspectives";
+import { ImageSelector } from "../ImageSelector";
+
+interface MultiPerspectiveFormProps {
+  initialImage?: string;
+  onChange: (config: any) => void;
+}
+
+export function MultiPerspectiveForm({ initialImage, onChange }: MultiPerspectiveFormProps) {
+  const [selectedImage, setSelectedImage] = useState(initialImage || "");
+  const [selectedPerspectives, setSelectedPerspectives] = useState<string[]>([]);
+  const { perspectives, isLoading, error } = usePerspectives();
+  
+  // Group perspectives by type
+  const perspectiveGroups = {
+    "Descriptive": ["graph_caption", "custom_caption"],
+    "Analytical": ["art_critic", "emotional_sentiment", "locality_graph"],
+    "Creative": ["poetic_metaphor", "storytelling", "out_of_frame"],
+    "Temporal": ["temporarium", "simple_temporarium", "time_tags"],
+    "Synthesized": ["synthesized_caption"]
+  };
+  
+  // Update parent when form changes
+  useEffect(() => {
+    if (selectedImage && selectedPerspectives.length > 0) {
+      onChange({
+        images: [selectedImage],
+        perspectives: selectedPerspectives,
+        options: {
+          provider: "ollama-mac" // Default provider - could be made configurable
+        }
+      });
+    }
+  }, [selectedImage, selectedPerspectives, onChange]);
+  
+  // Handle image selection
+  const handleImageSelect = (imagePath: string) => {
+    setSelectedImage(imagePath);
+  };
+  
+  // Handle perspective selection
+  const handlePerspectiveChange = (selected: string[]) => {
+    setSelectedPerspectives(selected);
+  };
+  
+  if (isLoading) {
+    return <Spinner />;
+  }
+  
+  if (error) {
+    return (
+      <Alert status="error">
+        <AlertIcon />
+        Error loading perspectives: {error}
+      </Alert>
+    );
+  }
+  
+  return (
+    <VStack spacing={6} align="stretch">
+      <Box>
+        <Heading size="sm" mb={2}>Select Image</Heading>
+        <ImageSelector
+          selectedImage={selectedImage}
+          onSelectImage={handleImageSelect}
+        />
+      </Box>
+      
+      <Divider />
+      
+      <Box>
+        <Heading size="sm" mb={2}>Select Perspectives</Heading>
+        
+        <CheckboxGroup value={selectedPerspectives} onChange={handlePerspectiveChange}>
+          {Object.entries(perspectiveGroups).map(([groupName, groupPerspectives]) => (
+            <Box key={groupName} mb={4}>
+              <Text fontWeight="bold" mb={2}>{groupName}</Text>
+              <SimpleGrid columns={2} spacing={2}>
+                {groupPerspectives.map(perspective => {
+                  const perspectiveInfo = perspectives.find(p => p.name === perspective);
+                  return (
+                    <Checkbox key={perspective} value={perspective}>
+                      {perspectiveInfo?.display_name || perspective}
+                    </Checkbox>
+                  );
+                })}
+              </SimpleGrid>
+            </Box>
+          ))}
+        </CheckboxGroup>
+      </Box>
+      
+      <Box pt={2}>
+        <Text fontSize="sm" color="gray.500">
+          {selectedPerspectives.length} perspectives selected
+        </Text>
+      </Box>
+    </VStack>
+  );
+}
+```
+
+### 3. Dataset-Perspective Form Pattern
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/job-patterns/DatasetPerspectiveForm.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Dataset-Perspective Form
+ *
+ * Form for creating a job that applies a single perspective to all images in a dataset.
+ */
+
+import { useState, useEffect } from "react";
+import {
+  VStack,
+  FormControl,
+  FormLabel,
+  Box,
+  Text,
+  Radio,
+  RadioGroup,
+  Select,
+  Checkbox,
+  Divider,
+  Heading,
+  Spinner,
+  Alert,
+  AlertIcon,
+  HStack,
+  Tag,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText
+} from "@chakra-ui/react";
+import { usePerspectives } from "../../hooks/usePerspectives";
+import { useDatasets } from "../../hooks/useDatasets";
+
+interface DatasetPerspectiveFormProps {
+  initialPerspective?: string;
+  onChange: (config: any) => void;
+}
+
+export function DatasetPerspectiveForm({ initialPerspective, onChange }: DatasetPerspectiveFormProps) {
+  const [selectedDataset, setSelectedDataset] = useState("");
+  const [selectedPerspective, setSelectedPerspective] = useState(initialPerspective || "");
+  const [onlyMissingImages, setOnlyMissingImages] = useState(true);
+  
+  const { perspectives, isLoading: perspectivesLoading, error: perspectivesError } = usePerspectives();
+  const { datasets, imageCount, isLoading: datasetsLoading, error: datasetsError } = useDatasets();
+  
+  // Update parent when form changes
+  useEffect(() => {
+    if (selectedDataset && selectedPerspective) {
+      onChange({
+        dataset: selectedDataset,
+        perspectives: [selectedPerspective],
+        filters: {
+          onlyMissing: onlyMissingImages
+        },
+        options: {
+          provider: "ollama-mac" // Default provider
+        }
+      });
+    }
+  }, [selectedDataset, selectedPerspective, onlyMissingImages, onChange]);
+  
+  const isLoading = perspectivesLoading || datasetsLoading;
+  const error = perspectivesError || datasetsError;
+  
+  if (isLoading) {
+    return <Spinner />;
+  }
+  
+  if (error) {
+    return (
+      <Alert status="error">
+        <AlertIcon />
+        Error loading data: {error}
+      </Alert>
+    );
+  }
+  
+  // Estimated processing time (rough estimate based on 5 seconds per image)
+  const estimatedTime = imageCount[selectedDataset] ? imageCount[selectedDataset] * 5 : 0;
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds} seconds`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes`;
+    return `${Math.floor(seconds / 3600)} hours ${Math.floor((seconds % 3600) / 60)} minutes`;
+  };
+  
+  return (
+    <VStack spacing={6} align="stretch">
+      <Box>
+        <Heading size="sm" mb={2}>Select Dataset</Heading>
+        <FormControl isRequired>
+          <Select 
+            placeholder="Select dataset"
+            value={selectedDataset}
+            onChange={(e) => setSelectedDataset(e.target.value)}
+          >
+            {datasets.map(dataset => (
+              <option key={dataset.id} value={dataset.id}>
+                {dataset.name} ({imageCount[dataset.id] || 0} images)
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+        
+        {selectedDataset && (
+          <Box mt={2} p={3} bg="gray.50" borderRadius="md">
+            <Stat>
+              <StatLabel>Dataset Size</StatLabel>
+              <StatNumber>{imageCount[selectedDataset] || 0} images</StatNumber>
+              <StatHelpText>Est. processing time: {formatTime(estimatedTime)}</StatHelpText>
+            </Stat>
+          </Box>
+        )}
+      </Box>
+      
+      <Divider />
+      
+      <Box>
+        <Heading size="sm" mb={2}>Select Perspective</Heading>
+        <RadioGroup onChange={setSelectedPerspective} value={selectedPerspective}>
+          <VStack align="start" spacing={3}>
+            {perspectives.map(perspective => (
+              <Radio key={perspective.name} value={perspective.name}>
+                <HStack>
+                  <Text>{perspective.display_name || perspective.name}</Text>
+                  {perspective.name === "synthesized_caption" && (
+                    <Tag size="sm" colorScheme="purple">Dependencies</Tag>
+                  )}
+                </HStack>
+              </Radio>
+            ))}
+          </VStack>
+        </RadioGroup>
+      </Box>
+      
+      <Divider />
+      
+      <Box>
+        <Heading size="sm" mb={2}>Options</Heading>
+        <Checkbox 
+          isChecked={onlyMissingImages} 
+          onChange={(e) => setOnlyMissingImages(e.target.checked)}
+        >
+          Only process images without this perspective
+        </Checkbox>
+      </Box>
+    </VStack>
+  );
+}
+```
+
+### 4. Advanced Options Panel
+
+```typescript
+// graphcap_studio/src/features/batch-queue/components/AdvancedOptionsPanel.tsx
+
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Advanced Options Panel
+ *
+ * Panel for configuring advanced options for batch caption jobs.
+ */
+
+import { useState, useEffect } from "react";
+import {
+  VStack,
+  FormControl,
+  FormLabel,
+  Select,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  Checkbox,
+  HStack,
+  Box
+} from "@chakra-ui/react";
+import { useProviders } from "../hooks/useProviders";
+
+interface AdvancedOptionsPanelProps {
+  onChange: (options: any) => void;
+}
+
+export function AdvancedOptionsPanel({ onChange }: AdvancedOptionsPanelProps) {
+  const { providers, isLoading, error } = useProviders();
+  
+  const [provider, setProvider] = useState("ollama-mac");
+  const [maxTokens, setMaxTokens] = useState(4096);
+  const [temperature, setTemperature] = useState(0.8);
+  const [topP, setTopP] = useState(0.9);
+  const [repetitionPenalty, setRepetitionPenalty] = useState(1.15);
+  const [resize, setResize] = useState(false);
+  const [resizeResolution, setResizeResolution] = useState("HD_720P");
+  
+  // Update parent when any option changes
+  useEffect(() => {
+    onChange({
+      provider,
+      max_tokens: maxTokens,
+      temperature,
+      top_p: topP,
+      repetition_penalty: repetitionPenalty,
+      resize,
+      resize_resolution: resize ? resizeResolution : undefined
+    });
+  }, [
+    provider,
+    maxTokens,
+    temperature,
+    topP,
+    repetitionPenalty,
+    resize,
+    resizeResolution,
+    onChange
+  ]);
+  
+  return (
+    <VStack spacing={4} align="stretch">
+      <FormControl>
+        <FormLabel>Provider</FormLabel>
+        <Select
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+        >
+          {providers?.map(p => (
+            <option key={p.name} value={p.name}>
+              {p.name}
+            </option>
+          )) || (
+            <option value="ollama-mac">ollama-mac</option>
+          )}
+        </Select>
+      </FormControl>
+      
+      <FormControl>
+        <FormLabel>Max Tokens</FormLabel>
+        <NumberInput
+          value={maxTokens}
+          onChange={(_, val) => setMaxTokens(val)}
+          min={1}
+          max={16384}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+      </FormControl>
+      
+      <FormControl>
+        <FormLabel>Temperature: {temperature}</FormLabel>
+        <Slider
+          value={temperature}
+          onChange={setTemperature}
+          min={0}
+          max={2}
+          step={0.1}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </FormControl>
+      
+      <FormControl>
+        <FormLabel>Top P: {topP}</FormLabel>
+        <Slider
+          value={topP}
+          onChange={setTopP}
+          min={0}
+          max={1}
+          step={0.05}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </FormControl>
+      
+      <FormControl>
+        <FormLabel>Repetition Penalty: {repetitionPenalty}</FormLabel>
+        <Slider
+          value={repetitionPenalty}
+          onChange={setRepetitionPenalty}
+          min={1}
+          max={2}
+          step={0.05}
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+      </FormControl>
+      
+      <Box>
+        <Checkbox
+          isChecked={resize}
+          onChange={(e) => setResize(e.target.checked)}
+        >
+          Resize images before processing
+        </Checkbox>
+        
+        {resize && (
+          <Select
+            mt={2}
+            value={resizeResolution}
+            onChange={(e) => setResizeResolution(e.target.value)}
+          >
+            <option value="HD_720P">HD (720p)</option>
+            <option value="FHD_1080P">Full HD (1080p)</option>
+            <option value="QHD_1440P">QHD (1440p)</option>
+            <option value="UHD_4K">4K UHD</option>
+          </Select>
+        )}
+      </Box>
+    </VStack>
+  );
+}
+```
+
+## Integration Points
+
+### 1. Context Menu for Images
+
+```typescript
+// Add to image context menu component
+<Menu>
+  <MenuButton as={IconButton} icon={<MoreIcon />} variant="ghost" />
+  <MenuList>
+    <MenuItem onClick={() => openBatchDialog(imagePath)}>
+      Batch Caption...
+    </MenuItem>
+    {/* Other menu items */}
+  </MenuList>
+</Menu>
+```
+
+### 2. PerspectiveCardTabbed Component Integration
+
+```typescript
+// Add to PerspectiveCardTabbed component
+<HStack spacing={2} alignItems="center">
+  <Heading size="md">{perspective.display_name}</Heading>
+  <IconButton
+    aria-label="Batch process"
+    icon={<QueueIcon />}
+    size="sm"
+    variant="ghost" 
+    onClick={() => openBatchDialog(null, perspective.name)}
+  />
+</HStack>
+```
+
+### 3. Dialog Open Callback
+
+```typescript
+// In main layout component
+const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+const [batchDialogParams, setBatchDialogParams] = useState({
+  initialImage: null,
+  initialPerspective: null
+});
+
+const openBatchDialog = (initialImage = null, initialPerspective = null) => {
+  setBatchDialogParams({ initialImage, initialPerspective });
+  setBatchDialogOpen(true);
+};
+
+// In JSX
+<JobCreationDialog
+  isOpen={batchDialogOpen}
+  onClose={() => setBatchDialogOpen(false)}
+  initialImage={batchDialogParams.initialImage}
+  initialPerspective={batchDialogParams.initialPerspective}
+/>
+```
+
+## UI Design Considerations
+
+1. **Progressive Disclosure**
+   - Simple view focuses on essential selections
+   - Advanced options hidden behind an expandable panel
+   - Clear visual hierarchy for required vs. optional fields
+
+2. **Task-Oriented Interface**
+   - Each tab focuses on a specific operation pattern
+   - Workflow guided by sequential form sections
+   - Estimated processing time to set user expectations
+
+3. **Visual Feedback**
+   - Validation indicators for required fields
+   - Count displays for selected items
+   - Loading indicators during submission
+   - Toast notifications for success/failure
+
+4. **Accessibility**
+   - Proper form labeling and association
+   - Keyboard navigation through tab controls
+   - High contrast elements for important actions
+   - Clear error messages for validation failures
+
+## Implementation Steps
+
+1. Create basic dialog structure and form components
+2. Implement perspective grouping and selection
+3. Add dataset selection with image count display
+4. Integrate provider selection and advanced options
+5. Connect to backend API endpoints
+6. Implement form validation
+7. Add progress indicators and notifications
+8. Integrate with PerspectiveCardTabbed component
+
+This design provides a comprehensive, user-friendly interface for creating batch caption jobs with different operation patterns while following Chakra UI design patterns and supporting progressive disclosure for both simple and advanced use cases.
