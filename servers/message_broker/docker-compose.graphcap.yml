@@ -1,0 +1,43 @@
+# Sample configuration for integrating the message broker into the main GraphCap docker-compose.yml
+
+version: '3.8'
+
+services:
+  graphcap_message_broker:
+    container_name: graphcap_message_broker
+    build:
+      context: ./servers/message_broker
+      dockerfile: Dockerfile.message_broker.dev
+    ports:
+      - "32552:32552"  # HTTP API
+    expose:
+      - "5672"         # AMQP protocol (internal)
+      - "15672"        # Management interface (internal)
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=32552
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_HOST=localhost
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=/
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./servers/message_broker:/app
+    networks:
+      - graphcap
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:32552/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  graphcap:
+    name: graphcap_network 

@@ -1,0 +1,35 @@
+FROM oven/bun:1.0-debian as base
+
+WORKDIR /app
+
+# Install basic utilities for debugging and health checks
+RUN apt-get update && apt-get install -y \
+    lsof \
+    net-tools \
+    netcat-openbsd \
+    procps \
+    wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json bun.lockb* ./
+
+# Install dependencies
+RUN bun install
+
+# Copy source code
+COPY . .
+
+# Make entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
+# Expose ports
+EXPOSE 32552
+
+# Set environment variables with defaults
+ENV PORT=32552
+ENV NODE_ENV=development
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"] 

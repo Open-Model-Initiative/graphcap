@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management interface
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - graphcap
+
+  message_broker:
+    container_name: graphcap_message_broker
+    build:
+      context: .
+      dockerfile: Dockerfile.message_broker.dev
+    ports:
+      - "32552:32552"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=32552
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - ./src:/app/src
+      - ./entrypoint.sh:/app/entrypoint.sh
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:32552/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - graphcap
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  graphcap:
+    name: graphcap
+    external: true 
