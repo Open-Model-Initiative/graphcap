@@ -19,9 +19,8 @@ System Components
 
 graphcap consists of specialized services working together to provide image captioning capabilities:
 
-- **React Client**: Web-based user interface.
-- **Data Service**: Manages database operations, job orchestration, and tracking.
-- **Message Broker**: Handles asynchronous communication and real-time events.
+- **React Client**: Web-based user interface and system orchestrator.
+- **Data Service**: Manages database operations and data persistence.
 - **Inference Bridge**: Performs AI-based image captioning.
 - **Media Server**: Manages image storage, retrieval, and processing.
 
@@ -29,24 +28,28 @@ graphcap consists of specialized services working together to provide image capt
 
    .. code-block:: text
 
-       ┌─────────────────┐
-       │ React Client    │
-       └───────┬─────────┘
-               │ REST/WebSocket
-       ┌───────v─────────┐
-       │ Message Broker  │
-       └─┬─────┬─────┬───┘
-         │     │     │
-         ▼     ▼     ▼
-   ┌───────┐ ┌───────────┐ ┌─────────────┐
-   │ Data  │ │ Inference │ │ Media Server│
-   │Service│ │  Bridge   │ │             │
-   └───┬───┘ └───┬───────┘ └──────┬──────┘
-       │         │                │
-       ▼         ▼                ▼
- ┌──────────┐ ┌─────────────┐ ┌───────────┐
- │PostgreSQL│ │AI Providers │ │ Workspace │
- └──────────┘ └─────────────┘ └───────────┘
+       ┌─────────────────────────────────────┐
+       │           React Client              │
+       │           (Orchestrator)            │
+       └───────┬─────────┬─────────┬─────────┘
+               │         │         │
+               │         │         │
+               ▼         ▼         ▼
+       ┌───────────┐ ┌───────────┐ ┌─────────────┐
+       │  Data     │ │ Inference │ │ Media Server│
+       │  Service  │ │ Bridge    │ │             │
+       └─────┬─────┘ └─────┬─────┘ └──────┬──────┘
+             │             │              │
+             ▼             │              │
+       ┌──────────┐        │              │
+       │PostgreSQL│        │              │
+       └──────────┘        │              │
+                           │              │
+                           ▼              ▼
+                    ┌─────────────────────────┐
+                    │  Workspace Volume       │
+                    │  (Shared Storage)       │
+                    └─────────────────────────┘
 
 
 Communication Flows
@@ -55,79 +58,76 @@ Communication Flows
 REST API Communication
 ----------------------
 
-System REST APIs manage request-response interactions:
+The React Client orchestrates all services through direct REST API calls:
 
-- **Client ↔ Data Service**: Create/manage jobs, query status, handle DB operations.
-- **Client ↔ Media Server**: Upload, browse images, request transformations.
-- **Data Service ↔ Message Broker**: Job queuing and state management.
-- **Inference Bridge ↔ Message Broker**: Job processing, status updates, error handling.
+- **Client ↔ Data Service**: Database operations, caption storage, retrieval.
+- **Client ↔ Inference Bridge**: Caption generation requests and responses.
+- **Client ↔ Media Server**: Image upload, retrieval, processing, file system operations.
 
-Message Queue Communication
----------------------------
+Independent Service Operation
+----------------------------
 
-Asynchronous communication using message queues:
+Each service operates independently without direct communication with other services:
 
-- **Data Service → Inference Bridge**: Caption job requests (`caption.request`).
-- **Inference Bridge → Data Service**: Caption results (`caption.response`).
-- **System-wide Notifications**: Broadcast via `status.update` (fanout pattern).
+- **Data Service**: Persists caption data, handles database operations.
+- **Inference Bridge**: Processes image captioning requests when invoked.
+- **Media Server**: Manages file operations and image processing.
+
+All services directly access the shared workspace volume for file operations.
 
 WebSocket Communication
 -----------------------
 
-Real-time updates through Message Broker:
+Real-time updates may be implemented through direct WebSocket connections:
 
-- **Broker → Client**: Job statuses, progress, queue events.
-- **Client → Broker**: Connection management, event subscriptions, queue updates.
+- **Data Service → Client**: Database updates and events.
+- **Inference Bridge → Client**: Caption processing status.
 
 
 Component Deep Dives
 ====================
 
-Message Broker
---------------
-
-RabbitMQ-based central communication hub:
-
-- Implements AMQP for reliability and durability.
-- Manages direct, topic, fanout exchanges.
-- WebSocket support for real-time client communication.
-- Provides resilience through durable queues and automatic reconnections.
-
 Data Service
 ------------
 
-Manages persistence and job orchestration:
+Manages data persistence and database operations:
 
 - Single source of truth via PostgreSQL.
-- Handles batch job creation, status tracking, retries.
-- Provides REST APIs for data and job management.
+- Stores caption data, metadata, and relationships.
+- Provides REST APIs for data retrieval and modification.
+- Only service with direct PostgreSQL access.
 
 Inference Bridge
 ----------------
 
 Stateless AI caption processing:
 
-- Consumes caption jobs from the message broker.
+- Receives caption requests directly from the client.
 - Communicates with AI providers (Gemini, Ollama, OpenAI).
-- Publishes results back to broker without maintaining internal state.
+- Returns results directly to the client.
+- Remains completely stateless.
+- Reads images from the shared workspace volume.
 
 Media Server
 ------------
 
 Responsible for media asset management:
 
-- Provides file upload, retrieval, and processing.
-- Manages media workspace storage.
+- Provides file upload, retrieval, and processing APIs.
+- Manages workspace directory structure.
 - Generates thumbnails, extracts metadata.
+- Handles all file system operations on the workspace.
 
 React Client
 ------------
 
-Interactive front-end interface:
+Interactive front-end interface and system orchestrator:
 
+- Orchestrates workflow between services.
+- Directly communicates with all services.
+- Manages UI state and user experience.
+- Coordinates business logic and process flow.
 - Utilizes TanStack Query for efficient state management.
-- WebSocket integration for real-time updates.
-- Job queue and progress UI component.
 
 
 

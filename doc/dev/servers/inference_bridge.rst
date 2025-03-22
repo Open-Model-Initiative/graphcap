@@ -9,8 +9,8 @@ The graphcap Inference Bridge is a sophisticated system designed to generate cap
  A perspective represents a specific way of analyzing and describing an image, tailored for particular use cases. 
  The bridge is built on FastAPI and designed to be extensible, supporting various AI model providers and caption perspectives.
 
-**The Inference Bridge is completely stateless** - it does not maintain information about jobs, capture configurations, 
-or persist data to databases. It receives requests, processes them, and returns results without preserving state between requests. It serves as a bridge between the message broker and AI providers, transforming requests into AI model calls and returning structured results.
+**The Inference Bridge is completely stateless** - it does not maintain information about jobs, caption configurations, 
+or persist data to databases. It receives requests, processes them, and returns results without preserving state between requests. It serves as a bridge between the client and AI providers, transforming image caption requests into AI model calls and returning structured results.
 
 Key Components
 =============
@@ -45,39 +45,45 @@ Processing Pipeline
 
 The processing flow works as follows:
 
-1. The bridge receives a message with an image and specified perspective
+1. The bridge receives a REST request with an image and specified perspective
 2. It prepares the image (download/convert as needed)
 3. The selected perspective's prompt is sent with the image to the configured AI provider
 4. Response is parsed according to the perspective's schema
-5. Structured data is returned via the message broker
+5. Structured data is returned directly to the client via the REST API response
 
 Architecture Diagram
 ===================
 
 ::
 
-    ┌────────────────┐     ┌─────────────────┐     ┌─────────────────────────────┐
-    │                │     │                 │     │                             │
-    │  Client        │────▶│  Message Broker │────▶│  Inference Bridge (Stateless)│
-    │  Applications  │     │  (RabbitMQ)     │◀────│                             │
-    │                │     │                 │     │                             │
-    └───────┬────────┘     └────────┬────────┘     └─────────────────────────────┘
-            │                       ▲                            │
-            │                       │                            │
-            │                       │                            ▼
-            │                       │                  ┌─────────────────────┐
-            │                       │                  │                     │
-            │                       └──────────────────│   AI Providers      │
-            │                                          │                     │
-            │                                          └─────────────────────┘
+    ┌────────────────┐                     ┌─────────────────────────────┐
+    │                │      REST API       │                             │
+    │  React Client  │────────────────────▶│  Inference Bridge           │
+    │ (Orchestrator) │◀────────────────────│  (Stateless)                │
+    │                │                     │                             │
+    └───────┬────────┘                     └─────────────┬───────────────┘
+            │                                            │
+            │                                            │
+            │                                            ▼
+            │                                  ┌─────────────────────┐
+            │                                  │                     │
+            │                                  │   AI Providers      │
+            ▼                                  │                     │
+    ┌───────────────┐                         └─────────────────────┘
+    │  Data Service │
+    │               │
+    └───────┬───────┘
             │
-            │
-    ┌───────▼────────┐
-    │                │
-    │  Data Service  │
-    │  (Job Manager) │
-    │                │
-    └────────────────┘
+            ▼
+    ┌──────────────┐
+    │  PostgreSQL  │
+    │  Database    │
+    └──────────────┘
+
+    ┌────────────────────────────────────────────┐
+    │             Workspace Volume               │
+    │ (Accessed by all services independently)   │
+    └────────────────────────────────────────────┘
 
 Internal Bridge Components::
 
@@ -120,25 +126,25 @@ Internal Bridge Components::
     │  └─────────────┘  └───────────────┘ │
     └─────────────────────────────────────┘
 
-Stateless Design and Broker Integration
+Stateless Design
 ======================================
 
-Message Broker Integration
+REST API Design
 -------------------------
 
-The Inference Bridge integrates with a message broker (RabbitMQ) to maintain its stateless nature:
+The Inference Bridge maintains its stateless nature through a well-defined REST API:
 
-1. **Message-Based Communication**: All caption requests come through the message broker, which handles message routing.
+1. **Request-Response Pattern**: Each caption request is a self-contained HTTP transaction.
 
-2. **Complete Request Packages**: Each message contains all necessary information to process a request:
-   * Image data or references
-   * Perspective configuration
+2. **Complete Request Packages**: Each request contains all necessary information to process the caption:
+   * Image data or references (file paths, URLs, or base64-encoded data)
+   * Perspective specification
    * Provider selection
    * Processing parameters
 
-3. **Response Routing**: After processing, results are published back to the broker, which routes them to the appropriate service.
+3. **Independent Processing**: Each request is processed independently without knowledge of previous requests.
 
-4. **No Persistent Connections**: The bridge doesn't maintain persistent connections to clients, enhancing scalability.
+4. **No Session State**: The service doesn't maintain session state between requests.
 
 Maintaining Statelessness
 ------------------------
@@ -157,73 +163,63 @@ The Inference Bridge achieves complete statelessness through:
 
 5. **No Cross-Request Dependencies**: Each request is processed independently without relying on data from previous requests.
 
-Batch Processing and Division of Responsibilities
-------------------------------------------------
+Division of Responsibilities
+---------------------------
 
-The Inference Bridge does **not** handle batch processing directly. The responsibility for batch job management is divided as follows:
+The Inference Bridge maintains a clear separation of responsibilities:
 
-1. **Data Service**:
-   * **Job Management Role**:
-     * Maintains job queues and state
-     * Stores job configurations and progress
-     * Breaks batch jobs into individual caption requests
-     * Publishes individual requests to the message broker
-     * Tracks completion status across multiple images
-     * Handles retries and failures
-   
-   * **Data Storage Role**:
-     * Persists all caption results to PostgreSQL database
-     * Maintains relationships between images, captions, and perspectives
-     * Provides data access APIs to clients
-     * Manages data retention policies
-     * Serves as the system's single source of truth for caption data
+1. **React Client**:
+   * Acts as the system orchestrator
+   * Sends caption requests to the Inference Bridge
+   * Receives and processes caption results
+   * Coordinates the overall workflow
+   * Manages user interface and interactions
 
-2. **Message Broker**:
-   * Routes individual caption requests to available Inference Bridge instances
-   * Handles message distribution and delivery guarantees
-   * Returns results to the Data Service
+2. **Data Service**:
+   * Stores caption results in PostgreSQL
+   * Maintains relationships between images, captions, and perspectives
+   * Provides data access APIs to the React Client
+   * Manages job tracking and status in database tables
+   * Serves as the system's single source of truth for caption data
 
 3. **Inference Bridge**:
-   * Processes individual caption requests without knowledge of batch context
+   * Processes individual caption requests
    * Handles only single-image caption generation
-   * Returns results for each individual request
+   * Returns results directly to the client
    * Maintains no state between requests
+   * Accesses the workspace volume for image files when needed
 
-This separation of concerns ensures that the Inference Bridge remains completely stateless while the Data Service handles both orchestration of jobs and persistence of the resulting data.
+This separation of concerns ensures that the Inference Bridge remains completely stateless while the Data Service handles persistence and the React Client handles orchestration.
 
-Client-Broker-Bridge Flow
-------------------------
+Client-Bridge Interaction Flow
+-----------------------------
 
 The typical flow for image processing is:
 
-1. **Client Request**: Client applications submit caption requests to the Data Service, which may manage batches.
+1. **Client Request**: The React Client sends a caption request directly to the Inference Bridge.
 
-2. **Request Decomposition**: For batch requests, the Data Service breaks them into individual caption requests.
+2. **Image Processing**: The bridge processes the image with the specified perspective and AI provider.
 
-3. **Message Publishing**: The Data Service publishes individual requests to the message broker.
+3. **Result Generation**: Structured caption data is generated by the AI provider.
 
-4. **Message Consumption**: The Inference Bridge consumes messages from the broker when ready to process new requests.
+4. **Direct Response**: Results are returned directly to the React Client in the API response.
 
-5. **Complete Processing**: The bridge processes each request with all required information contained in the message.
+5. **Data Persistence**: The React Client may optionally send the results to the Data Service for storage.
 
-6. **Result Publication**: The structured caption data is published back to the broker.
-
-7. **Result Aggregation**: For batch requests, the Data Service aggregates individual results and updates the job status.
-
-8. **Client Notification**: The Data Service notifies the client when results are available.
+6. **Job Tracking**: For batch operations, the React Client coordinates with the Data Service to track progress.
 
 Scaling and Load Balancing
 -------------------------
 
 This architecture facilitates horizontal scaling:
 
-1. **Multiple Inference Bridge Instances**: Multiple stateless bridges can consume from the same queues.
+1. **Multiple Inference Bridge Instances**: Multiple stateless bridges can be deployed behind a load balancer.
 
-2. **Natural Load Balancing**: The broker distributes messages among available bridge instances.
+2. **Independent Scaling**: Inference bridges can be scaled independently of other system components.
 
-3. **Independent Scaling**: Inference bridges can be scaled independently of other system components.
+3. **Zero Downtime Deployment**: Bridge instances can be added or removed without system disruption.
 
-4. **Zero Downtime Deployment**: Bridge instances can be added or removed without system disruption.
+4. **Load Balancer Distribution**: A standard HTTP load balancer can distribute requests among instances.
 
 Implementation Details
 =====================
@@ -264,6 +260,7 @@ Image Processing
 
 The bridge includes utilities for:
 
+* Accessing images from the workspace volume
 * Downloading images from URLs
 * Processing base64-encoded images
 * Creating temporary files for processing
@@ -284,10 +281,10 @@ A key feature of the system is the ability to generate structured output via:
 API Structure
 ============
 
-Direct REST API
---------------
+REST API
+-------
 
-While the broker pattern is the primary method of interaction, the bridge also exposes several key API endpoints for direct communication:
+The Inference Bridge exposes several key API endpoints:
 
 * ``/perspectives/list``: Get available perspectives
 * ``/perspectives/{name}/caption``: Generate a caption using a specific perspective
@@ -295,7 +292,7 @@ While the broker pattern is the primary method of interaction, the bridge also e
 * ``/providers/list``: Get available AI providers
 * ``/providers/{name}/models``: Get models available for a specific provider
 
-These endpoints form an API for image captioning and analysis, useful for testing and direct integration.
+These endpoints form an API for image captioning and analysis that the React Client uses directly.
 
 WebSocket Support
 ----------------
@@ -305,22 +302,12 @@ The bridge also supports WebSocket connections for:
 * Real-time updates during processing
 * Streaming responses from AI models that support it
 
-Message Queue Endpoints
----------------------
-
-In addition to the REST API, the bridge listens on configured message queues:
-
-* ``caption.request``: For single image caption generation requests
-* ``analyze.request``: For single image multi-perspective analysis requests
-
-The bridge deliberately does not expose or process batch-specific endpoints. All batch management is handled by the Data Service, with the bridge processing only individual image requests.
-
 Data Flow
 =========
 
-1. **Message Reception**: The bridge consumes a message from the broker containing a complete request payload for a single image.
+1. **Request Reception**: The bridge receives an HTTP request containing a complete caption payload.
 
-2. **Image Acquisition**: The image is retrieved based on the information in the message (URL, base64 data, or file path).
+2. **Image Acquisition**: The image is retrieved based on the information in the request (workspace path, URL, or base64 data).
 
 3. **Perspective Loading**: The specified perspective is loaded from the configuration files or the request payload.
 
@@ -330,7 +317,7 @@ Data Flow
 
 6. **Response Processing**: The response is parsed according to the perspective schema.
 
-7. **Result Publication**: The structured caption data is published back to the broker.
+7. **Result Delivery**: The structured caption data is returned in the HTTP response.
 
 8. **Resource Cleanup**: All temporary resources are released after processing.
 
@@ -341,21 +328,21 @@ The Inference Bridge is containerized using Docker, with the following key compo
 
 * Base image: ``python:3.12-slim``
 * Package management: ``uv`` tool
-* Core dependencies: ``fastapi``, ``uvicorn``, ``pydantic``, ``aio-pika`` (for RabbitMQ)
+* Core dependencies: ``fastapi``, ``uvicorn``, ``pydantic``
 * Model-specific dependencies configured per provider
 
-Multiple instances can be deployed behind a load balancer or connected to the same message broker for horizontal scaling.
+Multiple instances can be deployed behind a load balancer for horizontal scaling.
 
 Security Considerations
 ======================
 
-* **Message Authentication**: Messages from the broker are verified for authenticity
 * **Input Validation**: All input payloads are validated before processing
 * **No Persistent Secrets**: API keys and credentials are provided at runtime and not stored
 * **Isolated Processing**: Each request is processed in isolation
+* **Path Validation**: Workspace file paths are validated to prevent directory traversal
 
 Conclusion
 =========
 
-The graphcap Inference Bridge provides a powerful, flexible, and completely stateless system for generating structured captions from images using various AI providers. By integrating with a message broker, it maintains high scalability and resilience while eliminating the need for state management or database interactions. The clear separation of responsibilities between the Inference Bridge (stateless caption generation) and the Data Service (stateful job management) creates a robust architecture that allows for easy horizontal scaling and seamless deployment in various environments.
+The graphcap Inference Bridge provides a powerful, flexible, and completely stateless system for generating structured captions from images using various AI providers. By maintaining a stateless REST API design, it achieves high scalability and resilience while eliminating the need for state management or database interactions. The clear separation of responsibilities between the client (orchestration), the Inference Bridge (stateless caption generation), and the Data Service (persistence) creates a robust architecture that allows for easy horizontal scaling and seamless deployment in various environments.
 

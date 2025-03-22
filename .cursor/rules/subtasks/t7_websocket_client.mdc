@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: false
 ---
+---
+description: 
+globs: 
+alwaysApply: false
+---
 
 # WebSocket Integration with TanStack Query and Hono for Batch Captioning
 

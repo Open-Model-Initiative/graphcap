@@ -6,8 +6,8 @@ Overview
 ========
 
 The Data Service is a core component of the graphcap system with a dual role: it serves as both a **data persistence layer**
- for all application content and a **job orchestration system** for batch processing workflows. It provides a REST API for 
- data access and job queue management while persisting all application data in a PostgreSQL database.
+ for all application content and a **database access service** for the React client. It provides a REST API for 
+ data access and job tracking while persisting all application data in a PostgreSQL database.
 
 This document details the architecture, components, and interactions of the Data Service within the graphcap ecosystem.
 
@@ -23,43 +23,43 @@ The Data Service fulfills two critical responsibilities:
    - Provides APIs for data querying and manipulation
    - Ensures data integrity and manages retention policies
 
-2. **Job Orchestration**
-   - Manages the complete lifecycle of batch caption jobs
-   - Handles job queue prioritization and scheduling
-   - Breaks down batch jobs into individual tasks for the Inference Bridge
-   - Tracks job progress and aggregates results
-   - Provides real-time status updates to clients
-   - Implements retry strategies and failure handling
+2. **Job Tracking**
+   - Stores the metadata and status for batch caption jobs
+   - Maintains database tables for job queue prioritization
+   - Records individual task status and results
+   - Provides APIs for job status retrieval and management
+   - Implements database-level job status tracking
 
-These dual responsibilities create a clear separation of concerns where the Data Service handles all stateful operations, 
-allowing the Inference Bridge to remain completely stateless.
+These responsibilities allow the Data Service to act as the persistence layer while the React Client serves as the system orchestrator.
 
 Architecture Components
 ======================
 
 .. code-block:: text
 
-   ┌────────────────────────────────────────────────────────┐
-   │                    Data Service                         │
-   │                                                         │
-   │  ┌─────────────┐      ┌──────────────┐     ┌────────┐  │
-   │  │             │      │              │     │        │  │
-   │  │  Hono API   ├──────┤  Repository  ├─────┤ Drizzle│  │
-   │  │   Layer     │      │    Layer     │     │   ORM  │  │
-   │  │             │      │              │     │        │  │
-   │  └──────┬──────┘      └──────────────┘     └────┬───┘  │
-   │         │                                      │        │
-   │  ┌──────┴──────┐                          ┌───┴────┐   │
-   │  │ Notification│                          │PostgreSQL│  │
-   │  │  Service    │                          │Database  │  │
-   │  └──────┬──────┘                          └─────────┘  │
-   │         │                                               │
-   └─────────┼───────────────────────────────────────────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │  Message Broker  │
-    └──────────────────┘
+   ┌──────────────────────────────────────────────────────┐
+   │                    Data Service                       │
+   │                                                       │
+   │  ┌─────────────┐      ┌──────────────┐     ┌────────┐│
+   │  │             │      │              │     │        ││
+   │  │  Hono API   ├──────┤  Repository  ├─────┤ Drizzle││
+   │  │   Layer     │      │    Layer     │     │   ORM  ││
+   │  │             │      │              │     │        ││
+   │  └─────────────┘      └──────────────┘     └────┬───┘│
+   │                                                 │    │
+   │                                            ┌────┴───┐│
+   │                                            │Postgres││
+   │                                            │Database││
+   │                                            └────────┘│
+   │                                                      │
+   └──────────────────────────────────────────────────────┘
+                            ▲
+                            │
+                            ▼
+                    ┌───────────────┐
+                    │  React Client │
+                    │ (Orchestrator)│
+                    └───────────────┘
 
 
 Core Components
@@ -81,9 +81,6 @@ Core Components
    - Handles SQL query generation
    - Manages schema migrations
 
-4. **Notification Service**
-   - Publishes data change events to the Message Broker
-   - Ensures services stay in sync when data changes
 
 Database Schema
 ==============
@@ -164,7 +161,7 @@ Batch Captioning Queue
      - Description
    * - /api/perspectives/batch/create
      - POST
-     - Create a new batch caption job
+     - Create a new batch caption job record
    * - /api/perspectives/batch/list
      - GET
      - List active jobs with pagination and filters
@@ -173,7 +170,7 @@ Batch Captioning Queue
      - Get detailed job status including items
    * - /api/perspectives/batch/cancel/:jobId
      - POST
-     - Cancel a pending or running job
+     - Mark a job as cancelled in the database
    * - /api/perspectives/batch/reorder
      - POST
      - Change job queue order or priorities
@@ -188,7 +185,7 @@ Batch Captioning Queue
      - Restore an archived job
    * - /api/perspectives/batch/retry-failed/:jobId
      - POST
-     - Retry failed items within a job
+     - Mark failed items for retry
    * - /api/perspectives/batch/statistics
      - GET
      - Get queue statistics
@@ -205,7 +202,7 @@ Job Item Operations
      - Description
    * - /api/perspectives/batch/items/:itemId
      - POST
-     - Update an individual job item (internal API)
+     - Update an individual job item status
    * - /api/perspectives/batch/items/:jobId/list
      - GET
      - List all items for a specific job
@@ -213,31 +210,19 @@ Job Item Operations
      - GET
      - List only failed items for a job
 
-Communication with Message Broker
-================================
+WebSocket Endpoints
+------------------
 
-The Data Service notifies the Message Broker about data changes through HTTP requests:
+The Data Service may also provide WebSocket endpoints for real-time updates:
 
-.. code-block:: text
+.. list-table::
+   :header-rows: 1
+   :widths: 30 30
 
-   ┌──────────────┐          ┌──────────────┐
-   │              │   HTTP   │              │
-   │ Data Service ├─────────►│Message Broker│
-   │              │ POST     │              │
-   └──────────────┘          └──────────────┘
-
-Event Publishing
---------------
-
-1. **Job Creation Events**
-   - When a new job is created, the Data Service sends a ``JOB_CREATED`` event
-
-2. **Job Status Change Events**
-   - When job status changes (completed, failed, cancelled)
-   - Includes relevant job metadata
-
-3. **Job Progress Events**
-   - When job progress is updated by the Inference Server
+   * - Endpoint
+     - Description
+   * - /api/ws/job-updates
+     - Provides real-time job status and progress updates
 
 Implementation Stack
 ===================
@@ -268,9 +253,6 @@ The Data Service is configured using environment variables:
      - 32550
    * - DATABASE_URL
      - PostgreSQL connection string
-     - None
-   * - MESSAGE_BROKER_URL
-     - URL of the Message Broker service
      - None
    * - NODE_ENV
      - Environment (development/production)
@@ -303,7 +285,6 @@ The Data Service is containerized using Docker:
        - NODE_ENV=development
        - PORT=32550
        - DATABASE_URL=postgresql://user:password@graphcap_postgres:5432/graphcap
-       - MESSAGE_BROKER_URL=http://graphcap_message_broker:32552
        - WORKSPACE_PATH=/workspace
        - MAX_CONCURRENT_JOBS=2
        - MAX_CONCURRENT_ITEMS=4
@@ -321,54 +302,3 @@ The Data Service is containerized using Docker:
        timeout: 10s
        retries: 3
        start_period: 30s
-
-Error Handling
-=============
-
-The Data Service implements robust error handling:
-
-1. **Request Validation Errors**
-   - Schema validation using zod
-   - Detailed error messages for invalid requests
-
-2. **Database Errors**
-   - Transaction rollback on failure
-   - Error logging with context
-   - Appropriate HTTP status codes
-
-3. **Service Communication Errors**
-   - Retry logic for message broker communication
-   - Fallback mechanisms for temporary failures
-
-Performance Considerations
-=========================
-
-1. **Connection Pooling**
-   - Optimized PostgreSQL connection pool
-   - Configurable pool size based on load
-
-2. **Query Optimization**
-   - Indexes on frequently accessed columns
-   - Pagination for large result sets
-   - Efficient joins and filters
-
-3. **Caching Strategies**
-   - In-memory caching for frequently accessed data
-   - Conditional HTTP caching headers
-
-
-Monitoring and Logging
-=====================
-
-1. **Health Check Endpoint**
-   - ``/health`` endpoint for container orchestration
-   - Database connectivity check
-
-2. **Structured Logging**
-   - JSON format logs with correlation IDs
-   - Log levels configurable via environment
-
-3. **Metrics**
-   - Request count and latency metrics
-   - Queue size and processing metrics
-   - Error rate tracking
