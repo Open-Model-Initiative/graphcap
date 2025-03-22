@@ -244,13 +244,12 @@ Implementation Stack
 
 The Data Service is built using the following technologies:
 
-- **Node.js**: Runtime environment
+- **Bun**: Runtime environment
 - **TypeScript**: Programming language
 - **Hono.js**: Lightweight, high-performance API framework
 - **Drizzle ORM**: Type-safe SQL query builder
 - **PostgreSQL**: Relational database
 - **zod**: Schema validation for API requests
-- **axios**: HTTP client for service-to-service communication
 
 Configuration
 ============
