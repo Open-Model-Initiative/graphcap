@@ -5,18 +5,19 @@
  * Main Hono application setup with middleware and routes.
  */
 
-import { cors } from 'hono/cors';
-import { secureHeaders } from 'hono/secure-headers';
-import { prettyJSON } from 'hono/pretty-json';
-import { timing } from 'hono/timing';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { z } from 'zod';
 import { apiReference } from '@scalar/hono-api-reference';
+import { cors } from 'hono/cors';
+import { prettyJSON } from 'hono/pretty-json';
+import { secureHeaders } from 'hono/secure-headers';
+import { timing } from 'hono/timing';
+import { z } from 'zod';
 
-import { env } from './env';
-import { logger } from './utils/logger';
+import { batchQueueRoutes } from './api/routes/batch_queue';
 import { providerRoutes } from './api/routes/providers';
 import { checkDatabaseConnection } from './db/init';
+import { env } from './env';
+import { logger } from './utils/logger';
 
 // Create OpenAPI Hono app
 const app = new OpenAPIHono();
@@ -136,6 +137,7 @@ app.openapi(dbHealthCheckRoute, async (c) => {
 
 // API routes with v1 prefix
 app.route(`${env.API_PREFIX}/v1/providers`, providerRoutes);
+app.route(`${env.API_PREFIX}/v1/perspectives/batch`, batchQueueRoutes);
 
 // OpenAPI documentation
 app.doc('openapi', {
@@ -143,7 +145,7 @@ app.doc('openapi', {
   info: {
     title: 'GraphCap Data Service API',
     version: '1.0.0',
-    description: 'API for managing GraphCap provider configurations',
+    description: 'API for managing GraphCap provider configurations and batch perspective jobs',
   },
   servers: [
     {

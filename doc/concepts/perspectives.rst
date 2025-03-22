@@ -1,8 +1,8 @@
 ===========================
-Perspectives in GraphCap
+Perspectives in graphcap
 ===========================
 
-Think of a perspective as a unique way of looking at and describing an image. Just like how a photographer, an art critic, and a child might describe the same photograph differently, GraphCap uses different perspectives to capture various aspects of what makes an image meaningful.
+Think of a perspective as a unique way of looking at and describing an image. Just like how a photographer, an art critic, and a child might describe the same photograph differently, graphcap uses different perspectives to capture various aspects of what makes an image meaningful.
 
 What's in a Perspective?
 =======================
@@ -28,7 +28,7 @@ Each perspective has its own:
 The Perspective Ecosystem
 ========================
 
-Perspectives in GraphCap are organized into modules that group related perspectives together. This organization makes it easier to:
+Perspectives in graphcap are organized into modules that group related perspectives together. This organization makes it easier to:
 
 - Find perspectives relevant to your interests
 - Enable or disable entire families of perspectives
@@ -45,7 +45,7 @@ Examples of modules include:
 Built-in Perspectives
 ===================
 
-GraphCap comes with a diverse set of built-in perspectives, each designed for specific use cases:
+graphcap comes with a diverse set of built-in perspectives, each designed for specific use cases:
 
 Graph Caption
 ------------
@@ -89,7 +89,7 @@ Working with Perspectives
 
 Discovering and Selecting
 ------------------------
-GraphCap offers an intuitive way to browse and select perspectives:
+graphcap offers an intuitive way to browse and select perspectives:
 
 - Browse by module to find related perspectives
 - Filter by tags to find perspectives for specific needs
@@ -107,13 +107,13 @@ Perspectives work best when they complement each other. You might use:
 Local Development and Customization
 =================================
 
-GraphCap allows you to create and test new perspectives locally before sharing them more broadly:
+graphcap allows you to create and test new perspectives locally before sharing them more broadly:
 
 Perspective Workspace
 -------------------
 Your perspective library can include both:
 
-- Standard perspectives from the GraphCap library
+- Standard perspectives from the graphcap library
 - Local perspectives you're developing or customizing
 
 This separation lets you experiment with new ideas while keeping the main system stable.
@@ -193,7 +193,7 @@ As your needs evolve, perspectives can too:
 Real-World Usage
 ==============
 
-GraphCap perspectives are designed to be useful in real-world applications:
+graphcap perspectives are designed to be useful in real-world applications:
 
 - **Content Creation**: Generate rich, varied descriptions for creative projects
 - **Accessibility**: Provide detailed image descriptions for visually impaired users
