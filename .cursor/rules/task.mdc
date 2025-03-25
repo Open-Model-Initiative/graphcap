@@ -4,4 +4,13 @@ globs:
 alwaysApply: true
 ---
 # Task
-Add your task for the agent here.
+Provider configuration still relies on some file based configuration.
+
+### Describe the solution you'd like
+- Utilize the UI / DB for provider configuration
+- Remove all old provider handling code
+- Resolve issues cited in discord related to provider ux
+
+
+[provider_manager.py](mdc:servers/inference_server/graphcap/providers/provider_manager.py)
+[provider_config.py](mdc:servers/inference_server/graphcap/providers/provider_config.py)

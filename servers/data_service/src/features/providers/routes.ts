@@ -7,9 +7,9 @@
 
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
-import * as handlers from '../controllers/providers';
-import { providerSchema, providerCreateSchema, providerUpdateSchema, providerApiKeySchema } from '../schemas/providers';
-import { commonResponses, notFoundResponse, invalidRequestResponse, successResponse } from '../schemas/common';
+import { commonResponses, invalidRequestResponse, notFoundResponse, successResponse } from '../../api/schemas/common';
+import * as handlers from './controller';
+import { providerApiKeySchema, providerCreateSchema, providerSchema, providerUpdateSchema } from './schemas';
 
 // Create a new OpenAPI router
 const router = new OpenAPIHono();

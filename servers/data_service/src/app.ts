@@ -14,9 +14,9 @@ import { timing } from 'hono/timing';
 import { z } from 'zod';
 
 import { batchQueueRoutes } from './api/routes/batch_queue';
-import { providerRoutes } from './api/routes/providers';
 import { checkDatabaseConnection } from './db/init';
 import { env } from './env';
+import { providerRoutes } from './features/providers/routes';
 import { logger } from './utils/logger';
 
 // Create OpenAPI Hono app

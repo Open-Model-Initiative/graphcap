@@ -15,7 +15,7 @@ import type {
 	ProviderApiKey,
 	ProviderCreate,
 	ProviderUpdate,
-} from "../schemas/providers";
+} from "./schemas";
 
 // Type for the validated parameters
 type ValidatedParams = {
