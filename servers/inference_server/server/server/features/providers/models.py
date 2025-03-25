@@ -5,7 +5,7 @@ Providers API Models
 Defines data models for the providers API endpoints.
 """
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -37,3 +37,23 @@ class ProviderModelsResponse(BaseModel):
 
     provider: str = Field(..., description="Name of the provider")
     models: List[ModelInfo] = Field(..., description="List of available models")
+
+
+class ProviderConfig(BaseModel):
+    """Provider configuration model."""
+    
+    name: str = Field(..., description="Unique identifier for the provider")
+    kind: str = Field(..., description="Type of provider (e.g., 'openai', 'anthropic', 'gemini')")
+    environment: str = Field(..., description="Provider environment (cloud, local)")
+    base_url: str = Field(..., description="Base URL for the provider API")
+    api_key: str = Field(..., description="API key for the provider")
+    default_model: Optional[str] = Field(None, description="Default model for the provider")
+    models: List[str] = Field(default_factory=list, description="List of available model IDs")
+    fetch_models: bool = Field(default=True, description="Whether to fetch models from the provider API")
+    rate_limits: Optional[dict] = Field(None, description="Rate limiting configuration")
+
+
+class ProviderConfigureRequest(BaseModel):
+    """Request model for configuring a provider."""
+    
+    config: ProviderConfig = Field(..., description="Provider configuration")
