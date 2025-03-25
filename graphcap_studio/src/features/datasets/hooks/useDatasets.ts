@@ -5,9 +5,9 @@ import {
 	useListDatasets,
 } from "@/services/dataset";
 import { getQueryClient } from "@/utils/queryClient";
+import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 /**
  * Custom hook for managing datasets
@@ -96,10 +96,10 @@ export function useDatasets() {
 				setSelectedDataset(name);
 				setSelectedSubfolder(null);
 
-				toast.success(`Created dataset ${name}`);
+				toast.success({ title: `Created dataset ${name}` });
 			} catch (error) {
 				console.error("Failed to create dataset:", error);
-				toast.error(`Failed to create dataset: ${(error as Error).message}`);
+				toast.error({ title: `Failed to create dataset: ${(error as Error).message}` });
 				throw error;
 			}
 		},
@@ -120,17 +120,17 @@ export function useDatasets() {
 				});
 
 				if (result.success) {
-					toast.success(
-						result.message ??
-							`Image added to dataset ${targetDataset} successfully`,
-					);
+					toast.success({
+						title: result.message ??
+							`Image added to dataset ${targetDataset} successfully`
+					});
 				} else {
-					toast.error(result.message ?? "Failed to add image to dataset");
+					toast.error({ title: result.message ?? "Failed to add image to dataset" });
 				}
 			} catch (error) {
-				toast.error(
-					`Failed to add image to dataset: ${(error as Error).message}`,
-				);
+				toast.error({
+					title: `Failed to add image to dataset: ${(error as Error).message}`
+				});
 				console.error("Error adding image to dataset:", error);
 			}
 		},
@@ -151,11 +151,11 @@ export function useDatasets() {
 				// After refresh, identify new images and mark them as recently uploaded
 				if (currentDataset?.images) {
 					const newRecentImages = new Set(recentlyUploadedImages);
-					currentDataset.images.forEach((image) => {
+					for (const image of currentDataset.images) {
 						// Add all images from the current dataset to the recent set
 						// In a real implementation, you might want to be more selective
 						newRecentImages.add(image.path);
-					});
+					}
 					setRecentlyUploadedImages(newRecentImages);
 
 					// Clear the recent uploads set after 5 minutes

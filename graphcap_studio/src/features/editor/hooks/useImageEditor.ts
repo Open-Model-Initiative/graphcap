@@ -1,9 +1,9 @@
 import { queryKeys } from "@/services/dataset";
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
+import { toast } from "@/utils/toast";
 import { useQueryClient } from "@tanstack/react-query";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 
 interface UseImageEditorProps {
 	selectedDataset: string | null;
@@ -28,7 +28,7 @@ export function useImageEditor({ selectedDataset }: UseImageEditorProps) {
 		if (selectedImage) {
 			setIsEditing(true);
 		} else {
-			toast.error("Please select an image to edit");
+			toast.error({ title: "Please select an image to edit" });
 		}
 	}, []);
 
@@ -36,7 +36,7 @@ export function useImageEditor({ selectedDataset }: UseImageEditorProps) {
 	 * Save edited image
 	 */
 	const handleSave = useCallback(() => {
-		toast.success("Image saved successfully");
+		toast.success({ title: "Image saved successfully" });
 		setIsEditing(false);
 
 		// Invalidate cache for this dataset to refresh the images

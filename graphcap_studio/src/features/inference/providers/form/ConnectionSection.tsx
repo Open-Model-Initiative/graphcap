@@ -88,6 +88,8 @@ export function ConnectionSection() {
 								id="apiKey"
 								type={showApiKey ? "text" : "password"}
 								pe="4.5rem"
+								required
+								placeholder="Enter API key"
 							/>
 							<InputElement placement="end" width="4.5rem">
 								<Button h="1.75rem" size="sm" onClick={toggleShowApiKey}>
@@ -95,7 +97,7 @@ export function ConnectionSection() {
 								</Button>
 							</InputElement>
 						</Group>
-						<Field.ErrorText>{errors.apiKey?.message}</Field.ErrorText>
+						<Field.ErrorText>{errors.apiKey?.message || (field.value === "" && "API key is required")}</Field.ErrorText>
 					</Field.Root>
 				)}
 			/>

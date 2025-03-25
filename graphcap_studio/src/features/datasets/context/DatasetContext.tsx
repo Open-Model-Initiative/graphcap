@@ -2,6 +2,7 @@
 import type { Dataset } from "@/services/dataset";
 import { useAddImageToDataset, useCreateDataset } from "@/services/dataset";
 import type { Image } from "@/services/images";
+import { toast } from "@/utils/toast";
 import {
 	type ReactNode,
 	createContext,
@@ -11,7 +12,6 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { toast } from "sonner";
 
 /**
  * Interface for the dataset context state
@@ -121,17 +121,17 @@ export function DatasetProvider({
 				});
 
 				if (result.success) {
-					toast.success(
-						result.message ??
-							`Image added to dataset ${targetDataset} successfully`,
-					);
+					toast.success({
+						title: result.message ??
+							`Image added to dataset ${targetDataset} successfully`
+					});
 				} else {
-					toast.error(result.message ?? "Failed to add image to dataset");
+					toast.error({ title: result.message ?? "Failed to add image to dataset" });
 				}
 			} catch (error) {
-				toast.error(
-					`Failed to add image to dataset: ${(error as Error).message}`,
-				);
+				toast.error({
+					title: `Failed to add image to dataset: ${(error as Error).message}`
+				});
 				console.error("Error adding image to dataset:", error);
 			}
 		},
@@ -149,10 +149,10 @@ export function DatasetProvider({
 
 				// Otherwise use the mutation from dataset service
 				await createDatasetMutation.mutateAsync(name);
-				toast.success(`Created dataset ${name}`);
+				toast.success({ title: `Created dataset ${name}` });
 			} catch (error) {
 				console.error("Failed to create dataset:", error);
-				toast.error(`Failed to create dataset: ${(error as Error).message}`);
+				toast.error({ title: `Failed to create dataset: ${(error as Error).message}` });
 				throw error;
 			}
 		},

@@ -1,9 +1,9 @@
 import { useUploadImage } from "@/services/images";
+import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 // TODO: RESOLVE OLD DATASET NAME SYSTEM
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { toast } from "sonner";
 
 export interface UseImageUploaderProps {
 	readonly datasetName: string;
@@ -48,9 +48,9 @@ export function useImageUploader({
 
 			// Initialize progress for each file
 			const initialProgress: Record<string, number> = {};
-			acceptedFiles.forEach((file) => {
+			for (const file of acceptedFiles) {
 				initialProgress[file.name] = 0;
-			});
+			}
 			setUploadProgress(initialProgress);
 
 			// Process files sequentially to avoid overwhelming the server
@@ -73,7 +73,7 @@ export function useImageUploader({
 					}));
 
 					// Show success toast for each file
-					toast.success(`Uploaded ${file.name}`);
+					toast.success({ title: `Uploaded ${file.name}` });
 				} catch (error) {
 					console.error(`Error uploading ${file.name}:`, error);
 					failedUploads.push(file.name);
@@ -85,25 +85,25 @@ export function useImageUploader({
 					}));
 
 					// Show error toast
-					toast.error(`Failed to upload ${file.name}`);
+					toast.error({ title: `Failed to upload ${file.name}` });
 				}
 			}
 
 			// Show summary toast
 			if (failedUploads.length === 0) {
 				if (totalFiles > 1) {
-					toast.success(`Successfully uploaded all ${totalFiles} images`);
+					toast.success({ title: `Successfully uploaded all ${totalFiles} images` });
 				}
 			} else {
-				toast.error(
-					`Failed to upload ${failedUploads.length} of ${totalFiles} images`,
-				);
+				toast.error({
+					title: `Failed to upload ${failedUploads.length} of ${totalFiles} images`,
+				});
 			}
 
 			setIsUploading(false);
 			onUploadComplete();
 		},
-		[datasetName, onUploadComplete],
+		[datasetName, onUploadComplete, uploadImageMutation.mutateAsync],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({

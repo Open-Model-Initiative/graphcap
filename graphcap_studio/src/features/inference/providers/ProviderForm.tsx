@@ -1,3 +1,4 @@
+import { handleApiError } from "@/utils/error-handler";
 import { Box, Button, Flex } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { memo, useState } from "react";
@@ -6,7 +7,11 @@ import { FormFields } from "./FormFields";
 import { ProviderConnectionErrorDialog } from "./components/ProviderConnectionErrorDialog";
 import { ProviderConnectionSuccessDialog } from "./components/ProviderConnectionSuccessDialog";
 import { useInferenceProviderContext } from "./context";
-import { toServerConfig } from "./types";
+import {
+	type ProviderCreate,
+	type ProviderUpdate,
+	toServerConfig,
+} from "./types";
 
 // Extended Error interface with cause property
 interface ErrorWithCause extends Error {
@@ -26,11 +31,23 @@ interface ErrorWithResponse {
  * Component for provider form that displays fields in either view or edit mode
  */
 function ProviderForm() {
-	const { handleSubmit, isSubmitting, onSubmit, onCancel, mode, setMode, selectedProvider } =
-		useInferenceProviderContext();
+	const {
+		handleSubmit,
+		isSubmitting,
+		onSubmit: onSubmitProp,
+		onCancel,
+		mode,
+		setMode,
+		selectedProvider,
+	} = useInferenceProviderContext();
 	const [isTestingConnection, setIsTestingConnection] = useState(false);
-	const [connectionError, setConnectionError] = useState<Record<string, unknown> | string | null>(null);
-	const [connectionDetails, setConnectionDetails] = useState<Record<string, unknown> | null>(null);
+	const [connectionError, setConnectionError] = useState<
+		Record<string, unknown> | string | null
+	>(null);
+	const [connectionDetails, setConnectionDetails] = useState<Record<
+		string,
+		unknown
+	> | null>(null);
 	const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
 	const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
 
@@ -40,15 +57,47 @@ function ProviderForm() {
 	const isCreating = mode === "create";
 	const isViewMode = mode === "view";
 
+	// Wrap the submit handler to use our error handler
+	const onSubmit = async (data: ProviderCreate | ProviderUpdate) => {
+		try {
+			await onSubmitProp(data);
+		} catch (error) {
+			handleApiError(error);
+		}
+	};
+
 	const handleTestConnection = async () => {
 		if (!selectedProvider) return;
+
+		// Validate API key is present
+		if (!selectedProvider.apiKey) {
+			setConnectionError({
+				title: "Connection failed",
+				timestamp: new Date().toISOString(),
+				message: "API key is required",
+				name: "ValidationError",
+				details: "Please provide an API key in the provider configuration.",
+				suggestions: [
+					"Edit the provider to add an API key",
+					"API keys should be non-empty strings",
+				],
+			});
+			setIsErrorDialogOpen(true);
+			return;
+		}
 
 		setIsTestingConnection(true);
 		setConnectionError(null);
 
 		try {
 			const config = toServerConfig(selectedProvider);
-			
+
+			// Log the config for debugging
+			console.log("Testing connection with provider config:", {
+				...config,
+				api_key: config.api_key ? "[REDACTED]" : null,
+			});
+
 			const result = await testConnection.mutateAsync({
 				providerName: selectedProvider.name,
 				config,
@@ -58,46 +107,47 @@ function ProviderForm() {
 			setIsSuccessDialogOpen(true);
 		} catch (error) {
 			console.error("Connection test failed:", error);
-			
+
 			// Create a user-friendly error object that can be displayed directly
 			let errorObj: Record<string, unknown> = {
 				title: "Connection failed",
-				timestamp: new Date().toISOString()
+				timestamp: new Date().toISOString(),
 			};
-			
+
 			// Extract error information based on type
 			if (error instanceof Error) {
 				// Extract useful properties from Error objects
 				errorObj.message = error.message;
 				errorObj.name = error.name;
-				
+
 				// Special case for [object Object] errors
-				if (error.message?.includes('[object Object]')) {
+				if (error.message?.includes("[object Object]")) {
 					errorObj.message = "Invalid provider configuration";
-					errorObj.details = "The server rejected the request due to invalid parameters.";
+					errorObj.details =
+						"The server rejected the request due to invalid parameters.";
 					errorObj.suggestions = [
 						"Check API key and endpoint URL",
 						"Verify the provider is correctly configured",
-						"Check server logs for more details"
+						"Check server logs for more details",
 					];
 				}
-				
+
 				// Check for cause object with additional details
 				const errorWithCause = error as ErrorWithCause;
-				if (errorWithCause.cause && typeof errorWithCause.cause === 'object') {
+				if (errorWithCause.cause && typeof errorWithCause.cause === "object") {
 					errorObj.errorDetails = errorWithCause.cause;
 				}
-			} else if (typeof error === 'object' && error !== null) {
+			} else if (typeof error === "object" && error !== null) {
 				// For direct object errors, merge with our error object
 				errorObj = {
 					...errorObj,
-					...error as Record<string, unknown>
+					...(error as Record<string, unknown>),
 				};
 			} else {
 				// For primitive errors
 				errorObj.message = String(error);
 			}
-			
+
 			// Set the formatted error object
 			setConnectionError(errorObj);
 			setIsErrorDialogOpen(true);
@@ -147,7 +197,7 @@ function ProviderForm() {
 			</Flex>
 
 			{/* Error Dialog */}
-			<ProviderConnectionErrorDialog 
+			<ProviderConnectionErrorDialog
 				isOpen={isErrorDialogOpen}
 				onClose={() => setIsErrorDialogOpen(false)}
 				error={connectionError}

@@ -1,6 +1,6 @@
+import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
-import { toast } from "sonner";
 import { useDatasetContext } from "../context/DatasetContext";
 
 type CreateDatasetModalProps = {
@@ -50,7 +50,7 @@ export function CreateDatasetModal({
 
 		try {
 			await createDataset(datasetName);
-			toast.success(`Dataset "${datasetName}" created successfully`);
+			toast.success({ title: `Dataset "${datasetName}" created successfully` });
 			onDatasetCreated(datasetName);
 			onClose();
 		} catch (error) {
@@ -60,7 +60,7 @@ export function CreateDatasetModal({
 			if (error instanceof Error && error.message.includes("409")) {
 				// If the dataset already exists, we can still consider this a success
 				// and notify the user that we're switching to the existing dataset
-				toast.info(`Dataset "${datasetName}" already exists. Switching to it.`);
+				toast.info({ title: `Dataset "${datasetName}" already exists. Switching to it.` });
 				onDatasetCreated(datasetName);
 				onClose();
 			} else {

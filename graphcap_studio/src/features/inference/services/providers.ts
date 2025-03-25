@@ -161,7 +161,9 @@ export function useUpdateProvider() {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to update provider: ${response.status}`);
+				const errorData = await response.json();
+				console.error("Provider update error:", errorData);
+				throw errorData;
 			}
 
 			return response.json() as Promise<Provider>;
@@ -220,7 +222,9 @@ export function useUpdateProviderApiKey() {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to update API key: ${response.status}`);
+				const errorData = await response.json();
+				console.error("API key update error:", errorData);
+				throw errorData;
 			}
 
 			return response.json() as Promise<SuccessResponse>;
@@ -241,6 +245,15 @@ export function useTestProviderConnection() {
 	return useMutation({
 		mutationFn: async ({ providerName, config }: { providerName: string; config: ServerProviderConfig }) => {
 			const client = createInferenceBridgeClient(connections);
+			
+			// Add console logging to debug
+			console.log('Testing connection with config:', JSON.stringify(config));
+			
+			// Make sure api_key is properly set and not null or undefined
+			if (!config.api_key) {
+				throw new Error("API key is required for testing provider connection");
+			}
+			
 			const response = await client.providers[":provider_name"]["test-connection"].$post({
 				param: { provider_name: providerName },
 				json: config,
@@ -248,6 +261,7 @@ export function useTestProviderConnection() {
 
 			if (!response.ok) {
 				const errorData = await response.json();
+				console.error('Error response:', errorData);
 				
 				// Check if this is our enhanced error format
 				if (errorData.status === 'error' && errorData.details) {

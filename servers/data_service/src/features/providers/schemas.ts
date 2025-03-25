@@ -83,7 +83,11 @@ export const providerUpdateSchema = z.object({
 
 // Schema for updating a provider's API key
 export const providerApiKeySchema = z.object({
-  apiKey: z.string().min(1, 'API key is required'),
+  apiKey: z.string()
+    .min(1, { message: 'API key is required and cannot be empty' })
+    .refine(val => val.trim() !== '', {
+      message: 'API key cannot be just whitespace'
+    }),
 });
 
 // Export types

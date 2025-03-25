@@ -183,7 +183,13 @@ export const updateProvider = async (c: Context) => {
 
 		if (!existingProvider) {
 			logger.debug({ id }, "Provider not found for update");
-			return c.json({ error: "Provider not found" }, 404);
+			return c.json({
+				status: "error",
+				statusCode: 404,
+				message: "Provider not found",
+				timestamp: new Date().toISOString(),
+				path: c.req.path
+			}, 404);
 		}
 
 		// Extract models and rate limits if provided
@@ -261,8 +267,21 @@ export const updateProvider = async (c: Context) => {
 		logger.debug({ id }, "Provider updated successfully");
 		return c.json(result);
 	} catch (error) {
-		logger.error({ error }, "Error updating provider");
-		return c.json({ error: "Failed to update provider" }, 500);
+		logger.error({ 
+			error,
+			message: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+		}, "Error updating provider");
+
+		// Return detailed error response
+		return c.json({
+			status: "error",
+			statusCode: 500,
+			message: error instanceof Error ? error.message : "Failed to update provider",
+			timestamp: new Date().toISOString(),
+			path: c.req.path,
+			details: error instanceof Error ? { name: error.name } : undefined
+		}, 500);
 	}
 };
 
@@ -310,6 +329,21 @@ export const updateProviderApiKey = async (c: Context) => {
 		const { apiKey } = c.req.valid("json") as ProviderApiKey;
 		logger.debug({ id }, "Updating provider API key");
 
+		// Validate API key
+		if (!apiKey || apiKey.trim() === '') {
+			logger.debug({ id }, "Empty API key provided");
+			return c.json({
+				status: "error",
+				statusCode: 400,
+				message: "API key cannot be empty",
+				timestamp: new Date().toISOString(),
+				path: c.req.path,
+				validationErrors: {
+					"apiKey": ["API key cannot be empty"]
+				}
+			}, 400);
+		}
+
 		// Check if provider exists
 		const existingProvider = await db.query.providers.findFirst({
 			where: eq(providers.id, Number.parseInt(id)),
@@ -317,7 +351,13 @@ export const updateProviderApiKey = async (c: Context) => {
 
 		if (!existingProvider) {
 			logger.debug({ id }, "Provider not found for API key update");
-			return c.json({ error: "Provider not found" }, 404);
+			return c.json({
+				status: "error",
+				statusCode: 404,
+				message: "Provider not found",
+				timestamp: new Date().toISOString(),
+				path: c.req.path
+			}, 404);
 		}
 
 		// Encrypt the API key
@@ -336,9 +376,25 @@ export const updateProviderApiKey = async (c: Context) => {
 		return c.json({
 			success: true,
 			message: "API key updated successfully",
+			timestamp: new Date().toISOString()
 		});
 	} catch (error) {
-		logger.error({ error }, "Error updating provider API key");
-		return c.json({ error: "Failed to update API key" }, 500);
+		const providerId = c.req.param('id');
+		logger.error({ 
+			error,
+			message: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined,
+			providerId
+		}, "Error updating provider API key");
+		
+		// Return detailed error response
+		return c.json({
+			status: "error",
+			statusCode: 500,
+			message: error instanceof Error ? error.message : "Failed to update API key",
+			timestamp: new Date().toISOString(),
+			path: c.req.path,
+			details: error instanceof Error ? { name: error.name } : undefined
+		}, 500);
 	}
 };

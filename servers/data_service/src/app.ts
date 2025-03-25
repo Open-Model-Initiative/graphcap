@@ -17,10 +17,14 @@ import { batchQueueRoutes } from './api/routes/batch_queue';
 import { checkDatabaseConnection } from './db/init';
 import { env } from './env';
 import { providerRoutes } from './features/providers/routes';
+import { errorHandlerMiddleware, notFoundHandler } from './utils/error-handler';
 import { logger } from './utils/logger';
 
 // Create OpenAPI Hono app
 const app = new OpenAPIHono();
+
+// Add error handling middleware first so it can catch errors from other middleware
+app.use('*', errorHandlerMiddleware({ logErrors: true }));
 
 // Add middleware
 app.use('*', cors());
@@ -164,11 +168,23 @@ app.get('/docs', apiReference({
   layout: 'modern',
 }));
 
-// Error handling
+// Error handling - replace existing onError handler
 app.onError((err, c) => {
-  logger.error({ err, path: c.req.path }, 'Unhandled error');
-  return c.json({ error: 'Internal server error' }, 500);
+  // The middleware should handle most errors,
+  // but this is a fallback for errors that somehow bypass the middleware
+  logger.error({ err, path: c.req.path }, 'Unhandled error in onError handler');
+  
+  return c.json({
+    status: 'error',
+    statusCode: 500,
+    message: 'Internal server error',
+    timestamp: new Date().toISOString(),
+    path: c.req.path
+  }, 500);
 });
+
+// Add not found handler
+app.notFound(notFoundHandler);
 
 // Export the app
 export default app;
