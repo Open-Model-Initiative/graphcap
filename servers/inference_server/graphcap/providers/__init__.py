@@ -14,6 +14,23 @@ Key features:
 
 Components:
     clients: Provider-specific client implementations
-    provider_config: Configuration management
-    provider_manager: Provider lifecycle management
+    factory: Provider client factory
+    types: Common type definitions
 """
+
+from .factory import (
+    ProviderFactory,
+    clear_provider_cache,
+    create_provider_client,
+    get_provider_factory,
+)
+from .types import ProviderConfig, RateLimits
+
+__all__ = [
+    "ProviderFactory",
+    "create_provider_client",
+    "get_provider_factory",
+    "clear_provider_cache",
+    "ProviderConfig",
+    "RateLimits",
+]

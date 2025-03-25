@@ -9,9 +9,9 @@ import base64
 import os
 import socket
 import tempfile
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional
-from collections import defaultdict
 
 import aiohttp
 from fastapi import HTTPException, UploadFile
