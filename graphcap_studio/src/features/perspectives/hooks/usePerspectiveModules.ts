@@ -8,6 +8,7 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import {
@@ -85,7 +86,7 @@ export function useModuleInfo() {
 export function usePerspectiveModules(): ModuleQueryResult {
   const { connections } = useServerConnectionsContext();
   const graphcapServerConnection = connections.find(
-    (conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER
+    (conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE
   );
   const isConnected = graphcapServerConnection?.status === "connected";
   
@@ -103,33 +104,29 @@ export function usePerspectiveModules(): ModuleQueryResult {
           });
         }
 
-        const baseUrl = getGraphCapServerUrl(connections);
-        if (!baseUrl) {
-          console.warn("No GraphCap server URL available");
-          throw new PerspectiveError("No GraphCap server URL available", {
-            code: "MISSING_SERVER_URL",
-            context: { connections },
-          });
+        // Use the inference bridge client instead of direct fetch
+        const client = createInferenceBridgeClient(connections);
+
+        console.debug("Fetching modules from server using API client");
+
+        try {
+          const response = await client.perspectives.modules.$get();
+
+          if (!response.ok) {
+            return handleApiError(response, "Failed to fetch modules");
+          }
+
+          const data = (await response.json()) as ModuleListResponse;
+
+          console.debug(
+            `Successfully fetched ${data.modules.length} modules`,
+          );
+
+          return data.modules;
+        } catch (error) {
+          console.error("API client error:", error);
+          throw error;
         }
-
-        const endpoint = API_ENDPOINTS.LIST_MODULES;
-        const url = `${baseUrl}${endpoint}`;
-
-        console.debug(`Fetching modules from server: ${url}`);
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          return handleApiError(response, "Failed to fetch modules");
-        }
-
-        const data = (await response.json()) as ModuleListResponse;
-
-        console.debug(
-          `Successfully fetched ${data.modules.length} modules`,
-        );
-
-        return data.modules;
       } catch (error) {
         // Improve error handling - log the error and rethrow
         console.error("Error fetching modules:", error);

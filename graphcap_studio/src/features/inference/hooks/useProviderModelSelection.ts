@@ -1,11 +1,12 @@
+import { useProviderModels, useProviders } from "@/features/server-connections/services/providers";
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from "react";
-import { useProviderModels, useProviders } from "../services/providers";
+import type { Provider } from "../providers/types";
 
 /**
  * Custom hook to handle provider and model selection logic
  */
-export function useProviderModelSelection(providerName: string) {
+export function useProviderModelSelection(provider: Provider) {
 	// Fetch providers from API
 	const {
 		data: providers = [],
@@ -19,7 +20,7 @@ export function useProviderModelSelection(providerName: string) {
 		isLoading: isLoadingModels,
 		isError: isModelsError,
 		error: modelsError,
-	} = useProviderModels(providerName);
+	} = useProviderModels(provider);
 
 	// Memoize the available providers
 	const availableProviders = useMemo(() => {
@@ -30,15 +31,22 @@ export function useProviderModelSelection(providerName: string) {
 	const providersWithNoModels = useMemo(() => {
 		const noModelsSet = new Set<string>();
 
-		if (providerModelsData?.models?.length === 0) {
-			noModelsSet.add(providerName);
+		if (providerModelsData?.models?.length === 0 && provider.fetchModels) {
+			noModelsSet.add(provider.name);
 		}
 
 		return noModelsSet;
-	}, [providerName, providerModelsData]);
+	}, [provider.name, provider.fetchModels, providerModelsData]);
 
 	// Get default model if available
 	const defaultModel = useMemo(() => {
+		if (provider.defaultModel) {
+			return {
+				id: provider.defaultModel,
+				name: provider.defaultModel,
+				is_default: true,
+			};
+		}
 		if (providerModelsData?.models && providerModelsData.models.length > 0) {
 			return (
 				providerModelsData.models.find((model) => model.is_default) ||
@@ -46,7 +54,7 @@ export function useProviderModelSelection(providerName: string) {
 			);
 		}
 		return null;
-	}, [providerModelsData]);
+	}, [provider.defaultModel, providerModelsData]);
 
 	return {
 		providers: availableProviders,

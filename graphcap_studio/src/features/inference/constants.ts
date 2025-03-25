@@ -8,8 +8,10 @@ export const DEFAULT_PROVIDER_FORM_DATA = {
 	kind: "",
 	environment: "cloud" as const,
 	baseUrl: "",
-	envVar: "",
+	apiKey: "",
 	isEnabled: true,
+	defaultModel: "",
+	fetchModels: true,
 	models: [],
 	rateLimits: {
 		requestsPerMinute: 0,
@@ -21,3 +23,13 @@ export const DEFAULT_PROVIDER_FORM_DATA = {
  * Environment options for providers
  */
 export const PROVIDER_ENVIRONMENTS = ["cloud", "local"] as const;
+
+/**
+ * Provider kinds
+ */
+export const PROVIDER_KINDS = [
+	"openai",
+	"google",
+	"ollama",
+	"vllm",
+] as const;

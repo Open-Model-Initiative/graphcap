@@ -7,9 +7,6 @@
  */
 
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
-import { SERVER_IDS } from "@/features/server-connections/constants";
-import { createDataServiceClient, createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	Provider,
 	ProviderApiKey,
@@ -18,8 +15,10 @@ import type {
 	ProviderUpdate,
 	ServerProviderConfig,
 	SuccessResponse,
-} from "../providers/types";
-import { toServerConfig } from "../providers/types";
+} from "@/features/inference/providers/types";
+import { toServerConfig } from "@/features/inference/providers/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";
 
 // Query keys for TanStack Query
 export const queryKeys = {
@@ -28,47 +27,13 @@ export const queryKeys = {
 	providerModels: (providerName: string) => ["providers", "models", providerName] as const,
 };
 
-interface ServerConnection {
-	id: string;
-	url: string;
-	status: string;
-}
-
-// Define a more specific type for the client
-interface DataServiceClient {
-	providers: {
-		$get: () => Promise<Response>;
-		$post: (options: { json: ProviderCreate }) => Promise<Response>;
-		":id": {
-			$get: (options: { param: { id: string } }) => Promise<Response>;
-			$put: (options: {
-				param: { id: string };
-				json: ProviderUpdate;
-			}) => Promise<Response>;
-			$delete: (options: { param: { id: string } }) => Promise<Response>;
-			"api-key": {
-				$put: (options: {
-					param: { id: string };
-					json: ProviderApiKey;
-				}) => Promise<Response>;
-			};
-		};
-	};
-}
-
-interface GraphCapServerClient {
-	models: {
-		$post: (options: { json: ServerProviderConfig }) => Promise<Response>;
-	};
-}
-
 /**
  * Hook to get all providers
  */
 export function useProviders() {
 	const { connections } = useServerConnectionsContext();
 	const dataServiceConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
+		(conn) => conn.id === "data-service",
 	);
 	const isConnected = dataServiceConnection?.status === "connected";
 
@@ -95,7 +60,7 @@ export function useProviders() {
 export function useProvider(id: number) {
 	const { connections } = useServerConnectionsContext();
 	const dataServiceConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
+		(conn) => conn.id === "data-service",
 	);
 	const isConnected = dataServiceConnection?.status === "connected";
 
@@ -232,13 +197,12 @@ export function useUpdateProviderApiKey() {
 }
 
 /**
- * Hook to get provider models
- * This now uses the new server-side configuration
+ * Hook to get available models for a provider
  */
 export function useProviderModels(provider: Provider) {
 	const { connections } = useServerConnectionsContext();
 	const inferenceBridgeConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
+		(conn) => conn.id === "inference-bridge",
 	);
 	const isConnected = inferenceBridgeConnection?.status === "connected";
 
@@ -253,12 +217,12 @@ export function useProviderModels(provider: Provider) {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch provider models: ${response.status}`);
+				throw new Error(`Failed to fetch models: ${response.status}`);
 			}
 
 			return response.json() as Promise<ProviderModelsResponse>;
 		},
-		enabled: isConnected && provider.fetchModels,
-		staleTime: 1000 * 60 * 5, // 5 minutes
+		enabled: isConnected && !!provider && provider.fetchModels,
+		staleTime: 1000 * 60 * 10, // 10 minutes
 	});
-}
+} 

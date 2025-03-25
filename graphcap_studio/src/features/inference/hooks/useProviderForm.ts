@@ -6,7 +6,7 @@ import type {
 import {
 	useCreateProvider,
 	useUpdateProvider,
-} from "@/features/inference/services/providers";
+} from "@/features/server-connections/services/providers";
 
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -18,7 +18,7 @@ type FormData = ProviderCreate | ProviderUpdate;
  * Custom hook for managing provider form state and operations
  */
 export function useProviderForm(initialData: Partial<FormData> = {}) {
-	// Initialize react-hook-form
+	// Initialize react-hook-form with validation
 	const {
 		control,
 		handleSubmit,
@@ -30,10 +30,13 @@ export function useProviderForm(initialData: Partial<FormData> = {}) {
 			...DEFAULT_PROVIDER_FORM_DATA,
 			...initialData,
 		},
+		mode: "onBlur",
 	});
 
-	// Watch the provider name for use in UI
+	// Watch the provider name and other fields for use in UI
 	const providerName = watch("name");
+	const fetchModels = watch("fetchModels");
+	const defaultModel = watch("defaultModel");
 
 	// Mutations
 	const createProvider = useCreateProvider();
@@ -43,6 +46,11 @@ export function useProviderForm(initialData: Partial<FormData> = {}) {
 	const onSubmit = useCallback(
 		async (data: FormData, isCreating: boolean, providerId?: number) => {
 			try {
+				// Ensure required fields are present
+				if (!data.name || !data.kind || !data.environment || !data.baseUrl || !data.apiKey) {
+					throw new Error("Missing required fields");
+				}
+
 				if (isCreating) {
 					await createProvider.mutateAsync(data as ProviderCreate);
 				} else if (providerId) {
@@ -69,6 +77,8 @@ export function useProviderForm(initialData: Partial<FormData> = {}) {
 		errors,
 		watch,
 		providerName,
+		fetchModels,
+		defaultModel,
 		reset,
 
 		// Form submission

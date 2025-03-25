@@ -6,6 +6,25 @@
  */
 
 /**
+ * Server-side provider configuration
+ * This is the configuration that gets sent to the inference server
+ */
+export interface ServerProviderConfig {
+	name: string;
+	kind: string;
+	environment: "cloud" | "local";
+	base_url: string;
+	api_key: string;  // Required for server requests
+	default_model?: string;
+	models: string[];
+	fetch_models: boolean;
+	rate_limits?: {
+		requests_per_minute?: number;
+		tokens_per_minute?: number;
+	};
+}
+
+/**
  * Provider model
  */
 export interface ProviderModel {
@@ -30,17 +49,18 @@ export interface RateLimits {
 }
 
 /**
- * Provider configuration
+ * Provider configuration stored in data service
  */
 export interface Provider {
 	id: number;
 	name: string;
 	kind: string;
 	environment: "cloud" | "local";
-	envVar: string;
 	baseUrl: string;
-	apiKey?: string;
+	apiKey: string;  // Changed from optional to required
 	isEnabled: boolean;
+	defaultModel?: string;
+	fetchModels: boolean;
 	createdAt: string | Date;
 	updatedAt: string | Date;
 	models?: ProviderModel[];
@@ -54,10 +74,11 @@ export interface ProviderCreate {
 	name: string;
 	kind: string;
 	environment: "cloud" | "local";
-	envVar: string;
 	baseUrl: string;
-	apiKey?: string;
+	apiKey: string;  // Changed from optional to required
 	isEnabled?: boolean;
+	defaultModel?: string;
+	fetchModels?: boolean;
 	models?: Array<{
 		name: string;
 		isEnabled?: boolean;
@@ -75,9 +96,11 @@ export interface ProviderUpdate {
 	name?: string;
 	kind?: string;
 	environment?: "cloud" | "local";
-	envVar?: string;
 	baseUrl?: string;
+	apiKey?: string;
 	isEnabled?: boolean;
+	defaultModel?: string;
+	fetchModels?: boolean;
 	models?: Array<{
 		id?: number;
 		name: string;
@@ -119,4 +142,24 @@ export interface ProviderModelInfo {
 export interface ProviderModelsResponse {
 	provider: string;
 	models: ProviderModelInfo[];
+}
+
+/**
+ * Helper function to convert Provider to ServerProviderConfig
+ */
+export function toServerConfig(provider: Provider): ServerProviderConfig {
+	return {
+		name: provider.name,
+		kind: provider.kind,
+		environment: provider.environment,
+		base_url: provider.baseUrl,
+		api_key: provider.apiKey,
+		default_model: provider.defaultModel,
+		models: provider.models?.map(m => m.name) || [],
+		fetch_models: provider.fetchModels,
+		rate_limits: provider.rateLimits ? {
+			requests_per_minute: provider.rateLimits.requestsPerMinute,
+			tokens_per_minute: provider.rateLimits.tokensPerMinute
+		} : undefined
+	};
 }

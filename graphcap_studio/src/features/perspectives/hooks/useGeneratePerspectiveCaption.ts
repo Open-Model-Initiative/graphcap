@@ -7,14 +7,11 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import type { ServerConnection } from "@/features/server-connections/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_ENDPOINTS, perspectivesQueryKeys } from "../services/constants";
-import {
-	ensureWorkspacePath,
-	getGraphCapServerUrl,
-	handleApiError,
-} from "../services/utils";
+import { perspectivesQueryKeys } from "../services/constants";
+import { ensureWorkspacePath, handleApiError } from "../services/utils";
 import type { CaptionOptions, CaptionResponse } from "../types";
 
 /**
@@ -38,7 +35,7 @@ export function useGeneratePerspectiveCaption() {
 	>({
 		mutationFn: async ({ perspective, imagePath, provider_name, options }) => {
 			const graphcapServerConnection = connections.find(
-				(conn: ServerConnection) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+				(conn: ServerConnection) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 			);
 			const isConnected = graphcapServerConnection?.status === "connected";
 
@@ -50,20 +47,15 @@ export function useGeneratePerspectiveCaption() {
 				throw new Error("Caption generation options are required");
 			}
 
-			const baseUrl = getGraphCapServerUrl(connections);
-			if (!baseUrl) {
-				throw new Error("No GraphCap server URL available");
-			}
-
+			// Use the inference bridge client instead of direct fetch
+			const client = createInferenceBridgeClient(connections);
+			
 			// Normalize the image path to ensure it starts with /workspace
 			const normalizedImagePath = ensureWorkspacePath(imagePath);
 
 			console.log(
 				`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`,
 			);
-
-			const endpoint = API_ENDPOINTS.REST_GENERATE_CAPTION;
-			const url = `${baseUrl}${endpoint}`;
 
 			// Prepare the request body according to the server's expected format
 			const requestBody = {
@@ -80,7 +72,7 @@ export function useGeneratePerspectiveCaption() {
 				resize_resolution: options.resize_resolution ?? "HD_720P",
 			};
 
-			console.log(`Sending caption generation request to: ${url}`, {
+			console.log("Sending caption generation request using API client", {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider_name,
@@ -96,12 +88,8 @@ export function useGeneratePerspectiveCaption() {
 				},
 			});
 
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(requestBody),
+			const response = await client.perspectives["caption-from-path"].$post({
+				json: requestBody,
 			});
 
 			if (!response.ok) {

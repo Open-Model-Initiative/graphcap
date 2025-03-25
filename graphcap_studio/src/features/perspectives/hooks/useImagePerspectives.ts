@@ -6,8 +6,8 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
-import { useProviders } from "@/features/inference/services/providers";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
 import { useCallback, useEffect, useState } from "react";
 
@@ -43,7 +43,7 @@ export function useImagePerspectives(
 	// Get server connection status
 	const { connections } = useServerConnectionsContext();
 	const graphcapServerConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isServerConnected = graphcapServerConnection?.status === "connected";
 

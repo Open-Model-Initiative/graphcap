@@ -5,6 +5,7 @@
  * This module provides direct API methods for interacting with the perspectives service.
  */
 
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import { API_ENDPOINTS } from "../constants/index";
 import {
 	CaptionRequestSchema,
@@ -20,14 +21,14 @@ import type {
 	ModulePerspectivesResponse,
 	Perspective,
 } from "../types";
-import { ensureWorkspacePath, getGraphCapServerUrl, handleApiError } from "./utils";
+import { ensureWorkspacePath, getGraphCapServerUrl, getInferenceBridgeApiUrl, handleApiError } from "./utils";
 
 /**
  * Get server connections from local storage
  */
 const getConnections = () => {
 	// Get the current connections from local storage
-	const connectionsStr = localStorage.getItem("graphcap-server-connections");
+	const connectionsStr = localStorage.getItem("inference-bridge-connections");
 	let connections = [];
 	
 	if (connectionsStr) {
@@ -55,16 +56,13 @@ export const perspectivesApi = {
 	 */
 	async listPerspectives(): Promise<Perspective[]> {
 		try {
-			// Get the base URL using the utility function
+			// Get connections and create the client
 			const connections = getConnections();
-			const baseUrl = getGraphCapServerUrl(connections);
+			const client = createInferenceBridgeClient(connections);
 			
-			// Create the full URL by combining base URL and endpoint path
-			const url = `${baseUrl}${API_ENDPOINTS.LIST_PERSPECTIVES}`;
+			console.debug("Fetching perspectives using API client");
 			
-			console.debug(`Fetching perspectives from: ${url}`);
-			
-			const response = await fetch(url);
+			const response = await client.perspectives.list.$get();
 
 			if (!response.ok) {
 				await handleApiError(response, "Failed to fetch perspectives");
@@ -87,16 +85,13 @@ export const perspectivesApi = {
 	 */
 	async listModules(): Promise<ModuleListResponse> {
 		try {
-			// Get the base URL using the utility function
+			// Get connections and create the client
 			const connections = getConnections();
-			const baseUrl = getGraphCapServerUrl(connections);
+			const client = createInferenceBridgeClient(connections);
 			
-			// Create the full URL by combining base URL and endpoint path
-			const url = `${baseUrl}${API_ENDPOINTS.LIST_MODULES}`;
+			console.debug("Fetching modules using API client");
 			
-			console.debug(`Fetching modules from: ${url}`);
-			
-			const response = await fetch(url);
+			const response = await client.perspectives.modules.$get();
 
 			if (!response.ok) {
 				await handleApiError(response, "Failed to fetch perspective modules");
@@ -120,22 +115,15 @@ export const perspectivesApi = {
 	 */
 	async getModulePerspectives(moduleName: string): Promise<ModulePerspectivesResponse> {
 		try {
-			// Get the base URL using the utility function
+			// Get connections and create the client
 			const connections = getConnections();
-			const baseUrl = getGraphCapServerUrl(connections);
+			const client = createInferenceBridgeClient(connections);
 			
-			// Create the endpoint path
-			const endpointPath = API_ENDPOINTS.MODULE_PERSPECTIVES.replace(
-				"{module_name}",
-				encodeURIComponent(moduleName)
-			);
+			console.debug(`Fetching perspectives for module '${moduleName}' using API client`);
 			
-			// Create the full URL by combining base URL and endpoint path
-			const url = `${baseUrl}${endpointPath}`;
-			
-			console.debug(`Fetching perspectives for module '${moduleName}' from: ${url}`);
-			
-			const response = await fetch(url);
+			const response = await client.perspectives.modules[":moduleName"].$get({
+				param: { moduleName }
+			});
 
 			if (!response.ok) {
 				// Check if we got HTML instead of JSON
@@ -190,14 +178,13 @@ export const perspectivesApi = {
 		requestParams: CaptionRequest,
 	): Promise<CaptionResponse> {
 		try {
-			// Get the base URL using the utility function
+			// Get connections and create the client
 			const connections = getConnections();
-			const baseUrl = getGraphCapServerUrl(connections);
+			const client = createInferenceBridgeClient(connections);
 			
 			// Ensure the image path has the correct workspace prefix
 			const normalizedImagePath = ensureWorkspacePath(requestParams.image_path);
 			console.log("Generating caption for image path:", normalizedImagePath);
-			console.log("Request params:", requestParams);
 			
 			// Create the request body and validate with Zod
 			const request: CaptionRequest = {
@@ -208,16 +195,11 @@ export const perspectivesApi = {
 			// Validate the request with Zod
 			const validatedRequest = CaptionRequestSchema.parse(request);
 			
-			// Create the full URL by combining base URL and endpoint path
-			const url = `${baseUrl}${API_ENDPOINTS.REST_GENERATE_CAPTION}`;
-
-			// Make the API request
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(validatedRequest),
+			console.debug(`Generating caption for perspective '${requestParams.perspective}' using API client`);
+			
+			// Use the API client to post the request
+			const response = await client.perspectives["caption-from-path"].$post({
+				json: validatedRequest
 			});
 
 			if (!response.ok) {

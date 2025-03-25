@@ -11,6 +11,7 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
 import React, {
 	createContext,
@@ -21,7 +22,6 @@ import React, {
 	useEffect,
 	useMemo,
 } from "react";
-import { useProviders } from "../../inference/services/providers";
 import { useGeneratePerspectiveCaption } from "../hooks/useGeneratePerspectiveCaption";
 import { usePerspectives } from "../hooks/usePerspectives";
 import type {
@@ -179,7 +179,7 @@ export function PerspectivesDataProvider({
 	// Server connection state
 	const { connections } = useServerConnectionsContext();
 	const graphcapServerConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isServerConnected = graphcapServerConnection?.status === "connected";
 
@@ -516,6 +516,14 @@ export function PerspectivesDataProvider({
 		[captions],
 	);
 
+	// Get the server URL from connections
+	const graphcapServerUrl = useMemo(() => {
+		const serverConn = connections.find(
+			(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
+		);
+		return serverConn?.url || "";
+	}, [connections]);
+
 	// Create consolidated context value
 	const value: PerspectivesDataContextType = useMemo(
 		() => ({
@@ -604,6 +612,7 @@ export function PerspectivesDataProvider({
 			togglePerspectiveVisibility,
 			isPerspectiveVisible,
 			setAllPerspectivesVisible,
+			graphcapServerUrl,
 		],
 	);
 

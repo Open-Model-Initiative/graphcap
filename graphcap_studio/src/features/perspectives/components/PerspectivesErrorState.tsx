@@ -42,7 +42,7 @@ export function PerspectivesErrorState({
 						Server Connection Error
 					</Heading>
 					<Text mb={6}>
-						Unable to connect to the GraphCap server. Please check your
+						Unable to connect to the Inference Bridge. Please check your
 						connection settings and try again.
 					</Text>
 					<Button
@@ -50,7 +50,7 @@ export function PerspectivesErrorState({
 						onClick={() =>
 							onReconnect
 								? onReconnect()
-								: handleConnect(SERVER_IDS.GRAPHCAP_SERVER)
+								: handleConnect(SERVER_IDS.INFERENCE_BRIDGE)
 						}
 					>
 						<Icon as={LuRefreshCw} mr={2} />

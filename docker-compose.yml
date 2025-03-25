@@ -83,7 +83,7 @@ services:
           target: /app/pnpm-lock.yaml
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - VITE_API_URL=http://localhost:32100/api
+      - VITE_API_URL=http://localhost:32100
       - VITE_WORKSPACE_PATH=/workspace/.local
       - VITE_MEDIA_SERVER_URL=http://localhost:32400
       - VITE_DATASETS_PATH=/workspace/datasets
