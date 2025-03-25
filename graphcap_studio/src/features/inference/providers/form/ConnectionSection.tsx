@@ -1,7 +1,9 @@
 import { Switch } from "@/components/ui/buttons/Switch";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { Box, Field, Input, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Field, Flex, Input, Text, VStack } from "@chakra-ui/react";
+import { Group, InputElement } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { useInferenceProviderContext } from "../context";
 
@@ -9,14 +11,17 @@ import { useInferenceProviderContext } from "../context";
  * Component for displaying and editing provider connection settings
  */
 export function ConnectionSection() {
-	const { control, errors, watch, isEditing } = useInferenceProviderContext();
+	const { control, errors, watch, isEditing, selectedProvider } = useInferenceProviderContext();
+	const [showApiKey, setShowApiKey] = useState(false);
 	const labelColor = useColorModeValue("gray.600", "gray.300");
 	const textColor = useColorModeValue("gray.700", "gray.200");
 
 	// Watch form values for read-only display
 	const baseUrl = watch("baseUrl");
-	const envVar = watch("envVar");
 	const isEnabled = watch("isEnabled");
+
+	// Toggle API key visibility
+	const toggleShowApiKey = () => setShowApiKey(!showApiKey);
 
 	if (!isEditing) {
 		return (
@@ -30,9 +35,21 @@ export function ConnectionSection() {
 
 				<Box>
 					<Text fontSize="sm" color={labelColor}>
-						Environment Variable
+						API Key
 					</Text>
-					<Text color={textColor}>{envVar}</Text>
+					<Group position="relative">
+						<Input
+							type={showApiKey ? "text" : "password"}
+							value={selectedProvider?.apiKey ? "••••••••••••••••" : "Not set"}
+							readOnly
+							pe="4.5rem"
+						/>
+						<InputElement placement="end" width="4.5rem">
+							<Button h="1.75rem" size="sm" onClick={toggleShowApiKey}>
+								{showApiKey ? "Hide" : "Show"}
+							</Button>
+						</InputElement>
+					</Group>
 				</Box>
 
 				<Box>
@@ -60,13 +77,25 @@ export function ConnectionSection() {
 			/>
 
 			<Controller
-				name="envVar"
+				name="apiKey"
 				control={control}
 				render={({ field }) => (
-					<Field.Root invalid={!!errors.envVar}>
-						<Field.Label color={labelColor}>Environment Variable</Field.Label>
-						<Input {...field} id="envVar" />
-						<Field.ErrorText>{errors.envVar?.message}</Field.ErrorText>
+					<Field.Root invalid={!!errors.apiKey}>
+						<Field.Label color={labelColor}>API Key</Field.Label>
+						<Group position="relative">
+							<Input
+								{...field}
+								id="apiKey"
+								type={showApiKey ? "text" : "password"}
+								pe="4.5rem"
+							/>
+							<InputElement placement="end" width="4.5rem">
+								<Button h="1.75rem" size="sm" onClick={toggleShowApiKey}>
+									{showApiKey ? "Hide" : "Show"}
+								</Button>
+							</InputElement>
+						</Group>
+						<Field.ErrorText>{errors.apiKey?.message}</Field.ErrorText>
 					</Field.Root>
 				)}
 			/>

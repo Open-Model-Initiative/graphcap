@@ -120,8 +120,8 @@ function ProviderForm() {
 						<Button
 							colorScheme="blue"
 							type="submit"
-							loadingText="Saving..."
 							loading={isSubmitting}
+							loadingText="Saving..."
 						>
 							{isCreating ? "Create Provider" : "Save Changes"}
 						</Button>
