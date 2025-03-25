@@ -39,12 +39,11 @@ export function ProviderSelect({
 	// Convert selectedProviderId to string array format
 	const value = selectedProviderId ? [String(selectedProviderId)] : [];
 
-	const handleProviderChange = (details: any) => {
+	const handleProviderChange = (details: { value: string[] }) => {
 		const id = Number(details.value[0]);
 		const provider = providers.find((p) => p.id === id);
 		if (provider) {
 			setSelectedProvider(provider);
-			setMode("view");
 		}
 	};
 
@@ -59,7 +58,7 @@ export function ProviderSelect({
 			<SelectTrigger>
 				<SelectValueText placeholder="Select a provider" />
 			</SelectTrigger>
-			<SelectContent>
+			<SelectContent portalled={false}>
 				{providerItems.map((item) => (
 					<SelectItem key={item.value} item={item}>
 						{item.label}
