@@ -113,9 +113,28 @@ export function ActionPanel({
 	// Handle clicks outside the panel
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
+			const target = event.target as HTMLElement;
+
+			// Check if the click is inside a dialog or modal
+			const isInsideModal = 
+				// Check for Chakra UI Dialog elements
+				target.closest("[role='dialog']") || 
+				target.closest("[data-part='backdrop']") ||
+				target.closest("[data-part='positioner']") ||
+				target.closest("[data-part='content']") ||
+				// Also check for other common modal classes/attributes
+				target.closest(".modal") ||
+				target.closest("[aria-modal='true']");
+
+			// Don't collapse the panel if clicking inside a dialog/modal
+			if (isInsideModal) {
+				return;
+			}
+
+			// Proceed with the normal check for panel containment
 			if (
 				panelRef.current &&
-				!panelRef.current.contains(event.target as Node) &&
+				!panelRef.current.contains(target) &&
 				isExpanded
 			) {
 				collapsePanel();

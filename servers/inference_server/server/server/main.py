@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import init_app_db
 from .routers import main_router
 from .utils.logger import logger
+from .utils.middleware import setup_middlewares
 
 
 class GracefulExit(SystemExit):
@@ -83,6 +84,9 @@ app = FastAPI(
     version="0.0.2",
     lifespan=lifespan,
 )
+
+# Set up middleware
+setup_middlewares(app)
 
 # Configure CORS
 app.add_middleware(

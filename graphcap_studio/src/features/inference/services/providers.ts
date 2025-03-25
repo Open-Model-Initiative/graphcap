@@ -56,10 +56,11 @@ interface DataServiceClient {
 	};
 }
 
-interface GraphCapServerClient {
-	models: {
-		$post: (options: { json: ServerProviderConfig }) => Promise<Response>;
-	};
+/**
+ * Extended Error interface with cause property
+ */
+interface ErrorWithCause extends Error {
+	cause?: unknown;
 }
 
 /**
@@ -232,8 +233,56 @@ export function useUpdateProviderApiKey() {
 }
 
 /**
- * Hook to get provider models
- * This now uses the new server-side configuration
+ * Hook to test provider connection
+ */
+export function useTestProviderConnection() {
+	const { connections } = useServerConnectionsContext();
+	
+	return useMutation({
+		mutationFn: async ({ providerName, config }: { providerName: string; config: ServerProviderConfig }) => {
+			const client = createInferenceBridgeClient(connections);
+			const response = await client.providers[":provider_name"]["test-connection"].$post({
+				param: { provider_name: providerName },
+				json: config,
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				
+				// Check if this is our enhanced error format
+				if (errorData.status === 'error' && errorData.details) {
+					// Use the structured error data with cause property
+					const error = new Error(errorData.message || 'Connection test failed') as ErrorWithCause;
+					error.cause = errorData;
+					throw error;
+				}
+				
+				// Handle different error formats
+				if (errorData.detail) {
+					throw new Error(errorData.detail);
+				}
+				
+				if (errorData.message) {
+					throw new Error(errorData.message);
+				}
+				
+				if (typeof errorData === 'object') {
+					// For raw objects, don't wrap in Error, just throw the object directly
+					// This prevents "[object Object]" in the error message
+					throw { ...errorData };
+				}
+				
+				// Fallback to simple error
+				throw new Error(`Connection test failed: ${response.status}`);
+			}
+
+			return response.json();
+		},
+	});
+}
+
+/**
+ * Hook to fetch provider models
  */
 export function useProviderModels(provider: Provider) {
 	const { connections } = useServerConnectionsContext();
@@ -253,7 +302,9 @@ export function useProviderModels(provider: Provider) {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch provider models: ${response.status}`);
+				throw new Error(
+					`Failed to fetch models for ${provider.name}: ${response.status}`,
+				);
 			}
 
 			return response.json() as Promise<ProviderModelsResponse>;

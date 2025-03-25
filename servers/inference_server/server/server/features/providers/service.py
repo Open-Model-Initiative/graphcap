@@ -6,6 +6,7 @@ Provides services for working with AI providers.
 """
 
 from typing import Any, Dict, List, Protocol, runtime_checkable
+import datetime
 
 from graphcap.providers.clients.base_client import BaseClient
 from graphcap.providers.factory import create_provider_client, get_provider_factory
@@ -124,3 +125,174 @@ def get_provider_manager():
             return ["gemini"]
     
     return ProviderManagerWrapper(factory)
+
+
+async def test_provider_connection(provider_name: str, config: ProviderConfig) -> Dict[str, Any]:
+    """
+    Test connection to a provider by initializing the client and performing a simple operation.
+
+    Args:
+        provider_name: Name of the provider to test
+        config: Provider configuration for this request
+
+    Returns:
+        Dictionary containing test results and additional information
+
+    Raises:
+        Exception: If the connection test fails
+    """
+    result = {
+        "provider": provider_name,
+        "details": {},
+        "diagnostics": {
+            "config_summary": {
+                "kind": config.kind,
+                "environment": config.environment,
+                "base_url_valid": bool(config.base_url),
+                "api_key_provided": bool(config.api_key),
+                "default_model": config.default_model,
+                "models_count": len(config.models),
+            },
+            "connection_steps": [],
+            "warnings": []
+        }
+    }
+    
+    try:
+        # Add diagnostic step
+        result["diagnostics"]["connection_steps"].append({
+            "step": "initialize_client",
+            "status": "pending",
+            "timestamp": str(datetime.datetime.now())
+        })
+        
+        # Initialize client with provided configuration
+        client = create_provider_client(
+            name=provider_name,
+            kind=config.kind,
+            environment=config.environment,
+            base_url=config.base_url,
+            api_key=config.api_key,
+            default_model=config.default_model,
+            rate_limits=config.rate_limits,
+            use_cache=False,  # Don't cache test clients
+        )
+        
+        # Update diagnostic step
+        result["diagnostics"]["connection_steps"][-1]["status"] = "success"
+        result["client_initialized"] = True
+        
+        # Check if an empty API key was provided
+        if not config.api_key:
+            result["diagnostics"]["warnings"].append({
+                "warning_type": "empty_api_key",
+                "message": "An empty API key was provided. This might not work with most providers."
+            })
+        
+        # Check if the base URL seems valid
+        if not config.base_url.startswith(("http://", "https://")):
+            result["diagnostics"]["warnings"].append({
+                "warning_type": "invalid_base_url",
+                "message": "The base URL doesn't start with http:// or https://"
+            })
+        
+        # Try to test the connection with a lightweight operation
+        # First check if we can get models (most providers support this)
+        if isinstance(client, ModelProvider):
+            try:
+                # Add diagnostic step
+                result["diagnostics"]["connection_steps"].append({
+                    "step": "verify_connection",
+                    "status": "pending",
+                    "timestamp": str(datetime.datetime.now())
+                })
+                
+                if hasattr(client, "get_available_models"):
+                    provider_models = await client.get_available_models()
+                    result["connection_verified"] = True
+                    result["details"]["method"] = "get_available_models"
+                    
+                    # Add model information if available
+                    if hasattr(provider_models, "data"):
+                        models_data = []
+                        for model in provider_models.data:
+                            model_id = _extract_model_id(model)
+                            models_data.append({"id": model_id})
+                        result["details"]["available_models"] = models_data
+                        result["details"]["models_count"] = len(models_data)
+                        
+                elif hasattr(client, "get_models"):
+                    provider_models = await client.get_models()
+                    result["connection_verified"] = True
+                    result["details"]["method"] = "get_models"
+                    
+                    # Add model information if available
+                    if hasattr(provider_models, "models"):
+                        models_data = []
+                        for model in provider_models.models:
+                            model_id = _extract_model_id(model)
+                            models_data.append({"id": model_id})
+                        result["details"]["available_models"] = models_data
+                        result["details"]["models_count"] = len(models_data)
+                        
+                else:
+                    # If we can't check models, just having created the client is enough
+                    result["connection_verified"] = True
+                    result["details"]["method"] = "client_init_only"
+                
+                # Update diagnostic step
+                result["diagnostics"]["connection_steps"][-1]["status"] = "success"
+                
+            except Exception as e:
+                logger.error(f"Error testing connection to {provider_name}: {str(e)}")
+                
+                # Update diagnostic step
+                result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
+                result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
+                result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
+                
+                result["connection_verified"] = False
+                result["details"]["error"] = str(e)
+                result["details"]["error_type"] = type(e).__name__
+                
+                # Add specific suggestions based on error type
+                if "authentication" in str(e).lower() or "unauthorized" in str(e).lower() or "auth" in str(e).lower():
+                    result["details"]["suggestion"] = "Check if the API key is valid and has necessary permissions"
+                elif "timeout" in str(e).lower():
+                    result["details"]["suggestion"] = "Connection timed out. Check network connectivity or server status"
+                elif "url" in str(e).lower() or "endpoint" in str(e).lower():
+                    result["details"]["suggestion"] = "Check if the base URL is correct for this provider"
+                
+                raise Exception(f"Error verifying connection: {str(e)}")
+        else:
+            # For providers that don't support models API
+            result["connection_verified"] = True
+            result["details"]["method"] = "client_init_only"
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error initializing provider client for {provider_name}: {str(e)}")
+        
+        # Update diagnostic information
+        if "connection_steps" in result["diagnostics"] and result["diagnostics"]["connection_steps"]:
+            result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
+            result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
+            result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
+        
+        result["client_initialized"] = False
+        result["connection_verified"] = False
+        result["details"]["error"] = str(e)
+        result["details"]["error_type"] = type(e).__name__
+        
+        # Add specific suggestions based on error type
+        if any(keyword in str(e).lower() for keyword in ["api key", "authentication", "auth", "credential"]):
+            result["details"]["suggestion"] = "Check if the API key is valid"
+        elif any(keyword in str(e).lower() for keyword in ["url", "endpoint", "address"]):
+            result["details"]["suggestion"] = "Check if the base URL is correct"
+        elif any(keyword in str(e).lower() for keyword in ["timeout", "connect"]):
+            result["details"]["suggestion"] = "Network connectivity issue. Check your internet connection"
+        elif "provider" in str(e).lower():
+            result["details"]["suggestion"] = "Verify that the provider type is supported and correctly configured"
+        
+        raise Exception(f"Failed to initialize provider client: {str(e)}", result)

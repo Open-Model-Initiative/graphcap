@@ -1,15 +1,17 @@
 """
 # SPDX-License-Identifier: Apache-2.0
-Utility Module Collection
+Utils Module
 
-Collection of utility functions and helpers used throughout the graphcap server.
+Provides utility functions and classes for the FastAPI application.
 
-Key features:
-- Logging configuration
-- JSON formatting
-- Error handling
-- Common utilities
-
-Components:
-    logger: Configured loguru logger with JSON formatting
+Key components:
+- logger: Configured loguru logger
+- resizing: Image resizing utilities
+- middleware: FastAPI middleware components
 """
+
+from . import logger
+from . import resizing
+from . import middleware
+
+__all__ = ["logger", "resizing", "middleware"]

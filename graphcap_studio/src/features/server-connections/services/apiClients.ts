@@ -40,6 +40,22 @@ export interface InferenceBridgeClient {
 	models: {
 		$post: (options: { json: unknown }) => Promise<Response>;
 	};
+	providers: {
+		":provider_name": {
+			"test-connection": {
+				$post: (options: { 
+					param: { provider_name: string };
+					json: unknown;
+				}) => Promise<Response>;
+			};
+			"models": {
+				$post: (options: { 
+					param: { provider_name: string };
+					json: unknown;
+				}) => Promise<Response>;
+			};
+		};
+	};
 	perspectives: {
 		list: {
 			$get: () => Promise<Response>;
