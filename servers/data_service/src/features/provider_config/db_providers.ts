@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: Apache-2.0
-import { pgTable, serial, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+// SPDX-License-Identifier: Apache-2.0
+import { boolean, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * Providers table schema
@@ -11,7 +11,6 @@ export const providers = pgTable('providers', {
   name: text('name').notNull().unique(),
   kind: text('kind').notNull(), // openai, gemini, etc.
   environment: text('environment').notNull(), // cloud, local
-  envVar: text('env_var').notNull(),
   baseUrl: text('base_url').notNull(),
   apiKey: text('api_key'), // Will store encrypted API key
   isEnabled: boolean('is_enabled').default(true),

@@ -13,7 +13,6 @@ export const providerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   kind: z.string().min(1, 'Kind is required'),
   environment: z.enum(['cloud', 'local']),
-  envVar: z.string().min(1, 'Environment variable name is required'),
   baseUrl: z.string().url('Must be a valid URL'),
   apiKey: z.string().optional(),
   isEnabled: z.boolean().default(true),
@@ -44,7 +43,6 @@ export const providerCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   kind: z.string().min(1, 'Kind is required'),
   environment: z.enum(['cloud', 'local']),
-  envVar: z.string().min(1, 'Environment variable name is required'),
   baseUrl: z.string().url('Must be a valid URL'),
   apiKey: z.string().optional(),
   isEnabled: z.boolean().default(true),
@@ -65,7 +63,6 @@ export const providerUpdateSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
   kind: z.string().min(1, 'Kind is required').optional(),
   environment: z.enum(['cloud', 'local']).optional(),
-  envVar: z.string().min(1, 'Environment variable name is required').optional(),
   baseUrl: z.string().url('Must be a valid URL').optional(),
   isEnabled: z.boolean().optional(),
   models: z.array(

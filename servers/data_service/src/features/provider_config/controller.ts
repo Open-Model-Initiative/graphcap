@@ -113,6 +113,54 @@ export const createProvider = async (c: Context) => {
 		const data = c.req.valid("json") as ProviderCreate;
 		logger.debug({ data }, "Creating new provider");
 
+		// Enhanced validation with detailed error messages
+		const validationErrors: Record<string, string[]> = {};
+		
+		// Name validation
+		if (!data.name) {
+			validationErrors.name = ['Provider name is required'];
+		} else if (data.name.trim() === '') {
+			validationErrors.name = ['Provider name cannot be just whitespace'];
+		} else if (data.name.length < 3) {
+			validationErrors.name = ['Provider name must be at least 3 characters long'];
+		}
+		
+		// Kind validation
+		if (!data.kind) {
+			validationErrors.kind = ['Provider kind is required'];
+		} else if (data.kind.trim() === '') {
+			validationErrors.kind = ['Provider kind cannot be just whitespace'];
+		}
+		
+		// Base URL validation
+		if (!data.baseUrl) {
+			validationErrors.baseUrl = ['Base URL is required'];
+		} else {
+			try {
+				new URL(data.baseUrl);
+			} catch (e) {
+				validationErrors.baseUrl = ['Base URL must be a valid URL'];
+			}
+		}
+		
+		// Environment validation
+		if (!data.environment) {
+			validationErrors.environment = ['Environment is required'];
+		} else if (!['cloud', 'local'].includes(data.environment)) {
+			validationErrors.environment = ['Environment must be either "cloud" or "local"'];
+		}
+		
+		// If there are validation errors, return them
+		if (Object.keys(validationErrors).length > 0) {
+			logger.debug({ validationErrors }, "Validation errors in provider creation");
+			return c.json({
+				status: "error",
+				statusCode: 400,
+				message: "Validation failed",
+				validationErrors
+			}, 400);
+		}
+
 		// Extract models and rate limits if provided
 		const { models, rateLimits, ...providerData } = data;
 
@@ -176,8 +224,58 @@ export const createProvider = async (c: Context) => {
 		}, "Provider created successfully");
 		return c.json(result, 201);
 	} catch (error) {
-		logger.error({ error }, "Error creating provider");
-		return c.json({ error: "Failed to create provider" }, 500);
+		logger.error({ 
+			error,
+			message: error instanceof Error ? error.message : "Unknown error",
+			stack: error instanceof Error ? error.stack : undefined
+		}, "Error creating provider");
+		
+		// Check for specific error types to provide better error messages
+		if (error instanceof Error) {
+			// Handle database unique constraint violation
+			if (error.message.includes('duplicate key value violates unique constraint')) {
+				return c.json({
+					status: "error",
+					statusCode: 400,
+					message: "A provider with that name already exists",
+					details: {
+						type: "UniqueConstraintViolation"
+					}
+				}, 400);
+			}
+			
+			// Handle other database errors
+			if (error.message.includes('database') || error.message.includes('query')) {
+				return c.json({
+					status: "error",
+					statusCode: 500,
+					message: "Database error occurred while creating provider",
+					details: {
+						type: "DatabaseError"
+					}
+				}, 500);
+			}
+			
+			// Handle validation errors from Zod or other validators
+			if (error.message.includes('validation')) {
+				return c.json({
+					status: "error",
+					statusCode: 400,
+					message: "Validation error",
+					details: {
+						message: error.message
+					}
+				}, 400);
+			}
+		}
+		
+		// Generic error fallback
+		return c.json({
+			status: "error",
+			statusCode: 500,
+			message: "Failed to create provider",
+			details: error instanceof Error ? { message: error.message } : undefined
+		}, 500);
 	}
 };
 
@@ -211,82 +309,6 @@ export const updateProvider = async (c: Context) => {
 		// Enhanced validation with detailed error messages
 		const validationErrors: Record<string, string[]> = {};
 		
-		// Name validation
-		if (data.name !== undefined) {
-			if (!data.name) {
-				validationErrors.name = ['Provider name cannot be empty'];
-			} else if (data.name.trim() === '') {
-				validationErrors.name = ['Provider name cannot be just whitespace'];
-			} else if (data.name.length < 3) {
-				validationErrors.name = ['Provider name must be at least 3 characters long'];
-			}
-		}
-		
-		// Kind validation
-		if (data.kind !== undefined) {
-			if (!data.kind) {
-				validationErrors.kind = ['Provider kind cannot be empty'];
-			} else if (data.kind.trim() === '') {
-				validationErrors.kind = ['Provider kind cannot be just whitespace'];
-			} else if (!['openai', 'anthropic', 'google', 'custom'].includes(data.kind.toLowerCase())) {
-				validationErrors.kind = ['Provider kind must be one of: openai, anthropic, google, custom'];
-			}
-		}
-		
-		// Base URL validation
-		if (data.baseUrl !== undefined) {
-			if (!data.baseUrl) {
-				validationErrors.baseUrl = ['Base URL cannot be empty'];
-			} else {
-				try {
-					const url = new URL(data.baseUrl);
-					if (!['http:', 'https:'].includes(url.protocol)) {
-						validationErrors.baseUrl = ['Base URL must use HTTP or HTTPS protocol'];
-					}
-				} catch (e) {
-					validationErrors.baseUrl = ['Base URL must be a valid URL'];
-				}
-			}
-		}
-
-		// Environment validation
-		if (data.environment !== undefined) {
-			if (!data.environment) {
-				validationErrors.environment = ['Environment cannot be empty'];
-			} else if (!['production', 'development', 'staging', 'test'].includes(data.environment.toLowerCase())) {
-				validationErrors.environment = ['Environment must be one of: production, development, staging, test'];
-			}
-		}
-
-		// Models validation if provided
-		if (data.models !== undefined) {
-			const modelErrors: string[] = [];
-			data.models.forEach((model, index) => {
-				if (!model.name) {
-					modelErrors.push(`Model at index ${index} must have a name`);
-				}
-				if (typeof model.isEnabled !== 'boolean') {
-					modelErrors.push(`Model ${model.name || `at index ${index}`} must have a boolean isEnabled field`);
-				}
-			});
-			if (modelErrors.length > 0) {
-				validationErrors.models = modelErrors;
-			}
-		}
-
-		// Rate limits validation if provided
-		if (data.rateLimits !== undefined) {
-			const rateLimitErrors: string[] = [];
-			if (typeof data.rateLimits.requestsPerMinute !== 'number' || data.rateLimits.requestsPerMinute < 0) {
-				rateLimitErrors.push('requestsPerMinute must be a non-negative number');
-			}
-			if (typeof data.rateLimits.tokensPerMinute !== 'number' || data.rateLimits.tokensPerMinute < 0) {
-				rateLimitErrors.push('tokensPerMinute must be a non-negative number');
-			}
-			if (rateLimitErrors.length > 0) {
-				validationErrors.rateLimits = rateLimitErrors;
-			}
-		}
 		
 		// If there are validation errors, return them
 		if (Object.keys(validationErrors).length > 0) {

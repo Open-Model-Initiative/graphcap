@@ -33,7 +33,7 @@ services:
     ports:
       - "35433:5432"
     volumes:
-      - inference_bridge_db:/var/lib/postgresql/data
+      - graphcap_db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
@@ -182,7 +182,7 @@ services:
       - ./workspace/config/.env
 
 volumes:
-  inference_bridge_db:
+  graphcap_db:
 
 networks:
   graphcap:

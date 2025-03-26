@@ -105,7 +105,6 @@ export async function seedProviders() {
         name,
         kind: providerConfig.kind,
         environment: providerConfig.environment,
-        envVar: providerConfig.env_var,
         baseUrl: providerConfig.base_url,
         isEnabled: true
       }).returning();
