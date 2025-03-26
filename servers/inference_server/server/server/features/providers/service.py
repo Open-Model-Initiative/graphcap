@@ -200,16 +200,15 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
         # First check if we can get models (most providers support this)
         if isinstance(client, ModelProvider):
             try:
-                # Add diagnostic step
+                # Add diagnostic step for model list
                 result["diagnostics"]["connection_steps"].append({
-                    "step": "verify_connection",
+                    "step": "list_models",
                     "status": "pending",
                     "timestamp": str(datetime.datetime.now())
                 })
                 
                 if hasattr(client, "get_available_models"):
                     provider_models = await client.get_available_models()
-                    result["connection_verified"] = True
                     result["details"]["method"] = "get_available_models"
                     
                     # Add model information if available
@@ -223,7 +222,6 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
                         
                 elif hasattr(client, "get_models"):
                     provider_models = await client.get_models()
-                    result["connection_verified"] = True
                     result["details"]["method"] = "get_models"
                     
                     # Add model information if available
@@ -234,23 +232,58 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
                             models_data.append({"id": model_id})
                         result["details"]["available_models"] = models_data
                         result["details"]["models_count"] = len(models_data)
-                        
-                else:
-                    # If we can't check models, just having created the client is enough
-                    result["connection_verified"] = True
-                    result["details"]["method"] = "client_init_only"
                 
                 # Update diagnostic step
                 result["diagnostics"]["connection_steps"][-1]["status"] = "success"
                 
             except Exception as e:
-                logger.error(f"Error testing connection to {provider_name}: {str(e)}")
+                logger.warning(f"Could not list models for {provider_name}: {str(e)}")
+                result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
+                result["diagnostics"]["connection_steps"][-1]["message"] = "Model listing not supported or failed"
+        
+        # Try a simple chat completion as a more thorough test
+        try:
+            # Add diagnostic step for chat completion
+            result["diagnostics"]["connection_steps"].append({
+                "step": "test_chat_completion",
+                "status": "pending",
+                "timestamp": str(datetime.datetime.now())
+            })
+            
+            # Use the first available model or default model
+            test_model = None
+            if result.get("details", {}).get("available_models"):
+                test_model = result["details"]["available_models"][0]["id"]
+            elif config.default_model:
+                test_model = config.default_model
+            
+            if test_model:
+                # Simple test message
+                test_messages = [{"role": "user", "content": "Hello, this is a test message. Please respond with 'OK' if you can process this request."}]
                 
-                # Update diagnostic step
-                result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
-                result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
-                result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
+                completion = await client.chat.completions.create(
+                    model=test_model,
+                    messages=test_messages,
+                    max_tokens=10,  # Keep it minimal
+                    temperature=0,  # Deterministic
+                )
                 
+                result["connection_verified"] = True
+                result["details"]["chat_completion_test"] = "success"
+                result["details"]["test_model"] = test_model
+                result["diagnostics"]["connection_steps"][-1]["status"] = "success"
+            else:
+                result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
+                result["diagnostics"]["connection_steps"][-1]["message"] = "No suitable model found for testing"
+                
+        except Exception as e:
+            logger.error(f"Chat completion test failed for {provider_name}: {str(e)}")
+            result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
+            result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
+            result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
+            
+            # Only mark connection as failed if we couldn't list models either
+            if not result.get("details", {}).get("available_models"):
                 result["connection_verified"] = False
                 result["details"]["error"] = str(e)
                 result["details"]["error_type"] = type(e).__name__
@@ -264,11 +297,15 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
                     result["details"]["suggestion"] = "Check if the base URL is correct for this provider"
                 
                 raise Exception(f"Error verifying connection: {str(e)}")
-        else:
-            # For providers that don't support models API
-            result["connection_verified"] = True
-            result["details"]["method"] = "client_init_only"
-            
+            else:
+                # If we could list models but chat completion failed, just warn
+                result["diagnostics"]["warnings"].append({
+                    "warning_type": "chat_completion_failed",
+                    "message": f"Chat completion test failed but model listing succeeded. Provider may have limited functionality. Error: {str(e)}"
+                })
+                result["connection_verified"] = True
+                result["details"]["method"] = "list_models_only"
+        
         return result
         
     except Exception as e:
