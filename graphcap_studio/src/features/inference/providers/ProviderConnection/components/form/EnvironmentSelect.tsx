@@ -3,6 +3,7 @@ import {
 	SelectItem,
 	SelectRoot,
 	SelectTrigger,
+	SelectValueText,
 } from "@/components/ui/select";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { Field, createListCollection } from "@chakra-ui/react";
@@ -34,10 +35,18 @@ export function EnvironmentSelect() {
 					<SelectRoot
 						{...field}
 						value={field.value ? [field.value] : []}
-						onValueChange={(value) => field.onChange(value)}
+						onValueChange={(details) => {
+							if (details.value && details.value.length > 0) {
+								field.onChange(details.value[0]);
+							} else {
+								field.onChange("");
+							}
+						}}
 						collection={collection}
 					>
-						<SelectTrigger>{field.value || "Select environment"}</SelectTrigger>
+						<SelectTrigger>
+							<SelectValueText placeholder="Select environment" />
+						</SelectTrigger>
 						<SelectContent>
 							{environmentItems.map((item) => (
 								<SelectItem key={item.value} item={item}>

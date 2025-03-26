@@ -31,6 +31,134 @@ export const createPinoLoggerMiddleware = () => {
 };
 
 /**
+ * Get safe query parameters with error handling
+ */
+const getSafeQueryParams = (c: Context): Record<string, string | string[]> => {
+	try {
+		return c.req.query();
+	} catch (e) {
+		logger.debug({ error: e }, "Failed to get query parameters");
+		return {}; // Fallback to empty object if query() throws an error
+	}
+};
+
+/**
+ * Extract and parse request body based on content type
+ */
+const parseRequestBody = async (clonedReq: Request, contentType: string): Promise<unknown> => {
+	if (contentType.includes("application/json")) {
+		try {
+			return await clonedReq.json();
+		} catch (jsonError) {
+			logger.debug({ error: jsonError }, "Failed to parse JSON body");
+			return "[Unparseable JSON]";
+		}
+	} 
+	
+	if (contentType.includes("multipart/form-data")) {
+		return "[Multipart form data]";
+	} 
+	
+	if (contentType.includes("application/x-www-form-urlencoded")) {
+		try {
+			return Object.fromEntries(await clonedReq.formData());
+		} catch (formError) {
+			logger.debug({ error: formError }, "Failed to parse form data");
+			return "[Unparseable form data]";
+		}
+	} 
+	
+	// Default to text handling
+	try {
+		const textBody = await clonedReq.text();
+		return textBody.length > 1000 ? `${textBody.substring(0, 1000)}... [truncated]` : textBody;
+	} catch (textError) {
+		logger.debug({ error: textError }, "Failed to get text body");
+		return "[Unreadable text body]";
+	}
+};
+
+/**
+ * Extract request body with proper error handling
+ */
+const getRequestBody = async (c: Context, method: string): Promise<[unknown, boolean]> => {
+	// Skip for GET and HEAD requests
+	if (method === "GET" || method === "HEAD") {
+		return [null, true];
+	}
+
+	try {
+		// Check if the request can be cloned
+		if (c.req.raw.clone && typeof c.req.raw.clone === 'function') {
+			const clonedReq = c.req.raw.clone();
+			const contentType = c.req.header("content-type") || "";
+			const body = await parseRequestBody(clonedReq, contentType);
+			return [body, true];
+		}
+		
+		// If request cloning is not supported
+		logger.debug("Request body logging skipped - Request.clone() not supported");
+		return ["[Body logging disabled - clone not supported]", false];
+	} catch (e) {
+		logger.debug({ error: e }, "Error while attempting to read request body");
+		return ["[Error reading request body]", true];
+	}
+};
+
+/**
+ * Log request information
+ */
+const logRequest = (
+	method: string, 
+	url: string, 
+	path: string, 
+	queryParams: Record<string, string | string[]>, 
+	headers: Record<string, string>,
+	body: unknown,
+	bodyReadable: boolean
+) => {
+	logger.info(
+		{
+			type: "request",
+			method,
+			url,
+			path,
+			query: queryParams,
+			headers,
+			body,
+			bodyReadable,
+		},
+		"API Request",
+	);
+};
+
+/**
+ * Log response information
+ */
+const logResponse = (
+	method: string,
+	url: string,
+	path: string,
+	status: number | undefined,
+	headers: Headers | undefined,
+	responseTime: number
+) => {
+	logger.info(
+		{
+			type: "response",
+			method,
+			url,
+			path,
+			status,
+			headers,
+			responseTime,
+			body: "[Response body not captured]",
+		},
+		"API Response",
+	);
+};
+
+/**
  * Detailed logging middleware
  *
  * This middleware captures and logs detailed request/response information
@@ -38,107 +166,24 @@ export const createPinoLoggerMiddleware = () => {
  */
 export const createDetailedLoggingMiddleware = () => {
 	return async (c: Context, next: () => Promise<void>) => {
-		// Log request details before processing
+		// Extract basic request information
 		const { method } = c.req;
 		const url = c.req.url;
 		const path = c.req.path;
 		
-		// Safely get query parameters
-		let queryParams: Record<string, string | string[]>;
-		try {
-			queryParams = c.req.query();
-		} catch (e) {
-			queryParams = {}; // Fallback to empty object if query() throws an error
-			logger.debug({ error: e }, "Failed to get query parameters");
-		}
-
-		// Try to get the request body if not a GET or HEAD request
-		let reqBody: unknown = null;
-		let bodyReadable = true;
-		if (method !== "GET" && method !== "HEAD") {
-			try {
-				// Check if the request can be cloned (only works in certain environments)
-				if (c.req.raw.clone && typeof c.req.raw.clone === 'function') {
-					// Clone the request to read the body without consuming it
-					const clonedReq = c.req.raw.clone();
-					const contentType = c.req.header("content-type") || "";
-
-					if (contentType.includes("application/json")) {
-						try {
-							reqBody = await clonedReq.json();
-						} catch (jsonError) {
-							logger.debug({ error: jsonError }, "Failed to parse JSON body");
-							reqBody = "[Unparseable JSON]";
-						}
-					} else if (contentType.includes("multipart/form-data")) {
-						reqBody = "[Multipart form data]";
-					} else if (contentType.includes("application/x-www-form-urlencoded")) {
-						try {
-							reqBody = Object.fromEntries(await clonedReq.formData());
-						} catch (formError) {
-							logger.debug({ error: formError }, "Failed to parse form data");
-							reqBody = "[Unparseable form data]";
-						}
-					} else {
-						try {
-							const textBody = await clonedReq.text();
-							reqBody = textBody.length > 1000 ? `${textBody.substring(0, 1000)}... [truncated]` : textBody;
-						} catch (textError) {
-							logger.debug({ error: textError }, "Failed to get text body");
-							reqBody = "[Unreadable text body]";
-						}
-					}
-				} else {
-					// If request cloning is not supported, don't attempt to read the body
-					bodyReadable = false;
-					reqBody = "[Body logging disabled - clone not supported]";
-					logger.debug("Request body logging skipped - Request.clone() not supported");
-				}
-			} catch (e) {
-				logger.debug({ error: e }, "Error while attempting to read request body");
-				reqBody = "[Error reading request body]";
-			}
-		}
-
+		// Get request components
+		const queryParams = getSafeQueryParams(c);
+		const [reqBody, bodyReadable] = await getRequestBody(c, method);
+		
 		// Log the request
-		logger.info(
-			{
-				type: "request",
-				method,
-				url,
-				path,
-				query: queryParams,
-				headers: c.req.header(),
-				body: reqBody,
-				bodyReadable,
-			},
-			"API Request",
-		);
+		logRequest(method, url, path, queryParams, c.req.header(), reqBody, bodyReadable);
 
-		// Process the request
+		// Process the request and measure response time
 		const startTime = Date.now();
 		await next();
 		const responseTime = Date.now() - startTime;
 
 		// Log response details
-		// We don't attempt to capture the response body to avoid interference
-		// Response body capture requires special handling at the route level
-		const resStatus = c.res?.status;
-		const resHeaders = c.res?.headers;
-
-		// Log the response
-		logger.info(
-			{
-				type: "response",
-				method,
-				url,
-				path,
-				status: resStatus,
-				headers: resHeaders,
-				responseTime,
-				body: "[Response body not captured]",
-			},
-			"API Response",
-		);
+		logResponse(method, url, path, c.res?.status, c.res?.headers, responseTime);
 	};
 };

@@ -9,11 +9,9 @@
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import type {
 	Provider,
-	ProviderApiKey,
 	ProviderCreate,
 	ProviderModelsResponse,
 	ProviderUpdate,
-	ServerProviderConfig,
 	SuccessResponse,
 } from "@/features/inference/providers/types";
 import { toServerConfig } from "@/features/inference/providers/types";
@@ -219,57 +217,6 @@ export function useDeleteProvider() {
 			queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
 			// Invalidate providers list
 			queryClient.invalidateQueries({ queryKey: queryKeys.providers });
-		},
-	});
-}
-
-/**
- * Hook to update a provider's API key
- */
-export function useUpdateProviderApiKey() {
-	const queryClient = useQueryClient();
-	const { connections } = useServerConnectionsContext();
-
-	return useMutation({
-		mutationFn: async ({ id, apiKey }: { id: number; apiKey: string }) => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"]["api-key"].$put({
-				param: { id: id.toString() },
-				json: { apiKey } as ProviderApiKey,
-			});
-
-			if (!response.ok) {
-				// Try to get detailed error information
-				try {
-					const errorData = await response.json();
-					console.error("API key update error:", errorData);
-					
-					// Check if we have a structured error response
-					if (errorData.status === 'error' || errorData.validationErrors) {
-						throw errorData;
-					}
-					
-					// Simple error with a message
-					if (errorData.message) {
-						throw new Error(errorData.message);
-					}
-					
-					// Fallback error
-					throw new Error(`Failed to update API key: ${response.status}`);
-				} catch (parseError) {
-					// If we can't parse the error as JSON, throw a general error
-					if (parseError instanceof Error && parseError.message !== 'Failed to update API key') {
-						throw parseError;
-					}
-					throw new Error(`Failed to update API key: ${response.status}`);
-				}
-			}
-
-			return response.json() as Promise<SuccessResponse>;
-		},
-		onSuccess: (_, { id }) => {
-			// Invalidate specific provider query
-			queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
 		},
 	});
 }

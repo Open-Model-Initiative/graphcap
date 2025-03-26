@@ -15,6 +15,7 @@ export function ProviderActions() {
     return (
       <Flex justify="flex-end" mt={6}>
         <HStack gap={3}>
+          <TestConnectionButton />
           <CancelButton />
           <SaveButton />
         </HStack>

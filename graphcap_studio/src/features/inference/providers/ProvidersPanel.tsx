@@ -2,7 +2,6 @@ import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Box, Center, Flex, Text } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from "react";
-import type { Provider } from "../providers/types";
 import { useProviders } from "../services/providers";
 import { ProviderConnection } from "./ProviderConnection";
 import {
@@ -14,7 +13,6 @@ import {
  */
 function PanelContent() {
 	const { colorMode } = useColorMode();
-	const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
 
 	return (
 		<Flex direction="column" h="full">

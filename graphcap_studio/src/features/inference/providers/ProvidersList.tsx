@@ -2,7 +2,6 @@
 import { useProviders } from "../services/providers";
 import { ProviderFormSelect } from "./ProviderConnection/components/form/ProviderFormSelect";
 import { ProviderFormContainer } from "./ProviderConnection/containers/ProviderFormContainer";
-import { useInferenceProviderContext } from "./context/InferenceProviderContext";
 import type { ProviderCreate, ProviderUpdate } from "./types";
 
 /**
@@ -11,7 +10,6 @@ import type { ProviderCreate, ProviderUpdate } from "./types";
  */
 export default function ProvidersList() {
 	const { data: providers = [], isLoading } = useProviders();
-	const { setSelectedProvider } = useInferenceProviderContext();
 
 	// No need to check context.providers as we fetch directly here
 	if (providers.length === 0 && !isLoading) {
