@@ -1,67 +1,26 @@
 import { useColorMode } from "@/components/ui/theme/color-mode";
-import { Box, Button, Center, Flex, Text, VStack } from "@chakra-ui/react";
+import { Box, Center, Flex, Text } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from "react";
 import type { Provider } from "../providers/types";
 import { useProviders } from "../services/providers";
 import { ProviderConnection } from "./ProviderConnection";
-import { ProviderSelect } from "./ProviderConnection/components/ProviderSelect";
 import {
 	InferenceProviderProvider,
-	useInferenceProviderContext,
 } from "./context";
 
 /**
  * Panel content that requires context
  */
 function PanelContent() {
-	const { setMode, providers, selectedProvider } = useInferenceProviderContext();
 	const { colorMode } = useColorMode();
-	const textColor = colorMode === "light" ? "gray.600" : "gray.300";
 	const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
-
-	// No providers state
-	if (providers.length === 0) {
-		return (
-			<VStack p={4} gap={4}>
-				<Text color={textColor}>No providers configured</Text>
-				<Button
-					colorScheme="blue"
-					onClick={() => {
-						setMode("create");
-					}}
-				>
-					Add Provider
-				</Button>
-			</VStack>
-		);
-	}
 
 	return (
 		<Flex direction="column" h="full">
-			{/* Header */}
-			<Flex
-				p={3}
-				borderBottom="1px"
-				borderColor={borderColor}
-				justify="space-between"
-				align="center"
-				gap={4}
-			>
-				{/* Provider Selection Dropdown */}
-				<Box flex="1">
-					<ProviderSelect className="w-full" aria-label="Select Provider" />
-				</Box>
-				<Button size="sm" colorScheme="blue" onClick={() => setMode("create")}>
-					Add Provider
-				</Button>
-			</Flex>
-
 			{/* Content */}
 			<Box flex="1" overflow="auto">
-				<ProviderConnection 
-					initialData={selectedProvider || undefined}
-				/>
+				<ProviderConnection />
 			</Box>
 		</Flex>
 	);
@@ -70,8 +29,8 @@ function PanelContent() {
 /**
  * Providers Panel Component
  *
- * This component displays a list of providers and allows viewing and editing
- * provider configurations.
+ * This component displays provider configurations in a panel.
+ * It acts as a container for the provider connection form.
  */
 export function ProvidersPanel() {
 	const {
@@ -112,9 +71,7 @@ export function ProvidersPanel() {
 			providers={providersData}
 			selectedProvider={initialSelectedProvider}
 			isCreating={false}
-			onSubmit={() => {}}
 			onCancel={() => {}}
-			isSubmitting={false}
 		>
 			<PanelContent />
 		</InferenceProviderProvider>

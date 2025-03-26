@@ -23,12 +23,6 @@ export interface DataServiceClient {
 				json: unknown;
 			}) => Promise<Response>;
 			$delete: (options: { param: { id: string } }) => Promise<Response>;
-			"api-key": {
-				$put: (options: {
-					param: { id: string };
-					json: unknown;
-				}) => Promise<Response>;
-			};
 		};
 	};
 }

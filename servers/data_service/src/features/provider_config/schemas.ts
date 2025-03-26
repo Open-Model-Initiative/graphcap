@@ -64,6 +64,7 @@ export const providerUpdateSchema = z.object({
   kind: z.string().min(1, 'Kind is required').optional(),
   environment: z.enum(['cloud', 'local']).optional(),
   baseUrl: z.string().url('Must be a valid URL').optional(),
+  apiKey: z.string().optional(),
   isEnabled: z.boolean().optional(),
   models: z.array(
     z.object({
@@ -78,17 +79,8 @@ export const providerUpdateSchema = z.object({
   }).optional(),
 });
 
-// Schema for updating a provider's API key
-export const providerApiKeySchema = z.object({
-  apiKey: z.string()
-    .min(1, { message: 'API key is required and cannot be empty' })
-    .refine(val => val.trim() !== '', {
-      message: 'API key cannot be just whitespace'
-    }),
-});
 
 // Export types
 export type Provider = z.infer<typeof providerSchema>;
 export type ProviderCreate = z.infer<typeof providerCreateSchema>;
 export type ProviderUpdate = z.infer<typeof providerUpdateSchema>;
-export type ProviderApiKey = z.infer<typeof providerApiKeySchema>; 

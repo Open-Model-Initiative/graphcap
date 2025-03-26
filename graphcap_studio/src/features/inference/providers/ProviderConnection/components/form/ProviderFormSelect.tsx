@@ -7,22 +7,23 @@ import {
 	SelectValueText,
 } from "@/components/ui/select";
 import { createListCollection } from "@chakra-ui/react";
-import { useInferenceProviderContext } from "../../context";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
-type ProviderSelectProps = {
+type ProviderFormSelectProps = {
 	readonly className?: string;
 	readonly "aria-label"?: string;
 };
 
 /**
- * Component for selecting a provider from a dropdown
+ * Component for selecting a provider from a dropdown within the provider form
+ * Uses the form context to manage provider selection
  */
-export function ProviderSelect({
+export function ProviderFormSelect({
 	className,
 	"aria-label": ariaLabel = "Select Provider",
-}: ProviderSelectProps) {
-	const { providers, selectedProvider, setSelectedProvider, setMode } =
-		useInferenceProviderContext();
+}: ProviderFormSelectProps) {
+	// Get providers and selection functions from the form context
+	const { providers, selectedProvider, setSelectedProvider } = useProviderFormContext();
 
 	const selectedProviderId = selectedProvider?.id ?? null;
 
@@ -40,9 +41,13 @@ export function ProviderSelect({
 	const value = selectedProviderId ? [String(selectedProviderId)] : [];
 
 	const handleProviderChange = (details: { value: string[] }) => {
+		if (!details.value.length) return;
+		
 		const id = Number(details.value[0]);
 		const provider = providers.find((p) => p.id === id);
 		if (provider) {
+			// Call the context's setSelectedProvider function
+			// This will update the global context and reset the form
 			setSelectedProvider(provider);
 		}
 	};
@@ -67,4 +72,4 @@ export function ProviderSelect({
 			</SelectContent>
 		</SelectRoot>
 	);
-}
+} 

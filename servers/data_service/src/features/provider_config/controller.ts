@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import { db } from "../../db";
 import { providerModels, providerRateLimits, providers } from "../../db/schema";
-import { encryptApiKey } from "../../utils/encryption";
+import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
 import { logger } from "../../utils/logger";
 import type {
 	ProviderApiKey,
@@ -36,6 +36,23 @@ export const getProviders = async (c: Context) => {
 				rateLimits: true,
 			},
 		});
+
+		// Decrypt API keys before returning to client
+		for (const provider of allProviders) {
+			if (provider.apiKey) {
+				logger.debug({ providerId: provider.id }, "Decrypting API key for provider");
+				provider.apiKey = await decryptApiKey(provider.apiKey);
+				
+				// Log whether API key is present after decryption (without showing the actual key)
+				logger.debug({ 
+					providerId: provider.id,
+					apiKeyPresent: provider.apiKey ? true : false,
+					apiKeyLength: provider.apiKey ? provider.apiKey.length : 0
+				}, "Provider API key decryption result");
+			} else {
+				logger.debug({ providerId: provider.id }, "No API key to decrypt for provider");
+			}
+		}
 
 		logger.info(
 			{ count: allProviders.length },
@@ -90,12 +107,32 @@ export const getProvider = async (c: Context) => {
 				return c.json({ error: "Provider not found" }, 404);
 			}
 
+			// Decrypt API key before returning to client
+			if (provider.apiKey) {
+				logger.debug({ 
+					providerId: id,
+					encryptedKeyLength: provider.apiKey.length 
+				}, "Decrypting API key for provider");
+				
+				provider.apiKey = await decryptApiKey(provider.apiKey);
+				
+				// Log the result of decryption (without showing the actual key)
+				logger.debug({ 
+					providerId: id,
+					apiKeyPresent: provider.apiKey ? true : false,
+					apiKeyLength: provider.apiKey ? provider.apiKey.length : 0
+				}, "Provider API key decryption result");
+			} else {
+				logger.debug({ providerId: id }, "No API key to decrypt for provider");
+			}
+
 			logger.info({ providerId: id }, "Provider fetched successfully");
 			return c.json(provider);
-		} else {
-			logger.warn({ providerId: id }, "Provider not found");
-			return c.json({ error: "Provider not found" }, 404);
 		}
+		
+		// If ID mismatch, return not found (removed else clause)
+		logger.warn({ providerId: id }, "Provider not found");
+		return c.json({ error: "Provider not found" }, 404);
 	} catch (error) {
 		logger.error({ error, providerId: id }, "Error fetching provider");
 		return c.json({ error: "Failed to fetch provider" }, 500);
@@ -289,11 +326,21 @@ export const updateProvider = async (c: Context) => {
 	try {
 		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
 		const data = c.req.valid("json") as ProviderUpdate;
-		logger.debug({ id, data }, "Updating provider");
+		logger.debug({ 
+			id, 
+			data: {
+				...data,
+				apiKey: data.apiKey !== undefined ? '[PRESENT]' : '[MISSING]'
+			}
+		}, "Updating provider");
 
 		// Check if provider exists
 		const existingProvider = await db.query.providers.findFirst({
 			where: eq(providers.id, Number.parseInt(id)),
+			with: {
+				models: true,
+				rateLimits: true,
+			},
 		});
 
 		if (!existingProvider) {
@@ -325,13 +372,118 @@ export const updateProvider = async (c: Context) => {
 		// Extract models and rate limits if provided
 		const { models, rateLimits, ...providerData } = data;
 
+		// LOG API KEY STATUS FOR DEBUGGING
+		logger.debug({
+			providerId: id,
+			original_apiKey_present: existingProvider.apiKey !== null,
+			update_apiKey_present: 'apiKey' in providerData,
+			update_apiKey_value_present: providerData.apiKey !== undefined && providerData.apiKey !== null
+		}, "API key update status");
+
+		// Log what fields are being updated
+		const updatedFields: Record<string, { from: unknown, to: unknown }> = {};
+		
+		// Compare each field being updated with existing values
+		for (const [key, value] of Object.entries(providerData)) {
+			const existingValue = (existingProvider as Record<string, unknown>)[key];
+			// Only log if the value is actually changing
+			if (existingValue !== value && value !== undefined) {
+				// Special handling for API key to avoid logging actual values
+				if (key === 'apiKey') {
+					updatedFields[key] = { 
+						from: existingValue ? '[ENCRYPTED]' : '[EMPTY]', 
+						to: value ? '[NEW_VALUE]' : '[EMPTY]' 
+					};
+					logger.info(
+						{ providerId: id },
+						`Updating API key from ${existingValue ? 'existing value' : 'empty'} to ${value ? 'new value' : 'empty'}`
+					);
+				} else {
+					updatedFields[key] = { from: existingValue, to: value };
+				}
+			}
+		}
+		
+		// Log all field changes
+		if (Object.keys(updatedFields).length > 0) {
+			logger.info({ 
+				providerId: id, 
+				provider: existingProvider.name,
+				updatedFields 
+			}, "Provider fields being updated");
+		}
+		
+		// Log model changes if applicable
+		if (models && models.length > 0) {
+			// Need to query specifically for models since they might not be included in existingProvider
+			const existingModelsQuery = await db.query.providerModels.findMany({
+				where: eq(providerModels.providerId, Number.parseInt(id))
+			});
+			
+			logger.info({
+				providerId: id,
+				provider: existingProvider.name,
+				existingModelsCount: existingModelsQuery.length,
+				newModelsCount: models.length,
+				modelNames: models.map(m => m.name)
+			}, "Updating provider models");
+		}
+		
+		// Log rate limit changes if applicable
+		if (rateLimits) {
+			// Query for existing rate limits
+			const existingRateLimitsQuery = await db.query.providerRateLimits.findFirst({
+				where: eq(providerRateLimits.providerId, Number.parseInt(id))
+			});
+			
+			logger.info({
+				providerId: id,
+				provider: existingProvider.name,
+				existingRateLimits: existingRateLimitsQuery 
+					? {
+						requestsPerMinute: existingRateLimitsQuery.requestsPerMinute,
+						tokensPerMinute: existingRateLimitsQuery.tokensPerMinute
+					}
+					: { requestsPerMinute: null, tokensPerMinute: null },
+				newRateLimits: rateLimits
+			}, "Updating provider rate limits");
+		}
+
 		// Start a transaction
 		const result = await db.transaction(async (tx) => {
-			// Update provider
+			// Get the current provider from the database to ensure we have the latest data
+			const currentProvider = await tx.query.providers.findFirst({
+				where: eq(providers.id, Number.parseInt(id)),
+			});
+			
+			if (!currentProvider) {
+				throw new Error(`Provider not found with id ${id}`);
+			}
+			
+			// CRITICAL FIX: Handle API key specially to avoid losing it
+			let apiKeyToUse = currentProvider.apiKey; // Default to keeping existing key
+			
+			// Only update the API key if it's explicitly included in the update data
+			if ('apiKey' in providerData && providerData.apiKey !== undefined) {
+				if (providerData.apiKey) {
+					logger.debug({ providerId: id }, "Encrypting new API key for provider update");
+					apiKeyToUse = await encryptApiKey(providerData.apiKey as string);
+					logger.info({ providerId: id }, "API key encrypted for update");
+				} else {
+					// If apiKey is explicitly set to an empty value, only then clear it
+					logger.debug({ providerId: id }, "API key explicitly cleared in update");
+					apiKeyToUse = null;
+				}
+			} else {
+				logger.debug({ providerId: id }, "Keeping existing API key - no change requested");
+			}
+			
+			// Update provider with the appropriate API key
 			await tx
 				.update(providers)
 				.set({
 					...providerData,
+					apiKey: apiKeyToUse, // Use the properly determined API key
 					updatedAt: new Date(),
 				})
 				.where(eq(providers.id, Number.parseInt(id)));

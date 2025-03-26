@@ -97,7 +97,30 @@ export function useCreateProvider() {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to create provider: ${response.status}`);
+				// Try to get detailed error information
+				try {
+					const errorData = await response.json();
+					console.error("Provider creation error:", errorData);
+					
+					// Check if we have a structured error response
+					if (errorData.status === 'error' || errorData.validationErrors) {
+						throw errorData;
+					}
+					
+					// Simple error with a message
+					if (errorData.message) {
+						throw new Error(errorData.message);
+					}
+					
+					// Fallback error
+					throw new Error(`Failed to create provider: ${response.status}`);
+				} catch (parseError) {
+					// If we can't parse the error as JSON, throw a general error
+					if (parseError instanceof Error && parseError.message !== 'Failed to create provider') {
+						throw parseError;
+					}
+					throw new Error(`Failed to create provider: ${response.status}`);
+				}
 			}
 
 			return response.json() as Promise<Provider>;
@@ -118,18 +141,15 @@ export function useUpdateProvider() {
 
 	return useMutation({
 		mutationFn: async ({ id, data }: { id: number; data: ProviderUpdate }) => {
-			// Filter out null values and skip apiKey property completely
+			console.log("Updating provider with data:", data);
 			const updateData = Object.entries(data).reduce((acc, [key, value]) => {
-				// Skip apiKey completely - it has its own endpoint
-				if (key === 'apiKey') return acc;
-				
 				// Only include defined values
 				if (value !== null && value !== undefined) {
 					acc[key] = value;
 				}
 				return acc;
 			}, {} as Record<string, unknown>);
-			
+			console.log("updateData", updateData);
 			const client = createDataServiceClient(connections);
 			const response = await client.providers[":id"].$put({
 				param: { id: id.toString() },

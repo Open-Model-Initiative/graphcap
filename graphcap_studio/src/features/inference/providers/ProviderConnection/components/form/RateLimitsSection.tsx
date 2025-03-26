@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import type { ChangeEvent } from "react";
-import { Controller } from "react-hook-form";
+import { Controller, useController } from "react-hook-form";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 /**
@@ -24,6 +24,16 @@ export function RateLimitsSection() {
 
 	// Watch form values for read-only display
 	const rateLimits = watch("rateLimits");
+
+	// Ensure rateLimits object exists in the form
+	useController({
+		name: "rateLimits",
+		control,
+		defaultValue: {
+			requestsPerMinute: 0,
+			tokensPerMinute: 0,
+		},
+	});
 
 	if (!isEditing) {
 		return (
@@ -64,6 +74,7 @@ export function RateLimitsSection() {
 						<Controller
 							name="rateLimits.requestsPerMinute"
 							control={control}
+							defaultValue={0}
 							render={({ field: { value, onChange, ...field } }) => (
 								<Field.Root invalid={!!errors.rateLimits?.requestsPerMinute}>
 									<Field.Label color={labelColor}>
@@ -91,6 +102,7 @@ export function RateLimitsSection() {
 						<Controller
 							name="rateLimits.tokensPerMinute"
 							control={control}
+							defaultValue={0}
 							render={({ field: { value, onChange, ...field } }) => (
 								<Field.Root invalid={!!errors.rateLimits?.tokensPerMinute}>
 									<Field.Label color={labelColor}>

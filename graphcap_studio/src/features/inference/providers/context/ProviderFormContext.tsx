@@ -10,6 +10,7 @@ interface ProviderFormContextType {
 	saveSuccess: boolean;
 	isTestingConnection: boolean;
 	selectedProvider: Provider | null;
+	setSelectedProvider: (provider: Provider | null) => void;
 	formError: ErrorDetails | null;
 	connectionError: ErrorDetails | null;
 	connectionDetails: ConnectionDetails | null;

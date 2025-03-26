@@ -4,3 +4,4 @@ export * from "./ConnectionSection";
 export * from "./RateLimitsSection";
 export * from "./EnvironmentSelect";
 export * from "./ModelSelector";
+export * from "./ProviderFormSelect";
