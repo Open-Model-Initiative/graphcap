@@ -26,9 +26,10 @@ type ValidatedParams = {
  * Get all providers
  */
 export const getProviders = async (c: Context) => {
-	try {
-		logger.debug("Fetching all providers");
+	const { logger } = c.var;
+	logger.debug("Fetching all providers");
 
+	try {
 		const allProviders = await db.query.providers.findMany({
 			with: {
 				models: true,
@@ -36,7 +37,7 @@ export const getProviders = async (c: Context) => {
 			},
 		});
 
-		logger.debug(
+		logger.info(
 			{ count: allProviders.length },
 			"Providers fetched successfully",
 		);
@@ -68,28 +69,35 @@ export const getProviders = async (c: Context) => {
  * Get a specific provider by ID
  */
 export const getProvider = async (c: Context) => {
+	const { logger } = c.var;
+	const id = c.req.param('id');
+	logger.debug({ id }, "Fetching provider by ID");
+
 	try {
 		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
-		const { id } = c.req.valid("param") as ValidatedParams;
-		logger.debug({ id }, "Fetching provider by ID");
+		const { id: paramId } = c.req.valid("param") as ValidatedParams;
+		if (id === paramId) {
+			const provider = await db.query.providers.findFirst({
+				where: eq(providers.id, Number.parseInt(id)),
+				with: {
+					models: true,
+					rateLimits: true,
+				},
+			});
 
-		const provider = await db.query.providers.findFirst({
-			where: eq(providers.id, Number.parseInt(id)),
-			with: {
-				models: true,
-				rateLimits: true,
-			},
-		});
+			if (!provider) {
+				logger.debug({ id }, "Provider not found");
+				return c.json({ error: "Provider not found" }, 404);
+			}
 
-		if (!provider) {
-			logger.debug({ id }, "Provider not found");
+			logger.info({ providerId: id }, "Provider fetched successfully");
+			return c.json(provider);
+		} else {
+			logger.warn({ providerId: id }, "Provider not found");
 			return c.json({ error: "Provider not found" }, 404);
 		}
-
-		logger.debug({ id }, "Provider fetched successfully");
-		return c.json(provider);
 	} catch (error) {
-		logger.error({ error }, "Error fetching provider");
+		logger.error({ error, providerId: id }, "Error fetching provider");
 		return c.json({ error: "Failed to fetch provider" }, 500);
 	}
 };
@@ -98,6 +106,8 @@ export const getProvider = async (c: Context) => {
  * Create a new provider
  */
 export const createProvider = async (c: Context) => {
+	const { logger } = c.var;
+	
 	try {
 		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
 		const data = c.req.valid("json") as ProviderCreate;
@@ -157,7 +167,13 @@ export const createProvider = async (c: Context) => {
 			});
 		});
 
-		logger.debug({ id: result?.id }, "Provider created successfully");
+		logger.info({ 
+			provider: { 
+				id: result?.id, 
+				name: result?.name,
+				kind: result?.kind 
+			} 
+		}, "Provider created successfully");
 		return c.json(result, 201);
 	} catch (error) {
 		logger.error({ error }, "Error creating provider");
@@ -169,9 +185,10 @@ export const createProvider = async (c: Context) => {
  * Update an existing provider
  */
 export const updateProvider = async (c: Context) => {
+	const { logger } = c.var;
+	const id = c.req.param('id');
+	
 	try {
-		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
-		const { id } = c.req.valid("param") as ValidatedParams;
 		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
 		const data = c.req.valid("json") as ProviderUpdate;
 		logger.debug({ id, data }, "Updating provider");
@@ -355,7 +372,13 @@ export const updateProvider = async (c: Context) => {
 			});
 		});
 
-		logger.debug({ id }, "Provider updated successfully");
+		logger.info({ 
+			providerId: id,
+			provider: { 
+				name: result?.name,
+				kind: result?.kind 
+			} 
+		}, "Provider updated successfully");
 		return c.json(result);
 	} catch (error) {
 		logger.error({ 
@@ -379,11 +402,12 @@ export const updateProvider = async (c: Context) => {
  * Delete a provider
  */
 export const deleteProvider = async (c: Context) => {
+	const { logger } = c.var;
+	const id = c.req.param('id');
+	
+	logger.debug({ id }, "Deleting provider");
+	
 	try {
-		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
-		const { id } = c.req.valid("param") as ValidatedParams;
-		logger.debug({ id }, "Deleting provider");
-
 		// Check if provider exists
 		const existingProvider = await db.query.providers.findFirst({
 			where: eq(providers.id, Number.parseInt(id)),
@@ -397,7 +421,7 @@ export const deleteProvider = async (c: Context) => {
 		// Delete provider (cascade will handle related records)
 		await db.delete(providers).where(eq(providers.id, Number.parseInt(id)));
 
-		logger.debug({ id }, "Provider deleted successfully");
+		logger.info({ providerId: id }, "Provider deleted successfully");
 		return c.json({
 			success: true,
 			message: "Provider deleted successfully",
