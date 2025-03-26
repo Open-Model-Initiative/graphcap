@@ -27,15 +27,15 @@ from .base_client import BaseClient
 class GeminiClient(BaseClient):
     """Client for Google's Gemini API with OpenAI compatibility layer"""
 
-    def __init__(self, name: str, kind: str, environment: str, env_var: str, base_url: str, default_model: str):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str):
         logger.info(f"GeminiClient initialized with base_url: {base_url}")
         super().__init__(
             name=name,
             kind=kind,
             environment=environment,
-            env_var=env_var,
             base_url=base_url.rstrip("/"),
             default_model=default_model,
+            api_key=api_key,
         )
 
     def _format_vision_content(self, text: str, image_data: str) -> list[dict[str, Any]]:

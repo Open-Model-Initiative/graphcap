@@ -38,15 +38,7 @@ from pydantic import BaseModel
 class BaseClient(AsyncOpenAI, ABC):
     """Abstract base class for all provider clients"""
 
-    def __init__(self, name: str, kind: str, environment: str, env_var: str, base_url: str, default_model: str):
-        # Check for required environment variable
-        if env_var and env_var != "NONE":
-            api_key = os.getenv(env_var)
-            if api_key is None:
-                raise ValueError(f"Environment variable {env_var} is not set")
-        else:
-            api_key = "stub_key"
-
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str):
         # Initialize OpenAI client
         super().__init__(api_key=api_key, base_url=base_url)
 
@@ -54,7 +46,6 @@ class BaseClient(AsyncOpenAI, ABC):
         self.name = name
         self.kind = kind
         self.environment = environment
-        self.env_var = env_var
         self.base_url = base_url
         self.default_model = default_model
 

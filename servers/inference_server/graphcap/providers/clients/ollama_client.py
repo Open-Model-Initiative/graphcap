@@ -26,7 +26,7 @@ from .base_client import BaseClient
 class OllamaClient(BaseClient):
     """Client for Ollama API with OpenAI compatibility layer"""
 
-    def __init__(self, name: str, kind: str, environment: str, env_var: str, base_url: str, default_model: str):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str = "stub_key"):
         logger.info("Initializing OllamaClient:")
         logger.info(f"  - name: {name}")
         logger.info(f"  - kind: {kind}")
@@ -56,9 +56,9 @@ class OllamaClient(BaseClient):
             name=name,
             kind=kind,
             environment=environment,
-            env_var=env_var,
             base_url=openai_base_url,
             default_model=default_model,
+            api_key=api_key,
         )
         logger.debug(f"OllamaClient initialized with environment: {environment}, kind: {kind}")
         logger.debug(f"Using base URL {self._raw_base_url} for Ollama endpoints")
