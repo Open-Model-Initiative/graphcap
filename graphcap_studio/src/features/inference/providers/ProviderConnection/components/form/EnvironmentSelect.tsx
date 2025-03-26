@@ -9,10 +9,10 @@ import { Field, createListCollection } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { Controller } from "react-hook-form";
 import { PROVIDER_ENVIRONMENTS } from "../../../../constants";
-import { useInferenceProviderContext } from "../../../context";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 export function EnvironmentSelect() {
-	const { control, errors } = useInferenceProviderContext();
+	const { control, errors } = useProviderFormContext();
 	const labelColor = useColorModeValue("gray.600", "gray.300");
 
 	const environmentItems = PROVIDER_ENVIRONMENTS.map((env) => ({
