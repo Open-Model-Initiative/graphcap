@@ -298,7 +298,8 @@ export function useProviderModels(provider: Provider) {
 			const client = createInferenceBridgeClient(connections);
 			const serverConfig = toServerConfig(provider);
 			
-			const response = await client.models.$post({
+			const response = await client.providers[":provider_name"]["models"].$post({
+				param: { provider_name: provider.name },
 				json: serverConfig,
 			});
 

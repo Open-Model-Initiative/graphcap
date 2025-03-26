@@ -16,6 +16,7 @@ import type {
 } from "@/features/inference/providers/types";
 import { toServerConfig } from "@/features/inference/providers/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { SERVER_IDS } from "../constants";
 import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";
 
 // Query keys for TanStack Query
@@ -31,7 +32,7 @@ export const queryKeys = {
 export function useProviders() {
 	const { connections } = useServerConnectionsContext();
 	const dataServiceConnection = connections.find(
-		(conn) => conn.id === "data-service",
+		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
 	);
 	const isConnected = dataServiceConnection?.status === "connected";
 
@@ -58,7 +59,7 @@ export function useProviders() {
 export function useProvider(id: number) {
 	const { connections } = useServerConnectionsContext();
 	const dataServiceConnection = connections.find(
-		(conn) => conn.id === "data-service",
+		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
 	);
 	const isConnected = dataServiceConnection?.status === "connected";
 
@@ -227,7 +228,7 @@ export function useDeleteProvider() {
 export function useProviderModels(provider: Provider) {
 	const { connections } = useServerConnectionsContext();
 	const inferenceBridgeConnection = connections.find(
-		(conn) => conn.id === "inference-bridge",
+		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isConnected = inferenceBridgeConnection?.status === "connected";
 
@@ -237,7 +238,8 @@ export function useProviderModels(provider: Provider) {
 			const client = createInferenceBridgeClient(connections);
 			const serverConfig = toServerConfig(provider);
 			
-			const response = await client.models.$post({
+			const response = await client.providers[":provider_name"].models.$post({
+				param: { provider_name: provider.name },
 				json: serverConfig,
 			});
 

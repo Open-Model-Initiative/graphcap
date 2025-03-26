@@ -31,9 +31,6 @@ export interface DataServiceClient {
  * Interface for the Inference Bridge client
  */
 export interface InferenceBridgeClient {
-	models: {
-		$post: (options: { json: unknown }) => Promise<Response>;
-	};
 	providers: {
 		":provider_name": {
 			"test-connection": {
