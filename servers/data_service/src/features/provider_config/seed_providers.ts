@@ -5,9 +5,9 @@
  * This script seeds the database with predefined provider configurations.
  */
 
-import { db } from '../index';
-import { providers, providerModels} from '../schema';
 import { eq } from 'drizzle-orm';
+import { db } from '../../db/index';
+import { providerModels, providers } from '../../db/schema';
 import { logger } from '../../utils/logger';
 
 // Define interfaces for provider configurations

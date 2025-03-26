@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { batchQueueRoutes } from './api/routes/batch_queue';
 import { checkDatabaseConnection } from './db/init';
 import { env } from './env';
-import { providerRoutes } from './features/providers/routes';
+import { providerRoutes } from './features/provider_config/routes';
 import { errorHandlerMiddleware, notFoundHandler } from './utils/error-handler';
 import { logger } from './utils/logger';
 
