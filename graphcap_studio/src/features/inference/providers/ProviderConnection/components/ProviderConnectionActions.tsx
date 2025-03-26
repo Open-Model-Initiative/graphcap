@@ -3,10 +3,10 @@ import { Button, Flex } from "@chakra-ui/react";
 import { useInferenceProviderContext } from "../../context";
 
 interface ProviderConnectionActionsProps {
-  isTestingConnection: boolean;
-  onTest: () => Promise<void>;
-  disabled?: boolean;
-  showEditButton?: boolean;
+  readonly isTestingConnection: boolean;
+  readonly onTest: () => Promise<void>;
+  readonly disabled?: boolean;
+  readonly showEditButton?: boolean;
 }
 
 /**

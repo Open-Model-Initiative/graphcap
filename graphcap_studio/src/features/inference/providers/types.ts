@@ -163,3 +163,15 @@ export function toServerConfig(provider: Provider): ServerProviderConfig {
 		} : undefined
 	};
 }
+
+export interface ErrorDetails {
+	message: string;
+	code?: string;
+	details?: Record<string, unknown>;
+}
+
+export interface ConnectionDetails {
+	result: boolean;
+	details?: Record<string, unknown>;
+	message?: string;
+}

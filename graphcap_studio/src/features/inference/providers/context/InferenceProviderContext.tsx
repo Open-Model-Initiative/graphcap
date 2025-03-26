@@ -178,9 +178,9 @@ type InferenceProviderProviderProps = {
 	readonly children: ReactNode;
 	readonly initialData?: Partial<ProviderCreate | ProviderUpdate>;
 	readonly isCreating: boolean;
-	readonly onSubmit: (data: FormData) => void;
+	readonly onSubmit?: (data: FormData) => void;
 	readonly onCancel: () => void;
-	readonly isSubmitting: boolean;
+	readonly isSubmitting?: boolean;
 	readonly onModelSelect?: (providerName: string, modelId: string) => void;
 	readonly selectedProvider?: Provider | null;
 	readonly providers?: Provider[];

@@ -1,5 +1,5 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { useInferenceProviderContext } from "@/features/inference/providers/context";
+// SPDX-License-Identifier: Apache-2.0
 import {
 	Box,
 	Field,
@@ -9,15 +9,16 @@ import {
 	Text,
 	VStack,
 } from "@chakra-ui/react";
-// SPDX-License-Identifier: Apache-2.0
 import { Controller } from "react-hook-form";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 import { EnvironmentSelect } from "./EnvironmentSelect";
 
 /**
  * Component for displaying and editing basic provider information
  */
 export function BasicInfoSection() {
-	const { control, errors, watch, isEditing } = useInferenceProviderContext();
+	const { control, errors, watch, mode } = useProviderFormContext();
+	const isEditing = mode === "edit" || mode === "create";
 	const labelColor = useColorModeValue("gray.600", "gray.300");
 	const textColor = useColorModeValue("gray.700", "gray.200");
 

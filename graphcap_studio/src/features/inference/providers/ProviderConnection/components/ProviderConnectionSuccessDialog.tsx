@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { LuCheck, LuCircleAlert } from "react-icons/lu";
+import type { ConnectionDetails as ContextConnectionDetails } from "../../types";
 import { type ConnectionStep, ConnectionSteps } from "./ConnectionSteps";
 
 /**
@@ -31,14 +32,14 @@ interface ConnectionDetails {
 				message: string;
 			}>;
 		};
-	};
+	} | boolean;
 }
 
 type ProviderConnectionSuccessDialogProps = {
 	readonly isOpen: boolean;
 	readonly onClose: () => void;
 	readonly providerName: string;
-	readonly connectionDetails: ConnectionDetails | null;
+	readonly connectionDetails: ConnectionDetails | ContextConnectionDetails | null;
 };
 
 const STEP_LABELS: Record<string, string> = {

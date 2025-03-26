@@ -12,7 +12,6 @@ import { createDataServiceClient, createInferenceBridgeClient } from "@/features
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	Provider,
-	ProviderApiKey,
 	ProviderCreate,
 	ProviderModelsResponse,
 	ProviderUpdate,
@@ -46,12 +45,6 @@ interface DataServiceClient {
 				json: ProviderUpdate;
 			}) => Promise<Response>;
 			$delete: (options: { param: { id: string } }) => Promise<Response>;
-			"api-key": {
-				$put: (options: {
-					param: { id: string };
-					json: ProviderApiKey;
-				}) => Promise<Response>;
-			};
 		};
 	};
 }
@@ -202,36 +195,6 @@ export function useDeleteProvider() {
 			queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
 			// Invalidate providers list
 			queryClient.invalidateQueries({ queryKey: queryKeys.providers });
-		},
-	});
-}
-
-/**
- * Hook to update a provider's API key
- */
-export function useUpdateProviderApiKey() {
-	const queryClient = useQueryClient();
-	const { connections } = useServerConnectionsContext();
-
-	return useMutation({
-		mutationFn: async ({ id, apiKey }: { id: number; apiKey: string }) => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"]["api-key"].$put({
-				param: { id: id.toString() },
-				json: { apiKey } as ProviderApiKey,
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				console.error("API key update error:", errorData);
-				throw errorData;
-			}
-
-			return response.json() as Promise<SuccessResponse>;
-		},
-		onSuccess: (_, { id }) => {
-			// Invalidate specific provider query
-			queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
 		},
 	});
 }

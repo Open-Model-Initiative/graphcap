@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ProviderSelect } from "./ProviderConnection/components/ProviderSelect";
-import { useProviderFormContext } from "./context";
+import { useProviderFormContext } from "./context/ProviderFormContext";
 
 
 /**

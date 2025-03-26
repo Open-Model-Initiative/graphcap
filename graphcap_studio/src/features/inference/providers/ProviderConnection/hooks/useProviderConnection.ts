@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useTestProviderConnection } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context";
-import { type Provider, type ProviderCreate, toServerConfig } from "../../types";
+import { type Provider, toServerConfig } from "../../types";
 
 interface UseProviderConnectionResult {
   isTestingConnection: boolean;

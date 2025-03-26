@@ -1,10 +1,10 @@
 import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Box, Button, Center, Flex, Text, VStack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useMemo, useState } from "react";
-import type { ProviderCreate, ProviderUpdate } from "../providers/types";
+import { useMemo } from "react";
+import type { Provider } from "../providers/types";
 import { useProviders } from "../services/providers";
-import ProviderForm from "./ProviderConnection/ProviderForm";
+import { ProviderConnection } from "./ProviderConnection";
 import { ProviderSelect } from "./ProviderConnection/components/ProviderSelect";
 import {
 	InferenceProviderProvider,
@@ -15,9 +15,7 @@ import {
  * Panel content that requires context
  */
 function PanelContent() {
-	const { setMode, providers } =
-		useInferenceProviderContext();
-
+	const { setMode, providers, selectedProvider } = useInferenceProviderContext();
 	const { colorMode } = useColorMode();
 	const textColor = colorMode === "light" ? "gray.600" : "gray.300";
 	const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
@@ -30,7 +28,7 @@ function PanelContent() {
 				<Button
 					colorScheme="blue"
 					onClick={() => {
-						/* TODO: Handle new provider creation */
+						setMode("create");
 					}}
 				>
 					Add Provider
@@ -61,7 +59,9 @@ function PanelContent() {
 
 			{/* Content */}
 			<Box flex="1" overflow="auto">
-				<ProviderForm />
+				<ProviderConnection 
+					initialData={selectedProvider || undefined}
+				/>
 			</Box>
 		</Flex>
 	);
@@ -79,11 +79,7 @@ export function ProvidersPanel() {
 		isLoading,
 		isError,
 		error,
-		refetch
 	} = useProviders();
-
-	// State to track form submission
-	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Set the initial selected provider to the first one in the list
 	const initialSelectedProvider = useMemo(() => {
@@ -92,25 +88,6 @@ export function ProvidersPanel() {
 
 	const { colorMode } = useColorMode();
 	const textColor = colorMode === "light" ? "gray.600" : "gray.300";
-
-	// Handle form submission
-	const handleSubmit = useCallback(async (data: ProviderCreate | ProviderUpdate) => {
-		try {
-			console.log("Provider form submitted:", data);
-			setIsSubmitting(true);
-			
-			// Simulate a delay for demonstration purposes
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			
-			// Refetch providers to get updated data
-			await refetch();
-			console.log("Provider updated successfully:", data);
-		} catch (error) {
-			console.error("Error updating provider:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	}, [refetch]);
 
 	// Loading state
 	if (isLoading) {
@@ -135,9 +112,9 @@ export function ProvidersPanel() {
 			providers={providersData}
 			selectedProvider={initialSelectedProvider}
 			isCreating={false}
-			onSubmit={handleSubmit}
+			onSubmit={() => {}}
 			onCancel={() => {}}
-			isSubmitting={isSubmitting}
+			isSubmitting={false}
 		>
 			<PanelContent />
 		</InferenceProviderProvider>

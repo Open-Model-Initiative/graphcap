@@ -2,7 +2,7 @@ import { ActionButton } from "@/components/ui/buttons/ActionButton";
 import { StatusMessage } from "@/components/ui/status/StatusMessage";
 // SPDX-License-Identifier: Apache-2.0
 import { Box } from "@chakra-ui/react";
-import { useInferenceProviderContext } from "../../../context";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 import { ModelSelector } from "./ModelSelector";
 
 // Define the model type
@@ -17,16 +17,18 @@ export interface ProviderModel {
  */
 export function ModelSelectionSection() {
 	const {
-		providerName,
-		selectedModelId,
-		setSelectedModelId,
+		selectedProvider,
 		providerModelsData,
 		isLoadingModels,
 		isModelsError,
 		modelsError,
+		selectedModelId,
+		setSelectedModelId,
 		handleModelSelect,
 		isSubmitting,
-	} = useInferenceProviderContext();
+	} = useProviderFormContext();
+
+	const providerName = selectedProvider?.name;
 
 	// Handle different states
 	if (!providerName) {

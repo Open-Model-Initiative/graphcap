@@ -13,14 +13,15 @@ import {
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
 import { Controller } from "react-hook-form";
-import { useInferenceProviderContext } from "../../../context";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 /**
  * Component for displaying and editing provider connection settings
  */
 export function ConnectionSection() {
-  const { control, errors, watch, isEditing, selectedProvider } =
-    useInferenceProviderContext();
+  const { control, errors, watch, mode, selectedProvider } =
+    useProviderFormContext();
+  const isEditing = mode === "edit" || mode === "create";
   const [showApiKey, setShowApiKey] = useState(false);
   const labelColor = useColorModeValue("gray.600", "gray.300");
   const textColor = useColorModeValue("gray.700", "gray.200");

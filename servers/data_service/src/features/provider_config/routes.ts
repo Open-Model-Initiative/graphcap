@@ -9,7 +9,7 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { commonResponses, invalidRequestResponse, notFoundResponse, successResponse } from '../../api/schemas/common';
 import * as handlers from './controller';
-import { providerApiKeySchema, providerCreateSchema, providerSchema, providerUpdateSchema } from './schemas';
+import { providerCreateSchema, providerSchema, providerUpdateSchema } from './schemas';
 
 // Create a new OpenAPI router
 const router = new OpenAPIHono();
@@ -149,46 +149,12 @@ const deleteProviderRoute = createRoute({
   },
 });
 
-const updateProviderApiKeyRoute = createRoute({
-  method: 'put',
-  path: '/{id}/api-key',
-  tags: ['Providers'],
-  summary: 'Update provider API key',
-  description: 'Updates the API key for an existing provider',
-  request: {
-    params: z.object({
-      id: z.string().min(1),
-    }),
-    body: {
-      content: {
-        'application/json': {
-          schema: providerApiKeySchema,
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: 'API key updated successfully',
-      content: {
-        'application/json': {
-          schema: successResponse,
-        },
-      },
-    },
-    ...notFoundResponse,
-    ...invalidRequestResponse,
-    ...commonResponses,
-  },
-});
-
 // Register routes with handlers
 router.openapi(getAllProvidersRoute, handlers.getProviders);
 router.openapi(getProviderRoute, handlers.getProvider);
 router.openapi(createProviderRoute, handlers.createProvider);
 router.openapi(updateProviderRoute, handlers.updateProvider);
 router.openapi(deleteProviderRoute, handlers.deleteProvider);
-router.openapi(updateProviderApiKeyRoute, handlers.updateProviderApiKey);
 
 // Export the router
 export const providerRoutes = router; 

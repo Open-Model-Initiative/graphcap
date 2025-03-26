@@ -11,13 +11,14 @@ import {
 // SPDX-License-Identifier: Apache-2.0
 import type { ChangeEvent } from "react";
 import { Controller } from "react-hook-form";
-import { useInferenceProviderContext } from "../../../context";
+import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 /**
  * Component for displaying and editing provider rate limits
  */
 export function RateLimitsSection() {
-	const { control, errors, watch, isEditing } = useInferenceProviderContext();
+	const { control, errors, watch, mode } = useProviderFormContext();
+	const isEditing = mode === "edit" || mode === "create";
 	const labelColor = useColorModeValue("gray.600", "gray.300");
 	const textColor = useColorModeValue("gray.700", "gray.200");
 

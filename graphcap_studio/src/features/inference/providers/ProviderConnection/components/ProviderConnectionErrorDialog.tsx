@@ -12,11 +12,13 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
+import type { ErrorDetails as ContextErrorDetails } from "../../types";
 
 type ErrorDetails = {
 	message?: string;
 	name?: string;
-	details?: string;
+	details?: string | Record<string, unknown>;
+	code?: string;
 	suggestions?: string[];
 	requestDetails?: {
 		provider: string;
@@ -27,7 +29,7 @@ type ErrorDetails = {
 type ProviderConnectionErrorDialogProps = {
 	readonly isOpen: boolean;
 	readonly onClose: () => void;
-	readonly error: ErrorDetails;
+	readonly error: ErrorDetails | ContextErrorDetails | null;
 	readonly providerName: string;
 };
 
@@ -112,6 +114,7 @@ export function ProviderConnectionErrorDialog({
 													name: errorObj.name,
 													message: errorObj.message,
 													details: errorObj.details,
+													code: errorObj.code,
 													suggestions: errorObj.suggestions
 												}, null, 2)}
 											</Code>
