@@ -19,7 +19,6 @@ Classes:
             environment (str): Deployment environment
             env_var (str): Environment variable for API key
             base_url (str): Base API URL
-            default_model (str): Default model identifier
 """
 
 import asyncio
@@ -38,7 +37,7 @@ from pydantic import BaseModel
 class BaseClient(AsyncOpenAI, ABC):
     """Abstract base class for all provider clients"""
 
-    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, api_key: str):
         # Initialize OpenAI client
         super().__init__(api_key=api_key, base_url=base_url)
 
@@ -47,7 +46,6 @@ class BaseClient(AsyncOpenAI, ABC):
         self.kind = kind
         self.environment = environment
         self.base_url = base_url
-        self.default_model = default_model
 
         # Rate limiting state
         self._request_times: list[float] = []

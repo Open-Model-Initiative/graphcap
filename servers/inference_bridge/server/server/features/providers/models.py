@@ -15,7 +15,6 @@ class ProviderInfo(BaseModel):
 
     name: str = Field(..., description="Unique identifier for the provider")
     kind: str = Field(..., description="Type of provider (e.g., 'openai', 'anthropic', 'gemini')")
-    default_model: str = Field("", description="Default model used by the provider")
 
 
 class ProviderListResponse(BaseModel):
@@ -47,7 +46,6 @@ class ProviderConfig(BaseModel):
     environment: str = Field(..., description="Provider environment (cloud, local)")
     base_url: str = Field(..., description="Base URL for the provider API")
     api_key: str = Field(..., description="API key for the provider")
-    default_model: Optional[str] = Field(None, description="Default model for the provider")
     models: List[str] = Field(default_factory=list, description="List of available model IDs")
     fetch_models: bool = Field(default=True, description="Whether to fetch models from the provider API")
     rate_limits: Optional[dict] = Field(None, description="Rate limiting configuration")

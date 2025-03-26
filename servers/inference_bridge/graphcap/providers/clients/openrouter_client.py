@@ -25,16 +25,21 @@ from .base_client import BaseClient
 
 
 class OpenRouterClient(BaseClient):
-    """Client for OpenRouter API with OpenAI compatibility layer"""
+    """Client for OpenRouter API"""
 
-    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, api_key: str):
         logger.info(f"OpenRouterClient initialized with base_url: {base_url}")
+        
+        # Base URL handling for OpenRouter
+        if not base_url.endswith("/v1"):
+            base_url = f"{base_url}/v1"
+            logger.info(f"Added /v1 to base URL: {base_url}")
+            
         super().__init__(
             name=name,
             kind=kind,
             environment=environment,
             base_url=base_url.rstrip("/"),
-            default_model=default_model,
             api_key=api_key,
         )
 

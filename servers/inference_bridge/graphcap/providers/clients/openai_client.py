@@ -29,14 +29,13 @@ from .base_client import BaseClient
 class OpenAIClient(BaseClient):
     """Client for OpenAI API"""
 
-    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, api_key: str):
         logger.info(f"OpenAIClient initialized with base_url: {base_url}")
         super().__init__(
             name=name,
             kind=kind,
             environment=environment,
             base_url=base_url.rstrip("/"),
-            default_model=default_model,
             api_key=api_key,
         )
 

@@ -33,7 +33,6 @@ class ProviderFactory:
         environment: str,
         base_url: str,
         api_key: str,
-        default_model: Optional[str] = None,
         rate_limits: Optional[dict] = None,
         use_cache: bool = True,
     ) -> BaseClient:
@@ -45,7 +44,6 @@ class ProviderFactory:
             environment: Provider environment (cloud, local)
             base_url: Base URL for the provider API
             api_key: API key for the provider
-            default_model: Default model for the provider
             rate_limits: Rate limiting configuration
             use_cache: Whether to cache and reuse client instances (default: True)
             
@@ -66,7 +64,6 @@ class ProviderFactory:
         logger.info(f"  - kind: {kind}")
         logger.info(f"  - environment: {environment}")
         logger.info(f"  - base_url: {base_url}")
-        logger.info(f"  - default_model: {default_model}")
 
         try:
             client = get_client(
@@ -75,7 +72,6 @@ class ProviderFactory:
                 environment=environment,
                 api_key=api_key,
                 base_url=base_url,
-                default_model=default_model,
             )
 
             # Set rate limits if configured
@@ -98,7 +94,6 @@ class ProviderFactory:
             logger.error(f"  - kind: {kind}")
             logger.error(f"  - environment: {environment}")
             logger.error(f"  - base_url: {base_url}")
-            logger.error(f"  - default_model: {default_model}")
             raise ValueError(f"Failed to create client for {name}: {str(e)}")
 
     def clear_cache(self) -> None:
@@ -131,7 +126,6 @@ def create_provider_client(
     environment: str,
     base_url: str,
     api_key: str,
-    default_model: Optional[str] = None,
     rate_limits: Optional[dict] = None,
     use_cache: bool = True,
 ) -> BaseClient:
@@ -143,7 +137,6 @@ def create_provider_client(
         environment: Provider environment (cloud, local)
         base_url: Base URL for the provider API
         api_key: API key for the provider
-        default_model: Default model for the provider
         rate_limits: Rate limiting configuration
         use_cache: Whether to cache and reuse client instances (default: True)
 
@@ -160,7 +153,6 @@ def create_provider_client(
         environment=environment,
         base_url=base_url,
         api_key=api_key,
-        default_model=default_model,
         rate_limits=rate_limits,
         use_cache=use_cache,
     )

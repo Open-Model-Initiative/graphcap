@@ -138,7 +138,7 @@ class CaptionResponse(BaseModel):
     """Response model for a generated caption."""
 
     perspective: str = Field(..., description="Name of the perspective used")
-    provider: str = Field("gemini", description="Name of the provider used")
+    provider: str = Field(..., description="Name of the provider used")
     result: dict = Field(..., description="Structured caption result")
     raw_text: Optional[str] = Field(None, description="Raw text response from the model")
 
@@ -189,7 +189,7 @@ class CaptionPathRequest(BaseModel):
 
     perspective: str = Field(..., description=DESC_PERSPECTIVE_NAME)
     image_path: str = Field(..., description="Path to the image file in the workspace")
-    provider: str = Field("gemini", description="Name of the provider to use")
+    provider: str = Field(..., description="Name of the provider to use")
     provider_config: dict = Field(..., description="Provider configuration")
     max_tokens: Optional[int] = Field(4096, description=DESC_MAX_TOKENS)
     temperature: Optional[float] = Field(0.8, description=DESC_TEMPERATURE)
@@ -205,6 +205,14 @@ class CaptionPathRequest(BaseModel):
                 "perspective": "custom_caption",
                 "image_path": "/workspace/datasets/example.jpg",
                 "provider": "gemini",
+                "provider_config": {
+                    "name": "gemini",
+                    "kind": "gemini",
+                    "environment": "cloud",
+                    "api_key": "your_api_key_here",
+                    "base_url": "https://generativelanguage.googleapis.com/v1beta",
+                    "models": ["gemini-pro-vision"]
+                },
                 "max_tokens": 4096,
                 "temperature": 0.8,
                 "resize_resolution": "HD_720P",

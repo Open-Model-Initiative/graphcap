@@ -22,6 +22,5 @@ class ProviderConfig:
     env_var: str
     base_url: str
     models: list[str]
-    default_model: str
     fetch_models: bool = False
     rate_limits: Optional[RateLimits] = None

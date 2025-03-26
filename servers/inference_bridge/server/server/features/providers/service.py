@@ -31,12 +31,12 @@ def _extract_model_id(model: Any) -> str:
     return str(model)
 
 
-def _create_model_info(model_id: str, default_model: str) -> ModelInfo:
+def _create_model_info(model_id: str) -> ModelInfo:
     """Create a ModelInfo instance"""
     return ModelInfo(
         id=model_id,
         name=model_id,
-        is_default=model_id == default_model
+        is_default=False
     )
 
 
@@ -57,7 +57,6 @@ async def get_provider_models(provider_name: str, config: ProviderConfig) -> Lis
         environment=config.environment,
         base_url=config.base_url,
         api_key=config.api_key,
-        default_model=config.default_model,
         rate_limits=config.rate_limits,
         use_cache=True,  # Cache clients for better performance
     )
@@ -73,20 +72,20 @@ async def get_provider_models(provider_name: str, config: ProviderConfig) -> Lis
                 if hasattr(provider_models, "data"):
                     for model in provider_models.data:
                         model_id = _extract_model_id(model)
-                        models.append(_create_model_info(model_id, config.default_model or ""))
+                        models.append(_create_model_info(model_id))
             elif hasattr(client, "get_models"):
                 provider_models = await client.get_models()
                 if hasattr(provider_models, "models"):
                     for model in provider_models.models:
                         model_id = _extract_model_id(model)
-                        models.append(_create_model_info(model_id, config.default_model or ""))
+                        models.append(_create_model_info(model_id))
         except Exception as e:
             logger.error(f"Error fetching models from provider {provider_name}: {str(e)}")
             logger.info(f"Falling back to configured models for provider {provider_name}")
 
     # Fall back to configured models if none fetched
     if not models:
-        models = [_create_model_info(model_id, config.default_model or "") for model_id in config.models]
+        models = [_create_model_info(model_id) for model_id in config.models]
         logger.info(f"Using {len(models)} configured models for provider {provider_name}")
 
     return models
@@ -112,7 +111,6 @@ def create_provider_client_from_config(config: ProviderConfig) -> BaseClient:
         environment=config.environment,
         base_url=config.base_url,
         api_key=config.api_key,
-        default_model=config.default_model,
         rate_limits=config.rate_limits,
         use_cache=True,
     )
@@ -141,7 +139,6 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
                 "environment": config.environment,
                 "base_url_valid": bool(config.base_url),
                 "api_key_provided": bool(config.api_key),
-                "default_model": config.default_model,
                 "models_count": len(config.models),
             },
             "connection_steps": [],
@@ -164,7 +161,6 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
             environment=config.environment,
             base_url=config.base_url,
             api_key=config.api_key,
-            default_model=config.default_model,
             rate_limits=config.rate_limits,
             use_cache=False,  # Don't cache test clients
         )

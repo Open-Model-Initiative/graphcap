@@ -26,9 +26,9 @@ from .base_client import BaseClient
 
 
 class VLLMClient(BaseClient):
-    """Client for VLLM API with OpenAI compatibility layer"""
+    """Client for vLLM API"""
 
-    def __init__(self, name: str, kind: str, environment: str, base_url: str, default_model: str, api_key: str = "stub_key"):
+    def __init__(self, name: str, kind: str, environment: str, base_url: str, api_key: str = "stub_key"):
         # If base_url doesn't include /v1, append it
         if not base_url.endswith("/v1"):
             base_url = f"{base_url}/v1"
@@ -39,7 +39,6 @@ class VLLMClient(BaseClient):
             kind=kind,
             environment=environment,
             base_url=base_url.rstrip("/"),
-            default_model=default_model,
             api_key=api_key,
         )
 

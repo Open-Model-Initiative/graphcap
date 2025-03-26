@@ -58,8 +58,8 @@ async def create_caption(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="Image file to upload"),
     perspective: str = Form(..., description="Name of the perspective to use"),
-    provider: str = Form("gemini", description="Name of the provider to use"),
-    provider_config: Optional[str] = Form(None, description="Provider configuration as JSON string"),
+    provider: str = Form(..., description="Name of the provider to use"),
+    provider_config: str = Form(..., description="Provider configuration as JSON string"),
     max_tokens: Optional[int] = Form(4096, description="Maximum number of tokens"),
     temperature: Optional[float] = Form(0.8, description="Temperature for generation"),
     top_p: Optional[float] = Form(0.9, description="Top-p sampling parameter"),
@@ -77,8 +77,8 @@ async def create_caption(
         background_tasks: Background tasks for cleanup
         file: Image file to upload (required)
         perspective: Name of the perspective to use (required)
-        provider: Name of the provider to use (optional, default: "default")
-        provider_config: Provider configuration as JSON string (optional)
+        provider: Name of the provider to use (required)
+        provider_config: Provider configuration as JSON string (required)
         max_tokens: Maximum number of tokens (optional, default: 4096)
         temperature: Temperature for generation (optional, default: 0.8)
         top_p: Top-p sampling parameter (optional, default: 0.9)
@@ -98,14 +98,12 @@ async def create_caption(
         parsed_context = _parse_context(context)
 
         # Parse provider_config from JSON string if provided
-        parsed_provider_config = None
-        if provider_config:
-            try:
-                parsed_provider_config = json.loads(provider_config)
-                logger.info(f"Parsed provider configuration for {provider}")
-            except json.JSONDecodeError as e:
-                logger.error(f"Invalid provider configuration JSON: {e}")
-                raise HTTPException(status_code=400, detail=f"Invalid provider configuration JSON: {str(e)}")
+        try:
+            parsed_provider_config = json.loads(provider_config)
+            logger.info(f"Parsed provider configuration for {provider}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid provider configuration JSON: {e}")
+            raise HTTPException(status_code=400, detail=f"Invalid provider configuration JSON: {str(e)}")
 
         # Process the uploaded file
         image_path = await save_uploaded_file(file)
