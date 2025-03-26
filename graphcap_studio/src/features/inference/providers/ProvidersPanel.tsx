@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { ProviderCreate, ProviderUpdate } from "../providers/types";
 import { useProviders } from "../services/providers";
 import ProviderForm from "./ProviderConnection/ProviderForm";
-import { ProviderSelect } from "./ProviderConnection/form";
+import { ProviderSelect } from "./ProviderConnection/components/ProviderSelect";
 import {
 	InferenceProviderProvider,
 	useInferenceProviderContext,

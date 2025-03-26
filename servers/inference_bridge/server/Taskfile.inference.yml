@@ -1,0 +1,29 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Start the inference server container with watch mode
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up inference_bridge --watch --build
+
+  start:
+    desc: Start the inference server container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up -d inference_bridge
+
+  stop:
+    desc: Stop the inference server container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env stop inference_bridge
+
+  logs:
+    desc: View logs for the inference server container
+    cmds:
+      - docker compose -f ./docker-compose.yml logs -f inference_bridge
+
+  rebuild:
+    desc: Rebuild and restart the inference server container
+    cmds:
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env build inference_bridge
+      - docker compose -f ./docker-compose.yml --env-file ./workspace/config/.env up -d --force-recreate inference_bridge
+

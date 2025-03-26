@@ -38,7 +38,7 @@ type ProviderConnectionSuccessDialogProps = {
 	readonly isOpen: boolean;
 	readonly onClose: () => void;
 	readonly providerName: string;
-	readonly connectionDetails: ConnectionDetails;
+	readonly connectionDetails: ConnectionDetails | null;
 };
 
 const STEP_LABELS: Record<string, string> = {
@@ -53,6 +53,7 @@ export function ProviderConnectionSuccessDialog({
 	providerName,
 	connectionDetails,
 }: ProviderConnectionSuccessDialogProps) {
+
 	// Create a reference to the dialog content
 	const dialogContentRef = useRef<HTMLDivElement>(null);
 
@@ -71,7 +72,12 @@ export function ProviderConnectionSuccessDialog({
 				dialogElement.removeEventListener("click", handleDialogClick);
 			};
 		}
-	}, []); // No dependencies needed as we're just setting up the event listener
+	}, []); 
+  
+	// Return early if connectionDetails is null
+	if (!connectionDetails) {
+		return null;
+	}
 
 	const { result } = connectionDetails;
 	const steps = result.diagnostics.connection_steps;

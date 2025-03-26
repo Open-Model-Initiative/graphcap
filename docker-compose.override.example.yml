@@ -14,8 +14,8 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
 # services:
-#   graphcap_server:
-#     container_name: graphcap_server
+#   inference_bridge:
+#     container_name: inference_bridge
 #     build:
 #       context: ./src
 #       dockerfile: ./server/Dockerfile.server
@@ -45,7 +45,7 @@ name: graphcap
 #     ports:
 #       - "35433:5432"
 #     volumes:
-#       - graphcap_server_db:/var/lib/postgresql/data
+#       - inference_bridge_db:/var/lib/postgresql/data
 #     healthcheck:
 #       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
 #       interval: 5s
@@ -181,7 +181,7 @@ name: graphcap
 
 
 # volumes:
-#   graphcap_server_db:
+#   inference_bridge_db:
 
 # networks:
 #   graphcap:

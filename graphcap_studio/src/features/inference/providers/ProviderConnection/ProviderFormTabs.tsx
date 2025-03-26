@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs } from "@chakra-ui/react";
 import styles from "./FormFields.module.css";
-import { BasicInfoSection, ConnectionSection, RateLimitsSection } from "./form";
-import { ModelSelectionSection } from "./form/ModelSelectionSection";
+import { BasicInfoSection, ConnectionSection, RateLimitsSection } from "./components/form";
+import { ModelSelectionSection } from "./components/form/ModelSelectionSection";
 
 /**
  * Component for rendering provider form fields in either view or edit mode

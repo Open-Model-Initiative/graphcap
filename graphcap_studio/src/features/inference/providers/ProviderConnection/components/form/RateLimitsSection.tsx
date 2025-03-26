@@ -11,7 +11,7 @@ import {
 // SPDX-License-Identifier: Apache-2.0
 import type { ChangeEvent } from "react";
 import { Controller } from "react-hook-form";
-import { useInferenceProviderContext } from "../../context";
+import { useInferenceProviderContext } from "../../../context";
 
 /**
  * Component for displaying and editing provider rate limits

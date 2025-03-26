@@ -12,5 +12,5 @@ Provider configuration still relies on some file based configuration.
 - Resolve issues cited in discord related to provider ux
 
 
-[provider_manager.py](mdc:servers/inference_server/graphcap/providers/provider_manager.py)
-[provider_config.py](mdc:servers/inference_server/graphcap/providers/provider_config.py)
+[provider_manager.py](mdc:servers/inference_bridge/graphcap/providers/provider_manager.py)
+[provider_config.py](mdc:servers/inference_bridge/graphcap/providers/provider_config.py)

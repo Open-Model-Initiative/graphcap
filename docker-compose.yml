@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
 services:
-  graphcap_server:
-    container_name: graphcap_server
+  inference_bridge:
+    container_name: inference_bridge
     build:
-      context: ./servers/inference_server
+      context: ./servers/inference_bridge
       dockerfile: ./server/Dockerfile.server.dev
     ports:
       - 32100:32100
     volumes:
-      - ./servers/inference_server/graphcap:/app/graphcap
-      - ./servers/inference_server/server/server:/app/server/server
+      - ./servers/inference_bridge/graphcap:/app/graphcap
+      - ./servers/inference_bridge/server/server:/app/server/server
       - ./workspace:/workspace
     environment:
       - HOST_PLATFORM=${HOST_PLATFORM:-linux}
@@ -33,7 +33,7 @@ services:
     ports:
       - "35433:5432"
     volumes:
-      - graphcap_server_db:/var/lib/postgresql/data
+      - inference_bridge_db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
@@ -128,12 +128,12 @@ services:
 
   graphcap_pipelines:
     build:
-      context: ./servers/inference_server
+      context: ./servers/inference_bridge
       dockerfile: pipelines/Dockerfile.pipelines.dev
     container_name: graphcap_pipelines
     volumes:
       - ./workspace:/workspace
-      - ./servers/inference_server:/app
+      - ./servers/inference_bridge:/app
     environment:
       - DAGSTER_HOME=/workspace/.local/.dagster
       - DAGSTER_PORT=32300
@@ -182,7 +182,7 @@ services:
       - ./workspace/config/.env
 
 volumes:
-  graphcap_server_db:
+  inference_bridge_db:
 
 networks:
   graphcap:

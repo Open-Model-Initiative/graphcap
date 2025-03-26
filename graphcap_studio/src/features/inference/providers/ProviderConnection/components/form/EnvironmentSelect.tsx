@@ -8,8 +8,8 @@ import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { Field, createListCollection } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { Controller } from "react-hook-form";
-import { PROVIDER_ENVIRONMENTS } from "../../../constants";
-import { useInferenceProviderContext } from "../../context";
+import { PROVIDER_ENVIRONMENTS } from "../../../../constants";
+import { useInferenceProviderContext } from "../../../context";
 
 export function EnvironmentSelect() {
 	const { control, errors } = useInferenceProviderContext();
