@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs } from "@chakra-ui/react";
 import styles from "./FormFields.module.css";
-import { ModelSelectionSection } from "./ModelSelectionSection";
 import { BasicInfoSection, ConnectionSection, RateLimitsSection } from "./form";
+import { ModelSelectionSection } from "./form/ModelSelectionSection";
 
 /**
  * Component for rendering provider form fields in either view or edit mode
  */
-export function FormFields() {
+export function ProviderFormTabs() {
 	return (
 		<Tabs.Root
 			defaultValue="basic"

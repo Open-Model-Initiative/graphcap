@@ -1,12 +1,12 @@
 import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Button, Flex, HStack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useInferenceProviderContext } from "./context";
+import { useInferenceProviderContext } from "../context";
 
 /**
  * Component for rendering form action buttons with Chakra UI styling
  */
-export function FormActions() {
+export function ProviderFormActions() {
 	const { isSubmitting, isCreating, onCancel } = useInferenceProviderContext();
 
 	const { colorMode } = useColorMode();
@@ -32,6 +32,7 @@ export function FormActions() {
 		<Flex justify="flex-end" mt={6}>
 			<HStack gap={3}>
 				<Button
+					type="button"
 					onClick={onCancel}
 					size="md"
 					bg={cancelBg}

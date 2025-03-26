@@ -1,9 +1,9 @@
+import { ActionButton } from "@/components/ui/buttons/ActionButton";
+import { StatusMessage } from "@/components/ui/status/StatusMessage";
 // SPDX-License-Identifier: Apache-2.0
 import { Box } from "@chakra-ui/react";
-import { ActionButton } from "../../../components/ui/buttons/ActionButton";
-import { StatusMessage } from "../../../components/ui/status/StatusMessage";
-import { useInferenceProviderContext } from "./context";
-import { ModelSelector } from "./form/ModelSelector";
+import { useInferenceProviderContext } from "../../../context";
+import { ModelSelector } from "./ModelSelector";
 
 // Define the model type
 export interface ProviderModel {

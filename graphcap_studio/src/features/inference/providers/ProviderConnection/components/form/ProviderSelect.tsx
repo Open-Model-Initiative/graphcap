@@ -7,7 +7,7 @@ import {
 	SelectValueText,
 } from "@/components/ui/select";
 import { createListCollection } from "@chakra-ui/react";
-import { useInferenceProviderContext } from "../context";
+import { useInferenceProviderContext } from "../../context";
 
 type ProviderSelectProps = {
 	readonly className?: string;

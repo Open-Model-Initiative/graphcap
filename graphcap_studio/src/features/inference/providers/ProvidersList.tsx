@@ -1,17 +1,12 @@
-import { useProviderFormContext } from "./context";
 // SPDX-License-Identifier: Apache-2.0
-import { ProviderSelect } from "./form";
+import { ProviderSelect } from "./ProviderConnection/form";
+import { useProviderFormContext } from "./context";
 
-type ProvidersListProps = {
-	readonly onSelectProvider: (id: number) => void;
-};
 
 /**
  * Component for displaying a list of providers as a dropdown
  */
-export default function ProvidersList({
-	onSelectProvider,
-}: ProvidersListProps) {
+export default function ProvidersList() {
 	const { providers } = useProviderFormContext();
 
 	if (providers.length === 0) {
@@ -21,10 +16,9 @@ export default function ProvidersList({
 			</div>
 		);
 	}
-
 	return (
 		<div className="p-4">
-			<ProviderSelect onChange={onSelectProvider} className="w-full" />
+			<ProviderSelect className="w-full" />
 		</div>
 	);
 }

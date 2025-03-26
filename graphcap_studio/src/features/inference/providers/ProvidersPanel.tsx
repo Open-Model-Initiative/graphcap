@@ -1,14 +1,15 @@
 import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Box, Button, Center, Flex, Text, VStack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { ProviderCreate, ProviderUpdate } from "../providers/types";
 import { useProviders } from "../services/providers";
-import ProviderForm from "./ProviderForm";
+import ProviderForm from "./ProviderConnection/ProviderForm";
+import { ProviderSelect } from "./ProviderConnection/form";
 import {
 	InferenceProviderProvider,
 	useInferenceProviderContext,
 } from "./context";
-import { ProviderSelect } from "./form";
 
 /**
  * Panel content that requires context
@@ -78,7 +79,11 @@ export function ProvidersPanel() {
 		isLoading,
 		isError,
 		error,
+		refetch
 	} = useProviders();
+
+	// State to track form submission
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Set the initial selected provider to the first one in the list
 	const initialSelectedProvider = useMemo(() => {
@@ -87,6 +92,25 @@ export function ProvidersPanel() {
 
 	const { colorMode } = useColorMode();
 	const textColor = colorMode === "light" ? "gray.600" : "gray.300";
+
+	// Handle form submission
+	const handleSubmit = useCallback(async (data: ProviderCreate | ProviderUpdate) => {
+		try {
+			console.log("Provider form submitted:", data);
+			setIsSubmitting(true);
+			
+			// Simulate a delay for demonstration purposes
+			await new Promise(resolve => setTimeout(resolve, 1000));
+			
+			// Refetch providers to get updated data
+			await refetch();
+			console.log("Provider updated successfully:", data);
+		} catch (error) {
+			console.error("Error updating provider:", error);
+		} finally {
+			setIsSubmitting(false);
+		}
+	}, [refetch]);
 
 	// Loading state
 	if (isLoading) {
@@ -111,9 +135,9 @@ export function ProvidersPanel() {
 			providers={providersData}
 			selectedProvider={initialSelectedProvider}
 			isCreating={false}
-			onSubmit={() => {}}
+			onSubmit={handleSubmit}
 			onCancel={() => {}}
-			isSubmitting={false}
+			isSubmitting={isSubmitting}
 		>
 			<PanelContent />
 		</InferenceProviderProvider>

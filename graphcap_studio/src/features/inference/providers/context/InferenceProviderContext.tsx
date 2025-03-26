@@ -247,7 +247,21 @@ export function InferenceProviderProvider({
 		onSubmit: onSubmitForm,
 		watch,
 		reset,
-	} = useProviderForm(initialData);
+		updateApiKey,
+	} = useProviderForm({
+		...initialData,
+		// If we're editing an existing provider, ensure its data is properly passed
+		...(selectedProvider && mode === "edit" ? {
+			name: selectedProvider.name,
+			kind: selectedProvider.kind,
+			environment: selectedProvider.environment,
+			baseUrl: selectedProvider.baseUrl,
+			apiKey: selectedProvider.apiKey || '',
+			isEnabled: selectedProvider.isEnabled,
+			defaultModel: selectedProvider.defaultModel || '',
+			fetchModels: selectedProvider.fetchModels,
+		} : {}),
+	});
 
 	// Reset form data when selected provider changes
 	useEffect(() => {
@@ -257,8 +271,12 @@ export function InferenceProviderProvider({
 				kind: selectedProvider.kind,
 				environment: selectedProvider.environment,
 				baseUrl: selectedProvider.baseUrl,
-				envVar: selectedProvider.envVar,
 				isEnabled: selectedProvider.isEnabled,
+				// If apiKey is null from the server, use an empty string to avoid React controlled/uncontrolled issues
+				// Don't include apiKey if in view mode to prevent showing empty field
+				...(mode === "edit" ? { apiKey: selectedProvider.apiKey || "" } : {}),
+				defaultModel: selectedProvider.defaultModel || "",
+				fetchModels: selectedProvider.fetchModels,
 				rateLimits: selectedProvider.rateLimits || {
 					requestsPerMinute: 0,
 					tokensPerMinute: 0,
@@ -288,13 +306,37 @@ export function InferenceProviderProvider({
 	// Create a memoized version of onSubmit that calls both form and prop handlers
 	const onSubmitHandler = useCallback(
 		async (data: FormData) => {
-			const result = await onSubmitForm(data, isCreating, selectedProvider?.id);
-			if (result.success) {
-				onSubmitProp(data);
-				setMode("view");
+			try {
+				console.log("InferenceProviderContext onSubmitHandler called with data:", data);
+				console.log("isSubmitting state:", isSubmitting);
+				
+				// Extract apiKey if present - we need to update it separately
+				const { apiKey, ...providerData } = data;
+
+				// First update the provider without the API key
+				const result = await onSubmitForm(
+					providerData,
+					isCreating,
+					selectedProvider?.id
+				);
+
+				if (result.success) {
+					// If we're editing and have a new API key, update it separately
+					if (!isCreating && selectedProvider?.id && apiKey) {
+						console.log("Updating API key separately");
+						await updateApiKey(selectedProvider.id, apiKey);
+					}
+
+					// Notify the parent component that we've submitted successfully
+					onSubmitProp(data);
+					setMode("view");
+				}
+			} catch (error) {
+				console.error("Error updating provider:", error);
+				throw error; // Re-throw the error so it can be caught by the form's error handler
 			}
 		},
-		[onSubmitForm, onSubmitProp, setMode, isCreating, selectedProvider?.id],
+		[onSubmitForm, onSubmitProp, setMode, isCreating, selectedProvider?.id, updateApiKey, isSubmitting],
 	);
 
 	// Create a memoized version of onCancel that resets mode
@@ -372,6 +414,3 @@ export function InferenceProviderProvider({
 		</InferenceProviderContext.Provider>
 	);
 }
-
-// For backward compatibility
-export const ProviderFormProvider = InferenceProviderProvider;

@@ -5,7 +5,7 @@ import { Group, InputElement } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
 import { Controller } from "react-hook-form";
-import { useInferenceProviderContext } from "../context";
+import { useInferenceProviderContext } from "../../../context";
 
 /**
  * Component for displaying and editing provider connection settings
@@ -79,27 +79,33 @@ export function ConnectionSection() {
 			<Controller
 				name="apiKey"
 				control={control}
-				render={({ field }) => (
-					<Field.Root invalid={!!errors.apiKey}>
-						<Field.Label color={labelColor}>API Key</Field.Label>
-						<Group position="relative">
-							<Input
-								{...field}
-								id="apiKey"
-								type={showApiKey ? "text" : "password"}
-								pe="4.5rem"
-								required
-								placeholder="Enter API key"
-							/>
-							<InputElement placement="end" width="4.5rem">
-								<Button h="1.75rem" size="sm" onClick={toggleShowApiKey}>
-									{showApiKey ? "Hide" : "Show"}
-								</Button>
-							</InputElement>
-						</Group>
-						<Field.ErrorText>{errors.apiKey?.message || (field.value === "" && "API key is required")}</Field.ErrorText>
-					</Field.Root>
-				)}
+				render={({ field }) => {
+					// Ensure we always have a defined string value
+					const value = field.value || "";
+					return (
+						<Field.Root invalid={!!errors.apiKey}>
+							<Field.Label color={labelColor}>API Key</Field.Label>
+							<Group position="relative">
+								<Input
+									{...field}
+									id="apiKey"
+									type={showApiKey ? "text" : "password"}
+									pe="4.5rem"
+									required
+									placeholder="Enter API key"
+									value={value}
+									onChange={(e) => field.onChange(e.target.value)}
+								/>
+								<InputElement placement="end" width="4.5rem">
+									<Button h="1.75rem" size="sm" onClick={toggleShowApiKey}>
+										{showApiKey ? "Hide" : "Show"}
+									</Button>
+								</InputElement>
+							</Group>
+							<Field.ErrorText>{errors.apiKey?.message || (value === "" && "API key is required")}</Field.ErrorText>
+						</Field.Root>
+					);
+				}}
 			/>
 
 			<Controller

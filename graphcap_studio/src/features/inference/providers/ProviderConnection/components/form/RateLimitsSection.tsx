@@ -9,9 +9,9 @@ import {
 	VStack,
 } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import { Controller } from "react-hook-form";
-import { useInferenceProviderContext } from "../context";
+import { useInferenceProviderContext } from "../../context";
 
 /**
  * Component for displaying and editing provider rate limits
@@ -74,7 +74,7 @@ export function RateLimitsSection() {
 										type="number"
 										value={value ?? 0}
 										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											onChange(parseInt(e.target.value) || 0)
+											onChange(Number.parseInt(e.target.value) || 0)
 										}
 										min={0}
 									/>
@@ -101,7 +101,7 @@ export function RateLimitsSection() {
 										type="number"
 										value={value ?? 0}
 										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											onChange(parseInt(e.target.value) || 0)
+											onChange(Number.parseInt(e.target.value) || 0)
 										}
 										min={0}
 									/>
