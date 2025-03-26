@@ -150,10 +150,17 @@ export function PerspectivesFooter() {
 
 		try {
 			console.log("Calling generatePerspective...");
+			// Find the provider object from the available providers
+			const providerObject = availableProviders.find(p => p.name === selectedProvider);
+			
+			if (!providerObject) {
+				throw new Error(`Provider "${selectedProvider}" not found in available providers`);
+			}
+			
 			await generatePerspective(
 				activeSchemaName!,
 				currentImage!.path,
-				selectedProvider,
+				providerObject, // Pass the full provider object
 				effectiveOptions,
 			);
 			showMessage(
@@ -172,6 +179,7 @@ export function PerspectivesFooter() {
 	}, [
 		activeSchemaName,
 		selectedProvider,
+		availableProviders, // Add availableProviders to the dependencies
 		generatePerspective,
 		captionOptions,
 		showMessage,

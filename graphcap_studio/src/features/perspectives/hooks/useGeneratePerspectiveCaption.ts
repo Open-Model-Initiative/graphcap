@@ -6,6 +6,10 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
+import {
+	type Provider,
+	toServerConfig,
+} from "@/features/inference/providers/types";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import type { ServerConnection } from "@/features/server-connections/types";
@@ -29,11 +33,11 @@ export function useGeneratePerspectiveCaption() {
 		{
 			perspective: string;
 			imagePath: string;
-			provider_name: string;
+			provider: Provider; // Use Provider type from types.ts
 			options?: CaptionOptions;
 		}
 	>({
-		mutationFn: async ({ perspective, imagePath, provider_name, options }) => {
+		mutationFn: async ({ perspective, imagePath, provider, options }) => {
 			const graphcapServerConnection = connections.find(
 				(conn: ServerConnection) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 			);
@@ -49,9 +53,12 @@ export function useGeneratePerspectiveCaption() {
 
 			// Use the inference bridge client instead of direct fetch
 			const client = createInferenceBridgeClient(connections);
-			
+
 			// Normalize the image path to ensure it starts with /workspace
 			const normalizedImagePath = ensureWorkspacePath(imagePath);
+
+			// Convert provider to server config
+			const providerConfig = toServerConfig(provider);
 
 			console.log(
 				`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`,
@@ -61,7 +68,8 @@ export function useGeneratePerspectiveCaption() {
 			const requestBody = {
 				perspective,
 				image_path: normalizedImagePath,
-				provider: provider_name,
+				provider: provider.name,
+				provider_config: providerConfig, // Include the full provider configuration
 				max_tokens: options.max_tokens,
 				temperature: options.temperature,
 				top_p: options.top_p,
@@ -75,7 +83,7 @@ export function useGeneratePerspectiveCaption() {
 			console.log("Sending caption generation request using API client", {
 				perspective,
 				image_path: normalizedImagePath,
-				provider: provider_name,
+				provider: provider.name,
 				options: {
 					max_tokens: requestBody.max_tokens,
 					temperature: requestBody.temperature,

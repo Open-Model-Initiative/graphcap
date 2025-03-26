@@ -22,7 +22,7 @@ from graphcap.perspectives import (
 from graphcap.providers.clients.base_client import BaseClient
 from loguru import logger
 
-from ..providers.service import get_provider_manager
+from ..providers.service import create_provider_client_from_config
 from .models import ModuleInfo, PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
 
 
@@ -270,6 +270,7 @@ async def generate_caption(
     context: Optional[List[str]] = None,
     global_context: Optional[str] = None,
     provider_name: str = "gemini",
+    provider_config: Optional[dict] = None,
 ) -> Dict:
     """
     Generate a caption for an image using a perspective.
@@ -284,6 +285,7 @@ async def generate_caption(
         context: Additional context for the caption
         global_context: Global context for the caption
         provider_name: Name of the provider to use (default: "gemini")
+        provider_config: Full provider configuration if available
 
     Returns:
         Caption data
@@ -295,35 +297,23 @@ async def generate_caption(
         # Get the perspective
         perspective = get_perspective(perspective_name)
 
-        # Get the provider client from the provider manager
-        provider_manager = get_provider_manager()
-
-        # Debug: Log available providers
-        available_providers = provider_manager.available_providers()
-        logger.debug(f"Available providers: {available_providers}")
-
-        # Debug: Try to resolve host.docker.internal
-        try:
-            host_ip = socket.gethostbyname("host.docker.internal")
-            logger.debug(f"host.docker.internal resolves to: {host_ip}")
-        except socket.gaierror as e:
-            logger.warning(f"Could not resolve host.docker.internal: {e}")
-
-        try:
-            provider: BaseClient = provider_manager.get_client(provider_name)
-            # Debug: Log provider details
-            logger.debug("Provider details:")
-            logger.debug(f"  - Name: {provider_name}")
-            logger.debug(f"  - Kind: {provider.kind}")
-            logger.debug(f"  - Environment: {provider.environment}")
-            logger.debug(f"  - Base URL: {provider.base_url}")
-            logger.debug(f"  - Default Model: {provider.default_model}")
-        except ValueError as e:
-            logger.error(f"Provider '{provider_name}' not found: {str(e)}")
+        # Create a provider client using the config if provided
+        if provider_config:
+            from ..providers.models import ProviderConfig
+            from ..providers.service import create_provider_client_from_config
+            
+            # Convert dict to ProviderConfig
+            config = ProviderConfig(**provider_config)
+            provider = create_provider_client_from_config(config)
+            logger.info(f"Created provider client from provided config for {provider_name}")
+        else:
+            # Legacy path - will likely fail as no provider manager exists
+            logger.error(f"No provider configuration provided for {provider_name}. Caption generation will likely fail.")
+            logger.error("Provider configuration must be provided in the request.")
             raise HTTPException(
-                status_code=404,
-                detail=f"""Provider '{provider_name}' not found. 
-                Available providers: {', '.join(provider_manager.available_providers())}""",
+                status_code=400,
+                detail=f"""Provider configuration not provided for '{provider_name}'. 
+                Provider configuration must be included in the request.""",
             )
 
         # Create a temporary output directory

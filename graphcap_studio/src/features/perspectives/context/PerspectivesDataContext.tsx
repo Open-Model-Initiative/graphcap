@@ -123,7 +123,7 @@ interface PerspectivesDataContextType {
 	generatePerspective: (
 		schemaName: string,
 		imagePath: string,
-		provider_name?: string,
+		provider?: Provider,
 		options?: CaptionOptions,
 	) => Promise<any>;
 
@@ -369,7 +369,7 @@ export function PerspectivesDataProvider({
 		async (
 			schemaName: string,
 			imagePath: string,
-			provider_name?: string,
+			provider?: Provider,
 			options?: CaptionOptions,
 		) => {
 			if (!isServerConnected) {
@@ -384,8 +384,12 @@ export function PerspectivesDataProvider({
 				// Add to generating list
 				setGeneratingPerspectives((prev) => [...prev, schemaName]);
 
-				// Use provided provider or selected provider
-				const effectiveProvider = provider_name ?? selectedProvider;
+				// Use provided provider or get the selected provider by name from available providers
+				let effectiveProvider = provider;
+				if (!effectiveProvider && selectedProvider) {
+					// Find the provider object by name
+					effectiveProvider = availableProviders.find(p => p.name === selectedProvider);
+				}
 
 				if (!effectiveProvider) {
 					throw new Error("No provider selected for caption generation");
@@ -403,7 +407,7 @@ export function PerspectivesDataProvider({
 				const result = await generateCaptionMutation.mutateAsync({
 					perspective: schemaName,
 					imagePath,
-					provider_name: effectiveProvider,
+					provider: effectiveProvider,
 					options: options ?? captionOptions,
 				});
 
@@ -438,7 +442,7 @@ export function PerspectivesDataProvider({
 							);
 							return "MISSING_MODEL";
 						})(),
-					provider: effectiveProvider,
+					provider: effectiveProvider.name,
 					content: result.result || {},
 					options: options || captionOptions,
 				};
@@ -456,7 +460,7 @@ export function PerspectivesDataProvider({
 						},
 						metadata: {
 							captioned_at: new Date().toISOString(),
-							provider: effectiveProvider,
+							provider: effectiveProvider.name,
 							model: result.metadata?.model ?? "unknown",
 						},
 					};
@@ -480,6 +484,7 @@ export function PerspectivesDataProvider({
 			isServerConnected,
 			currentImage,
 			selectedProvider,
+			availableProviders,
 			captionOptions,
 			generateCaptionMutation,
 		],

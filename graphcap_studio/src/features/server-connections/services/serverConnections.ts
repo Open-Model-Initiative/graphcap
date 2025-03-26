@@ -6,7 +6,9 @@
  * such as the Media Server and Inference Bridge.
  */
 
-import { SERVER_IDS } from "../constants";
+import { CONNECTION_STATUS, SERVER_IDS } from "../constants";
+import type { ServerConnection } from "../types";
+import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";
 
 /**
  * Interface for health check response
@@ -69,12 +71,37 @@ export async function checkMediaServerHealth(url: string): Promise<boolean> {
  */
 export async function checkInferenceBridgeHealth(url: string): Promise<boolean> {
 	try {
-		// Normalize URL by removing trailing slash if present
-		const normalizedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+		// Create mock connection array with the URL
+		const mockConnection: ServerConnection[] = [
+			{
+				id: SERVER_IDS.INFERENCE_BRIDGE,
+				name: "Inference Bridge",
+				status: CONNECTION_STATUS.DISCONNECTED,
+				url,
+			},
+		];
 
-		// First try the /api/v1/health endpoint
+		// Create client with the URL
+		const client = createInferenceBridgeClient(mockConnection);
+
+		// First try the /api/v1/health endpoint using the client
 		try {
-			const response = await fetch(`${normalizedUrl}/api/v1/health`, {
+			const response = await client.health.$get();
+
+			if (response.ok) {
+				const data = (await response.json()) as HealthCheckResponse;
+				// Check if the response contains a valid status
+				return data.status === "ok" || data.status === "healthy";
+			}
+		} catch (apiError) {
+			console.warn("Error checking Inference Bridge at /api/v1/health, trying direct health endpoint next:", apiError);
+		}
+
+		// Try direct /api/v1/health endpoint
+		try {
+			// Normalize URL by removing trailing slash if present
+			const normalizedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+			const apiResponse = await fetch(`${normalizedUrl}/api/v1/health`, {
 				method: "GET",
 				headers: {
 					Accept: "application/json",
@@ -83,16 +110,18 @@ export async function checkInferenceBridgeHealth(url: string): Promise<boolean> 
 				signal: AbortSignal.timeout(3000),
 			});
 
-			if (response.ok) {
-				const data = (await response.json()) as HealthCheckResponse;
+			if (apiResponse.ok) {
+				const data = (await apiResponse.json()) as HealthCheckResponse;
 				// Check if the response contains a valid status
 				return data.status === "ok" || data.status === "healthy";
 			}
-		} catch (apiError) {
-			console.warn("Error checking Inference Bridge at /api/v1/health, trying /health next:", apiError);
+		} catch (directApiError) {
+			console.warn("Error checking Inference Bridge at direct /api/v1/health, trying /health next:", directApiError);
 		}
 
-		// Fallback to the /health endpoint
+		// Fallback to the legacy /health endpoint with direct fetch as last resort
+		// Normalize URL by removing trailing slash if present
+		const normalizedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
 		const fallbackResponse = await fetch(`${normalizedUrl}/health`, {
 			method: "GET",
 			headers: {
@@ -103,7 +132,7 @@ export async function checkInferenceBridgeHealth(url: string): Promise<boolean> 
 		});
 
 		if (!fallbackResponse.ok) {
-			console.error(`Both health check endpoints failed. Last status: ${fallbackResponse.status}`);
+			console.error(`All health check endpoints failed. Last status: ${fallbackResponse.status}`);
 			return false;
 		}
 
@@ -123,7 +152,61 @@ export async function checkInferenceBridgeHealth(url: string): Promise<boolean> 
  * @returns A promise that resolves to a boolean indicating if the server is healthy
  */
 export async function checkDataServiceHealth(url: string): Promise<boolean> {
-	return checkServerHealth(url);
+	try {
+		// Create mock connection array with the URL
+		const mockConnection: ServerConnection[] = [
+			{
+				id: SERVER_IDS.DATA_SERVICE,
+				name: "Data Service",
+				status: CONNECTION_STATUS.DISCONNECTED,
+				url,
+			},
+		];
+
+		// Create client with the URL
+		const client = createDataServiceClient(mockConnection);
+
+		// Try the /api/v1/health endpoint using the client
+		try {
+			const response = await client.health.$get();
+
+			if (response.ok) {
+				const data = (await response.json()) as HealthCheckResponse;
+				// Check if the response contains a valid status
+				return data.status === "ok" || data.status === "healthy";
+			}
+		} catch (apiError) {
+			console.warn("Error checking Data Service at /api/v1/health, trying direct endpoint next:", apiError);
+		}
+
+		// Try direct /api/v1/health endpoint
+		try {
+			// Normalize URL by removing trailing slash if present
+			const normalizedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
+			const apiResponse = await fetch(`${normalizedUrl}/api/v1/health`, {
+				method: "GET",
+				headers: {
+					Accept: "application/json",
+				},
+				// Set a timeout to prevent long-hanging requests
+				signal: AbortSignal.timeout(3000),
+			});
+
+			if (apiResponse.ok) {
+				const data = (await apiResponse.json()) as HealthCheckResponse;
+				// Check if the response contains a valid status
+				return data.status === "ok" || data.status === "healthy";
+			}
+		} catch (directApiError) {
+			console.warn("Error checking Data Service at direct /api/v1/health, trying /health next:", directApiError);
+		}
+
+		// Fallback to the direct /health endpoint check as last resort
+		return checkServerHealth(url);
+	} catch (error) {
+		console.error("Error checking Data Service health:", error);
+		return false;
+	}
 }
 
 /**

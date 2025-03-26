@@ -190,6 +190,7 @@ class CaptionPathRequest(BaseModel):
     perspective: str = Field(..., description=DESC_PERSPECTIVE_NAME)
     image_path: str = Field(..., description="Path to the image file in the workspace")
     provider: str = Field("gemini", description="Name of the provider to use")
+    provider_config: dict = Field(..., description="Provider configuration")
     max_tokens: Optional[int] = Field(4096, description=DESC_MAX_TOKENS)
     temperature: Optional[float] = Field(0.8, description=DESC_TEMPERATURE)
     top_p: Optional[float] = Field(0.9, description=DESC_TOP_P)

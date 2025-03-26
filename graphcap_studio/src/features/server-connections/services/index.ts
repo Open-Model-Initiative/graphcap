@@ -10,6 +10,8 @@ export {
 export type {
 	DataServiceClient,
 	InferenceBridgeClient,
+	ProviderClient,
+	PerspectivesClient,
 } from "./apiClients";
 
 export {
@@ -17,6 +19,8 @@ export {
 	createDataServiceClient,
 	getInferenceBridgeUrl,
 	createInferenceBridgeClient,
+	createProviderClient,
+	createPerspectivesClient,
 } from "./apiClients";
 
 // Provider services
@@ -27,6 +31,5 @@ export {
 	useCreateProvider,
 	useUpdateProvider,
 	useDeleteProvider,
-	useUpdateProviderApiKey,
 	useProviderModels,
 } from "./providers";

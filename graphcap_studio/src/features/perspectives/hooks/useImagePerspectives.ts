@@ -6,6 +6,7 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
+import type { Provider } from "@/features/inference/providers/types";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
@@ -104,12 +105,13 @@ export function useImagePerspectives(
 			}
 
 			// Find the provider by ID if provided
-			let provider_name: string | undefined;
+			let providerObject: Provider | undefined;
 			if (providerId && providersData) {
-				const provider = providersData.find((p) => p.id === providerId);
-				if (provider) {
-					provider_name = provider.name;
-					console.debug(`Using provider: ${provider_name} (ID: ${providerId})`);
+				providerObject = providersData.find((p) => p.id === providerId);
+				if (providerObject) {
+					console.debug(
+						`Using provider: ${providerObject.name} (ID: ${providerId})`,
+					);
 				} else {
 					console.warn(`Provider with ID ${providerId} not found`);
 					setError(`Provider with ID ${providerId} not found`);
@@ -123,7 +125,7 @@ export function useImagePerspectives(
 
 			console.log(`Generating perspective: ${perspective}`, {
 				imagePath: image.path,
-				provider_name,
+				provider: providerObject.name,
 				options,
 			});
 
@@ -137,7 +139,7 @@ export function useImagePerspectives(
 				const result = await generateCaption.mutateAsync({
 					imagePath: image.path,
 					perspective,
-					provider_name,
+					provider: providerObject,
 					options,
 				});
 
@@ -153,7 +155,7 @@ export function useImagePerspectives(
 					config_name: perspective,
 					version: "1.0",
 					model: "api-generated",
-					provider: provider_name,
+					provider: providerObject.name,
 					content: result.content || result.result || {},
 					options: options,
 				};
@@ -170,7 +172,7 @@ export function useImagePerspectives(
 							},
 							metadata: {
 								captioned_at: new Date().toISOString(),
-								provider: provider_name,
+								provider: providerObject.name,
 								model: "api-generated",
 							},
 						};
@@ -187,7 +189,7 @@ export function useImagePerspectives(
 						metadata: {
 							...prevCaptions.metadata,
 							captioned_at: new Date().toISOString(),
-							provider: provider_name,
+							provider: providerObject.name,
 							model: "api-generated",
 						},
 					};

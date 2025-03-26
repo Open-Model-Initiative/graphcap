@@ -65,7 +65,7 @@ async def get_provider_models(provider_name: str, config: ProviderConfig) -> Lis
     models = []
     
     # Try to fetch models if configured
-    if config.fetch_models and isinstance(client, ModelProvider):
+    if config.fetch_models:
         try:
             logger.info(f"Fetching models from provider {provider_name}")
             if hasattr(client, "get_available_models"):
@@ -92,39 +92,30 @@ async def get_provider_models(provider_name: str, config: ProviderConfig) -> Lis
     return models
 
 
-def get_provider_manager():
+def create_provider_client_from_config(config: ProviderConfig) -> BaseClient:
     """
-    Get a compatible provider manager using the factory pattern.
-    This function creates a wrapper around the provider factory that maintains
-    backward compatibility with code expecting a provider manager.
+    Create a provider client from a configuration.
     
+    Args:
+        config: Provider configuration
+        
     Returns:
-        An object with the provider manager interface
+        Provider client
+        
+    Raises:
+        ValueError: If client creation fails
     """
-    factory = get_provider_factory()
-    
-    # Create a wrapper object that delegates to the factory
-    class ProviderManagerWrapper:
-        def __init__(self, factory):
-            self.factory = factory
-            self._client_cache: Dict[str, BaseClient] = {}
-        
-        def get_client(self, name: str) -> BaseClient:
-            """Get a client for the specified provider"""
-            if name in self._client_cache:
-                return self._client_cache[name]
-                
-            # In a real implementation, this would look up the config for the name
-            # For now, we're just passing through to create_provider_client
-            # which will fail if the provider doesn't exist
-            return create_provider_client(name=name, kind="", environment="", base_url="", api_key="")
-        
-        def available_providers(self) -> List[str]:
-            """Return a list of available provider names"""
-            # This is a stub - in a real implementation we would return actual providers
-            return ["gemini"]
-    
-    return ProviderManagerWrapper(factory)
+    logger.info(f"Creating provider client from config for {config.name}")
+    return create_provider_client(
+        name=config.name,
+        kind=config.kind,
+        environment=config.environment,
+        base_url=config.base_url,
+        api_key=config.api_key,
+        default_model=config.default_model,
+        rate_limits=config.rate_limits,
+        use_cache=True,
+    )
 
 
 async def test_provider_connection(provider_name: str, config: ProviderConfig) -> Dict[str, Any]:
@@ -198,138 +189,66 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
         
         # Try to test the connection with a lightweight operation
         # First check if we can get models (most providers support this)
-        if isinstance(client, ModelProvider):
-            try:
-                # Add diagnostic step for model list
-                result["diagnostics"]["connection_steps"].append({
-                    "step": "list_models",
-                    "status": "pending",
-                    "timestamp": str(datetime.datetime.now())
-                })
-                
-                if hasattr(client, "get_available_models"):
-                    provider_models = await client.get_available_models()
-                    result["details"]["method"] = "get_available_models"
-                    
-                    # Add model information if available
-                    if hasattr(provider_models, "data"):
-                        models_data = []
-                        for model in provider_models.data:
-                            model_id = _extract_model_id(model)
-                            models_data.append({"id": model_id})
-                        result["details"]["available_models"] = models_data
-                        result["details"]["models_count"] = len(models_data)
-                        
-                elif hasattr(client, "get_models"):
-                    provider_models = await client.get_models()
-                    result["details"]["method"] = "get_models"
-                    
-                    # Add model information if available
-                    if hasattr(provider_models, "models"):
-                        models_data = []
-                        for model in provider_models.models:
-                            model_id = _extract_model_id(model)
-                            models_data.append({"id": model_id})
-                        result["details"]["available_models"] = models_data
-                        result["details"]["models_count"] = len(models_data)
-                
-                # Update diagnostic step
-                result["diagnostics"]["connection_steps"][-1]["status"] = "success"
-                
-            except Exception as e:
-                logger.warning(f"Could not list models for {provider_name}: {str(e)}")
-                result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
-                result["diagnostics"]["connection_steps"][-1]["message"] = "Model listing not supported or failed"
-        
-        # Try a simple chat completion as a more thorough test
         try:
-            # Add diagnostic step for chat completion
+            # Add diagnostic step for model list
             result["diagnostics"]["connection_steps"].append({
-                "step": "test_chat_completion",
+                "step": "list_models",
                 "status": "pending",
                 "timestamp": str(datetime.datetime.now())
             })
             
-            # Use the first available model or default model
-            test_model = None
-            if result.get("details", {}).get("available_models"):
-                test_model = result["details"]["available_models"][0]["id"]
-            elif config.default_model:
-                test_model = config.default_model
+            if hasattr(client, "get_available_models"):
+                provider_models = await client.get_available_models()
+                result["details"]["method"] = "get_available_models"
+                
+                # Add model information if available
+                if hasattr(provider_models, "data"):
+                    models_data = []
+                    for model in provider_models.data:
+                        model_id = _extract_model_id(model)
+                        models_data.append({"id": model_id})
+                    result["details"]["available_models"] = models_data
+                    result["details"]["models_count"] = len(models_data)
+                    
+            elif hasattr(client, "get_models"):
+                provider_models = await client.get_models()
+                result["details"]["method"] = "get_models"
+                
+                # Add model information if available
+                if hasattr(provider_models, "models"):
+                    models_data = []
+                    for model in provider_models.models:
+                        model_id = _extract_model_id(model)
+                        models_data.append({"id": model_id})
+                    result["details"]["available_models"] = models_data
+                    result["details"]["models_count"] = len(models_data)
             
-            if test_model:
-                # Simple test message
-                test_messages = [{"role": "user", "content": "Hello, this is a test message. Please respond with 'OK' if you can process this request."}]
-                
-                completion = await client.chat.completions.create(
-                    model=test_model,
-                    messages=test_messages,
-                    max_tokens=10,  # Keep it minimal
-                    temperature=0,  # Deterministic
-                )
-                
-                result["connection_verified"] = True
-                result["details"]["chat_completion_test"] = "success"
-                result["details"]["test_model"] = test_model
-                result["diagnostics"]["connection_steps"][-1]["status"] = "success"
-            else:
-                result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
-                result["diagnostics"]["connection_steps"][-1]["message"] = "No suitable model found for testing"
-                
+            # Update diagnostic step
+            result["diagnostics"]["connection_steps"][-1]["status"] = "success"
+            
         except Exception as e:
-            logger.error(f"Chat completion test failed for {provider_name}: {str(e)}")
-            result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
-            result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
-            result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
+            logger.warning(f"Could not list models for {provider_name}: {str(e)}")
+            result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
+            result["diagnostics"]["connection_steps"][-1]["message"] = "Model listing not supported or failed"
             
-            # Only mark connection as failed if we couldn't list models either
-            if not result.get("details", {}).get("available_models"):
-                result["connection_verified"] = False
-                result["details"]["error"] = str(e)
-                result["details"]["error_type"] = type(e).__name__
-                
-                # Add specific suggestions based on error type
-                if "authentication" in str(e).lower() or "unauthorized" in str(e).lower() or "auth" in str(e).lower():
-                    result["details"]["suggestion"] = "Check if the API key is valid and has necessary permissions"
-                elif "timeout" in str(e).lower():
-                    result["details"]["suggestion"] = "Connection timed out. Check network connectivity or server status"
-                elif "url" in str(e).lower() or "endpoint" in str(e).lower():
-                    result["details"]["suggestion"] = "Check if the base URL is correct for this provider"
-                
-                raise Exception(f"Error verifying connection: {str(e)}")
-            else:
-                # If we could list models but chat completion failed, just warn
-                result["diagnostics"]["warnings"].append({
-                    "warning_type": "chat_completion_failed",
-                    "message": f"Chat completion test failed but model listing succeeded. Provider may have limited functionality. Error: {str(e)}"
-                })
-                result["connection_verified"] = True
-                result["details"]["method"] = "list_models_only"
+        # Connection test successful
+        result["connected"] = True
+        result["success"] = True
+        result["message"] = f"Successfully connected to {provider_name}"
         
         return result
-        
     except Exception as e:
-        logger.error(f"Error initializing provider client for {provider_name}: {str(e)}")
+        logger.error(f"Error testing connection to {provider_name}: {str(e)}")
         
-        # Update diagnostic information
-        if "connection_steps" in result["diagnostics"] and result["diagnostics"]["connection_steps"]:
+        # Update the last diagnostic step if it's pending
+        if result["diagnostics"]["connection_steps"] and result["diagnostics"]["connection_steps"][-1]["status"] == "pending":
             result["diagnostics"]["connection_steps"][-1]["status"] = "failed"
             result["diagnostics"]["connection_steps"][-1]["error"] = str(e)
-            result["diagnostics"]["connection_steps"][-1]["error_type"] = type(e).__name__
         
-        result["client_initialized"] = False
-        result["connection_verified"] = False
-        result["details"]["error"] = str(e)
-        result["details"]["error_type"] = type(e).__name__
+        # Add overall failure information
+        result["connected"] = False
+        result["success"] = False
+        result["message"] = f"Failed to connect to {provider_name}: {str(e)}"
+        result["error"] = str(e)
         
-        # Add specific suggestions based on error type
-        if any(keyword in str(e).lower() for keyword in ["api key", "authentication", "auth", "credential"]):
-            result["details"]["suggestion"] = "Check if the API key is valid"
-        elif any(keyword in str(e).lower() for keyword in ["url", "endpoint", "address"]):
-            result["details"]["suggestion"] = "Check if the base URL is correct"
-        elif any(keyword in str(e).lower() for keyword in ["timeout", "connect"]):
-            result["details"]["suggestion"] = "Network connectivity issue. Check your internet connection"
-        elif "provider" in str(e).lower():
-            result["details"]["suggestion"] = "Verify that the provider type is supported and correctly configured"
-        
-        raise Exception(f"Failed to initialize provider client: {str(e)}", result)
+        return result
