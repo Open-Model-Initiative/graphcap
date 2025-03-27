@@ -29,7 +29,7 @@ export function RootLeftActionPanel() {
 		<ActionPanel
 			side="left"
 			defaultExpanded={false}
-			expandedWidth={350}
+			expandedWidth={450}
 			sections={[
 				{
 					id: "feature-flags",

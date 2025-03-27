@@ -40,6 +40,8 @@ export const globalCss = defineGlobalStyles({
 		color: "fg.muted/80",
 	},
 	"*::selection": {
-		bg: "colorPalette.muted/80",
+		bg: "colorPalette.500/50",
+		color: "white",
+	
 	},
 });
