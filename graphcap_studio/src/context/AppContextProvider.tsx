@@ -1,7 +1,9 @@
 import { DatasetInitializer } from "@/features/datasets";
+import { GenerationOptionsProvider } from "@/features/inference/generation-options";
+import { InferenceProviderProvider } from "@/features/inference/providers/context";
 import { PerspectivesProvider } from "@/features/perspectives/context";
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ServerConnectionsProvider } from ".";
 import { FeatureFlagProvider } from "../features/app-settings/feature-flags/FeatureFlagProvider";
 
@@ -28,7 +30,11 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
 		<FeatureFlagProvider>
 			<ServerConnectionsProvider>
 				<DatasetInitializer>
-					<PerspectivesProvider image={null}>{children}</PerspectivesProvider>
+					<GenerationOptionsProvider>
+						<InferenceProviderProvider>
+							<PerspectivesProvider image={null}>{children}</PerspectivesProvider>
+						</InferenceProviderProvider>
+					</GenerationOptionsProvider>
 				</DatasetInitializer>
 			</ServerConnectionsProvider>
 		</FeatureFlagProvider>

@@ -7,7 +7,7 @@
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { Box, Textarea } from "@chakra-ui/react";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useGenerationOptions } from "../../context";
 
 /**
@@ -32,7 +32,9 @@ export function GlobalContextField() {
 		debounce((value: string) => {
 			updateOption("global_context", value);
 		}, 500),
-		[updateOption],
+		// updateOption is from context and won't change during component's lifecycle
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[],
 	);
 
 	const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -63,13 +65,14 @@ export function GlobalContextField() {
 }
 
 // Debounce utility function
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
 	func: T,
 	wait: number,
 ): (...args: Parameters<T>) => void {
 	let timeout: NodeJS.Timeout | null = null;
 
-	return function (...args: Parameters<T>) {
+	// Using arrow function to avoid "this function expression can be turned into an arrow function" lint error
+	return (...args: Parameters<T>) => {
 		if (timeout) clearTimeout(timeout);
 		timeout = setTimeout(() => func(...args), wait);
 	};

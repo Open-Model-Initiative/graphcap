@@ -35,6 +35,8 @@ export const DEFAULT_OPTIONS = {
 	repetition_penalty: 1.1,
 	resize_resolution: "NONE", // Default to no resize
 	global_context: "You are a visual captioning perspective.",
+	provider_id: "", // Default to empty (will be populated later)
+	model_id: "", // Default to empty (will be populated later)
 } as const;
 
 // Schema for generation options
@@ -67,6 +69,10 @@ export const GenerationOptionsSchema = z.object({
 	resize_resolution: z.string().default(DEFAULT_OPTIONS.resize_resolution),
 
 	global_context: z.string().default(DEFAULT_OPTIONS.global_context),
+	
+	provider_id: z.string().default(DEFAULT_OPTIONS.provider_id),
+	
+	model_id: z.string().default(DEFAULT_OPTIONS.model_id),
 });
 
 // Type for generation options

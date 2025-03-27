@@ -6,7 +6,7 @@ import type { Provider } from "../providers/types";
 /**
  * Custom hook to handle provider and model selection logic
  */
-export function useProviderModelSelection(provider: Provider) {
+export function useProviderModelSelection(provider: Provider | null | undefined) {
 	// Fetch providers from API
 	const {
 		data: providers = [],
@@ -31,16 +31,16 @@ export function useProviderModelSelection(provider: Provider) {
 	const providersWithNoModels = useMemo(() => {
 		const noModelsSet = new Set<string>();
 
-		if (providerModelsData?.models?.length === 0 && provider.fetchModels) {
+		if (providerModelsData?.models?.length === 0 && provider?.fetchModels && provider?.name) {
 			noModelsSet.add(provider.name);
 		}
 
 		return noModelsSet;
-	}, [provider.name, provider.fetchModels, providerModelsData]);
+	}, [provider?.name, provider?.fetchModels, providerModelsData]);
 
 	// Get default model if available
 	const defaultModel = useMemo(() => {
-		if (provider.defaultModel) {
+		if (provider?.defaultModel) {
 			return {
 				id: provider.defaultModel,
 				name: provider.defaultModel,
@@ -54,7 +54,7 @@ export function useProviderModelSelection(provider: Provider) {
 			);
 		}
 		return null;
-	}, [provider.defaultModel, providerModelsData]);
+	}, [provider?.defaultModel, providerModelsData]);
 
 	return {
 		providers: availableProviders,

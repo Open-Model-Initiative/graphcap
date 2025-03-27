@@ -225,7 +225,7 @@ export function useDeleteProvider() {
 /**
  * Hook to get available models for a provider
  */
-export function useProviderModels(provider: Provider) {
+export function useProviderModels(provider: Provider | null | undefined) {
 	const { connections } = useServerConnectionsContext();
 	const inferenceBridgeConnection = connections.find(
 		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
@@ -233,8 +233,12 @@ export function useProviderModels(provider: Provider) {
 	const isConnected = inferenceBridgeConnection?.status === "connected";
 
 	return useQuery({
-		queryKey: queryKeys.providerModels(provider.name),
+		queryKey: queryKeys.providerModels(provider?.name ?? 'unknown'),
 		queryFn: async () => {
+			if (!provider) {
+				throw new Error("Provider is null or undefined");
+			}
+			
 			const client = createInferenceBridgeClient(connections);
 			const serverConfig = toServerConfig(provider);
 			
@@ -249,7 +253,7 @@ export function useProviderModels(provider: Provider) {
 
 			return response.json() as Promise<ProviderModelsResponse>;
 		},
-		enabled: isConnected && !!provider && provider.fetchModels,
+		enabled: isConnected && !!provider && !!provider.fetchModels,
 		staleTime: 1000 * 60 * 10, // 10 minutes
 	});
 } 

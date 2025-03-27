@@ -12,3 +12,4 @@ export * from "./TopPField";
 export * from "./RepetitionPenaltyField";
 export * from "./GlobalContextField";
 export * from "./ResizeResolutionField";
+export * from "./ModelSelectorField";

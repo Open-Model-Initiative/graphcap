@@ -5,18 +5,19 @@
  * This module provides a context for managing generation options state.
  */
 
-import React, {
+import type React from "react";
+import {
 	createContext,
-	useContext,
-	useState,
 	useCallback,
-	useMemo,
+	useContext,
 	useEffect,
+	useMemo,
+	useState,
 } from "react";
 import { usePersistGenerationOptions } from "../persist-generation-options";
 import {
 	DEFAULT_OPTIONS,
-	GenerationOptions,
+	type GenerationOptions,
 	GenerationOptionsSchema,
 } from "../schema";
 
@@ -24,7 +25,7 @@ import {
 interface GenerationOptionsContextValue {
 	// State
 	options: GenerationOptions;
-	isPopoverOpen: boolean;
+	isDialogOpen: boolean;
 	isGenerating: boolean;
 
 	// Actions
@@ -34,9 +35,9 @@ interface GenerationOptionsContextValue {
 	) => void;
 	resetOptions: () => void;
 	setOptions: (options: Partial<GenerationOptions>) => void;
-	openPopover: () => void;
-	closePopover: () => void;
-	togglePopover: () => void;
+	openDialog: () => void;
+	closeDialog: () => void;
+	toggleDialog: () => void;
 	setIsGenerating: (isGenerating: boolean) => void;
 }
 
@@ -78,7 +79,7 @@ export function GenerationOptionsProvider({
 
 	// State
 	const [options, setOptions] = useState<GenerationOptions>(defaultOptions);
-	const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(initialGenerating);
 
 	// Save options to localStorage when they change
@@ -131,41 +132,38 @@ export function GenerationOptionsProvider({
 		[onOptionsChange],
 	);
 
-	// Popover controls
-	const openPopover = useCallback(() => setIsPopoverOpen(true), []);
-	const closePopover = useCallback(() => setIsPopoverOpen(false), []);
-	const togglePopover = useCallback(
-		() => setIsPopoverOpen((prev) => !prev),
-		[],
-	);
+	// Dialog controls
+	const openDialog = useCallback(() => setIsDialogOpen(true), []);
+	const closeDialog = useCallback(() => setIsDialogOpen(false), []);
+	const toggleDialog = useCallback(() => setIsDialogOpen((prev) => !prev), []);
 
 	// Context value
 	const value = useMemo(
 		() => ({
 			// State
 			options,
-			isPopoverOpen,
+			isDialogOpen,
 			isGenerating,
 
 			// Actions
 			updateOption,
 			resetOptions,
 			setOptions: mergeOptions,
-			openPopover,
-			closePopover,
-			togglePopover,
+			openDialog,
+			closeDialog,
+			toggleDialog,
 			setIsGenerating,
 		}),
 		[
 			options,
-			isPopoverOpen,
+			isDialogOpen,
 			isGenerating,
 			updateOption,
 			resetOptions,
 			mergeOptions,
-			openPopover,
-			closePopover,
-			togglePopover,
+			openDialog,
+			closeDialog,
+			toggleDialog,
 		],
 	);
 

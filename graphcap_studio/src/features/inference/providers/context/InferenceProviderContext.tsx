@@ -155,8 +155,8 @@ const loadProviderFromStorage = (): Provider | null => {
  */
 type InferenceProviderProviderProps = {
 	readonly children: ReactNode;
-	readonly isCreating: boolean;
-	readonly onCancel: () => void;
+	readonly isCreating?: boolean;
+	readonly onCancel?: () => void;
 	readonly onModelSelect?: (providerName: string, modelId: string) => void;
 	readonly selectedProvider?: Provider | null;
 	readonly providers?: Provider[];
@@ -177,8 +177,8 @@ type InferenceProviderProviderProps = {
  */
 export function InferenceProviderProvider({
 	children,
-	isCreating,
-	onCancel,
+	isCreating = false,
+	onCancel = () => {},
 	onModelSelect,
 	selectedProvider: selectedProviderProp,
 	providers: providersProp = [],
@@ -195,20 +195,27 @@ export function InferenceProviderProvider({
 
 	// Update selected provider when prop changes
 	useEffect(() => {
-		if (selectedProviderProp) {
+		if (selectedProviderProp && JSON.stringify(selectedProviderProp) !== JSON.stringify(selectedProvider)) {
 			setSelectedProvider(selectedProviderProp);
 		}
-	}, [selectedProviderProp]);
+	}, [selectedProviderProp, selectedProvider]);
 
 	// Save selected provider to localStorage when it changes
 	useEffect(() => {
-		saveProviderToStorage(selectedProvider);
+		if (selectedProvider) {
+			saveProviderToStorage(selectedProvider);
+		}
 	}, [selectedProvider]);
 
-	// Update providers when prop changes
+	// Update providers when prop changes - only if we have providers and they're different
 	useEffect(() => {
-		setProviders(providersProp);
-	}, [providersProp]);
+		const hasProviders = Array.isArray(providersProp) && providersProp.length > 0;
+		const providersChanged = JSON.stringify(providersProp) !== JSON.stringify(providers);
+		
+		if (hasProviders && providersChanged) {
+			setProviders(providersProp);
+		}
+	}, [providersProp, providers]);
 
 	// Use the model selection hook with selectedProvider
 	const {
@@ -219,12 +226,14 @@ export function InferenceProviderProvider({
 		isModelsError,
 		modelsError,
 		handleModelSelect: handleModelSelectBase,
-	} = useModelSelection(selectedProvider as Provider, onModelSelect);
+	} = useModelSelection(selectedProvider, onModelSelect);
 
 	// Create a memoized version of handleModelSelect
 	const handleModelSelect = useCallback(() => {
-		handleModelSelectBase();
-	}, [handleModelSelectBase]);
+		if (selectedProvider) {
+			handleModelSelectBase();
+		}
+	}, [handleModelSelectBase, selectedProvider]);
 
 	// Create a memoized version of onCancel that resets mode
 	const onCancelHandler = useCallback(() => {

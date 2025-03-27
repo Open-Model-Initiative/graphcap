@@ -2,13 +2,13 @@
 /**
  * Generation Options Button
  *
- * This component provides a button that triggers the generation options popover.
+ * This component provides a button that triggers the generation options dialog.
  */
 
 import { Button } from "@/components/ui";
-import React from "react";
+import type React from "react";
 import { useGenerationOptions } from "../context";
-import { GenerationOptionsPopover } from "./GenerationOptionsPopover";
+import { GenerationOptionsDialog } from "./GenerationOptionsDialog";
 
 interface GenerationOptionsButtonProps {
 	readonly label?: React.ReactNode;
@@ -17,25 +17,25 @@ interface GenerationOptionsButtonProps {
 }
 
 /**
- * Button component for triggering generation options popover
+ * Button component for triggering generation options dialog
  */
 export function GenerationOptionsButton({
 	label = "Options",
 	size = "sm",
 	variant = "outline",
 }: GenerationOptionsButtonProps) {
-	const { togglePopover, isGenerating } = useGenerationOptions();
+	const { toggleDialog, isGenerating } = useGenerationOptions();
 
 	return (
-		<GenerationOptionsPopover>
+		<GenerationOptionsDialog>
 			<Button
-				onClick={togglePopover}
+				onClick={toggleDialog}
 				disabled={isGenerating}
 				size={size}
 				variant={variant}
 			>
 				{label}
 			</Button>
-		</GenerationOptionsPopover>
+		</GenerationOptionsDialog>
 	);
 }
