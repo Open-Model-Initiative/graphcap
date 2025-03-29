@@ -53,7 +53,6 @@ export const ProviderSchema = BaseProviderSchema.extend({
 	baseUrl: z.string().url("Must be a valid URL"),
 	apiKey: z.string().optional(),
 	defaultModel: z.string().optional(),
-	fetchModels: z.boolean().default(true),
 	createdAt: z.string().or(z.date()),
 	updatedAt: z.string().or(z.date()),
 	models: z.array(ProviderModelSchema).optional(),
@@ -69,7 +68,6 @@ export const ProviderCreateSchema = z.object({
 	apiKey: z.string().optional(),
 	isEnabled: z.boolean().default(true),
 	defaultModel: z.string().optional(),
-	fetchModels: z.boolean().default(true),
 	models: z
 		.array(
 			z.object({
@@ -95,7 +93,6 @@ export const ProviderUpdateSchema = z.object({
 	apiKey: z.string().optional(),
 	isEnabled: z.boolean().optional(),
 	defaultModel: z.string().optional(),
-	fetchModels: z.boolean().optional(),
 	models: z
 		.array(
 			z.object({
@@ -155,7 +152,6 @@ export const ServerProviderConfigSchema = z.object({
 	api_key: z.string(),
 	default_model: z.string().optional(),
 	models: z.array(z.string()),
-	fetch_models: z.boolean(),
 	rate_limits: z
 		.object({
 			requests_per_minute: z.number().optional(),
@@ -261,7 +257,6 @@ export function toServerConfig(provider: Provider): ServerProviderConfig {
 		api_key: provider.apiKey || "",
 		default_model: provider.defaultModel,
 		models: provider.models?.map((m) => m.name) || [],
-		fetch_models: provider.fetchModels,
 		rate_limits: provider.rateLimits
 			? {
 					requests_per_minute: provider.rateLimits.requestsPerMinute,

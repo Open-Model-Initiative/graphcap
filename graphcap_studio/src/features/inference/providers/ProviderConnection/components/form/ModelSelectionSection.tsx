@@ -31,7 +31,6 @@ export function ModelSelectionSection() {
 	const providerName = provider?.name;
 	const isEditMode = mode === "edit" || mode === "create";
 	const customModels = watch("models") || [];
-	const fetchModels = provider?.fetchModels || watch("fetchModels");
 
 	// Prepare an array with all models to display
 	const allModels = [];
@@ -50,8 +49,8 @@ export function ModelSelectionSection() {
 		}
 	}
 	
-	// Add API-fetched models if fetchModels is true
-	if (fetchModels && providerModels && providerModels.length > 0) {
+	// Add API-fetched models
+	if (providerModels && providerModels.length > 0) {
 		// Map API models to the format expected by the model selector
 		for (const model of providerModels) {
 			// Only add if not already included in custom models
@@ -85,7 +84,7 @@ export function ModelSelectionSection() {
 					<ProviderModelActions />
 				</Box>
 				
-				{fetchModels && isLoadingModels && (
+				{isLoadingModels && (
 					<StatusMessage type="loading" message="Loading provider models..." />
 				)}
 				
@@ -108,7 +107,7 @@ export function ModelSelectionSection() {
 	}
 
 	// View mode
-	if (fetchModels && isLoadingModels) {
+	if (isLoadingModels) {
 		return <StatusMessage type="loading" message="Loading models..." />;
 	}
 
@@ -117,7 +116,7 @@ export function ModelSelectionSection() {
 			<StatusMessage
 				type="warning"
 				title="No models available"
-				message="This provider has no available models. Add custom models or enable model fetching."
+				message="This provider has no available models. Add custom models."
 			/>
 		);
 	}

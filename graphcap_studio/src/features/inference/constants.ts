@@ -9,9 +9,8 @@ export const DEFAULT_PROVIDER_FORM_DATA = {
 	environment: "cloud" as const,
 	baseUrl: "",
 	apiKey: "",
-	isEnabled: true,
+	isEnabled: false,
 	defaultModel: "",
-	fetchModels: true,
 	models: [],
 	rateLimits: {
 		requestsPerMinute: 0,

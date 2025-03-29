@@ -15,12 +15,10 @@ import {
 import type {
 	Provider,
 	ProviderCreate,
-	ProviderModelsResponse,
 	ProviderUpdate,
 	ServerProviderConfig,
-	SuccessResponse,
+	SuccessResponse
 } from "@/types/provider-config-types";
-import { toServerConfig } from "@/types/provider-config-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query keys for TanStack Query
@@ -283,41 +281,5 @@ export function useTestProviderConnection() {
 
 			return response.json();
 		},
-	});
-}
-
-/**
- * Hook to fetch provider models
- */
-export function useProviderModels(provider: Provider) {
-	const { connections } = useServerConnectionsContext();
-	const inferenceBridgeConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
-	);
-	const isConnected = inferenceBridgeConnection?.status === "connected";
-
-	return useQuery({
-		queryKey: queryKeys.providerModels(provider.name),
-		queryFn: async () => {
-			const client = createInferenceBridgeClient(connections);
-			const serverConfig = toServerConfig(provider);
-
-			const response = await client.providers[":provider_name"]["models"].$post(
-				{
-					param: { provider_name: provider.name },
-					json: serverConfig,
-				},
-			);
-
-			if (!response.ok) {
-				throw new Error(
-					`Failed to fetch models for ${provider.name}: ${response.status}`,
-				);
-			}
-
-			return response.json() as Promise<ProviderModelsResponse>;
-		},
-		enabled: isConnected && provider.fetchModels,
-		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 }

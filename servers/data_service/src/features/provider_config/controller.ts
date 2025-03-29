@@ -423,8 +423,7 @@ export const updateProvider = async (c: Context) => {
 			// Then insert new models - handle both full model objects and simple name+isEnabled objects
 			await db.insert(providerModels).values(
 				models.map((model) => {
-					// If model already has numeric ID, use it
-					// Otherwise, generate a new one (auto-increment by database)
+					// Create base model data object
 					const modelData = {
 						providerId: Number.parseInt(id),
 						name: model.name,
@@ -516,8 +515,7 @@ export const updateProvider = async (c: Context) => {
 				// Then insert new models - handle both full model objects and simple name+isEnabled objects
 				await tx.insert(providerModels).values(
 					models.map((model) => {
-						// If model already has numeric ID, use it
-						// Otherwise, generate a new one (auto-increment by database)
+						// Create base model data object
 						const modelData = {
 							providerId: Number.parseInt(id),
 							name: model.name,

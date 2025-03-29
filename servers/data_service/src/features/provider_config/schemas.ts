@@ -68,7 +68,7 @@ export const providerUpdateSchema = z.object({
   isEnabled: z.boolean().optional(),
   models: z.array(
     z.object({
-      id: z.number().optional(),
+      id: z.number().or(z.string()).optional(),
       name: z.string().min(1, 'Model name is required'),
       isEnabled: z.boolean().default(true),
     })

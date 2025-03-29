@@ -44,7 +44,7 @@ export function SaveButton() {
 	// Get provider service functions
 	const { isPending: isCreatingProvider } =
 		useCreateProvider();
-	const { mutateAsync: updateProviderAsync, isPending: isUpdatingProvider } =
+	const { isPending: isUpdatingProvider } =
 		useUpdateProvider();
 
 	// Determine if form is submitting
@@ -158,12 +158,10 @@ export function SaveButton() {
 							<Text>
 								<strong>Base URL:</strong> {displayProvider.baseUrl}
 							</Text>
-							{displayProvider.fetchModels && (
-								<Text>
-									<strong>Default Model:</strong>{" "}
-									{displayProvider.defaultModel ?? "Not set"}
-								</Text>
-							)}
+							<Text>
+								<strong>Default Model:</strong>{" "}
+								{displayProvider.defaultModel ?? "Not set"}
+							</Text>
 						</VStack>
 					</Box>
 				</VStack>

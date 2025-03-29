@@ -19,7 +19,6 @@ interface ApiProvider {
 	apiKey?: string;
 	isEnabled: boolean;
 	defaultModel?: string;
-	fetchModels: boolean;
 	createdAt: string | Date;
 	updatedAt: string | Date;
 	models?: ApiProviderModel[];
@@ -67,7 +66,6 @@ export function fromApiProvider(apiProvider: ApiProvider): Provider {
 		apiKey: apiProvider.apiKey,
 		isEnabled: apiProvider.isEnabled,
 		defaultModel: apiProvider.defaultModel,
-		fetchModels: apiProvider.fetchModels,
 		createdAt: apiProvider.createdAt,
 		updatedAt: apiProvider.updatedAt,
 
@@ -109,7 +107,6 @@ export function toApiProvider(provider: Provider): ApiProvider {
 		apiKey: provider.apiKey,
 		isEnabled: provider.isEnabled,
 		defaultModel: provider.defaultModel,
-		fetchModels: provider.fetchModels,
 		createdAt: provider.createdAt,
 		updatedAt: provider.updatedAt,
 
