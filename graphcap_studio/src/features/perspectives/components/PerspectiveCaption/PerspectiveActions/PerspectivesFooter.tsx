@@ -7,23 +7,23 @@
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import {
-	GenerationOptionsButton,
-	GenerationOptionsProvider,
-	ProviderSelector,
+    GenerationOptionsButton,
+    GenerationOptionsProvider,
+    ProviderSelector,
 } from "@/features/inference/generation-options";
-import { DEFAULT_OPTIONS } from "@/features/inference/generation-options/schema";
 import {
-	usePerspectiveUI,
-	usePerspectivesData,
+    usePerspectiveUI,
+    usePerspectivesData,
 } from "@/features/perspectives/context";
 import type { CaptionOptions } from "@/features/perspectives/types";
+import { DEFAULT_OPTIONS } from "@/types/generation-option-types";
 import {
-	Box,
-	Button,
-	Flex,
-	HStack,
-	Icon,
-	useBreakpointValue,
+    Box,
+    Button,
+    Flex,
+    HStack,
+    Icon,
+    useBreakpointValue,
 } from "@chakra-ui/react";
 import { useCallback, useEffect } from "react";
 import { LuRefreshCw, LuSettings } from "react-icons/lu";

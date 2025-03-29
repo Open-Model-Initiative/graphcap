@@ -5,7 +5,10 @@
  * This module provides utilities for persisting generation options to localStorage.
  */
 
-import { GenerationOptions, GenerationOptionsSchema } from "./schema";
+import {
+	type GenerationOptions,
+	GenerationOptionsSchema,
+} from "@/types/generation-option-types";
 
 /**
  * Storage key for saving generation options in localStorage

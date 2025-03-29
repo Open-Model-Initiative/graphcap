@@ -7,9 +7,9 @@
 
 import { Slider } from "@/components/ui/slider";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { OPTION_CONFIGS } from "@/types/generation-option-types";
 import { Box, HStack, Input } from "@chakra-ui/react";
-import { ChangeEvent } from "react";
-import { OPTION_CONFIGS } from "../../schema";
+import type { ChangeEvent } from "react";
 
 export type OptionFieldKey = keyof typeof OPTION_CONFIGS;
 
@@ -46,8 +46,8 @@ export function OptionField<K extends OptionFieldKey>({
 
 	// Handle direct input changes
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-		const valueAsNumber = parseFloat(e.target.value);
-		if (isNaN(valueAsNumber)) return;
+		const valueAsNumber = Number.parseFloat(e.target.value);
+		if (Number.isNaN(valueAsNumber)) return;
 
 		// Ensure value is within bounds
 		const boundedValue = Math.max(

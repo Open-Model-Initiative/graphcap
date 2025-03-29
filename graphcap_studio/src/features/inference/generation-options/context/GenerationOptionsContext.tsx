@@ -5,6 +5,11 @@
  * This module provides a context for managing generation options state.
  */
 
+import {
+	DEFAULT_OPTIONS,
+	type GenerationOptions,
+	GenerationOptionsSchema,
+} from "@/types/generation-option-types";
 import type React from "react";
 import {
 	createContext,
@@ -15,11 +20,6 @@ import {
 	useState,
 } from "react";
 import { usePersistGenerationOptions } from "../persist-generation-options";
-import {
-	DEFAULT_OPTIONS,
-	type GenerationOptions,
-	GenerationOptionsSchema,
-} from "../schema";
 
 // Define the context interface
 interface GenerationOptionsContextValue {

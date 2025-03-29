@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateProvider, useProviders, useTestProviderConnection, useUpdateProvider } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context/InferenceProviderContext";
@@ -25,7 +25,6 @@ interface ProviderFormContainerProps {
 export function ProviderFormContainer({
 	children,
 	initialData,
-	onSubmit: onSubmitProp,
 }: ProviderFormContainerProps) {
 	// Get model selection and provider state from the InferenceProviderContext
 	const {
@@ -140,8 +139,7 @@ export function ProviderFormContainer({
 				// Create new provider
 				await createProvider.mutateAsync(data as ProviderCreate);
 			} else {
-				// This is the custom submit handler from parent (if any)
-				await onSubmitProp(data);
+
 			}
 			
 			setSaveSuccess(true);

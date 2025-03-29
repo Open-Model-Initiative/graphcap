@@ -6,9 +6,9 @@
  */
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { RESOLUTION_PRESETS } from "@/types/generation-option-types";
 import { Box, HStack } from "@chakra-ui/react";
 import { useGenerationOptions } from "../../context";
-import { RESOLUTION_PRESETS } from "../../schema";
 
 /**
  * Field component for adjusting image resize resolution
