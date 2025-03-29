@@ -19,24 +19,17 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
+from fastapi import (APIRouter, BackgroundTasks, File, Form, HTTPException,
+                     UploadFile, status)
 from loguru import logger
 
-from ...utils.resizing import ResolutionPreset, log_resize_options, resize_image
-from .models import (
-    CaptionPathRequest,
-    CaptionResponse,
-    ModuleListResponse,
-    ModulePerspectivesResponse,
-    PerspectiveListResponse,
-)
-from .service import (
-    generate_caption,
-    get_available_modules,
-    get_available_perspectives,
-    get_perspectives_by_module,
-    save_uploaded_file,
-)
+from ...utils.resizing import (ResolutionPreset, log_resize_options,
+                               resize_image)
+from .models import (CaptionPathRequest, CaptionResponse, ModuleListResponse,
+                     ModulePerspectivesResponse, PerspectiveListResponse)
+from .service import (generate_caption, get_available_modules,
+                      get_available_perspectives, get_perspectives_by_module,
+                      save_uploaded_file)
 
 router = APIRouter(prefix="/perspectives", tags=["perspectives"])
 
@@ -60,6 +53,7 @@ async def create_caption(
     perspective: str = Form(..., description="Name of the perspective to use"),
     provider: str = Form(..., description="Name of the provider to use"),
     provider_config: str = Form(..., description="Provider configuration as JSON string"),
+    model: str = Form(..., description="Model name to use for processing"),
     max_tokens: Optional[int] = Form(4096, description="Maximum number of tokens"),
     temperature: Optional[float] = Form(0.8, description="Temperature for generation"),
     top_p: Optional[float] = Form(0.9, description="Top-p sampling parameter"),
@@ -79,6 +73,7 @@ async def create_caption(
         perspective: Name of the perspective to use (required)
         provider: Name of the provider to use (required)
         provider_config: Provider configuration as JSON string (required)
+        model: Model name to use for processing (required)
         max_tokens: Maximum number of tokens (optional, default: 4096)
         temperature: Temperature for generation (optional, default: 0.8)
         top_p: Top-p sampling parameter (optional, default: 0.9)
@@ -150,14 +145,23 @@ async def create_caption(
         if not parsed_provider_config:
             logger.error(f"No provider configuration provided for {provider}")
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Provider configuration not provided for '{provider}'. Please include provider_config in the request."
+            )
+
+        # Validate model is provided
+        if not model:
+            logger.error(f"No model specified for {provider}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model name not provided for '{provider}'. Please include model in the request."
             )
 
         # Generate the caption
         caption_data = await generate_caption(
             perspective_name=perspective,
             image_path=image_path,
+            model=model,
             max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
@@ -231,10 +235,19 @@ async def create_caption_from_path(
                 detail=f"Provider configuration not provided for '{request.provider}'. Please include provider_config in the request."
             )
 
+        # Validate that model is provided
+        if not hasattr(request, 'model') or not request.model:
+            logger.error(f"No model specified for {request.provider}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model name not provided for '{request.provider}'. Please include model in the request."
+            )
+
         # Generate the caption
         caption_data = await generate_caption(
             perspective_name=request.perspective,
             image_path=image_path,
+            model=request.model,
             max_tokens=request.max_tokens,
             temperature=request.temperature,
             top_p=request.top_p,

@@ -6,14 +6,12 @@ Handles provider-specific error formatting and responses.
 """
 
 import datetime
-import traceback
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, Set
 
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from .models import ProviderConfig
-from ...utils.logger import logger
 
 
 def format_provider_validation_error(e: ValidationError, provider_name: str) -> JSONResponse:
@@ -150,7 +148,6 @@ def format_provider_connection_error(e: Exception, provider_name: str, config: P
         "kind": config.kind,
         "environment": config.environment,
         "base_url": config.base_url,
-        "default_model": config.default_model,
         "models": config.models,
         "fetch_models": config.fetch_models,
     }
@@ -187,4 +184,4 @@ def format_provider_connection_error(e: Exception, provider_name: str, config: P
     return JSONResponse(
         status_code=400,
         content=error_response
-    ) 
+    )

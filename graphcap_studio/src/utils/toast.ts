@@ -105,8 +105,8 @@ export const toast = {
 	/**
 	 * Show a success toast
 	 */
-	success: ({ title, description, duration = 3000 }: { title: string; description?: string; duration?: number }) => {
-		toaster.create({
+	success: ({ title, description, duration = 1000 }: { title: string; description?: string; duration?: number }) => {
+		return toaster.create({
 			title,
 			description,
 			duration,
@@ -117,8 +117,8 @@ export const toast = {
 	/**
 	 * Show an error toast
 	 */
-	error: ({ title, description, duration = 5000 }: { title: string; description?: string; duration?: number }) => {
-		toaster.create({
+	error: ({ title, description, duration = 2000 }: { title: string; description?: string; duration?: number }) => {
+		return toaster.create({
 			title,
 			description,
 			duration,
@@ -129,8 +129,8 @@ export const toast = {
 	/**
 	 * Show an info toast
 	 */
-	info: ({ title, description, duration = 3000 }: { title: string; description?: string; duration?: number }) => {
-		toaster.create({
+	info: ({ title, description, duration = 2000 }: { title: string; description?: string; duration?: number }) => {
+		return toaster.create({
 			title,
 			description,
 			duration,
@@ -141,12 +141,34 @@ export const toast = {
 	/**
 	 * Show a warning toast
 	 */
-	warning: ({ title, description, duration = 4000 }: { title: string; description?: string; duration?: number }) => {
-		toaster.create({
+	warning: ({ title, description, duration = 2000 }: { title: string; description?: string; duration?: number }) => {
+		return toaster.create({
 			title,
 			description,
 			duration,
 			type: "warning",
 		});
+	},
+
+	/**
+	 * Dismiss a toast by its ID
+	 * If no ID is provided, all toasts will be dismissed
+	 */
+	dismiss: (id?: string) => {
+		toaster.dismiss(id);
+	},
+
+	/**
+	 * Pause a toast by its ID to prevent it from timing out
+	 */
+	pause: (id: string) => {
+		toaster.pause(id);
+	},
+
+	/**
+	 * Resume a paused toast, re-enabling the timeout with the remaining duration
+	 */
+	resume: (id: string) => {
+		toaster.resume(id);
 	}
 };

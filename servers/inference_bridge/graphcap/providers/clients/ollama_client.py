@@ -75,7 +75,6 @@ class OllamaClient(BaseClient):
         try:
             logger.info("Fetching models from Ollama:")
             logger.info(f"  - URL: {self._raw_base_url}/models")
-            logger.info(f"  - Default model: {self.default_model}")
 
             async with httpx.AsyncClient() as client:
                 response = await client.get(f"{self._raw_base_url}/models")
@@ -88,7 +87,6 @@ class OllamaClient(BaseClient):
             logger.error("Connection error while fetching models from Ollama:")
             logger.error(f"  - Error: {str(e)}")
             logger.error(f"  - URL: {self._raw_base_url}/models")
-            logger.error(f"  - Default model: {self.default_model}")
             raise
         except Exception as e:
             logger.error(f"Failed to get models from Ollama: {str(e)}")

@@ -101,6 +101,7 @@ export const CaptionRequestSchema = z.object({
 	provider: z.string().optional(), // For backward compatibility
 	options: z
 		.object({
+			model: z.string(), // Required model name to use for processing
 			max_tokens: z.number().optional(),
 			temperature: z.number().optional(),
 			top_p: z.number().optional(),
@@ -190,6 +191,7 @@ export type ServerConnection = {
  * Specifies options for generating captions.
  */
 export type CaptionOptions = {
+	model: string; // Required model name to use for processing
 	max_tokens?: number;
 	temperature?: number;
 	top_p?: number;

@@ -1,12 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import {
-	SelectContent,
-	SelectItem,
-	SelectRoot,
-	SelectTrigger,
-	SelectValueText,
-} from "@/components/ui/select";
-import { createListCollection } from "@chakra-ui/react";
+import { ProviderSelector, type ProviderOption } from "@/components/common_inference/ProviderSelector";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 type ProviderFormSelectProps = {
@@ -27,23 +20,17 @@ export function ProviderFormSelect({
 
 	const selectedProviderId = selectedProvider?.id ?? null;
 
-	// Convert providers to the format expected by SelectRoot
-	const providerItems = providers.map((provider) => ({
+	// Convert providers to the format expected by ProviderSelector
+	const providerOptions: ProviderOption[] = providers.map((provider) => ({
 		label: provider.name,
 		value: String(provider.id),
+		id: provider.id,
 	}));
 
-	const providerCollection = createListCollection({
-		items: providerItems,
-	});
-
-	// Convert selectedProviderId to string array format
-	const value = selectedProviderId ? [String(selectedProviderId)] : [];
-
-	const handleProviderChange = (details: { value: string[] }) => {
-		if (!details.value.length) return;
+	const handleProviderChange = (value: string) => {
+		if (!value) return;
 		
-		const id = Number(details.value[0]);
+		const id = Number(value);
 		const provider = providers.find((p) => p.id === id);
 		if (provider) {
 			// Call the context's setSelectedProvider function
@@ -53,23 +40,12 @@ export function ProviderFormSelect({
 	};
 
 	return (
-		<SelectRoot
-			collection={providerCollection}
-			value={value}
-			onValueChange={handleProviderChange}
-			aria-label={ariaLabel}
+		<ProviderSelector
+			options={providerOptions}
+			value={selectedProviderId}
+			onChange={handleProviderChange}
+			placeholder="Select a provider"
 			className={className}
-		>
-			<SelectTrigger>
-				<SelectValueText placeholder="Select a provider" />
-			</SelectTrigger>
-			<SelectContent portalled={false}>
-				{providerItems.map((item) => (
-					<SelectItem key={item.value} item={item}>
-						{item.label}
-					</SelectItem>
-				))}
-			</SelectContent>
-		</SelectRoot>
+		/>
 	);
 } 

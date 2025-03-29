@@ -2,6 +2,7 @@
 """Assets for loading provider configurations."""
 
 import dagster as dg
+
 from graphcap.providers.types import ProviderConfig
 
 from ..common.resources import ProviderConfigFile
@@ -23,7 +24,6 @@ def provider_list(
         env_var="GOOGLE_API_KEY",
         base_url="https://generativelanguage.googleapis.com/v1beta",
         models=["gemini-2.0-flash-exp"],
-        default_model="gemini-2.0-flash-exp",
         fetch_models=False,
     )
     

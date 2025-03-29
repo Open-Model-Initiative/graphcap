@@ -1,5 +1,4 @@
 from graphcap.providers.factory import create_provider_client
-from ..perspectives.jobs.config import PerspectivePipelineConfig
 
 
 def get_provider(config_path: str, default_provider: str):
@@ -18,9 +17,9 @@ def get_provider(config_path: str, default_provider: str):
     client = create_provider_client(
         name=default_provider,
         kind="gemini",
-        environment="cloud", 
+        environment="cloud",
         base_url="https://generativelanguage.googleapis.com/v1beta",
         api_key="",  # API key will be retrieved from environment variable
-        default_model="gemini-2.0-flash-exp",
+        models=["gemini-2.0-flash-exp"],  # Specify models explicitly
     )
     return client

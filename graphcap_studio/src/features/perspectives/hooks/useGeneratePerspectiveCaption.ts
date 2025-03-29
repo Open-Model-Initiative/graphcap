@@ -13,6 +13,7 @@ import {
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import type { ServerConnection } from "@/features/server-connections/types";
+import { toast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { perspectivesQueryKeys } from "../services/constants";
 import { ensureWorkspacePath, handleApiError } from "../services/utils";
@@ -51,6 +52,11 @@ export function useGeneratePerspectiveCaption() {
 				throw new Error("Caption generation options are required");
 			}
 
+			// Check if a model is specified in the options
+			if (!options.model) {
+				throw new Error("A model must be specified in the options");
+			}
+
 			// Use the inference bridge client instead of direct fetch
 			const client = createInferenceBridgeClient(connections);
 
@@ -69,6 +75,7 @@ export function useGeneratePerspectiveCaption() {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
+				model: options.model, // Use the model from options
 				provider_config: providerConfig, // Include the full provider configuration
 				max_tokens: options.max_tokens,
 				temperature: options.temperature,
@@ -84,6 +91,7 @@ export function useGeneratePerspectiveCaption() {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
+				model: options.model, // Log the model from options
 				options: {
 					max_tokens: requestBody.max_tokens,
 					temperature: requestBody.temperature,
@@ -136,6 +144,10 @@ export function useGeneratePerspectiveCaption() {
 		},
 		onError: (error) => {
 			console.error("Caption generation failed", error);
+			toast.error({
+				title: "Caption generation failed",
+				description: error.message,
+			});
 		},
 	});
 }

@@ -191,6 +191,7 @@ class CaptionPathRequest(BaseModel):
     image_path: str = Field(..., description="Path to the image file in the workspace")
     provider: str = Field(..., description="Name of the provider to use")
     provider_config: dict = Field(..., description="Provider configuration")
+    model: str = Field(..., description="Model name to use for processing")
     max_tokens: Optional[int] = Field(4096, description=DESC_MAX_TOKENS)
     temperature: Optional[float] = Field(0.8, description=DESC_TEMPERATURE)
     top_p: Optional[float] = Field(0.9, description=DESC_TOP_P)
@@ -205,6 +206,7 @@ class CaptionPathRequest(BaseModel):
                 "perspective": "custom_caption",
                 "image_path": "/workspace/datasets/example.jpg",
                 "provider": "gemini",
+                "model": "gemini-pro-vision",
                 "provider_config": {
                     "name": "gemini",
                     "kind": "gemini",

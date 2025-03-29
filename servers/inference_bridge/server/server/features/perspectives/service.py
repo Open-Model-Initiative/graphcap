@@ -7,7 +7,6 @@ Provides services for working with perspective captions.
 
 import base64
 import os
-import socket
 import tempfile
 from collections import defaultdict
 from pathlib import Path
@@ -15,15 +14,12 @@ from typing import Dict, List, Optional
 
 import aiohttp
 from fastapi import HTTPException, UploadFile
-from graphcap.perspectives import (
-    get_perspective,
-    get_perspective_list,
-)
-from graphcap.providers.clients.base_client import BaseClient
 from loguru import logger
 
-from ..providers.service import create_provider_client_from_config
-from .models import ModuleInfo, PerspectiveInfo, PerspectiveSchema, SchemaField, TableColumn
+from graphcap.perspectives import get_perspective, get_perspective_list
+
+from .models import (ModuleInfo, PerspectiveInfo, PerspectiveSchema,
+                     SchemaField, TableColumn)
 
 
 async def download_image(url: str) -> Path:
@@ -108,7 +104,7 @@ def load_perspective_schema(perspective_name: str) -> Optional[PerspectiveSchema
     try:
         # Import perspective function
         from graphcap.perspectives import get_perspective
-        
+
         # Get the perspective processor
         perspective = get_perspective(perspective_name)
         if perspective and hasattr(perspective, 'config'):
@@ -263,6 +259,7 @@ def get_perspectives_by_module(module_name: str) -> List[PerspectiveInfo]:
 async def generate_caption(
     perspective_name: str,
     image_path: Path,
+    model: str,
     max_tokens: Optional[int] = 4096,
     temperature: Optional[float] = 0.8,
     top_p: Optional[float] = 0.9,
@@ -278,6 +275,7 @@ async def generate_caption(
     Args:
         perspective_name: Name of the perspective to use
         image_path: Path to the image file
+        model: Model name to use for processing
         max_tokens: Maximum number of tokens in the response
         temperature: Temperature for generation
         top_p: Top-p sampling parameter
@@ -301,7 +299,7 @@ async def generate_caption(
         if provider_config:
             from ..providers.models import ProviderConfig
             from ..providers.service import create_provider_client_from_config
-            
+
             # Convert dict to ProviderConfig
             config = ProviderConfig(**provider_config)
             provider = create_provider_client_from_config(config)
@@ -332,6 +330,7 @@ async def generate_caption(
                 caption_data_list = await perspective.process_batch(
                     provider=provider,
                     image_paths=[image_path],
+                    model=model,
                     output_dir=output_dir,
                     max_tokens=max_tokens,
                     temperature=temperature,
@@ -353,6 +352,7 @@ async def generate_caption(
                 caption_data = await perspective.process_single(
                     provider=provider,
                     image_path=image_path,
+                    model=model,
                     max_tokens=max_tokens,
                     temperature=temperature,
                     top_p=top_p,

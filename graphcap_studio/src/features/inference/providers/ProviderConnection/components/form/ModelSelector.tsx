@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Field } from "@/components/ui/field";
-import {
-	SelectContent,
-	SelectItem,
-	SelectRoot,
-	SelectTrigger,
-	SelectValueText,
-} from "@/components/ui/select";
+import { ModelSelector as GenericModelSelector, ModelOption } from "@/components/common_inference/ModelSelector";
 import { useColorMode } from "@/components/ui/theme/color-mode";
-import { Box, Heading, Text, createListCollection } from "@chakra-ui/react";
+import { Box, Heading, Text } from "@chakra-ui/react";
 
-// Define the model item type for the select component
 export interface ModelItem {
 	label: string;
 	value: string;
@@ -38,13 +30,6 @@ export function ModelSelector({
 	const headingColor = isDark ? "gray.100" : "gray.700";
 	const labelColor = isDark ? "gray.300" : "gray.600";
 
-	const modelCollection = createListCollection({
-		items: modelItems,
-	});
-
-	// Convert selectedModelId to string array format
-	const value = selectedModelId ? [selectedModelId] : [];
-
 	return (
 		<Box
 			bg={cardBg}
@@ -61,24 +46,11 @@ export function ModelSelector({
 			<Text mb={2} fontSize="sm" color={labelColor}>
 				Select a model to use with this provider
 			</Text>
-			<Field id="model">
-				<SelectRoot
-					collection={modelCollection}
-					value={value}
-					onValueChange={(details) => setSelectedModelId(details.value[0])}
-				>
-					<SelectTrigger>
-						<SelectValueText placeholder="Select a model" />
-					</SelectTrigger>
-					<SelectContent>
-						{modelItems.map((item: ModelItem) => (
-							<SelectItem key={item.value} item={item}>
-								{item.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</SelectRoot>
-			</Field>
+			<GenericModelSelector
+				options={modelItems}
+				value={selectedModelId}
+				onChange={setSelectedModelId}
+			/>
 		</Box>
 	);
 }

@@ -112,6 +112,7 @@ class BaseCaptionProcessor(ABC):
         self,
         provider: BaseClient,
         image_path: Path,
+        model: str,
         max_tokens: Optional[int] = 4096,
         temperature: Optional[float] = 0.8,
         top_p: Optional[float] = 0.9,
@@ -125,6 +126,7 @@ class BaseCaptionProcessor(ABC):
         Args:
             provider: Vision AI provider client instance
             image_path: Path to the image file
+            model: Model name to use for processing
             max_tokens: Maximum tokens for model response
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
@@ -151,7 +153,7 @@ class BaseCaptionProcessor(ABC):
                 prompt=prompt,
                 image=image_path,
                 schema=self.vision_config.schema,
-                model=provider.default_model,
+                model=model,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 top_p=top_p,
@@ -186,6 +188,7 @@ class BaseCaptionProcessor(ABC):
         self,
         provider: BaseClient,
         image_paths: List[Path],
+        model: str,
         max_tokens: Optional[int] = 4096,
         temperature: Optional[float] = 0.8,
         top_p: Optional[float] = 0.9,
@@ -205,6 +208,7 @@ class BaseCaptionProcessor(ABC):
         Args:
             provider: Vision AI provider client instance
             image_paths: List of paths to image files
+            model: Model name to use for processing
             max_tokens: Maximum tokens for model response
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
@@ -247,7 +251,7 @@ class BaseCaptionProcessor(ABC):
             job_info_data = {
                 "started_at": timestamp,
                 "provider": provider.name,
-                "model": provider.default_model,
+                "model": model,
                 "config_name": self.vision_config.config_name,
                 "version": self.vision_config.version,
                 "total_images": len(image_paths),
@@ -308,6 +312,7 @@ class BaseCaptionProcessor(ABC):
                     result = await self.process_single(
                         provider=provider,
                         image_path=path,
+                        model=model,
                         max_tokens=max_tokens,
                         temperature=temperature,
                         top_p=top_p,
@@ -324,7 +329,7 @@ class BaseCaptionProcessor(ABC):
                         "filename": f"./{path.name}",
                         "config_name": self.vision_config.config_name,
                         "version": self.vision_config.version,
-                        "model": provider.default_model,
+                        "model": model,
                         "provider": provider.name,
                         "parsed": result,
                     }
@@ -354,7 +359,7 @@ class BaseCaptionProcessor(ABC):
                         "filename": f"./{path.name}",
                         "config_name": self.vision_config.config_name,
                         "version": self.vision_config.version,
-                        "model": provider.default_model,
+                        "model": model,
                         "provider": provider.name,
                         "parsed": {"error": str(e)},
                     }
