@@ -114,25 +114,29 @@ async def create_caption(
                 try:
                     resolution = ResolutionPreset[resize_resolution]
                 except (KeyError, ValueError):
-                    logger.warning(f"Invalid resolution: {resize_resolution}. Using HD_720P.")
-                    resolution = ResolutionPreset.HD_720P
+                    logger.warning(f"Invalid resolution: {resize_resolution}. Skipping resize.")
+                    # Skip resizing and continue with original image
+                    continue_resize = False
+                else:
+                    continue_resize = True
+                
+                if continue_resize:
+                    # Create temporary file for resized image
+                    suffix = os.path.splitext(image_path)[1]
+                    fd, resized_path = tempfile.mkstemp(suffix=suffix)
+                    os.close(fd)
 
-                # Create temporary file for resized image
-                suffix = os.path.splitext(image_path)[1]
-                fd, resized_path = tempfile.mkstemp(suffix=suffix)
-                os.close(fd)
+                    # Resize the image
+                    logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
+                    resized_img = resize_image(image_path, resolution)
+                    resized_img.save(resized_path)
 
-                # Resize the image
-                logger.info(f"Resizing image to {resolution.name} ({resolution.value})")
-                resized_img = resize_image(image_path, resolution)
-                resized_img.save(resized_path)
+                    # Add cleanup task for original image
+                    background_tasks.add_task(lambda: os.unlink(image_path) if os.path.exists(image_path) else None)
 
-                # Add cleanup task for original image
-                background_tasks.add_task(lambda: os.unlink(image_path) if os.path.exists(image_path) else None)
-
-                # Use the resized image
-                image_path = Path(resized_path)
-                logger.info(f"Image resized successfully to {resolution.name}")
+                    # Use the resized image
+                    image_path = Path(resized_path)
+                    logger.info(f"Image resized successfully to {resolution.name}")
             except Exception as e:
                 logger.error(f"Error resizing image: {str(e)}")
                 logger.warning("Using original image instead")
@@ -294,9 +298,9 @@ async def _resize_image_if_needed(image_path: Path, resize_resolution: Optional[
         try:
             resolution = ResolutionPreset[resize_resolution]
         except (KeyError, ValueError):
-            logger.warning(f"Invalid resolution: {resize_resolution}. Using HD_720P.")
-            resolution = ResolutionPreset.HD_720P
-
+            logger.warning(f"Invalid resolution: {resize_resolution}. Skipping resize.")
+            return image_path, temp_path
+        
         # Create temporary file for resized image
         suffix = os.path.splitext(str(image_path))[1]
         fd, resized_path = tempfile.mkstemp(suffix=suffix)
