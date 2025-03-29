@@ -81,8 +81,8 @@ export function fromApiProvider(apiProvider: ApiProvider): Provider {
 			updatedAt: model.updatedAt,
 		})),
 
-		// Convert nested rate limits
-		rateLimits: apiProvider.rateLimits
+		// Convert nested rate limits if defined 
+		rateLimits: apiProvider.rateLimits?.id && apiProvider.rateLimits?.providerId
 			? {
 					id: normalizeProviderId(apiProvider.rateLimits.id),
 					providerId: normalizeProviderId(apiProvider.rateLimits.providerId),
