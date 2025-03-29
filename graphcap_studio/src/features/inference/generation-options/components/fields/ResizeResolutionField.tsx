@@ -14,7 +14,9 @@ import { useGenerationOptions } from "../../context";
  * Field component for adjusting image resize resolution
  */
 export function ResizeResolutionField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 
 	// Color values for theming
 	const labelColor = useColorModeValue("gray.700", "gray.300");

@@ -18,8 +18,12 @@ export function ModelSelectorField() {
 		options, 
 		providers, 
 		models,
-		actions 
+		actions,
+		uiState
 	} = useGenerationOptions();
+	
+	const { selectProvider, selectModel } = actions;
+	const { isGenerating } = uiState;
 
 	// Color values for theming
 	const labelColor = useColorModeValue("gray.700", "gray.300");
@@ -49,14 +53,14 @@ export function ModelSelectorField() {
 	// Handle provider change
 	const handleProviderChange = (details: { value: string[] }) => {
 		if (details.value.length > 0 && details.value[0] !== "none") {
-			actions.selectProvider(details.value[0]);
+			selectProvider(details.value[0]);
 		}
 	};
 
 	// Handle model change
 	const handleModelChange = (details: { value: string[] }) => {
 		if (details.value.length > 0 && details.value[0] !== "none") {
-			actions.selectModel(details.value[0]);
+			selectModel(details.value[0]);
 		}
 	};
 
@@ -68,7 +72,7 @@ export function ModelSelectorField() {
 	// Loading state
 	const isProvidersLoading = providers.isLoading;
 	const isModelsLoading = models.isLoading;
-
+	
 	return (
 		<Box w="full">
 			<Box as="label" display="block" fontSize="xs" mb={1} color={labelColor}>
@@ -81,7 +85,7 @@ export function ModelSelectorField() {
 						collection={providerCollection}
 						value={options.provider_id ? [options.provider_id] : []}
 						onValueChange={handleProviderChange}
-						disabled={isProvidersLoading}
+						disabled={isProvidersLoading || isGenerating}
 						size="sm"
 					>
 						<Select.HiddenSelect />
@@ -116,7 +120,7 @@ export function ModelSelectorField() {
 						collection={modelCollection}
 						value={options.model_id ? [options.model_id] : []}
 						onValueChange={handleModelChange}
-						disabled={isModelsLoading || !hasProviders}
+						disabled={isModelsLoading || !hasProviders || isGenerating}
 						size="sm"
 					>
 						<Select.HiddenSelect />

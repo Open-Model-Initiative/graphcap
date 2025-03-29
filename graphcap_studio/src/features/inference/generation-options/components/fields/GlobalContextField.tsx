@@ -14,7 +14,9 @@ import { useGenerationOptions } from "../../context";
  * Global context control field component
  */
 export function GlobalContextField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 	const [localValue, setLocalValue] = useState(options.global_context);
 
 	// Color values for theming

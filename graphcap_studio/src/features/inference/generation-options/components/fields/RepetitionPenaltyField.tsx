@@ -12,7 +12,9 @@ import { OptionField } from "./OptionField";
  * Repetition penalty control field component
  */
 export function RepetitionPenaltyField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 
 	const handleChange = (value: number) => {
 		updateOption("repetition_penalty", value);

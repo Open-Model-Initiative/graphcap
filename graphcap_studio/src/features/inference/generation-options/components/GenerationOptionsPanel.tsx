@@ -21,7 +21,9 @@ import {
  * Panel component for generation options in the left action drawer
  */
 export function GenerationOptionsPanel() {
-	const { resetOptions, isGenerating } = useGenerationOptions();
+	const { actions, uiState } = useGenerationOptions();
+	const { resetOptions } = actions;
+	const { isGenerating } = uiState;
 
 	return (
 		<VStack gap={4} align="stretch" p={3}>
