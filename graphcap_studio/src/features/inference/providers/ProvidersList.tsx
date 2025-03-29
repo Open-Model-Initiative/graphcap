@@ -1,8 +1,8 @@
+import type { ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useProviders } from "../services/providers";
 import { ProviderFormSelect } from "./ProviderConnection/components/form/ProviderFormSelect";
 import { ProviderFormContainer } from "./ProviderConnection/containers/ProviderFormContainer";
-import type { ProviderCreate, ProviderUpdate } from "./types";
 
 /**
  * Component for displaying a list of providers as a dropdown

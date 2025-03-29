@@ -6,12 +6,12 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
 import {
 	type Provider,
 	toServerConfig,
-} from "@/features/inference/providers/types";
-import { SERVER_IDS } from "@/features/server-connections/constants";
-import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+} from "@/types/provider-config-types";
 import type { ServerConnection } from "@/types/server-connection-types";
 import { toast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

@@ -1,8 +1,8 @@
+import { type Provider, toServerConfig } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
 import { useTestProviderConnection } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context";
-import { type Provider, toServerConfig } from "../../types";
 
 interface UseProviderConnectionResult {
   isTestingConnection: boolean;
@@ -75,13 +75,6 @@ export function useProviderConnection(selectedProvider: Provider | null): UsePro
 
     try {
       const config = toServerConfig(currentFormValues);
-      const requestDetails = {
-        provider: currentFormValues.name,
-        config: {
-          ...config,
-          api_key: config.api_key ? '[REDACTED]' : undefined
-        }
-      };
 
       const result = await testConnection.mutateAsync({
         providerName: currentFormValues.name,

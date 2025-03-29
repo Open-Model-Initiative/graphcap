@@ -1,8 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { ReactNode } from "react";
-import { useState } from "react";
-import { useInferenceProviderContext } from "../context";
-import type { ProviderCreate, ProviderUpdate } from "../types";
 import { ProviderFormView } from "./components/ProviderFormView";
 import { ProviderFormContainer } from "./containers/ProviderFormContainer";
 

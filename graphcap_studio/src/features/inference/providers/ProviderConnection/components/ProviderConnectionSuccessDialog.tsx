@@ -1,3 +1,4 @@
+import type { ConnectionDetails as ContextConnectionDetails } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import {
 	Button,
@@ -10,7 +11,6 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { LuCheck, LuCircleAlert } from "react-icons/lu";
-import type { ConnectionDetails as ContextConnectionDetails } from "../../types";
 import { type ConnectionStep, ConnectionSteps } from "./ConnectionSteps";
 
 /**

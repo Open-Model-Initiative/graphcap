@@ -1,7 +1,7 @@
 import { useProviderModels } from "@/features/server-connections/services/providers";
+import type { Provider } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useState } from "react";
-import type { Provider } from "../providers/types";
 
 /**
  * Custom hook for managing model selection

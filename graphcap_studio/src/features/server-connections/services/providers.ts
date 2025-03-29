@@ -13,8 +13,8 @@ import type {
 	ProviderModelsResponse,
 	ProviderUpdate,
 	SuccessResponse,
-} from "@/features/inference/providers/types";
-import { toServerConfig } from "@/features/inference/providers/types";
+} from "@/types/provider-config-types";
+import { toServerConfig } from "@/types/provider-config-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SERVER_IDS } from "../constants";
 import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";

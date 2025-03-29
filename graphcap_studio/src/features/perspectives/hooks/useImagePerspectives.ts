@@ -6,10 +6,10 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
-import type { Provider } from "@/features/inference/providers/types";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
+import type { Provider } from "@/types/provider-config-types";
 import { useCallback, useEffect, useState } from "react";
 
 import type {

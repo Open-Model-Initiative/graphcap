@@ -1,3 +1,5 @@
+import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
+import { toServerConfig } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
@@ -5,8 +7,6 @@ import { useForm } from "react-hook-form";
 import { useCreateProvider, useProviders, useTestProviderConnection, useUpdateProvider } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context/InferenceProviderContext";
 import { ProviderFormProvider } from "../../context/ProviderFormContext";
-import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "../../types";
-import { toServerConfig } from "../../types";
 
 // Extended Error interface with cause property
 interface ErrorWithCause extends Error {

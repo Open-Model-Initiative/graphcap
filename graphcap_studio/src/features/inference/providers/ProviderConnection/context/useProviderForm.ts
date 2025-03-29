@@ -1,9 +1,9 @@
+import { type Provider, type ProviderCreate, type ProviderUpdate, toServerConfig } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
 import { type Control, type FieldErrors, type UseFormHandleSubmit, type UseFormReset, type UseFormWatch, useForm } from "react-hook-form";
 import { useTestProviderConnection } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context/InferenceProviderContext";
-import { type Provider, type ProviderCreate, type ProviderUpdate, toServerConfig } from "../../types";
 
 interface UseProviderFormResult {
   mode: 'view' | 'edit' | 'create';
@@ -185,7 +185,7 @@ export function useProviderForm(initialData: Partial<ProviderCreate | ProviderUp
     watch,
     reset,
     dialogs,
-    onSubmit: (data) => Promise.resolve(), // Placeholder to maintain compatibility
+    onSubmit: () => Promise.resolve(), // Placeholder to maintain compatibility
     handleTestConnection,
     setMode,
     closeDialog,

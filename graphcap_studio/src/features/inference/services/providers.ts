@@ -9,7 +9,6 @@
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createDataServiceClient, createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
 	Provider,
 	ProviderCreate,
@@ -17,8 +16,9 @@ import type {
 	ProviderUpdate,
 	ServerProviderConfig,
 	SuccessResponse,
-} from "../providers/types";
-import { toServerConfig } from "../providers/types";
+} from "@/types/provider-config-types";
+import { toServerConfig } from "@/types/provider-config-types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query keys for TanStack Query
 export const queryKeys = {
@@ -27,27 +27,7 @@ export const queryKeys = {
 	providerModels: (providerName: string) => ["providers", "models", providerName] as const,
 };
 
-interface ServerConnection {
-	id: string;
-	url: string;
-	status: string;
-}
 
-// Define a more specific type for the client
-interface DataServiceClient {
-	providers: {
-		$get: () => Promise<Response>;
-		$post: (options: { json: ProviderCreate }) => Promise<Response>;
-		":id": {
-			$get: (options: { param: { id: string } }) => Promise<Response>;
-			$put: (options: {
-				param: { id: string };
-				json: ProviderUpdate;
-			}) => Promise<Response>;
-			$delete: (options: { param: { id: string } }) => Promise<Response>;
-		};
-	};
-}
 
 /**
  * Extended Error interface with cause property

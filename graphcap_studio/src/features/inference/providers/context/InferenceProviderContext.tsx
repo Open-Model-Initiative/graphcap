@@ -1,3 +1,4 @@
+import type { Provider } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Inference Provider Context
@@ -21,7 +22,6 @@ import {
 	useState,
 } from "react";
 import { useModelSelection } from "../../hooks";
-import type { Provider } from "../types";
 
 // Local storage key for selected provider
 const SELECTED_PROVIDER_STORAGE_KEY = "graphcap-selected-provider";

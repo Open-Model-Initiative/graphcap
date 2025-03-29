@@ -1,3 +1,4 @@
+import type { ErrorDetails as ContextErrorDetails } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import {
 	Box,
@@ -12,7 +13,6 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { LuTriangleAlert } from "react-icons/lu";
-import type { ErrorDetails as ContextErrorDetails } from "../../types";
 
 type ErrorDetails = {
 	message?: string;

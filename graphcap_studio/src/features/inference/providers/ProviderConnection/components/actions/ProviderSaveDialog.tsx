@@ -1,3 +1,4 @@
+import type { Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 import {
   Box,
   Button,
@@ -12,7 +13,6 @@ import {
 import { useState } from "react";
 import { useCreateProvider, useUpdateProvider } from "../../../../services/providers";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
-import type { Provider, ProviderCreate, ProviderUpdate } from "../../../types";
 
 // Define error type with message property
 interface ErrorWithMessage {

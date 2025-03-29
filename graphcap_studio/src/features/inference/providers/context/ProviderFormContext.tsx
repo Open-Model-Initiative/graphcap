@@ -1,7 +1,7 @@
+import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import { type ReactNode, createContext, useContext } from "react";
 import type { Control, FieldErrors, UseFormWatch } from "react-hook-form";
-import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "../types";
 
 interface ProviderFormContextType {
 	mode: "view" | "edit" | "create";
