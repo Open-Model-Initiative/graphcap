@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ProviderSelector, type ProviderOption } from "@/components/common_inference/ProviderSelector";
+import { type ProviderOption, ProviderSelector } from "@/components/common_inference/ProviderSelector";
+import type { Provider } from "@/types/provider-config-types";
+import { useProviders } from "../../../../services/providers";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 type ProviderFormSelectProps = {
@@ -15,37 +17,37 @@ export function ProviderFormSelect({
 	className,
 	"aria-label": ariaLabel = "Select Provider",
 }: ProviderFormSelectProps) {
-	// Get providers and selection functions from the form context
-	const { providers, selectedProvider, setSelectedProvider } = useProviderFormContext();
-
-	const selectedProviderId = selectedProvider?.id ?? null;
-
+	// Get provider data from context
+	const { provider, setProvider } = useProviderFormContext();
+	
+	// Fetch providers directly
+	const { data: providers = [] } = useProviders();
+	
 	// Convert providers to the format expected by ProviderSelector
-	const providerOptions: ProviderOption[] = providers.map((provider) => ({
-		label: provider.name,
-		value: String(provider.id),
-		id: provider.id,
+	const providerOptions: ProviderOption[] = providers.map((p: Provider) => ({
+		label: p.name,
+		value: String(p.id),
+		id: String(p.id),
 	}));
 
 	const handleProviderChange = (value: string) => {
 		if (!value) return;
 		
-		const id = Number(value);
-		const provider = providers.find((p) => p.id === id);
-		if (provider) {
-			// Call the context's setSelectedProvider function
-			// This will update the global context and reset the form
-			setSelectedProvider(provider);
+		// Find the selected provider from the providers list
+		const selectedProvider = providers.find((p: Provider) => String(p.id) === value);
+		if (selectedProvider) {
+			setProvider(selectedProvider);
 		}
 	};
 
 	return (
 		<ProviderSelector
 			options={providerOptions}
-			value={selectedProviderId}
+			value={provider?.id ? String(provider.id) : null}
 			onChange={handleProviderChange}
 			placeholder="Select a provider"
 			className={className}
+			aria-label={ariaLabel}
 		/>
 	);
 } 

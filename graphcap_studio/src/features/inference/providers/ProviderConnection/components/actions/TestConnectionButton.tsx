@@ -6,17 +6,17 @@ import { useProviderFormContext } from "../../../context/ProviderFormContext";
  * Button component for testing provider connection
  */
 export function TestConnectionButton() {
-  const { isTestingConnection, handleTestConnection, selectedProvider } = useProviderFormContext();
+  const { isSubmitting, testConnection, provider } = useProviderFormContext();
 
   return (
     <Button
       colorScheme="teal"
       variant="outline"
-      onClick={handleTestConnection}
-      disabled={isTestingConnection || !selectedProvider}
+      onClick={testConnection}
+      disabled={isSubmitting || !provider}
       mr={2}
     >
-      {isTestingConnection ? 'Testing...' : 'Test Connection'}
+      {isSubmitting ? 'Testing...' : 'Test Connection'}
     </Button>
   );
 } 

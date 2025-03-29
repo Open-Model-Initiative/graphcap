@@ -1,5 +1,5 @@
 import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
-import { toServerConfig } from "@/types/provider-config-types";
+import { denormalizeProviderId, toServerConfig } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
@@ -8,336 +8,222 @@ import { useCreateProvider, useProviders, useTestProviderConnection, useUpdatePr
 import { useInferenceProviderContext } from "../../context/InferenceProviderContext";
 import { ProviderFormProvider } from "../../context/ProviderFormContext";
 
-// Extended Error interface with cause property
-interface ErrorWithCause extends Error {
-	cause?: unknown;
-}
+// Simplified dialog state type
+type DialogType = null | "error" | "success" | "formError" | "save";
 
 interface ProviderFormContainerProps {
 	children: ReactNode;
 	initialData?: Partial<ProviderCreate | ProviderUpdate>;
-	onSubmit: (data: ProviderCreate | ProviderUpdate) => Promise<void>;
 }
 
-/**
- * Container component that provides the ProviderFormContext
- */
 export function ProviderFormContainer({
 	children,
 	initialData,
 }: ProviderFormContainerProps) {
-	// Get model selection and provider state from the InferenceProviderContext
+	// Get required context from parent
 	const {
-		mode,
-		setMode,
-		selectedProvider,
-		setSelectedProvider,
-		providers: contextProviders,
+		mode: contextMode,
+		setMode: setContextMode,
+		selectedProvider: contextSelectedProvider,
 		selectedModelId,
-		setSelectedModelId, 
+		setSelectedModelId,
 		providerModelsData,
 		isLoadingModels,
-		isModelsError,
-		modelsError,
-		handleModelSelect,
 		onCancel: onContextCancel,
 	} = useInferenceProviderContext();
 
-	// Setup react-hook-form for provider form
+	// State for the provider form
+	const [mode, setMode] = useState(contextMode);
+	const [provider, setProvider] = useState(contextSelectedProvider);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [dialog, setDialog] = useState<DialogType>(null);
+	const [error, setError] = useState<ErrorDetails | null>(null);
+	const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | null>(null);
+
+	// Form setup
 	const { 
 		control, 
-		handleSubmit: hookHandleSubmit, 
+		handleSubmit: formHandleSubmit, 
 		formState: { errors },
 		watch,
 		reset 
 	} = useForm<ProviderCreate | ProviderUpdate>({
-		defaultValues: initialData,
+		defaultValues: initialData || provider || {},
 	});
 
-	// Local state for the provider form
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [saveSuccess, setSaveSuccess] = useState(false);
-	const [isTestingConnection, setIsTestingConnection] = useState(false);
-	const [formError, setFormError] = useState<ErrorDetails | null>(null);
-	const [connectionError, setConnectionError] = useState<ErrorDetails | null>(null);
-	const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | null>(null);
-	const [dialogs, setDialogs] = useState({
-		error: false,
-		success: false,
-		formError: false,
-		save: false,
-	});
-
-	// Fetch providers
-	const { data: providers = [] } = useProviders();
-
-	// API connection test hook
+	// API hooks
+	useProviders();
 	const testConnection = useTestProviderConnection();
-	// Add hooks for creating and updating providers
 	const createProvider = useCreateProvider();
 	const updateProvider = useUpdateProvider();
 
-	const handleSelectProvider = (provider: Provider | null) => {
-		setSelectedProvider(provider);
+	// Use either API providers or context providers
+
+	// Handle provider selection
+	const handleProviderSelect = useCallback((newProvider: Provider | null) => {
+		setProvider(newProvider);
 		
-		// If a provider is selected, reset the form with its data
-		if (provider) {
-			// Debug log to check if API key is present
-			console.log("Provider selected for edit:", {
-				...provider,
-				apiKey: provider.apiKey ? "[PRESENT]" : "[MISSING]"
+		if (newProvider) {
+			// Reset form with provider data
+			reset({
+				name: newProvider.name,
+				kind: newProvider.kind,
+				environment: newProvider.environment,
+				baseUrl: newProvider.baseUrl,
+				apiKey: newProvider.apiKey || "",
+				isEnabled: newProvider.isEnabled,
+				defaultModel: newProvider.defaultModel,
+				fetchModels: newProvider.fetchModels,
+				models: newProvider.models,
+				rateLimits: newProvider.rateLimits || { requestsPerMinute: 0, tokensPerMinute: 0 }
 			});
-			
-			// Reset the form with the selected provider's data
-			const providerData: ProviderUpdate = {
-				name: provider.name,
-				kind: provider.kind,
-				environment: provider.environment,
-				baseUrl: provider.baseUrl,
-				apiKey: provider.apiKey || "", // Ensure apiKey is included and not null/undefined
-				isEnabled: provider.isEnabled,
-				defaultModel: provider.defaultModel,
-				fetchModels: provider.fetchModels,
-				models: provider.models,
-				rateLimits: provider.rateLimits || { requestsPerMinute: 0, tokensPerMinute: 0 }
-			};
-			
-			// Log the data being used to reset the form
-			console.log("Resetting form with:", {
-				...providerData,
-				apiKey: providerData.apiKey ? "[PRESENT]" : "[MISSING]"
-			});
-			
-			reset(providerData);
 		}
-	};
+	}, [reset]);
 
-	// Function to close any dialog
-	const closeDialog = (dialog: "error" | "success" | "formError" | "save") => {
-		setDialogs(prev => ({ ...prev, [dialog]: false }));
-	};
-
-	// Function to open the save dialog
-	const openSaveDialog = useCallback(() => {
-		setDialogs(prev => ({ ...prev, save: true }));
+	// Dialog handlers
+	const openDialog = useCallback((type: DialogType, newError?: ErrorDetails) => {
+		setDialog(type);
+		if (newError) setError(newError);
 	}, []);
 
-	// Handle form submission
-	const onSubmit = async (data: ProviderCreate | ProviderUpdate) => {
+	const closeDialog = useCallback(() => {
+		setDialog(null);
+	}, []);
+
+	// Form submission
+	const handleSubmit = async (e?: React.BaseSyntheticEvent) => {
+		// If an event was provided, prevent default
+		if (e) {
+			e.preventDefault();
+		}
+		
 		try {
 			setIsSubmitting(true);
-			setFormError(null);
-			setSaveSuccess(false);
+			setError(null);
 			
-			if (mode === "edit" && selectedProvider?.id) {
-				// Update existing provider
+			// Use formHandleSubmit to get data from the form
+			const formData = await new Promise<ProviderCreate | ProviderUpdate>((resolve) => {
+				formHandleSubmit((data) => {
+					resolve(data);
+				})(e);
+			});
+			
+			if (mode === "edit" && provider?.id) {
 				await updateProvider.mutateAsync({
-					id: selectedProvider.id,
-					data: data as ProviderUpdate
+					id: denormalizeProviderId(provider.id),
+					data: formData as ProviderUpdate
 				});
 			} else if (mode === "create") {
-				// Create new provider
-				await createProvider.mutateAsync(data as ProviderCreate);
-			} else {
-
+				await createProvider.mutateAsync(formData as ProviderCreate);
 			}
 			
-			setSaveSuccess(true);
-			openSaveDialog();
-			
-			// Switch back to view mode after successful save
+			openDialog("success");
 			setMode("view");
+			setContextMode("view");
 			
-			// Reset success message after 3 seconds
-			setTimeout(() => {
-				setSaveSuccess(false);
-			}, 3000);
-		} catch (error) {
-			console.error("Provider form submission error:", error);
+		} catch (err) {
+			console.error("Provider form submission error:", err);
+			const errorDetails: ErrorDetails = err instanceof Error 
+				? { message: err.message, code: err.name, details: { error: err.toString() } }
+				: { message: String(err), details: { error } };
 			
-			// Convert error to ErrorDetails format
-			let errorObj: ErrorDetails;
-			if (error instanceof Error) {
-				errorObj = {
-					message: error.message,
-					code: error.name,
-					details: {
-						error: error.toString()
-					}
-				};
-				
-				// Try to extract cause if it exists
-				const errorWithCause = error as ErrorWithCause;
-				if ('cause' in error && errorWithCause.cause !== undefined) {
-					errorObj.details = {
-						...errorObj.details,
-						cause: errorWithCause.cause
-					};
-				}
-			} else if (typeof error === 'object' && error !== null) {
-				errorObj = error as ErrorDetails;
-			} else {
-				errorObj = {
-					message: String(error),
-					details: { error }
-				};
-			}
+			setError(errorDetails);
+			openDialog("formError");
 			
-			setFormError(errorObj);
-			setDialogs(prev => ({ ...prev, formError: true }));
+			// Re-throw the error so the caller knows something went wrong
+			throw err;
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
 
-	// Handle cancel - use context's cancel handler
-	const onCancel = useCallback(() => {
-		onContextCancel();
-	}, [onContextCancel]);
-
-	// Handle test connection
-	const handleTestConnection = async () => {
-		if (!selectedProvider) return;
-
-		// Validate API key is present
-		if (!selectedProvider.apiKey) {
-			setConnectionError({
+	// Connection test
+	const testProviderConnection = async () => {
+		if (!provider) return;
+		
+		if (!provider.apiKey) {
+			setError({
 				message: "API key is required",
 				code: "ValidationError",
-				details: {
-					title: "Connection failed",
-					timestamp: new Date().toISOString(),
-					message: "API key is required",
-					name: "ValidationError",
-					details: "Please provide an API key in the provider configuration.",
-					suggestions: [
-						"Edit the provider to add an API key",
-						"API keys should be non-empty strings",
-					],
-				}
+				details: { message: "API key is required" }
 			});
-			setDialogs(prev => ({ ...prev, error: true }));
+			openDialog("error");
 			return;
 		}
 
-		setIsTestingConnection(true);
-		setConnectionError(null);
-
 		try {
-			const config = toServerConfig(selectedProvider);
+			setIsSubmitting(true);
+			setError(null);
+			
+			const config = toServerConfig(provider);
 			const result = await testConnection.mutateAsync({
-				providerName: selectedProvider.name,
+				providerName: provider.name,
 				config,
 			});
 
 			setConnectionDetails(result);
-			setDialogs(prev => ({ ...prev, success: true }));
-		} catch (error) {
-			console.error("Connection test failed:", error);
-
-			let errorObj: ErrorDetails = {
-				message: "Connection failed",
-				code: "ConnectionError",
-				details: {
-					title: "Connection failed",
-					timestamp: new Date().toISOString(),
-				}
-			};
-
-			if (error instanceof Error) {
-				errorObj.message = error.message;
-				errorObj.code = error.name;
-
-				if (error.message?.includes("[object Object]")) {
-					errorObj.message = "Invalid provider configuration";
-					errorObj.details = {
-						...errorObj.details,
-						details: "The server rejected the request due to invalid parameters.",
-						suggestions: [
-							"Check API key and endpoint URL",
-							"Verify the provider is correctly configured",
-							"Check server logs for more details",
-						]
-					};
-				}
-
-				const errorWithCause = error as ErrorWithCause;
-				if ('cause' in error && errorWithCause.cause !== undefined) {
-					errorObj.details = {
-						...errorObj.details,
-						cause: errorWithCause.cause
-					};
-				}
-			} else if (typeof error === "object" && error !== null) {
-				errorObj = {
-					...errorObj,
-					...(error as ErrorDetails),
-				};
-			} else {
-				errorObj.message = String(error);
-			}
-
-			setConnectionError(errorObj);
-			setDialogs(prev => ({ ...prev, error: true }));
+			openDialog("success");
+		} catch (err) {
+			console.error("Connection test failed:", err);
+			
+			const errorDetails: ErrorDetails = err instanceof Error 
+				? { message: err.message, code: err.name, details: { error: err.toString() } }
+				: { message: String(err), details: { error } };
+			
+			setError(errorDetails);
+			openDialog("error");
 		} finally {
-			setIsTestingConnection(false);
+			setIsSubmitting(false);
 		}
 	};
 
-	// Form submission handler
-	const handleSubmit = (handler: (data: ProviderCreate | ProviderUpdate) => Promise<void>) => {
-		return hookHandleSubmit(async (data) => {
-			try {
-				await handler(data);
-			} catch (error) {
-				console.error("Form submission error:", error);
-			}
-		});
-	};
+	// Update mode in both local and context state
+	const handleSetMode = useCallback((newMode: "view" | "edit" | "create") => {
+		setMode(newMode);
+		setContextMode(newMode);
+	}, [setContextMode]);
+
+	// Handle model selection with proper type handling
+	const handleSetSelectedModelId = useCallback((id: string | null) => {
+		if (id !== null) {
+			setSelectedModelId(id);
+		}
+	}, [setSelectedModelId]);
 
 	return (
 		<ProviderFormProvider
 			value={{
+				// Core state
+				provider,
 				mode,
-				isSubmitting,
-				isCreating: mode === "create",
-				saveSuccess,
-				isTestingConnection,
-				selectedProvider,
-				setSelectedProvider: handleSelectProvider,
-				formError,
-				connectionError,
-				connectionDetails,
-				dialogs,
-				saveError: undefined,
-				savedProvider: null,
-				providers: providers.length > 0 ? providers : contextProviders,
 				
-				// Form related properties
+				// Form state
 				control,
 				errors,
 				watch,
 				
-				// Model selection properties
-				providerModelsData,
-				isLoadingModels,
-				isModelsError,
-				modelsError,
-				selectedModelId: selectedModelId || null,
-				setSelectedModelId: (id: string | null) => {
-					if (id !== null) {
-						setSelectedModelId(id);
-					}
-				},
-				handleModelSelect,
+				// UI state
+				isSubmitting,
+				dialog,
+				error,
+				connectionDetails,
 				
-				onSubmit,
-				onCancel,
-				handleSubmit,
-				handleTestConnection,
-				setMode,
+				// Selected model state
+				selectedModelId,
+				providerModels: providerModelsData?.models || null,
+				isLoadingModels,
+				
+				// Actions
+				setProvider: handleProviderSelect,
+				setMode: handleSetMode,
+				setSelectedModelId: handleSetSelectedModelId,
+				openDialog,
 				closeDialog,
-				openSaveDialog,
+				
+				// Form actions
+				handleSubmit,
+				cancelEdit: onContextCancel,
+				testConnection: testProviderConnection,
 			}}
 		>
 			{children}

@@ -18,12 +18,12 @@ import {
 export interface ProviderOption {
 	label: string;
 	value: string;
-	id?: number;
+	id: string;
 }
 
 export interface ProviderSelectorProps {
 	readonly options: ProviderOption[];
-	readonly value: string | number | null | undefined;
+	readonly value: string | null | undefined;
 	readonly onChange: (value: string) => void;
 	readonly isDisabled?: boolean;
 	readonly maxWidth?: string | number;

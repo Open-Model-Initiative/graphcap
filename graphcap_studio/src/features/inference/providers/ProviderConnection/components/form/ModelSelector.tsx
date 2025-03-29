@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ModelSelector as GenericModelSelector, ModelOption } from "@/components/common_inference/ModelSelector";
+import {
+	ModelSelector as GenericModelSelector,
+	type ModelOption,
+} from "@/components/common_inference/ModelSelector";
 import { useColorMode } from "@/components/ui/theme/color-mode";
 import { Box, Heading, Text } from "@chakra-ui/react";
 
-export interface ModelItem {
-	label: string;
-	value: string;
-}
+export type ModelItem = ModelOption;
 
 export interface ModelSelectorProps {
 	modelItems: ModelItem[];
 	selectedModelId: string | null;
-	setSelectedModelId: (id: string) => void;
+	setSelectedModelId: (id: string | null) => void;
 }
 
 /**
@@ -29,6 +29,10 @@ export function ModelSelector({
 	const borderColor = isDark ? "gray.700" : "gray.200";
 	const headingColor = isDark ? "gray.100" : "gray.700";
 	const labelColor = isDark ? "gray.300" : "gray.600";
+
+	const handleModelChange = (value: string) => {
+		setSelectedModelId(value || null);
+	};
 
 	return (
 		<Box
@@ -49,7 +53,7 @@ export function ModelSelector({
 			<GenericModelSelector
 				options={modelItems}
 				value={selectedModelId}
-				onChange={setSelectedModelId}
+				onChange={handleModelChange}
 			/>
 		</Box>
 	);

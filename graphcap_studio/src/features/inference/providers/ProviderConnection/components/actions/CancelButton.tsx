@@ -7,7 +7,7 @@ import { useProviderFormContext } from "../../../context/ProviderFormContext";
  * Button component for canceling provider form changes
  */
 export function CancelButton() {
-  const { onCancel } = useProviderFormContext();
+  const { cancelEdit } = useProviderFormContext();
   const { colorMode } = useColorMode();
   const isDark = colorMode === "dark";
 
@@ -19,7 +19,7 @@ export function CancelButton() {
   return (
     <Button
       type="button"
-      onClick={onCancel}
+      onClick={cancelEdit}
       size="md"
       bg={cancelBg}
       color={cancelColor}

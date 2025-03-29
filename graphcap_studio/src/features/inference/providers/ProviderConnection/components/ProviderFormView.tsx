@@ -13,26 +13,21 @@ import { ProviderFormSelect } from "./form/ProviderFormSelect";
  */
 export function ProviderFormView() {
 	const {
-		onSubmit,
 		handleSubmit,
 		isSubmitting,
-		saveSuccess,
-		dialogs,
+		dialog,
 		closeDialog,
-		formError,
-		connectionError,
+		error,
 		connectionDetails,
-		selectedProvider,
-		setMode,
-		mode
-	} = useProviderFormContext();
+		provider,
+		setMode	} = useProviderFormContext();
 
 	const handleAddProvider = () => {
 		setMode("create");
 	};
 	
 	return (
-		<form onSubmit={handleSubmit(onSubmit)}>
+		<form onSubmit={handleSubmit}>
 			<Box p={4}>
 				{/* Provider Selection Section */}
 				<Box mb={4}>
@@ -56,32 +51,32 @@ export function ProviderFormView() {
 				
 				<LoadingMessage 
 					isSubmitting={isSubmitting}
-					saveSuccess={saveSuccess}
+					saveSuccess={dialog === "success"}
 				/>
 
 				<ProviderActions />
 
 				{/* Form Error Dialog */}
 				<ProviderConnectionErrorDialog
-					isOpen={dialogs.formError}
-					onClose={() => closeDialog("formError")}
-					error={formError}
-					providerName={selectedProvider?.name || "Provider"}
+					isOpen={dialog === "formError"}
+					onClose={() => closeDialog()}
+					error={error}
+					providerName={provider?.name || "Provider"}
 				/>
 
 				{/* Connection Error Dialog */}
 				<ProviderConnectionErrorDialog
-					isOpen={dialogs.error}
-					onClose={() => closeDialog("error")}
-					error={connectionError}
-					providerName={selectedProvider?.name || "Provider"}
+					isOpen={dialog === "error"}
+					onClose={() => closeDialog()}
+					error={error}
+					providerName={provider?.name || "Provider"}
 				/>
 
 				{/* Success Dialog */}
 				<ProviderConnectionSuccessDialog
-					isOpen={dialogs.success}
-					onClose={() => closeDialog("success")}
-					providerName={selectedProvider?.name || "Provider"}
+					isOpen={dialog === "success"}
+					onClose={() => closeDialog()}
+					providerName={provider?.name || "Provider"}
 					connectionDetails={connectionDetails}
 				/>
 			</Box>

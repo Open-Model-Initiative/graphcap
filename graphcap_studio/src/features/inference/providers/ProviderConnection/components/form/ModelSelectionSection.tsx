@@ -1,8 +1,9 @@
 import { ActionButton } from "@/components/ui/buttons/ActionButton";
 import { StatusMessage } from "@/components/ui/status/StatusMessage";
 // SPDX-License-Identifier: Apache-2.0
-import { Box } from "@chakra-ui/react";
+import { Box, Heading, VStack } from "@chakra-ui/react";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
+import { ProviderModelActions } from "../actions/ProviderModelActions";
 import { ModelSelector } from "./ModelSelector";
 
 // Define the model type
@@ -17,18 +18,53 @@ export interface ProviderModel {
  */
 export function ModelSelectionSection() {
 	const {
-		selectedProvider,
-		providerModelsData,
+		provider,
+		providerModels,
 		isLoadingModels,
-		isModelsError,
-		modelsError,
 		selectedModelId,
 		setSelectedModelId,
-		handleModelSelect,
 		isSubmitting,
+		mode,
+		watch,
 	} = useProviderFormContext();
 
-	const providerName = selectedProvider?.name;
+	const providerName = provider?.name;
+	const isEditMode = mode === "edit" || mode === "create";
+	const customModels = watch("models") || [];
+	const fetchModels = provider?.fetchModels || watch("fetchModels");
+
+	// Prepare an array with all models to display
+	const allModels = [];
+	
+	// Always add custom/user-defined models
+	if (customModels && customModels.length > 0) {
+		// Map custom models to the format expected by the model selector
+		for (const model of customModels) {
+			allModels.push({
+				// Generate a stable ID for custom models
+				id: typeof model.id === 'string' ? model.id : `custom-${model.name}`,
+				name: model.name,
+				is_default: provider?.defaultModel === model.name,
+				isCustom: true
+			});
+		}
+	}
+	
+	// Add API-fetched models if fetchModels is true
+	if (fetchModels && providerModels && providerModels.length > 0) {
+		// Map API models to the format expected by the model selector
+		for (const model of providerModels) {
+			// Only add if not already included in custom models
+			if (!customModels.some(m => m.name === model.name)) {
+				allModels.push({
+					id: model.id,
+					name: model.name,
+					is_default: model.is_default,
+					isApiModel: true
+				});
+			}
+		}
+	}
 
 	// Handle different states
 	if (!providerName) {
@@ -40,36 +76,57 @@ export function ModelSelectionSection() {
 		);
 	}
 
-	if (isLoadingModels) {
+	// When in edit mode, show model management section
+	if (isEditMode) {
+		return (
+			<VStack align="stretch" spacing={4}>
+				<Box>
+					<Heading size="md" mb={4}>Model Configuration</Heading>
+					<ProviderModelActions />
+				</Box>
+				
+				{fetchModels && isLoadingModels && (
+					<StatusMessage type="loading" message="Loading provider models..." />
+				)}
+				
+				{allModels.length > 0 && (
+					<Box pt={2}>
+						<Heading size="sm" mb={3}>Default Model Selection</Heading>
+						<ModelSelector
+							modelItems={allModels.map(model => ({
+								label: `${model.name}${model.is_default ? " (Default)" : ""}${model.isCustom ? " (Custom)" : ""}${model.isApiModel ? " (API)" : ""}`,
+								value: model.id,
+								id: model.id,
+							}))}
+							selectedModelId={selectedModelId}
+							setSelectedModelId={setSelectedModelId}
+						/>
+					</Box>
+				)}
+			</VStack>
+		);
+	}
+
+	// View mode
+	if (fetchModels && isLoadingModels) {
 		return <StatusMessage type="loading" message="Loading models..." />;
 	}
 
-	if (isModelsError) {
+	if (allModels.length === 0) {
 		return (
 			<StatusMessage
-				type="error"
-				title="Error loading models"
-				message={
-					modelsError instanceof Error ? modelsError.message : "Unknown error"
-				}
-			/>
-		);
-	}
-
-	if (!providerModelsData?.models || providerModelsData.models.length === 0) {
-		return (
-			<StatusMessage
-				type="error"
+				type="warning"
 				title="No models available"
-				message="This provider has no available models."
+				message="This provider has no available models. Add custom models or enable model fetching."
 			/>
 		);
 	}
 
-	// Convert models to the format expected by SelectRoot
-	const modelItems = providerModelsData.models.map((model: ProviderModel) => ({
-		label: `${model.name}${model.is_default ? " (Default)" : ""}`,
+	// Convert all models to the format expected by SelectRoot
+	const modelItems = allModels.map(model => ({
+		label: `${model.name}${model.is_default ? " (Default)" : ""}${model.isCustom ? " (Custom)" : ""}${model.isApiModel ? " (API)" : ""}`,
 		value: model.id,
+		id: model.id,
 	}));
 
 	return (
@@ -81,7 +138,7 @@ export function ModelSelectionSection() {
 			/>
 
 			<ActionButton
-				onClick={handleModelSelect}
+				onClick={() => console.log("Selected model:", selectedModelId)}
 				disabled={!selectedModelId}
 				isLoading={isSubmitting}
 			/>

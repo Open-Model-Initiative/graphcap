@@ -8,7 +8,10 @@
 
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { createDataServiceClient, createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import {
+	createDataServiceClient,
+	createInferenceBridgeClient,
+} from "@/features/server-connections/services/apiClients";
 import type {
 	Provider,
 	ProviderCreate,
@@ -24,10 +27,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export const queryKeys = {
 	providers: ["providers"] as const,
 	provider: (id: number) => ["providers", id] as const,
-	providerModels: (providerName: string) => ["providers", "models", providerName] as const,
+	providerModels: (providerName: string) =>
+		["providers", "models", providerName] as const,
 };
-
-
 
 /**
  * Extended Error interface with cause property
@@ -110,22 +112,25 @@ export function useCreateProvider() {
 				try {
 					const errorData = await response.json();
 					console.error("Provider creation error:", errorData);
-					
+
 					// Check if we have a structured error response
-					if (errorData.status === 'error' || errorData.validationErrors) {
+					if (errorData.status === "error" || errorData.validationErrors) {
 						throw errorData;
 					}
-					
+
 					// Simple error with a message
 					if (errorData.message) {
 						throw new Error(errorData.message);
 					}
-					
+
 					// Fallback error
 					throw new Error(`Failed to create provider: ${response.status}`);
 				} catch (parseError) {
 					// If we can't parse the error as JSON, throw a general error
-					if (parseError instanceof Error && parseError.message !== 'Failed to create provider') {
+					if (
+						parseError instanceof Error &&
+						parseError.message !== "Failed to create provider"
+					) {
 						throw parseError;
 					}
 					throw new Error(`Failed to create provider: ${response.status}`);
@@ -151,10 +156,19 @@ export function useUpdateProvider() {
 	return useMutation({
 		mutationFn: async ({ id, data }: { id: number; data: ProviderUpdate }) => {
 			console.log("Updating provider with data:", data);
+			
+			// For update operations, we only need to send simple model objects
+			// Backend will handle ID generation and association
+			const apiData = { ...data };
+			
+			// Keep models simple, backend will handle IDs
+			// No ID conversion needed, only sending name and isEnabled
+			// Backend will handle the rest
+			
 			const client = createDataServiceClient(connections);
 			const response = await client.providers[":id"].$put({
 				param: { id: id.toString() },
-				json: data,
+				json: apiData,
 			});
 
 			if (!response.ok) {
@@ -166,8 +180,11 @@ export function useUpdateProvider() {
 			return response.json() as Promise<Provider>;
 		},
 		onSuccess: (data) => {
+			// Convert string ID to number for query invalidation
+			const numericId = typeof data.id === 'string' ? Number.parseInt(data.id, 10) : data.id;
+			
 			// Invalidate specific provider query
-			queryClient.invalidateQueries({ queryKey: queryKeys.provider(data.id) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.provider(numericId) });
 			// Invalidate providers list
 			queryClient.invalidateQueries({ queryKey: queryKeys.providers });
 		},
@@ -208,51 +225,58 @@ export function useDeleteProvider() {
  */
 export function useTestProviderConnection() {
 	const { connections } = useServerConnectionsContext();
-	
+
 	return useMutation({
-		mutationFn: async ({ providerName, config }: { providerName: string; config: ServerProviderConfig }) => {
+		mutationFn: async ({
+			providerName,
+			config,
+		}: { providerName: string; config: ServerProviderConfig }) => {
 			const client = createInferenceBridgeClient(connections);
-			
+
 			// Add console logging to debug
-			console.log('Testing connection with config:', JSON.stringify(config));
-			
+			console.log("Testing connection with config:", JSON.stringify(config));
+
 			// Make sure api_key is properly set and not null or undefined
 			if (!config.api_key) {
 				throw new Error("API key is required for testing provider connection");
 			}
-			
-			const response = await client.providers[":provider_name"]["test-connection"].$post({
+
+			const response = await client.providers[":provider_name"][
+				"test-connection"
+			].$post({
 				param: { provider_name: providerName },
 				json: config,
 			});
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				console.error('Error response:', errorData);
-				
+				console.error("Error response:", errorData);
+
 				// Check if this is our enhanced error format
-				if (errorData.status === 'error' && errorData.details) {
+				if (errorData.status === "error" && errorData.details) {
 					// Use the structured error data with cause property
-					const error = new Error(errorData.message || 'Connection test failed') as ErrorWithCause;
+					const error = new Error(
+						errorData.message || "Connection test failed",
+					) as ErrorWithCause;
 					error.cause = errorData;
 					throw error;
 				}
-				
+
 				// Handle different error formats
 				if (errorData.detail) {
 					throw new Error(errorData.detail);
 				}
-				
+
 				if (errorData.message) {
 					throw new Error(errorData.message);
 				}
-				
-				if (typeof errorData === 'object') {
+
+				if (typeof errorData === "object") {
 					// For raw objects, don't wrap in Error, just throw the object directly
 					// This prevents "[object Object]" in the error message
 					throw { ...errorData };
 				}
-				
+
 				// Fallback to simple error
 				throw new Error(`Connection test failed: ${response.status}`);
 			}
@@ -277,11 +301,13 @@ export function useProviderModels(provider: Provider) {
 		queryFn: async () => {
 			const client = createInferenceBridgeClient(connections);
 			const serverConfig = toServerConfig(provider);
-			
-			const response = await client.providers[":provider_name"]["models"].$post({
-				param: { provider_name: provider.name },
-				json: serverConfig,
-			});
+
+			const response = await client.providers[":provider_name"]["models"].$post(
+				{
+					param: { provider_name: provider.name },
+					json: serverConfig,
+				},
+			);
 
 			if (!response.ok) {
 				throw new Error(

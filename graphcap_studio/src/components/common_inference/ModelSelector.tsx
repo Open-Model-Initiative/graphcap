@@ -18,6 +18,8 @@ import {
 export interface ModelOption {
 	label: string;
 	value: string;
+	id: string;
+	is_default?: boolean;
 }
 
 export interface ModelSelectorProps {

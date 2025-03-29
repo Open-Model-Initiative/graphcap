@@ -415,18 +415,36 @@ export const updateProvider = async (c: Context) => {
 		
 		// Log model changes if applicable
 		if (models && models.length > 0) {
-			// Need to query specifically for models since they might not be included in existingProvider
-			const existingModelsQuery = await db.query.providerModels.findMany({
-				where: eq(providerModels.providerId, Number.parseInt(id))
-			});
-			
-			logger.info({
-				providerId: id,
-				provider: existingProvider.name,
-				existingModelsCount: existingModelsQuery.length,
-				newModelsCount: models.length,
-				modelNames: models.map(m => m.name)
-			}, "Updating provider models");
+			// First, delete existing models
+			await db
+				.delete(providerModels)
+				.where(eq(providerModels.providerId, Number.parseInt(id)));
+
+			// Then insert new models - handle both full model objects and simple name+isEnabled objects
+			await db.insert(providerModels).values(
+				models.map((model) => {
+					// If model already has numeric ID, use it
+					// Otherwise, generate a new one (auto-increment by database)
+					const modelData = {
+						providerId: Number.parseInt(id),
+						name: model.name,
+						isEnabled: model.isEnabled ?? true,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					};
+					
+					// Only include ID if it exists and is a number
+					if (model.id !== undefined && typeof model.id === 'number') {
+						return {
+							...modelData,
+							id: model.id
+						};
+					}
+					
+					// Let database auto-generate ID
+					return modelData;
+				}),
+			);
 		}
 		
 		// Log rate limit changes if applicable
@@ -495,15 +513,30 @@ export const updateProvider = async (c: Context) => {
 					.delete(providerModels)
 					.where(eq(providerModels.providerId, Number.parseInt(id)));
 
-				// Then insert new models
+				// Then insert new models - handle both full model objects and simple name+isEnabled objects
 				await tx.insert(providerModels).values(
-					models.map((model) => ({
-						providerId: Number.parseInt(id),
-						name: model.name,
-						isEnabled: model.isEnabled,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					})),
+					models.map((model) => {
+						// If model already has numeric ID, use it
+						// Otherwise, generate a new one (auto-increment by database)
+						const modelData = {
+							providerId: Number.parseInt(id),
+							name: model.name,
+							isEnabled: model.isEnabled ?? true,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						};
+						
+						// Only include ID if it exists and is a number
+						if (model.id !== undefined && typeof model.id === 'number') {
+							return {
+								...modelData,
+								id: model.id
+							};
+						}
+						
+						// Let database auto-generate ID
+						return modelData;
+					}),
 				);
 			}
 

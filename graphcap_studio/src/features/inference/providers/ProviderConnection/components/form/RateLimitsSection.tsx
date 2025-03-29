@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import type { ChangeEvent } from "react";
-import { Controller, useController } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { useProviderFormContext } from "../../../context/ProviderFormContext";
 
 /**
@@ -23,17 +23,8 @@ export function RateLimitsSection() {
 	const textColor = useColorModeValue("gray.700", "gray.200");
 
 	// Watch form values for read-only display
-	const rateLimits = watch("rateLimits");
-
-	// Ensure rateLimits object exists in the form
-	useController({
-		name: "rateLimits",
-		control,
-		defaultValue: {
-			requestsPerMinute: 0,
-			tokensPerMinute: 0,
-		},
-	});
+	const formValues = watch();
+	const rateLimits = formValues.rateLimits || { requestsPerMinute: 0, tokensPerMinute: 0 };
 
 	if (!isEditing) {
 		return (
@@ -48,14 +39,14 @@ export function RateLimitsSection() {
 								Requests per minute
 							</Text>
 							<Text color={textColor}>
-								{rateLimits?.requestsPerMinute ?? 0}
+								{rateLimits.requestsPerMinute ?? 0}
 							</Text>
 						</GridItem>
 						<GridItem>
 							<Text fontSize="sm" color={labelColor}>
 								Tokens per minute
 							</Text>
-							<Text color={textColor}>{rateLimits?.tokensPerMinute ?? 0}</Text>
+							<Text color={textColor}>{rateLimits.tokensPerMinute ?? 0}</Text>
 						</GridItem>
 					</Grid>
 				</Box>
@@ -69,63 +60,65 @@ export function RateLimitsSection() {
 				<Text fontSize="xs" color={labelColor} mb={1}>
 					Rate Limits
 				</Text>
-				<Grid templateColumns="repeat(2, 1fr)" gap={4}>
-					<GridItem>
-						<Controller
-							name="rateLimits.requestsPerMinute"
-							control={control}
-							defaultValue={0}
-							render={({ field: { value, onChange, ...field } }) => (
+				
+				{/* Use a single Controller for the entire rateLimits object 
+				    This ensures we always have an object structure */}
+				<Controller
+					name="rateLimits"
+					control={control}
+					defaultValue={{ requestsPerMinute: 0, tokensPerMinute: 0 }}
+					render={({ field }) => (
+						<Grid templateColumns="repeat(2, 1fr)" gap={4}>
+							<GridItem>
 								<Field.Root invalid={!!errors.rateLimits?.requestsPerMinute}>
 									<Field.Label color={labelColor}>
 										Requests per minute
 									</Field.Label>
 									<Input
-										{...field}
 										id="requestsPerMinute"
 										type="number"
-										value={value ?? 0}
-										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											onChange(Number.parseInt(e.target.value) || 0)
-										}
+										value={field.value?.requestsPerMinute ?? 0}
+										onChange={(e: ChangeEvent<HTMLInputElement>) => {
+											const value = Number.parseInt(e.target.value) || 0;
+											field.onChange({
+												...field.value,
+												requestsPerMinute: value
+											});
+										}}
 										min={0}
 									/>
 									<Field.ErrorText>
 										{errors.rateLimits?.requestsPerMinute?.message}
 									</Field.ErrorText>
 								</Field.Root>
-							)}
-						/>
-					</GridItem>
+							</GridItem>
 
-					<GridItem>
-						<Controller
-							name="rateLimits.tokensPerMinute"
-							control={control}
-							defaultValue={0}
-							render={({ field: { value, onChange, ...field } }) => (
+							<GridItem>
 								<Field.Root invalid={!!errors.rateLimits?.tokensPerMinute}>
 									<Field.Label color={labelColor}>
 										Tokens per minute
 									</Field.Label>
 									<Input
-										{...field}
 										id="tokensPerMinute"
 										type="number"
-										value={value ?? 0}
-										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											onChange(Number.parseInt(e.target.value) || 0)
-										}
+										value={field.value?.tokensPerMinute ?? 0}
+										onChange={(e: ChangeEvent<HTMLInputElement>) => {
+											const value = Number.parseInt(e.target.value) || 0;
+											field.onChange({
+												...field.value,
+												tokensPerMinute: value
+											});
+										}}
 										min={0}
 									/>
 									<Field.ErrorText>
 										{errors.rateLimits?.tokensPerMinute?.message}
 									</Field.ErrorText>
 								</Field.Root>
-							)}
-						/>
-					</GridItem>
-				</Grid>
+							</GridItem>
+						</Grid>
+					)}
+				/>
 			</Box>
 		</VStack>
 	);
