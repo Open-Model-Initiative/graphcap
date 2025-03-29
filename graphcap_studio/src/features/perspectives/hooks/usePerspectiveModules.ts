@@ -12,6 +12,7 @@ import { createInferenceBridgeClient } from "@/features/server-connections/servi
 import type { ModuleInfo, ModuleListResponse, Perspective, PerspectiveModule } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
+import { CACHE_TIMES, perspectivesQueryKeys } from "../services/constants";
 import { handleApiError } from "../services/utils";
 import { PerspectiveError } from "./usePerspectives";
 
