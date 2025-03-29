@@ -39,9 +39,10 @@ export function ModelSelectionSection() {
 	if (customModels && customModels.length > 0) {
 		// Map custom models to the format expected by the model selector
 		for (const model of customModels) {
+			// Generate a stable ID for custom models
 			allModels.push({
 				// Generate a stable ID for custom models
-				id: typeof model.id === 'string' ? model.id : `custom-${model.name}`,
+				id: `${model.name}`,
 				name: model.name,
 				is_default: provider?.defaultModel === model.name,
 				isCustom: true
@@ -78,7 +79,7 @@ export function ModelSelectionSection() {
 	// When in edit mode, show model management section
 	if (isEditMode) {
 		return (
-			<VStack align="stretch" spacing={4}>
+			<VStack align="stretch" gap={4}>
 				<Box>
 					<Heading size="md" mb={4}>Model Configuration</Heading>
 					<ProviderModelActions />

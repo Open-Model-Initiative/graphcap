@@ -19,6 +19,47 @@ interface ServerErrorResponse {
 }
 
 /**
+ * Extracts a message from a validation error object
+ */
+function extractValidationErrorMessage(validationErrors: Record<string, string[]>): string | null {
+  const validationMessages: string[] = [];
+  
+  for (const [field, errors] of Object.entries(validationErrors)) {
+    for (const errorMsg of errors) {
+      validationMessages.push(`${field}: ${errorMsg}`);
+    }
+  }
+  
+  if (validationMessages.length > 0) {
+    return `Validation errors:\n${validationMessages.join('\n')}`;
+  }
+  
+  return null;
+}
+
+/**
+ * Extracts message from a server error object
+ */
+function extractServerErrorMessage(serverError: ServerErrorResponse): string | null {
+  // If there's a message, use it
+  if (serverError.message) {
+    return serverError.message;
+  }
+  
+  // If there are validation errors, format them
+  if (serverError.validationErrors) {
+    return extractValidationErrorMessage(serverError.validationErrors);
+  }
+  
+  // If there's an error property with a message (common in Axios errors)
+  if ('error' in serverError && typeof serverError.error === 'string') {
+    return serverError.error;
+  }
+  
+  return null;
+}
+
+/**
  * Formats a server error response into a human-readable message
  */
 export function formatServerError(error: unknown): string {
@@ -30,30 +71,9 @@ export function formatServerError(error: unknown): string {
   // Try to handle server error response
   if (error && typeof error === 'object') {
     const serverError = error as ServerErrorResponse;
-    
-    // If there's a message, use it
-    if (serverError.message) {
-      return serverError.message;
-    }
-    
-    // If there are validation errors, format them
-    if (serverError.validationErrors) {
-      const validationMessages: string[] = [];
-      
-      for (const [field, errors] of Object.entries(serverError.validationErrors)) {
-        for (const errorMsg of errors) {
-          validationMessages.push(`${field}: ${errorMsg}`);
-        }
-      }
-      
-      if (validationMessages.length > 0) {
-        return `Validation errors:\n${validationMessages.join('\n')}`;
-      }
-    }
-    
-    // If there's an error property with a message (common in Axios errors)
-    if ('error' in serverError && typeof serverError.error === 'string') {
-      return serverError.error;
+    const message = extractServerErrorMessage(serverError);
+    if (message) {
+      return message;
     }
   }
   
