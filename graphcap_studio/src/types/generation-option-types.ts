@@ -2,7 +2,8 @@
 /**
  * Generation Options Schema
  *
- * This module defines the validation schema for caption generation options.
+ * This module defines the validation schema for generation options,
+ * replacing the legacy CaptionOptions with a consolidated schema.
  */
 
 import { z } from "zod";
@@ -27,7 +28,7 @@ export const RESOLUTION_PRESETS = {
 	UHD_8K: { label: "8K UHD", value: "UHD_8K" },
 } as const;
 
-// Default options for caption generation
+// Default options for generation
 export const DEFAULT_OPTIONS = {
 	temperature: 0.7,
 	max_tokens: 4096,
@@ -35,6 +36,7 @@ export const DEFAULT_OPTIONS = {
 	repetition_penalty: 1.1,
 	resize_resolution: "NONE", // Default to no resize
 	global_context: "You are a visual captioning perspective.",
+	context: [] as string[], // Default to empty context array
 	provider_id: "", // Default to empty (will be populated later)
 	model_id: "", // Default to empty (will be populated later)
 } as const;
@@ -70,6 +72,10 @@ export const GenerationOptionsSchema = z.object({
 
 	global_context: z.string().default(DEFAULT_OPTIONS.global_context),
 	
+	// Added context array (was in CaptionOptions)
+	context: z.array(z.string()).default([]),
+	
+	// Provider and model selection
 	provider_id: z.string().default(DEFAULT_OPTIONS.provider_id),
 	
 	model_id: z.string().default(DEFAULT_OPTIONS.model_id),
@@ -77,3 +83,41 @@ export const GenerationOptionsSchema = z.object({
 
 // Type for generation options
 export type GenerationOptions = z.infer<typeof GenerationOptionsSchema>;
+
+/**
+ * Format generation options for API requests
+ * This transforms the frontend GenerationOptions to the format expected by the API
+ */
+export function formatApiOptions(options: GenerationOptions): Record<string, unknown> {
+	return {
+		model: options.model_id, // API expects 'model' instead of model_id
+		temperature: options.temperature,
+		max_tokens: options.max_tokens,
+		top_p: options.top_p,
+		repetition_penalty: options.repetition_penalty,
+		global_context: options.global_context,
+		context: options.context,
+		resize_resolution: options.resize_resolution,
+	};
+}
+
+/**
+ * Format a complete caption request
+ */
+export function formatCaptionRequest(
+	imagePath: string,
+	perspective: string,
+	options: GenerationOptions
+): {
+	image_path: string;
+	perspective: string;
+	provider_id: string;
+	options: Record<string, unknown>;
+} {
+	return {
+		image_path: imagePath,
+		perspective: perspective,
+		provider_id: options.provider_id,
+		options: formatApiOptions(options),
+	};
+}

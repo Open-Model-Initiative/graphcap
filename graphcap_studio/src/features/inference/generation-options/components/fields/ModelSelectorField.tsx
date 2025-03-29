@@ -7,97 +7,67 @@
 
 import { Field } from "@/components/ui/field";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { useProviderModelSelection } from "@/features/inference/hooks";
-import { useInferenceProviderContext } from "@/features/inference/providers/context/InferenceProviderContext";
-import { Box } from "@chakra-ui/react";
-import { Portal, Select, createListCollection } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo } from "react";
+import { Box, Portal, Select, createListCollection } from "@chakra-ui/react";
 import { useGenerationOptions } from "../../context";
 
 /**
  * Field component for selecting model and provider
  */	
 export function ModelSelectorField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
-	const { providers: contextProviders } = useInferenceProviderContext();
-
-	// Extract provider from context
-	const currentProvider = useMemo(() => {
-		if (!options.provider_id) return null;
-		const providerId = Number.parseInt(options.provider_id, 10);
-		return contextProviders.find(p => p.id === providerId) || null;
-	}, [contextProviders, options.provider_id]);
-
-	// Use the hook to get providers and models
-	const {
-		providers,
+	const { 
+		options, 
+		providers, 
 		models,
-		isLoading,
-	} = useProviderModelSelection(currentProvider);
+		actions 
+	} = useGenerationOptions();
 
-	// Color values f or theming
+	// Color values for theming
 	const labelColor = useColorModeValue("gray.700", "gray.300");
 	const helperTextColor = useColorModeValue("gray.500", "gray.400");
 
-	// Initialize provider if needed
-	useEffect(() => {
-		if (providers.length > 0 && !options.provider_id) {
-			const provider = providers[0];
-			updateOption("provider_id", provider.id.toString());
-		}
-	}, [providers, options.provider_id, updateOption]);
-
-	// Update model when provider changes or when models are loaded
-	useEffect(() => {
-		if (models.length > 0 && !options.model_id) {
-			updateOption("model_id", models[0]?.name || "");
-		}
-	}, [models, options.model_id, updateOption]);
-
 	// Create collections for selects - always include at least one item
-	const providerCollection = useMemo(() => {
-		const items = providers.length > 0
-			? providers.map((provider) => ({
+	const providerCollection = createListCollection({
+		items: providers.items.length > 0
+			? providers.items.map((provider) => ({
 				label: provider.name,
-				value: provider.id.toString(),
+				value: provider.id,
 				disabled: false,
 			}))
-			: [{ label: "No providers available", value: "none", disabled: false }];
+			: [{ label: "No providers available", value: "none", disabled: false }]
+	});
 
-		return createListCollection({ items });
-	}, [providers]);
-
-	const modelCollection = useMemo(() => {
-		const items = models.length > 0
-			? models.map((model) => ({
+	const modelCollection = createListCollection({
+		items: models.items.length > 0
+			? models.items.map((model) => ({
 				label: model.name,
 				value: model.id,
 				disabled: false,
 			}))
-			: [{ label: "No models available", value: "none", disabled: false }];
-
-		return createListCollection({ items });
-	}, [models]);
+			: [{ label: "No models available", value: "none", disabled: false }]
+	});
 
 	// Handle provider change
-	const handleProviderChange = useCallback((newValue: string[]) => {
-		if (newValue.length > 0 && newValue[0] !== "none") {
-			const providerId = newValue[0];
-			updateOption("provider_id", providerId);
-			updateOption("model_id", "");
+	const handleProviderChange = (details: { value: string[] }) => {
+		if (details.value.length > 0 && details.value[0] !== "none") {
+			actions.selectProvider(details.value[0]);
 		}
-	}, [updateOption]);
+	};
 
 	// Handle model change
-	const handleModelChange = useCallback((newValue: string[]) => {
-		if (newValue.length > 0 && newValue[0] !== "none") {
-			updateOption("model_id", newValue[0]);
+	const handleModelChange = (details: { value: string[] }) => {
+		if (details.value.length > 0 && details.value[0] !== "none") {
+			actions.selectModel(details.value[0]);
 		}
-	}, [updateOption]);
+	};
 
-	console.log('Providers:', providers);
-	console.log('IsLoading:', isLoading);
-	console.log('CurrentProvider:', currentProvider);
+	// Check if any providers are available
+	const hasProviders = providers.items.length > 0;
+	
+	// Check if any models are available for the selected provider
+	
+	// Loading state
+	const isProvidersLoading = providers.isLoading;
+	const isModelsLoading = models.isLoading;
 
 	return (
 		<Box w="full">
@@ -105,19 +75,19 @@ export function ModelSelectorField() {
 				Provider & Model
 			</Box>
 
-			<Box mb={2}>
+			<Box mb={3}>
 				<Field label="Provider">
 					<Select.Root
 						collection={providerCollection}
 						value={options.provider_id ? [options.provider_id] : []}
-						onValueChange={(e) => handleProviderChange(e.value)}
-						disabled={false} // Never disable this
+						onValueChange={handleProviderChange}
+						disabled={isProvidersLoading}
 						size="sm"
 					>
 						<Select.HiddenSelect />
 						<Select.Control>
 							<Select.Trigger>
-								<Select.ValueText placeholder="Click to select provider" />
+								<Select.ValueText placeholder="Select provider" />
 							</Select.Trigger>
 							<Select.IndicatorGroup>
 								<Select.Indicator />
@@ -140,19 +110,19 @@ export function ModelSelectorField() {
 				</Field>
 			</Box>
 
-			<Box>
+			<Box mb={3}>
 				<Field label="Model">
 					<Select.Root
 						collection={modelCollection}
 						value={options.model_id ? [options.model_id] : []}
-						onValueChange={(e) => handleModelChange(e.value)}
-						disabled={false} // Never disable this
+						onValueChange={handleModelChange}
+						disabled={isModelsLoading || !hasProviders}
 						size="sm"
 					>
 						<Select.HiddenSelect />
 						<Select.Control>
 							<Select.Trigger>
-								<Select.ValueText placeholder="Click to select model" />
+								<Select.ValueText placeholder="Select model" />
 							</Select.Trigger>
 							<Select.IndicatorGroup>
 								<Select.Indicator />
@@ -176,7 +146,7 @@ export function ModelSelectorField() {
 			</Box>
 
 			<Box fontSize="xs" mt={1} color={helperTextColor}>
-				Click on the dropdowns to select provider and model
+				Select provider and model for generation
 			</Box>
 		</Box>
 	);

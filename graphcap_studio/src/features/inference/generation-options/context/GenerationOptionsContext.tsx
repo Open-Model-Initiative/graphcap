@@ -2,7 +2,8 @@
 /**
  * Generation Options Context
  *
- * This module provides a context for managing generation options state.
+ * This module provides a context for managing generation options state,
+ * including provider and model selection.
  */
 
 import {
@@ -10,6 +11,7 @@ import {
 	type GenerationOptions,
 	GenerationOptionsSchema,
 } from "@/types/generation-option-types";
+import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
 import type React from "react";
 import {
 	createContext,
@@ -19,29 +21,47 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { useProviderModelOptions } from "../../hooks/useProviderModelOptions";
 import { usePersistGenerationOptions } from "../persist-generation-options";
 
 // Define the context interface
 interface GenerationOptionsContextValue {
-	// State
+	// State groups
 	options: GenerationOptions;
-	isDialogOpen: boolean;
-	isGenerating: boolean;
+	providers: {
+		items: Provider[];
+		selected: Provider | null;
+		isLoading: boolean;
+		error: unknown;
+	};
+	models: {
+		items: ProviderModelInfo[];
+		defaultModel: ProviderModelInfo | null;
+		isLoading: boolean;
+		error: unknown;
+	};
+	uiState: {
+		isDialogOpen: boolean;
+		isGenerating: boolean;
+	};
 
-	// Actions
-	updateOption: <K extends keyof GenerationOptions>(
-		key: K,
-		value: GenerationOptions[K],
-	) => void;
-	resetOptions: () => void;
-	setOptions: (options: Partial<GenerationOptions>) => void;
-	openDialog: () => void;
-	closeDialog: () => void;
-	toggleDialog: () => void;
-	setIsGenerating: (isGenerating: boolean) => void;
+	// Action groups
+	actions: {
+		updateOption: <K extends keyof GenerationOptions>(key: K, value: GenerationOptions[K]) => void;
+		resetOptions: () => void;
+		setOptions: (options: Partial<GenerationOptions>) => void;
+		selectProvider: (providerId: string) => void;
+		selectModel: (modelId: string) => void;
+	};
+	uiActions: {
+		openDialog: () => void;
+		closeDialog: () => void;
+		toggleDialog: () => void;
+		setIsGenerating: (isGenerating: boolean) => void;
+	};
 }
 
-// Create the context with a default value
+// Create the context with undefined default
 const GenerationOptionsContext = createContext<
 	GenerationOptionsContextValue | undefined
 >(undefined);
@@ -82,6 +102,18 @@ export function GenerationOptionsProvider({
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(initialGenerating);
 
+	// Provider and model data
+	const {
+		providers,
+		selectedProvider,
+		isLoadingProviders,
+		providersError,
+		models,
+		defaultModel,
+		isLoadingModels,
+		modelsError
+	} = useProviderModelOptions(options.provider_id);
+
 	// Save options to localStorage when they change
 	useEffect(() => {
 		saveOptions(options);
@@ -91,6 +123,24 @@ export function GenerationOptionsProvider({
 	useEffect(() => {
 		setIsGenerating(initialGenerating);
 	}, [initialGenerating]);
+
+	// Initialize provider if available and not already set
+	useEffect(() => {
+		if (providers.length > 0 && !options.provider_id) {
+			const firstProvider = providers[0];
+			updateOption("provider_id", firstProvider.id);
+		}
+	}, [providers, options.provider_id]);
+
+	// Initialize model if available and not already set
+	useEffect(() => {
+		// If we have a provider but no model, and models are available
+		if (options.provider_id && !options.model_id && models.length > 0) {
+			// Try to use default model first, otherwise use first available model
+			const modelToUse = defaultModel || models[0];
+			updateOption("model_id", modelToUse.id);
+		}
+	}, [options.provider_id, options.model_id, models, defaultModel]);
 
 	// Update a single option
 	const updateOption = useCallback(
@@ -132,38 +182,80 @@ export function GenerationOptionsProvider({
 		[onOptionsChange],
 	);
 
+	// Provider selection
+	const selectProvider = useCallback((providerId: string) => {
+		updateOption("provider_id", providerId);
+		// Clear model when provider changes
+		updateOption("model_id", "");
+	}, [updateOption]);
+
+	// Model selection
+	const selectModel = useCallback((modelId: string) => {
+		updateOption("model_id", modelId);
+	}, [updateOption]);
+
 	// Dialog controls
 	const openDialog = useCallback(() => setIsDialogOpen(true), []);
 	const closeDialog = useCallback(() => setIsDialogOpen(false), []);
 	const toggleDialog = useCallback(() => setIsDialogOpen((prev) => !prev), []);
 
-	// Context value
+	// Context value using grouped structure
 	const value = useMemo(
 		() => ({
-			// State
+			// State groups
 			options,
-			isDialogOpen,
-			isGenerating,
+			providers: {
+				items: providers,
+				selected: selectedProvider,
+				isLoading: isLoadingProviders,
+				error: providersError
+			},
+			models: {
+				items: models,
+				defaultModel,
+				isLoading: isLoadingModels,
+				error: modelsError
+			},
+			uiState: {
+				isDialogOpen,
+				isGenerating
+			},
 
-			// Actions
-			updateOption,
-			resetOptions,
-			setOptions: mergeOptions,
-			openDialog,
-			closeDialog,
-			toggleDialog,
-			setIsGenerating,
+			// Action groups
+			actions: {
+				updateOption,
+				resetOptions,
+				setOptions: mergeOptions,
+				selectProvider,
+				selectModel
+			},
+			uiActions: {
+				openDialog,
+				closeDialog,
+				toggleDialog,
+				setIsGenerating
+			}
 		}),
 		[
 			options,
+			providers,
+			selectedProvider,
+			isLoadingProviders,
+			providersError,
+			models,
+			defaultModel,
+			isLoadingModels,
+			modelsError,
 			isDialogOpen,
 			isGenerating,
 			updateOption,
 			resetOptions,
 			mergeOptions,
+			selectProvider,
+			selectModel,
 			openDialog,
 			closeDialog,
-			toggleDialog,
+			toggleDialog
 		],
 	);
 

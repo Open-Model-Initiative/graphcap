@@ -7,26 +7,19 @@
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import {
-    GenerationOptionsButton,
-    GenerationOptionsProvider,
-    ProviderSelector,
-} from "@/features/inference/generation-options";
-import {
-    usePerspectiveUI,
-    usePerspectivesData,
+	usePerspectiveUI,
+	usePerspectivesData,
 } from "@/features/perspectives/context";
-import type { CaptionOptions } from "@/features/perspectives/types";
-import { DEFAULT_OPTIONS } from "@/types/generation-option-types";
 import {
-    Box,
-    Button,
-    Flex,
-    HStack,
-    Icon,
-    useBreakpointValue,
+	Box,
+	Button,
+	Flex,
+	Icon,
+	Text,
+	chakra,
 } from "@chakra-ui/react";
 import { useCallback, useEffect } from "react";
-import { LuRefreshCw, LuSettings } from "react-icons/lu";
+import { LuRefreshCw } from "react-icons/lu";
 
 /**
  * Helper function to determine button title text
@@ -64,10 +57,8 @@ export function PerspectivesFooter() {
 		generatePerspective,
 		isGenerating,
 		currentImage,
-		captionOptions,
-		setCaptionOptions,
+		generationOptions,
 		selectedProvider,
-		handleProviderChange,
 	} = usePerspectivesData();
 
 	// Use UI context
@@ -83,13 +74,26 @@ export function PerspectivesFooter() {
 
 	const bgColor = useColorModeValue("white", "gray.800");
 	const borderColor = useColorModeValue("gray.200", "gray.700");
+	const infoTextColor = useColorModeValue("gray.600", "gray.400");
 
-	// Use responsive selector width based on screen size
-	const selectorWidth = useBreakpointValue({
-		base: "100%",
-		sm: "12rem",
-		md: "16rem",
-	});
+	// Get provider and model names
+	// Log information for debugging
+	console.log("GenerationOptions:", generationOptions);
+	console.log("Available providers:", availableProviders);
+	
+	// Try to find provider by id first, if that fails look for a name match 
+	const providerObj = availableProviders.find(p => 
+		// Try matching by ID
+		p.id.toString() === generationOptions.provider_id ||
+		// Or by name
+		(selectedProvider && p.name === selectedProvider)
+	);
+	
+	const providerName = providerObj?.name || 
+		// If we have a provider_id but couldn't find a match, show that
+		(generationOptions.provider_id ? `ID: ${generationOptions.provider_id}` : "None");
+	
+	const modelId = generationOptions.model_id || "None";
 
 	// Fetch providers on component mount
 	useEffect(() => {
@@ -135,14 +139,7 @@ export function PerspectivesFooter() {
 		console.log("Generate button clicked");
 		console.log("Active schema:", activeSchemaName);
 		console.log("Selected provider:", selectedProvider);
-
-		// Ensure we have valid options by applying defaults if needed
-		const effectiveOptions =
-			Object.keys(captionOptions).length === 0
-				? DEFAULT_OPTIONS
-				: captionOptions;
-
-		console.log("Using caption options:", effectiveOptions);
+		console.log("Using generation options:", generationOptions);
 
 		if (!validateGeneration()) {
 			return;
@@ -158,11 +155,12 @@ export function PerspectivesFooter() {
 			}
 			
 			await generatePerspective(
-				activeSchemaName!,
-				currentImage!.path,
-				providerObject, // Pass the full provider object
-				effectiveOptions,
+				activeSchemaName as string,
+				currentImage?.path as string,
+				providerObject,
+				generationOptions
 			);
+			
 			showMessage(
 				"Generation started",
 				`Generating ${activeSchemaName} perspective`,
@@ -179,9 +177,9 @@ export function PerspectivesFooter() {
 	}, [
 		activeSchemaName,
 		selectedProvider,
-		availableProviders, // Add availableProviders to the dependencies
+		availableProviders,
 		generatePerspective,
-		captionOptions,
+		generationOptions,
 		showMessage,
 		currentImage,
 		validateGeneration,
@@ -202,27 +200,6 @@ export function PerspectivesFooter() {
 		isGenerated,
 	);
 
-	// Handle options change
-	const handleOptionsChange = useCallback(
-		(newOptions: CaptionOptions) => {
-			setCaptionOptions(newOptions);
-		},
-		[setCaptionOptions],
-	);
-
-	// Create a handler for the new ProviderSelector component
-	const handleProviderSelection = useCallback(
-		(provider: string) => {
-			// Create a synthetic event to pass to the original handler
-			const syntheticEvent = {
-				target: { value: provider },
-			} as React.ChangeEvent<HTMLSelectElement>;
-
-			handleProviderChange(syntheticEvent);
-		},
-		[handleProviderChange],
-	);
-
 	return (
 		<Box
 			position="sticky"
@@ -237,60 +214,34 @@ export function PerspectivesFooter() {
 			zIndex={10}
 		>
 			<Flex justifyContent="space-between" alignItems="center">
-				{/* Provider Selection */}
-				{availableProviders.length > 0 ? (
-					<ProviderSelector
-						providers={availableProviders}
-						selectedProvider={selectedProvider}
-						onChange={handleProviderSelection}
-						isDisabled={isProcessing}
-						placeholder="Select provider"
-						width={selectorWidth}
-						size="sm"
-					/>
-				) : (
-					<Box flex="1" />
-				)}
-
-				<HStack gap={2}>
-					{/* Options Button with Popover */}
-					<GenerationOptionsProvider
-						initialOptions={captionOptions}
-						onOptionsChange={handleOptionsChange}
-						initialGenerating={isProcessing}
-					>
-						<GenerationOptionsButton
-							label={
-								<HStack gap={2}>
-									<Icon as={LuSettings} />
-									<Box>Options</Box>
-								</HStack>
-							}
-							size="sm"
-							variant="ghost"
+				{/* Provider and Model Info */}
+				<Text 
+					fontSize="sm" 
+					color={infoTextColor}
+					title="Current provider and model from global settings"
+				>
+					Using: <chakra.span fontWeight="bold">{providerName}</chakra.span> / <chakra.span fontStyle="italic">{modelId}</chakra.span>
+				</Text>
+				
+				{/* Generate/Regenerate Button */}
+				<Button
+					size="sm"
+					colorScheme={isGenerated ? "gray" : "blue"}
+					variant={isGenerated ? "outline" : "solid"}
+					onClick={handleGenerate}
+					disabled={isGenerateDisabled}
+					title={buttonTitle}
+				>
+					{isGenerating && (
+						<Icon
+							as={LuRefreshCw}
+							mr={2}
+							animation="spin 1s linear infinite"
 						/>
-					</GenerationOptionsProvider>
-
-					{/* Generate/Regenerate Button */}
-					<Button
-						size="sm"
-						colorScheme={isGenerated ? "gray" : "blue"}
-						variant={isGenerated ? "outline" : "solid"}
-						onClick={handleGenerate}
-						disabled={isGenerateDisabled}
-						title={buttonTitle}
-					>
-						{isGenerating && (
-							<Icon
-								as={LuRefreshCw}
-								mr={2}
-								animation="spin 1s linear infinite"
-							/>
-						)}
-						{isGenerated && !isGenerating && <Icon as={LuRefreshCw} mr={2} />}
-						{isGenerated ? "Regenerate" : "Generate"}
-					</Button>
-				</HStack>
+					)}
+					{isGenerated && !isGenerating && <Icon as={LuRefreshCw} mr={2} />}
+					{isGenerated ? "Regenerate" : "Generate"}
+				</Button>
 			</Flex>
 		</Box>
 	);

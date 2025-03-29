@@ -10,22 +10,22 @@
  */
 
 import { useServerConnectionsContext } from "@/context";
+import { useGenerationOptions } from "@/features/inference/generation-options/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
 import type {
-	CaptionOptions,
 	Perspective,
 	PerspectiveData,
-	PerspectiveSchema,
-	Provider,
+	PerspectiveSchema
 } from "@/types";
+import type { GenerationOptions } from "@/types/generation-option-types";
+import type { Provider } from "@/types/provider-config-types";
 import React, {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
-	useMemo,
 	useState,
 	type ReactNode,
 } from "react";
@@ -106,14 +106,13 @@ interface PerspectivesDataContextType {
 	refetchPerspectives: () => Promise<Perspective[]>;
 
 	// Captions data
-	captions: Record<string, any>;
+	captions: Record<string, unknown>;
 	generatedPerspectives: string[];
 	isGenerating: boolean;
 	isServerConnected: boolean;
 
-	// Caption options
-	captionOptions: CaptionOptions;
-	setCaptionOptions: (options: CaptionOptions) => void;
+	// Generation options from the GenerationOptions context
+	generationOptions: GenerationOptions;
 
 	// Current image
 	currentImage: Image | null;
@@ -124,8 +123,8 @@ interface PerspectivesDataContextType {
 		schemaName: string,
 		imagePath: string,
 		provider?: Provider,
-		options?: CaptionOptions,
-	) => Promise<any>;
+		options?: GenerationOptions,
+	) => Promise<unknown>;
 
 	// Status helpers
 	isPerspectiveGenerated: (schemaName: string) => boolean;
@@ -162,7 +161,6 @@ interface PerspectivesDataProviderProps {
 	readonly image: Image | null;
 	readonly initialProvider?: string;
 	readonly initialProviders?: Provider[];
-	readonly initialCaptionOptions?: CaptionOptions;
 }
 
 /**
@@ -174,7 +172,6 @@ export function PerspectivesDataProvider({
 	image: initialImage,
 	initialProvider,
 	initialProviders = [],
-	initialCaptionOptions = {},
 }: PerspectivesDataProviderProps) {
 	// Server connection state
 	const { connections } = useServerConnectionsContext();
@@ -182,6 +179,9 @@ export function PerspectivesDataProvider({
 		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isServerConnected = graphcapServerConnection?.status === "connected";
+
+	// Get generation options from context
+	const generationOptions = useGenerationOptions();
 
 	// Current image state
 	const [currentImage, setCurrentImage] = useState<Image | null>(initialImage);
@@ -194,13 +194,8 @@ export function PerspectivesDataProvider({
 		useState<Provider[]>(initialProviders);
 	const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
-	// Caption options state
-	const [captionOptions, setCaptionOptions] = useState<CaptionOptions>(
-		initialCaptionOptions,
-	);
-
 	// Captions state
-	const [captions, setCaptions] = useState<any>({});
+	const [captions, setCaptions] = useState<Record<string, unknown>>({});
 
 	// Generation state
 	const [generatingPerspectives, setGeneratingPerspectives] = useState<
@@ -289,10 +284,9 @@ export function PerspectivesDataProvider({
 			if (prev.includes(perspectiveName)) {
 				// If already hidden, make it visible (remove from hidden list)
 				return prev.filter((name) => name !== perspectiveName);
-			} else {
-				// If visible, hide it (add to hidden list)
-				return [...prev, perspectiveName];
 			}
+			// If visible, hide it (add to hidden list)
+			return [...prev, perspectiveName];
 		});
 	}, []);
 
@@ -360,8 +354,9 @@ export function PerspectivesDataProvider({
 
 	// Get generated perspectives based on captions
 	const generatedPerspectives = React.useMemo(() => {
-		if (!captions.perspectives) return [];
-		return Object.keys(captions.perspectives);
+		const perspectives = captions.perspectives as Record<string, unknown> | undefined;
+		if (!perspectives) return [];
+		return Object.keys(perspectives);
 	}, [captions]);
 
 	// Generate a perspective caption and save to localStorage
@@ -370,7 +365,7 @@ export function PerspectivesDataProvider({
 			schemaName: string,
 			imagePath: string,
 			provider?: Provider,
-			options?: CaptionOptions,
+			options?: GenerationOptions,
 		) => {
 			if (!isServerConnected) {
 				throw new Error(
@@ -395,11 +390,14 @@ export function PerspectivesDataProvider({
 					throw new Error("No provider selected for caption generation");
 				}
 
+				// Get current options from GenerationOptions context if not provided
+				const effectiveOptions = options || generationOptions.options;
+				
 				// Log the options to ensure they're being passed correctly
 				console.debug(`Generating perspective "${schemaName}" with options:`, {
 					providedOptions: options,
-					contextOptions: captionOptions,
-					finalOptions: options ?? captionOptions ?? {},
+					contextOptions: generationOptions.options,
+					finalOptions: effectiveOptions,
 					provider: effectiveProvider,
 				});
 
@@ -408,7 +406,7 @@ export function PerspectivesDataProvider({
 					perspective: schemaName,
 					imagePath,
 					provider: effectiveProvider,
-					options: options ?? captionOptions,
+					options: effectiveOptions,
 				});
 
 				// Validate required data
@@ -418,49 +416,40 @@ export function PerspectivesDataProvider({
 					);
 				}
 
-				if (!effectiveProvider) {
-					console.error(
-						`ERROR: Missing provider information for perspective ${schemaName}`,
-					);
-				}
-
-				if (!options && !captionOptions) {
-					console.error(
-						`ERROR: Missing generation options for perspective ${schemaName}`,
-					);
-				}
-
-				// Format the data as PerspectiveData object - no defaults!
-				const perspectiveData: PerspectiveData = {
+				// Format the data as PerspectiveData object
+				const perspectiveData = {
 					config_name: schemaName,
 					version: "1.0",
-					model:
-						result.metadata?.model ??
-						(() => {
-							console.error(
-								`CRITICAL ERROR: Missing model information in API response for perspective ${schemaName}`,
-							);
-							return "MISSING_MODEL";
-						})(),
+					model: result.metadata?.model ?? "MISSING_MODEL",
 					provider: effectiveProvider.name,
 					content: result.result || {},
-					options: options || captionOptions,
+					options: {
+						model: effectiveOptions.model_id, // Map to expected model property
+						max_tokens: effectiveOptions.max_tokens,
+						temperature: effectiveOptions.temperature,
+						top_p: effectiveOptions.top_p,
+						repetition_penalty: effectiveOptions.repetition_penalty,
+						global_context: effectiveOptions.global_context,
+						context: effectiveOptions.context,
+						resize_resolution: effectiveOptions.resize_resolution
+					}
 				};
 
 				// Save the perspective directly to localStorage
 				savePerspectiveCaption(imagePath, schemaName, perspectiveData);
 
 				// Update captions state with this new perspective data
-				setCaptions((prev: Record<string, any>) => {
+				setCaptions((prev) => {
+					const prevPerspectives = (prev.perspectives || {}) as Record<string, unknown>;
 					const newCaptions = {
 						...prev,
 						perspectives: {
-							...prev.perspectives,
+							...prevPerspectives,
 							[schemaName]: perspectiveData,
 						},
 						metadata: {
 							captioned_at: new Date().toISOString(),
-							provider: effectiveProvider.name,
+							provider: effectiveProvider?.name || "",
 							model: result.metadata?.model ?? "unknown",
 						},
 					};
@@ -485,7 +474,7 @@ export function PerspectivesDataProvider({
 			currentImage,
 			selectedProvider,
 			availableProviders,
-			captionOptions,
+			generationOptions.options,
 			generateCaptionMutation,
 		],
 	);
@@ -493,7 +482,8 @@ export function PerspectivesDataProvider({
 	// Helper to check if a perspective is generated
 	const isPerspectiveGenerated = useCallback(
 		(schemaName: string) => {
-			return !!captions.perspectives?.[schemaName];
+			const perspectives = captions.perspectives as Record<string, unknown> | undefined;
+			return !!perspectives?.[schemaName];
 		},
 		[captions],
 	);
@@ -510,116 +500,72 @@ export function PerspectivesDataProvider({
 	const getPerspectiveData = useCallback(
 		(schemaName: string) => {
 			// Try to get data from our in-memory state
-			const perspectiveData = captions.perspectives?.[schemaName];
+			const perspectives = captions.perspectives as Record<string, PerspectiveData> | undefined;
+			const perspectiveData = perspectives?.[schemaName];
 
 			console.debug("getPerspectiveData for", schemaName, perspectiveData);
 
 			// Always return the complete perspective data object
 			// to preserve options and metadata
-			return perspectiveData;
+			return perspectiveData as Record<string, unknown> | null;
 		},
 		[captions],
 	);
 
-	// Get the server URL from connections
-	const graphcapServerUrl = useMemo(() => {
-		const serverConn = connections.find(
-			(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
-		);
-		return serverConn?.url || "";
-	}, [connections]);
-
 	// Create consolidated context value
-	const value: PerspectivesDataContextType = useMemo(
-		() => ({
-			// Provider state
-			selectedProvider,
-			availableProviders,
-			isGeneratingAll,
+	const value: PerspectivesDataContextType = {
+		// Provider state
+		selectedProvider,
+		availableProviders,
+		isGeneratingAll,
 
-			// Provider actions
-			setSelectedProvider,
-			setAvailableProviders,
-			setIsGeneratingAll,
-			handleProviderChange,
+		// Provider actions
+		setSelectedProvider,
+		setAvailableProviders,
+		setIsGeneratingAll,
+		handleProviderChange,
 
-			// Data fetching - providers
-			fetchProviders,
-			isLoadingProviders,
-			providerError,
+		// Data fetching - providers
+		fetchProviders,
+		isLoadingProviders,
+		providerError,
 
-			// Perspectives data
-			perspectives: perspectivesData || [],
-			schemas,
-			isLoadingPerspectives,
-			perspectivesError,
-			refetchPerspectives,
+		// Perspectives data
+		perspectives: perspectivesData || [],
+		schemas,
+		isLoadingPerspectives,
+		perspectivesError,
+		refetchPerspectives,
 
-			// Captions data
-			captions,
-			generatedPerspectives,
-			isGenerating: generatingPerspectives.length > 0,
-			isServerConnected,
+		// Captions data
+		captions,
+		generatedPerspectives,
+		isGenerating: generatingPerspectives.length > 0,
+		isServerConnected,
 
-			// Caption options
-			captionOptions,
-			setCaptionOptions,
+		// Generation options from context
+		generationOptions: generationOptions.options,
 
-			// Current image
-			currentImage,
-			setCurrentImage,
+		// Current image
+		currentImage,
+		setCurrentImage,
 
-			// Generation operations
-			generatePerspective,
+		// Generation operations
+		generatePerspective,
 
-			// Status helpers
-			isPerspectiveGenerated,
-			isPerspectiveGenerating,
+		// Status helpers
+		isPerspectiveGenerated,
+		isPerspectiveGenerating,
 
-			// Data helpers
-			getPerspectiveData,
+		// Data helpers
+		getPerspectiveData,
 
-			// Perspective visibility
-			hiddenPerspectives,
-			togglePerspectiveVisibility,
-			isPerspectiveVisible,
-			setAllPerspectivesVisible,
-		}),
-		[
-			selectedProvider,
-			availableProviders,
-			isGeneratingAll,
-			setSelectedProvider,
-			setAvailableProviders,
-			setIsGeneratingAll,
-			handleProviderChange,
-			fetchProviders,
-			isLoadingProviders,
-			providerError,
-			perspectivesData,
-			schemas,
-			isLoadingPerspectives,
-			perspectivesError,
-			refetchPerspectives,
-			captions,
-			generatedPerspectives,
-			generatingPerspectives,
-			isServerConnected,
-			captionOptions,
-			setCaptionOptions,
-			currentImage,
-			setCurrentImage,
-			generatePerspective,
-			isPerspectiveGenerated,
-			isPerspectiveGenerating,
-			getPerspectiveData,
-			hiddenPerspectives,
-			togglePerspectiveVisibility,
-			isPerspectiveVisible,
-			setAllPerspectivesVisible,
-			graphcapServerUrl,
-		],
-	);
+		// Perspective visibility
+		hiddenPerspectives,
+		togglePerspectiveVisibility,
+		isPerspectiveVisible,
+		setAllPerspectivesVisible,
+	};
 
 	return (
 		<PerspectivesDataContext.Provider value={value}>

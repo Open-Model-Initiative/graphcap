@@ -27,6 +27,13 @@ export interface ProviderClient {
 			}) => Promise<Response>;
 		};
 	};
+	":provider": {
+		"models": {
+			$get: (options: { 
+				param: { provider: string };
+			}) => Promise<Response>;
+		};
+	};
 }
 
 /**

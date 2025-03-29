@@ -8,7 +8,11 @@
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
-import type { CaptionOptions, CaptionResponse } from "@/types";
+import type { CaptionResponse } from "@/types";
+import {
+	type GenerationOptions,
+	formatApiOptions
+} from "@/types/generation-option-types";
 import {
 	type Provider,
 	toServerConfig,
@@ -34,8 +38,8 @@ export function useGeneratePerspectiveCaption() {
 		{
 			perspective: string;
 			imagePath: string;
-			provider: Provider; // Use Provider type from types.ts
-			options?: CaptionOptions;
+			provider: Provider;
+			options: GenerationOptions;
 		}
 	>({
 		mutationFn: async ({ perspective, imagePath, provider, options }) => {
@@ -53,7 +57,7 @@ export function useGeneratePerspectiveCaption() {
 			}
 
 			// Check if a model is specified in the options
-			if (!options.model) {
+			if (!options.model_id) {
 				throw new Error("A model must be specified in the options");
 			}
 
@@ -70,38 +74,25 @@ export function useGeneratePerspectiveCaption() {
 				`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`,
 			);
 
+			// Format options for API request
+			const apiOptions = formatApiOptions(options);
+			
 			// Prepare the request body according to the server's expected format
 			const requestBody = {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
-				model: options.model, // Use the model from options
+				model: options.model_id, // Use model_id from GenerationOptions
 				provider_config: providerConfig, // Include the full provider configuration
-				max_tokens: options.max_tokens,
-				temperature: options.temperature,
-				top_p: options.top_p,
-				repetition_penalty: options.repetition_penalty,
-				context: options.context || [],
-				global_context: options.global_context ?? "",
-				resize: options.resize ?? false,
-				resize_resolution: options.resize_resolution ?? "HD_720P",
+				...apiOptions, // Spread the formatted API options
 			};
 
 			console.log("Sending caption generation request using API client", {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
-				model: options.model, // Log the model from options
-				options: {
-					max_tokens: requestBody.max_tokens,
-					temperature: requestBody.temperature,
-					top_p: requestBody.top_p,
-					repetition_penalty: requestBody.repetition_penalty,
-					context: requestBody.context,
-					global_context: requestBody.global_context,
-					resize: requestBody.resize,
-					resize_resolution: requestBody.resize_resolution,
-				},
+				model: options.model_id, // Log the model_id from options
+				options: apiOptions,
 			});
 
 			const response = await client.perspectives["caption-from-path"].$post({

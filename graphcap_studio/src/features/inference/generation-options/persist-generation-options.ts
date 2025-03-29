@@ -20,7 +20,15 @@ const STORAGE_KEY = "graphcap:generation-options";
  */
 export function saveGenerationOptions(options: GenerationOptions): void {
 	try {
-		const serialized = JSON.stringify(options);
+		// Create a copy to ensure we don't modify the original
+		const optionsToSave = { ...options };
+		
+		// Ensure provider_id is stored as a string
+		if (optionsToSave.provider_id !== undefined) {
+			optionsToSave.provider_id = String(optionsToSave.provider_id);
+		}
+		
+		const serialized = JSON.stringify(optionsToSave);
 		localStorage.setItem(STORAGE_KEY, serialized);
 	} catch (error) {
 		console.error("Failed to save generation options to localStorage:", error);
@@ -38,6 +46,12 @@ export function loadGenerationOptions(): GenerationOptions | null {
 		if (!serialized) return null;
 
 		const parsed = JSON.parse(serialized);
+		
+		// If provider_id exists and is a number, convert it to string
+		if (parsed.provider_id !== undefined && typeof parsed.provider_id === 'number') {
+			parsed.provider_id = parsed.provider_id.toString();
+		}
+		
 		// Validate the loaded data against the schema
 		return GenerationOptionsSchema.parse(parsed);
 	} catch (error) {
