@@ -10,9 +10,8 @@ import type { Context } from "hono";
 import { db } from "../../db";
 import { providerModels, providerRateLimits, providers } from "../../db/schema";
 import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
-import { logger } from "../../utils/logger";
+import { processApiKeyForUpdate } from "./api-key-manager";
 import type {
-	ProviderApiKey,
 	ProviderCreate,
 	ProviderUpdate,
 } from "./schemas";
@@ -46,7 +45,7 @@ export const getProviders = async (c: Context) => {
 				// Log whether API key is present after decryption (without showing the actual key)
 				logger.debug({ 
 					providerId: provider.id,
-					apiKeyPresent: provider.apiKey ? true : false,
+					apiKeyPresent: Boolean(provider.apiKey),
 					apiKeyLength: provider.apiKey ? provider.apiKey.length : 0
 				}, "Provider API key decryption result");
 			} else {
@@ -119,7 +118,7 @@ export const getProvider = async (c: Context) => {
 				// Log the result of decryption (without showing the actual key)
 				logger.debug({ 
 					providerId: id,
-					apiKeyPresent: provider.apiKey ? true : false,
+					apiKeyPresent: Boolean(provider.apiKey),
 					apiKeyLength: provider.apiKey ? provider.apiKey.length : 0
 				}, "Provider API key decryption result");
 			} else {
@@ -477,23 +476,8 @@ export const updateProvider = async (c: Context) => {
 				throw new Error(`Provider not found with id ${id}`);
 			}
 			
-			// CRITICAL FIX: Handle API key specially to avoid losing it
-			let apiKeyToUse = currentProvider.apiKey; // Default to keeping existing key
-			
-			// Only update the API key if it's explicitly included in the update data
-			if ('apiKey' in providerData && providerData.apiKey !== undefined) {
-				if (providerData.apiKey) {
-					logger.debug({ providerId: id }, "Encrypting new API key for provider update");
-					apiKeyToUse = await encryptApiKey(providerData.apiKey as string);
-					logger.info({ providerId: id }, "API key encrypted for update");
-				} else {
-					// If apiKey is explicitly set to an empty value, only then clear it
-					logger.debug({ providerId: id }, "API key explicitly cleared in update");
-					apiKeyToUse = null;
-				}
-			} else {
-				logger.debug({ providerId: id }, "Keeping existing API key - no change requested");
-			}
+			// Use the API key manager to handle API key updates
+			const apiKeyToUse = await processApiKeyForUpdate(currentProvider, providerData.apiKey);
 			
 			// Update provider with the appropriate API key
 			await tx
@@ -634,90 +618,5 @@ export const deleteProvider = async (c: Context) => {
 	} catch (error) {
 		logger.error({ error }, "Error deleting provider");
 		return c.json({ error: "Failed to delete provider" }, 500);
-	}
-};
-
-/**
- * Update a provider's API key
- */
-export const updateProviderApiKey = async (c: Context) => {
-	try {
-		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
-		const { id } = c.req.valid("param") as ValidatedParams;
-		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
-		const { apiKey } = c.req.valid("json") as ProviderApiKey;
-		logger.debug({ id }, "Updating provider API key");
-
-		// Check if provider exists
-		const existingProvider = await db.query.providers.findFirst({
-			where: eq(providers.id, Number.parseInt(id)),
-		});
-
-		if (!existingProvider) {
-			logger.debug({ id }, "Provider not found for API key update");
-			return c.json({
-				status: "error",
-				statusCode: 404,
-				message: "Provider not found",
-				timestamp: new Date().toISOString(),
-				path: c.req.path
-			}, 404);
-		}
-
-		// Validate API key
-		const validationErrors: Record<string, string[]> = {};
-		
-		if (!apiKey || apiKey.trim() === '') {
-			validationErrors.apiKey = ['API key cannot be empty'];
-		}
-		
-		// If there are validation errors, return them
-		if (Object.keys(validationErrors).length > 0) {
-			logger.debug({ validationErrors }, "API key validation errors");
-			return c.json({
-				status: "error",
-				statusCode: 400,
-				message: "Validation failed",
-				timestamp: new Date().toISOString(),
-				path: c.req.path,
-				validationErrors
-			}, 400);
-		}
-
-		// Encrypt API key
-		const encryptedApiKey = await encryptApiKey(apiKey);
-
-		// Update API key
-		await db
-			.update(providers)
-			.set({
-				apiKey: encryptedApiKey,
-				updatedAt: new Date(),
-			})
-			.where(eq(providers.id, Number.parseInt(id)));
-
-		logger.debug({ id }, "Provider API key updated successfully");
-		return c.json({
-			success: true,
-			message: "API key updated successfully",
-		});
-	} catch (error) {
-		const providerId = c.req.param('id');
-		logger.error({ 
-			error,
-			message: error instanceof Error ? error.message : "Unknown error",
-			stack: error instanceof Error ? error.stack : undefined,
-			providerId
-		}, "Error updating provider API key");
-		
-		// Return detailed error response
-		return c.json({
-			status: "error",
-			statusCode: 500,
-			message: error instanceof Error ? error.message : "Failed to update API key",
-			timestamp: new Date().toISOString(),
-			path: c.req.path,
-			details: error instanceof Error ? { name: error.name } : undefined
-		}, 500);
 	}
 };

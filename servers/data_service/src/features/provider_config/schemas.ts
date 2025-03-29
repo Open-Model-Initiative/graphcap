@@ -79,7 +79,6 @@ export const providerUpdateSchema = z.object({
   }).optional(),
 });
 
-
 // Export types
 export type Provider = z.infer<typeof providerSchema>;
 export type ProviderCreate = z.infer<typeof providerCreateSchema>;
