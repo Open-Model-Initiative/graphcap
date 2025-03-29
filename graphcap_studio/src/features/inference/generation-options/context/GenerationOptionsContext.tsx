@@ -138,7 +138,7 @@ export function GenerationOptionsProvider({
 		if (options.provider_id && !options.model_id && models.length > 0) {
 			// Try to use default model first, otherwise use first available model
 			const modelToUse = defaultModel || models[0];
-			updateOption("model_id", modelToUse.id);
+			updateOption("model_id", modelToUse.name);
 		}
 	}, [options.provider_id, options.model_id, models, defaultModel]);
 
@@ -191,8 +191,13 @@ export function GenerationOptionsProvider({
 
 	// Model selection
 	const selectModel = useCallback((modelId: string) => {
-		updateOption("model_id", modelId);
-	}, [updateOption]);
+		// Find the model by ID to get its name
+		const model = models.find((m: ProviderModelInfo) => m.id === modelId);
+		if (!model) {
+			throw new Error(`Model with ID ${modelId} not found`);
+		}
+		updateOption("model_id", model.name);
+	}, [updateOption, models]);
 
 	// Dialog controls
 	const openDialog = useCallback(() => setIsDialogOpen(true), []);

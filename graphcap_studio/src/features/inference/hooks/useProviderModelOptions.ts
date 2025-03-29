@@ -6,7 +6,7 @@
  * It consolidates provider and model data loading in a single hook.
  */
 
-import { useProviderModels, useProviders } from "@/features/server-connections/services/providers";
+import { useProviders } from "@/features/server-connections/services/providers";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
 import { useMemo } from "react";
 
@@ -30,18 +30,17 @@ export function useProviderModelOptions(providerId?: string) {
     return providers.find((p: Provider) => p.id === providerId) || null;
   }, [providers, providerId]);
   
-  // Fetch models for the selected provider
-  const {
-    data: modelData,
-    isLoading: isLoadingModels,
-    error: modelsError
-  } = useProviderModels(selectedProvider?.name || "");
-  
-  // Process models data
+  // Process models data directly from the provider
   const models = useMemo<ProviderModelInfo[]>(() => {
-    if (!modelData?.models) return [];
-    return modelData.models;
-  }, [modelData]);
+    if (!selectedProvider?.models?.length) return [];
+    
+    // Map provider models to ProviderModelInfo format
+    return selectedProvider.models.map((model: { id: string; name: string }) => ({
+      id: model.id,
+      name: model.name,
+      is_default: model.name === selectedProvider.defaultModel
+    }));
+  }, [selectedProvider]);
   
   // Check for default model
   const defaultModel = useMemo(() => {
@@ -58,11 +57,9 @@ export function useProviderModelOptions(providerId?: string) {
     // Models data
     models,
     defaultModel,
-    isLoadingModels,
-    modelsError,
     
     // Helper for status checking
-    isLoading: isLoadingProviders || isLoadingModels,
-    hasError: !!providersError || !!modelsError
+    isLoading: isLoadingProviders,
+    hasError: !!providersError
   };
 } 

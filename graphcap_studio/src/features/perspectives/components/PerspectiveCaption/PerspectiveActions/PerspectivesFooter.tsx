@@ -18,7 +18,7 @@ import {
 	Text,
 	chakra,
 } from "@chakra-ui/react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { LuRefreshCw } from "react-icons/lu";
 
 /**
@@ -58,7 +58,6 @@ export function PerspectivesFooter() {
 		isGenerating,
 		currentImage,
 		generationOptions,
-		selectedProvider,
 	} = usePerspectivesData();
 
 	// Use UI context
@@ -81,19 +80,35 @@ export function PerspectivesFooter() {
 	console.log("GenerationOptions:", generationOptions);
 	console.log("Available providers:", availableProviders);
 	
-	// Try to find provider by id first, if that fails look for a name match 
-	const providerObj = availableProviders.find(p => 
-		// Try matching by ID
-		p.id.toString() === generationOptions.provider_id ||
-		// Or by name
-		(selectedProvider && p.name === selectedProvider)
-	);
+	// Get provider information safely (without throwing during render)
+	const providerInfo = useMemo(() => {
+		// Don't attempt to find providers if the list is empty or loading
+		if (!availableProviders.length) {
+			return { providerName: "Loading...", modelName: "Loading..." };
+		}
+		
+		// Try to find provider by ID
+		const providerObj = availableProviders.find(p => 
+			p.id.toString() === generationOptions.provider_id
+		);
+		
+		// If provider not found, return a placeholder but don't throw
+		if (!providerObj) {
+			console.warn(`Provider with ID ${generationOptions.provider_id} not found yet`);
+			return { 
+				providerName: `ID: ${generationOptions.provider_id}`,
+				modelName: generationOptions.model_id || "None"
+			};
+		}
+		
+		// Provider found, return proper info
+		return {
+			providerName: providerObj.name,
+			modelName: generationOptions.model_id || "None"
+		};
+	}, [availableProviders, generationOptions.provider_id, generationOptions.model_id]);
 	
-	const providerName = providerObj?.name || 
-		// If we have a provider_id but couldn't find a match, show that
-		(generationOptions.provider_id ? `ID: ${generationOptions.provider_id}` : "None");
-	
-	const modelId = generationOptions.model_id || "None";
+	const { providerName, modelName } = providerInfo;
 
 	// Fetch providers on component mount
 	useEffect(() => {
@@ -113,7 +128,7 @@ export function PerspectivesFooter() {
 			return false;
 		}
 
-		if (!selectedProvider) {
+		if (!generationOptions.provider_id) {
 			showMessage(
 				"No provider selected",
 				"Please select an inference provider",
@@ -132,14 +147,13 @@ export function PerspectivesFooter() {
 		}
 
 		return true;
-	}, [activeSchemaName, selectedProvider, currentImage, showMessage]);
+	}, [activeSchemaName, generationOptions.provider_id, currentImage, showMessage]);
 
 	// Handle generate button click
 	const handleGenerate = useCallback(async () => {
 		console.log("Generate button clicked");
 		console.log("Active schema:", activeSchemaName);
-		console.log("Selected provider:", selectedProvider);
-		console.log("Using generation options:", generationOptions);
+		console.log("Generation options:", generationOptions);
 
 		if (!validateGeneration()) {
 			return;
@@ -147,11 +161,11 @@ export function PerspectivesFooter() {
 
 		try {
 			console.log("Calling generatePerspective...");
-			// Find the provider object from the available providers
-			const providerObject = availableProviders.find(p => p.name === selectedProvider);
+			// Find the provider object from the available providers using the provider_id
+			const providerObject = availableProviders.find(p => p.id.toString() === generationOptions.provider_id);
 			
 			if (!providerObject) {
-				throw new Error(`Provider "${selectedProvider}" not found in available providers`);
+				throw new Error(`Provider with ID "${generationOptions.provider_id}" not found in available providers`);
 			}
 			
 			await generatePerspective(
@@ -176,7 +190,6 @@ export function PerspectivesFooter() {
 		}
 	}, [
 		activeSchemaName,
-		selectedProvider,
 		availableProviders,
 		generatePerspective,
 		generationOptions,
@@ -188,13 +201,13 @@ export function PerspectivesFooter() {
 	// Combine loading states
 	const isProcessing = isLoading || isGenerating;
 
-	// Check if button should be disabled
+	// Check if button should be disabled - use generationOptions.provider_id instead of selectedProvider
 	const isGenerateDisabled =
-		isProcessing || !activeSchemaName || !selectedProvider;
+		isProcessing || !activeSchemaName || !generationOptions.provider_id;
 
-	// Get title for the generate button
+	// Get title for the generate button - also use generationOptions.provider_id
 	const buttonTitle = getButtonTitle(
-		selectedProvider,
+		generationOptions.provider_id ? providerName : undefined,
 		activeSchemaName,
 		isProcessing,
 		isGenerated,
@@ -220,7 +233,7 @@ export function PerspectivesFooter() {
 					color={infoTextColor}
 					title="Current provider and model from global settings"
 				>
-					Using: <chakra.span fontWeight="bold">{providerName}</chakra.span> / <chakra.span fontStyle="italic">{modelId}</chakra.span>
+					Using: <chakra.span fontWeight="bold">{providerName}</chakra.span> / <chakra.span fontStyle="italic">{modelName}</chakra.span>
 				</Text>
 				
 				{/* Generate/Regenerate Button */}

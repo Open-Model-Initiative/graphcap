@@ -12,10 +12,6 @@ export const DEFAULT_PROVIDER_FORM_DATA = {
 	isEnabled: false,
 	defaultModel: "",
 	models: [],
-	rateLimits: {
-		requestsPerMinute: 0,
-		tokensPerMinute: 0,
-	},
 };
 
 /**

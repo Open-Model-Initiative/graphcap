@@ -10,10 +10,9 @@ import { useServerConnectionsContext } from "@/context/ServerConnectionsContext"
 import type {
 	Provider,
 	ProviderCreate,
-	ProviderModelsResponse,
 	ProviderUpdate,
 	ServerProviderConfig,
-	SuccessResponse,
+	SuccessResponse
 } from "@/types/provider-config-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SERVER_IDS } from "../constants";
@@ -229,55 +228,7 @@ export function useDeleteProvider() {
 	});
 }
 
-/**
- * Hook to get provider models
- */
-export function useProviderModels(providerName: string | Provider) {
-	useServerConnectionsContext();
-	
-	// Extract the provider name and data if an object was passed
-	const isProviderObject = typeof providerName === 'object' && providerName !== null;
-	const name = isProviderObject ? providerName.name : providerName;
-	const provider = isProviderObject ? providerName : null;
 
-	return useQuery({
-		queryKey: queryKeys.providerModels(name),
-		queryFn: async () => {
-			console.log(`📡 Processing models for provider: ${name}`);
-			
-			// Debug provider object to better understand structure
-			if (provider) {
-				console.log('Provider object passed:', JSON.stringify(provider, null, 2));
-			}
-			
-			// If we have a provider object with models, use those directly
-			if (provider && Array.isArray(provider.models) && provider.models.length > 0) {
-				const modelCount = provider.models.length;
-				console.log(`📝 Using ${modelCount} models from provider object`, provider.models);
-				
-				// Convert the provider models to the expected ProviderModelsResponse format
-				const configuredModels: ProviderModelsResponse = {
-					provider: name,
-					models: provider.models.map(model => ({
-						id: model.id ? (typeof model.id === 'string' ? model.id : String(model.id)) : String(model.name),
-						name: model.name,
-						is_default: model.name === provider.defaultModel
-					}))
-				};
-				
-				return configuredModels;
-			}
-			
-			// If no provider object or no models, return empty array
-			console.log(`📝 No models available for provider: ${name}`, provider ? 'Has provider object but no models array or empty array' : 'No provider object');
-			return {
-				provider: name,
-				models: []
-			};
-		},
-		enabled: !!name,
-	});
-}
 
 /**
  * Hook to test a provider connection

@@ -28,6 +28,11 @@ export function saveGenerationOptions(options: GenerationOptions): void {
 			optionsToSave.provider_id = String(optionsToSave.provider_id);
 		}
 		
+		// Verify we have a model name, not an ID
+		if (optionsToSave.model_id && /^\d+$/.test(optionsToSave.model_id)) {
+			throw new Error('model_id must be a model name, not a numeric ID');
+		}
+		
 		const serialized = JSON.stringify(optionsToSave);
 		localStorage.setItem(STORAGE_KEY, serialized);
 	} catch (error) {
@@ -50,6 +55,12 @@ export function loadGenerationOptions(): GenerationOptions | null {
 		// If provider_id exists and is a number, convert it to string
 		if (parsed.provider_id !== undefined && typeof parsed.provider_id === 'number') {
 			parsed.provider_id = parsed.provider_id.toString();
+		}
+		
+		// Check if model_id appears to be a numeric ID and not a name
+		if (parsed.model_id && /^\d+$/.test(parsed.model_id)) {
+			console.error('Invalid model_id format: Must be a model name, not a numeric ID');
+			throw new Error('model_id must be a model name, not a numeric ID');
 		}
 		
 		// Validate the loaded data against the schema

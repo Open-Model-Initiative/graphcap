@@ -72,6 +72,5 @@ export const CACHE_TIMES = {
 // Default values
 export const DEFAULTS = {
 	SERVER_URL: "http://localhost:32100",
-	PROVIDER: "gemini",
-	DEFAULT_FILENAME: "image.jpg",
+
 };

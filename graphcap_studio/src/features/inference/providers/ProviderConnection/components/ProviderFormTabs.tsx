@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tabs } from "@chakra-ui/react";
 import styles from "./FormFields.module.css";
-import { BasicInfoSection, ConnectionSection, RateLimitsSection } from "./form";
+import { BasicInfoSection, ConnectionSection } from "./form";
 import { ModelSelectionSection } from "./form/ModelSelectionSection";
 
 /**
@@ -29,7 +29,6 @@ export function ProviderFormTabs() {
 			>
 				<Tabs.Trigger value="basic">Basic Info</Tabs.Trigger>
 				<Tabs.Trigger value="connection">Connection</Tabs.Trigger>
-				<Tabs.Trigger value="limits">Rate Limits</Tabs.Trigger>
 				<Tabs.Trigger value="model">Model</Tabs.Trigger>
 				<Tabs.Indicator />
 			</Tabs.List>
@@ -43,9 +42,6 @@ export function ProviderFormTabs() {
 				</Tabs.Content>
 				<Tabs.Content value="model">
 					<ModelSelectionSection />
-				</Tabs.Content>
-				<Tabs.Content value="limits">
-					<RateLimitsSection />
 				</Tabs.Content>
 			</div>
 		</Tabs.Root>

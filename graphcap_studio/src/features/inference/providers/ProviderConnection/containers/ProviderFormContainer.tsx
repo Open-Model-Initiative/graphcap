@@ -73,8 +73,7 @@ export function ProviderFormContainer({
 				apiKey: newProvider.apiKey || "",
 				isEnabled: newProvider.isEnabled,
 				defaultModel: newProvider.defaultModel,
-				models: newProvider.models,
-				rateLimits: newProvider.rateLimits || { requestsPerMinute: 0, tokensPerMinute: 0 }
+				models: newProvider.models
 			});
 		}
 	}, [reset]);

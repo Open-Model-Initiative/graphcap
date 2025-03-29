@@ -22,7 +22,6 @@ interface ApiProvider {
 	createdAt: string | Date;
 	updatedAt: string | Date;
 	models?: ApiProviderModel[];
-	rateLimits?: ApiRateLimits;
 }
 
 // Type for raw API provider model data
@@ -31,16 +30,6 @@ interface ApiProviderModel {
 	providerId: number;
 	name: string;
 	isEnabled: boolean;
-	createdAt: string | Date;
-	updatedAt: string | Date;
-}
-
-// Type for raw API rate limits data
-interface ApiRateLimits {
-	id: number;
-	providerId: number;
-	requestsPerMinute?: number;
-	tokensPerMinute?: number;
 	createdAt: string | Date;
 	updatedAt: string | Date;
 }
@@ -78,18 +67,6 @@ export function fromApiProvider(apiProvider: ApiProvider): Provider {
 			createdAt: model.createdAt,
 			updatedAt: model.updatedAt,
 		})),
-
-		// Convert nested rate limits if defined 
-		rateLimits: apiProvider.rateLimits?.id && apiProvider.rateLimits?.providerId
-			? {
-					id: normalizeProviderId(apiProvider.rateLimits.id),
-					providerId: normalizeProviderId(apiProvider.rateLimits.providerId),
-					requestsPerMinute: apiProvider.rateLimits.requestsPerMinute,
-					tokensPerMinute: apiProvider.rateLimits.tokensPerMinute,
-					createdAt: apiProvider.rateLimits.createdAt,
-					updatedAt: apiProvider.rateLimits.updatedAt,
-				}
-			: undefined,
 	};
 }
 
@@ -119,18 +96,6 @@ export function toApiProvider(provider: Provider): ApiProvider {
 			createdAt: model.createdAt,
 			updatedAt: model.updatedAt,
 		})),
-
-		// Convert rate limits back to numeric IDs
-		rateLimits: provider.rateLimits
-			? {
-					id: Number.parseInt(provider.rateLimits.id, 10),
-					providerId: Number.parseInt(provider.rateLimits.providerId, 10),
-					requestsPerMinute: provider.rateLimits.requestsPerMinute,
-					tokensPerMinute: provider.rateLimits.tokensPerMinute,
-					createdAt: provider.rateLimits.createdAt,
-					updatedAt: provider.rateLimits.updatedAt,
-				}
-			: undefined,
 	};
 }
 

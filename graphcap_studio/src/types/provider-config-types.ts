@@ -33,18 +33,6 @@ export const ProviderModelSchema = z.object({
 });
 
 /**
- * Rate limits schema
- */
-export const RateLimitsSchema = z.object({
-	id: z.string(),
-	providerId: z.string(),
-	requestsPerMinute: z.number().optional(),
-	tokensPerMinute: z.number().optional(),
-	createdAt: z.string().or(z.date()),
-	updatedAt: z.string().or(z.date()),
-});
-
-/**
  * Complete provider schema
  */
 export const ProviderSchema = BaseProviderSchema.extend({
@@ -56,7 +44,6 @@ export const ProviderSchema = BaseProviderSchema.extend({
 	createdAt: z.string().or(z.date()),
 	updatedAt: z.string().or(z.date()),
 	models: z.array(ProviderModelSchema).optional(),
-	rateLimits: RateLimitsSchema.optional(),
 });
 
 // Provider creation schema
@@ -75,12 +62,6 @@ export const ProviderCreateSchema = z.object({
 				isEnabled: z.boolean().default(true),
 			}),
 		)
-		.optional(),
-	rateLimits: z
-		.object({
-			requestsPerMinute: z.number().optional(),
-			tokensPerMinute: z.number().optional(),
-		})
 		.optional(),
 });
 
@@ -101,12 +82,6 @@ export const ProviderUpdateSchema = z.object({
 				isEnabled: z.boolean().default(true),
 			}),
 		)
-		.optional(),
-	rateLimits: z
-		.object({
-			requestsPerMinute: z.number().optional(),
-			tokensPerMinute: z.number().optional(),
-		})
 		.optional(),
 });
 
@@ -152,12 +127,6 @@ export const ServerProviderConfigSchema = z.object({
 	api_key: z.string(),
 	default_model: z.string().optional(),
 	models: z.array(z.string()),
-	rate_limits: z
-		.object({
-			requests_per_minute: z.number().optional(),
-			tokens_per_minute: z.number().optional(),
-		})
-		.optional(),
 });
 
 // ============================================================================
@@ -173,11 +142,6 @@ export type BaseProvider = z.infer<typeof BaseProviderSchema>;
  * Provider model
  */
 export type ProviderModel = z.infer<typeof ProviderModelSchema>;
-
-/**
- * Rate limits configuration
- */
-export type RateLimits = z.infer<typeof RateLimitsSchema>;
 
 /**
  * Provider configuration stored in data service
@@ -257,11 +221,5 @@ export function toServerConfig(provider: Provider): ServerProviderConfig {
 		api_key: provider.apiKey || "",
 		default_model: provider.defaultModel,
 		models: provider.models?.map((m) => m.name) || [],
-		rate_limits: provider.rateLimits
-			? {
-					requests_per_minute: provider.rateLimits.requestsPerMinute,
-					tokens_per_minute: provider.rateLimits.tokensPerMinute,
-				}
-			: undefined,
 	};
 }
