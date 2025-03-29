@@ -5,9 +5,9 @@
  * This module provides client functions for interacting with the Inference Bridge API.
  */
 
+import type { ServerConnection } from "@/types/server-connection-types";
 import { hc } from "hono/client";
 import { DEFAULT_URLS, SERVER_IDS } from "../constants";
-import type { ServerConnection } from "../types";
 
 /**
  * Interface for the Inference Bridge Provider operations

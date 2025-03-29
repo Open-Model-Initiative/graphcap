@@ -1,7 +1,7 @@
 import { useServerConnections } from "@/features/server-connections";
-import { ServerConnection } from "@/features/server-connections/types";
+import type { ServerConnection } from "@/types/server-connection-types";
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, createContext, useContext } from "react";
+import { type ReactNode, createContext, useContext } from "react";
 
 /**
  * Interface for the ServerConnectionsContext value

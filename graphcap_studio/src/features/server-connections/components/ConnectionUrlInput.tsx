@@ -1,8 +1,8 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { ConnectionUrlInputProps } from "@/features/server-connections/types";
+import type { ConnectionUrlInputProps } from "@/types/server-connection-types";
 import { Input } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { ChangeEvent, memo } from "react";
+import { type ChangeEvent, memo } from "react";
 
 /**
  * ConnectionUrlInput component

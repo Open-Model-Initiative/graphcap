@@ -1,3 +1,4 @@
+import type { ServerConnection } from "@/types/server-connection-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -7,7 +8,6 @@ import {
 	SERVER_NAMES,
 } from "./constants";
 import { checkServerHealthById } from "./services/serverConnections";
-import type { ServerConnection } from "./types";
 
 // Local storage keys
 const STORAGE_KEY = "inference-bridge-connections";

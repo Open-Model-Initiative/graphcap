@@ -6,8 +6,8 @@
  * such as the Media Server and Inference Bridge.
  */
 
+import type { ServerConnection } from "@/types/server-connection-types";
 import { CONNECTION_STATUS, SERVER_IDS } from "../constants";
-import type { ServerConnection } from "../types";
 import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";
 
 /**

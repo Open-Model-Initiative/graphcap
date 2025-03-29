@@ -9,15 +9,14 @@
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
-import type { ServerConnection } from "@/features/server-connections/types";
+import type { ServerConnection } from "@/types/server-connection-types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
-	API_ENDPOINTS,
 	CACHE_TIMES,
-	perspectivesQueryKeys,
+	perspectivesQueryKeys
 } from "../services/constants";
-import { getGraphCapServerUrl, handleApiError } from "../services/utils";
+import { handleApiError } from "../services/utils";
 import type { Perspective, PerspectiveListResponse } from "../types";
 
 /**
