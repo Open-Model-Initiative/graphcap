@@ -6,22 +6,21 @@
  */
 
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
-import { API_ENDPOINTS } from "../constants/index";
-import {
-	CaptionRequestSchema,
-	CaptionResponseSchema,
-	ModuleListResponseSchema,
-	ModulePerspectivesResponseSchema,
-	PerspectiveListResponseSchema,
-} from "../types";
 import type {
 	CaptionRequest,
 	CaptionResponse,
 	ModuleListResponse,
 	ModulePerspectivesResponse,
 	Perspective,
-} from "../types";
-import { ensureWorkspacePath, getGraphCapServerUrl, getInferenceBridgeApiUrl, handleApiError } from "./utils";
+} from "@/types";
+import {
+	CaptionRequestSchema,
+	CaptionResponseSchema,
+	ModuleListResponseSchema,
+	ModulePerspectivesResponseSchema,
+	PerspectiveListResponseSchema,
+} from "@/types";
+import { ensureWorkspacePath, handleApiError } from "./utils";
 
 /**
  * Get server connections from local storage

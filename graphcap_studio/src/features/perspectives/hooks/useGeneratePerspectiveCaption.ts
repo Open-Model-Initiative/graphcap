@@ -8,6 +8,7 @@
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import type { CaptionOptions, CaptionResponse } from "@/types";
 import {
 	type Provider,
 	toServerConfig,
@@ -17,7 +18,6 @@ import { toast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { perspectivesQueryKeys } from "../services/constants";
 import { ensureWorkspacePath, handleApiError } from "../services/utils";
-import type { CaptionOptions, CaptionResponse } from "../types";
 
 /**
  * Hook to generate a perspective caption for an image

@@ -6,6 +6,6 @@
  * Type definitions are consolidated in their respective files.
  */
 
-export * from "@/types/perspectiveModuleTypes";
-export * from "@/types/perspectivesTypes";
+export * from "@/types/perspective-module-types";
+export * from "@/types/perspective-types";
 

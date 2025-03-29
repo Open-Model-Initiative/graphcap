@@ -1,4 +1,5 @@
 import { ClipboardButton } from "@/components/ui/buttons";
+import type { PerspectiveData, PerspectiveSchema } from "@/types";
 import { Box, Stack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 /**
@@ -8,7 +9,6 @@ import { Box, Stack } from "@chakra-ui/react";
  * including its data, options, and metadata.
  */
 import { useEffect } from "react";
-import type { PerspectiveData, PerspectiveSchema } from "../../../types";
 import {
 	DataStatistics,
 	MetadataSection,

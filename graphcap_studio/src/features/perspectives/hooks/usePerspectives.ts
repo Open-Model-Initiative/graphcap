@@ -9,6 +9,7 @@
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import type { Perspective, PerspectiveListResponse } from "@/types";
 import type { ServerConnection } from "@/types/server-connection-types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -17,7 +18,6 @@ import {
 	perspectivesQueryKeys
 } from "../services/constants";
 import { handleApiError } from "../services/utils";
-import type { Perspective, PerspectiveListResponse } from "../types";
 
 /**
  * Custom error class for perspective fetching errors

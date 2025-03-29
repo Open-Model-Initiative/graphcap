@@ -1,5 +1,6 @@
 import { ClipboardButton } from "@/components/ui/buttons";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import type { PerspectiveSchema } from "@/types/perspective-types";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * PerspectiveCardTabbed Component
@@ -8,7 +9,6 @@ import { useColorModeValue } from "@/components/ui/theme/color-mode";
  * This component uses Chakra UI tabs for the tabbed interface.
  */
 import { Box, Card, Stack, Tabs, Text } from "@chakra-ui/react";
-import type { PerspectiveSchema } from "../../../types";
 import { PerspectiveDebug } from "./PerspectiveDebug";
 import { SchemaView } from "./SchemaView";
 import { CaptionRenderer } from "./schema-fields";

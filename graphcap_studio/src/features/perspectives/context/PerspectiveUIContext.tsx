@@ -6,17 +6,18 @@
  * It follows the Context API best practices and focuses exclusively on UI concerns.
  */
 
-import React, {
+import type { PerspectiveSchema } from "@/types";
+import type React from "react";
+import {
+	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
-	ReactNode,
 	useEffect,
 	useMemo,
-	useState,
 	useRef,
-	useCallback,
+	useState,
 } from "react";
-import { PerspectiveSchema } from "../types";
 import {
 	getSelectedPerspective,
 	saveSelectedPerspective,

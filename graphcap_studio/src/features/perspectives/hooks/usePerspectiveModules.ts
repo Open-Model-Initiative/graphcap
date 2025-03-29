@@ -9,15 +9,10 @@
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import type { ModuleInfo, ModuleListResponse, Perspective, PerspectiveModule } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
-import {
-  API_ENDPOINTS,
-  CACHE_TIMES,
-  perspectivesQueryKeys,
-} from "../services/constants";
-import { getGraphCapServerUrl, handleApiError } from "../services/utils";
-import type { ModuleInfo, ModuleListResponse, Perspective, PerspectiveModule } from "../types";
+import { handleApiError } from "../services/utils";
 import { PerspectiveError } from "./usePerspectives";
 
 type ModuleQueryResult = {

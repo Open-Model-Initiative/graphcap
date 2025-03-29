@@ -13,24 +13,24 @@ import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useProviders } from "@/features/server-connections/services/providers";
 import type { Image } from "@/services/images";
-import React, {
-	createContext,
-	useContext,
-	type ReactNode,
-	useState,
-	useCallback,
-	useEffect,
-	useMemo,
-} from "react";
-import { useGeneratePerspectiveCaption } from "../hooks/useGeneratePerspectiveCaption";
-import { usePerspectives } from "../hooks/usePerspectives";
 import type {
 	CaptionOptions,
 	Perspective,
 	PerspectiveData,
 	PerspectiveSchema,
 	Provider,
-} from "../types";
+} from "@/types";
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+	type ReactNode,
+} from "react";
+import { useGeneratePerspectiveCaption } from "../hooks/useGeneratePerspectiveCaption";
+import { usePerspectives } from "../hooks/usePerspectives";
 import {
 	getAllPerspectiveCaptions,
 	loadHiddenPerspectives,

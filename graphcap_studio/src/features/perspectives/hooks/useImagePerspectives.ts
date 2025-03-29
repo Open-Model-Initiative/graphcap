@@ -18,7 +18,7 @@ import type {
 	ImagePerspectivesResult,
 	PerspectiveData,
 	PerspectiveType,
-} from "../types";
+} from "@/types/perspective-types";
 import { useGeneratePerspectiveCaption } from "./useGeneratePerspectiveCaption";
 import { usePerspectives } from "./usePerspectives";
 

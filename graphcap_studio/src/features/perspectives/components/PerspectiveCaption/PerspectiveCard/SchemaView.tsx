@@ -5,13 +5,12 @@
  * This component displays the schema information for a perspective.
  */
 
-import React from "react";
-import type { PerspectiveSchema } from "../../../types";
+import type { PerspectiveSchema } from "@/types";
 import { SchemaFieldFactory } from "./schema-fields";
 
 interface SchemaViewProps {
-	schema: PerspectiveSchema;
-	className?: string;
+	readonly schema: PerspectiveSchema;
+	readonly className?: string;
 }
 
 export function SchemaView({ schema, className = "" }: SchemaViewProps) {

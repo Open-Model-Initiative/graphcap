@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from "react";
 import { useTreeContext } from "../TreeContext";
-import { TreeItemData } from "../types";
+import type { TreeItemData } from "../types";
 
 /**
  * Custom hook for tree-specific logic.

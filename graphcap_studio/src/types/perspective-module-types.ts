@@ -5,8 +5,8 @@
  * This module defines types related to perspective modules and management.
  */
 
-import type { Perspective } from "@/types/perspectivesTypes";
-import { PerspectiveSchema } from "@/types/perspectivesTypes";
+import type { Perspective } from "@/types/perspective-types";
+import { PerspectiveSchema } from "@/types/perspective-types";
 import { z } from "zod";
 
 /**
