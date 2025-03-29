@@ -7,6 +7,7 @@ from graphcap.providers.types import ProviderConfig
 
 from ..common.resources import ProviderConfigFile
 
+deprecation_msg = "Provider configuration is now managed by the data service"
 
 @dg.asset(compute_kind="python", group_name="providers")
 def provider_list(
@@ -15,7 +16,7 @@ def provider_list(
     """Loads the list of providers (now from data service API)."""
     # TODO: Call data service API to get providers instead of loading from file
     # For now, return an empty dictionary to avoid errors
-    context.log.info("Provider configuration is now managed by the data service")
+    context.log.info(deprecation_msg)
     
     # Sample provider for testing
     gemini_config = ProviderConfig(
@@ -33,7 +34,7 @@ def provider_list(
         {
             "num_providers": len(providers),
             "providers": "gemini: gemini-2.0-flash-exp",
-            "note": "Provider configuration is now managed by the data service"
+            "note": deprecation_msg
         }
     )
     return providers
@@ -48,7 +49,7 @@ def default_provider(context: dg.AssetExecutionContext, provider_config_file: Pr
     context.add_output_metadata(
         {
             "selected_provider": selected_provider_name,
-            "note": "Provider configuration is now managed by the data service"
+                "note": deprecation_msg
         }
     )
     return selected_provider_name

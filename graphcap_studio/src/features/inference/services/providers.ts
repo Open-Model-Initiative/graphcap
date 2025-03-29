@@ -155,13 +155,7 @@ export function useUpdateProvider() {
 		mutationFn: async ({ id, data }: { id: number; data: ProviderUpdate }) => {
 			console.log("Updating provider with data:", data);
 			
-			// For update operations, we only need to send simple model objects
-			// Backend will handle ID generation and association
 			const apiData = { ...data };
-			
-			// Keep models simple, backend will handle IDs
-			// No ID conversion needed, only sending name and isEnabled
-			// Backend will handle the rest
 			
 			const client = createDataServiceClient(connections);
 			const response = await client.providers[":id"].$put({
@@ -231,13 +225,7 @@ export function useTestProviderConnection() {
 		}: { providerName: string; config: ServerProviderConfig }) => {
 			const client = createInferenceBridgeClient(connections);
 
-			// Add console logging to debug
 			console.log("Testing connection with config:", JSON.stringify(config));
-
-			// Make sure api_key is properly set and not null or undefined
-			if (!config.api_key) {
-				throw new Error("API key is required for testing provider connection");
-			}
 
 			const response = await client.providers[":provider_name"][
 				"test-connection"
@@ -250,9 +238,7 @@ export function useTestProviderConnection() {
 				const errorData = await response.json();
 				console.error("Error response:", errorData);
 
-				// Check if this is our enhanced error format
 				if (errorData.status === "error" && errorData.details) {
-					// Use the structured error data with cause property
 					const error = new Error(
 						errorData.message || "Connection test failed",
 					) as ErrorWithCause;
@@ -270,9 +256,9 @@ export function useTestProviderConnection() {
 				}
 
 				if (typeof errorData === "object") {
-					// For raw objects, don't wrap in Error, just throw the object directly
-					// This prevents "[object Object]" in the error message
-					throw { ...errorData };
+					const error = new Error("Connection test failed") as ErrorWithCause;
+					error.cause = errorData;
+					throw error;
 				}
 
 				// Fallback to simple error

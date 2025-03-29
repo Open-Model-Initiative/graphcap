@@ -19,7 +19,7 @@ from .utils.logger import logger
 from .utils.middleware import setup_middlewares
 
 
-class GracefulExit(SystemExit):
+class GracefulExit(Exception):
     """Custom exception for graceful shutdown."""
 
     pass

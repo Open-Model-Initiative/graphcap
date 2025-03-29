@@ -17,7 +17,8 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from ...utils.logger import logger
-from .error_handler import format_provider_connection_error, format_provider_validation_error
+from .error_handler import (format_provider_connection_error,
+                            format_provider_validation_error)
 from .models import ProviderConfig, ProviderModelsResponse
 from .service import get_provider_models, test_provider_connection
 
@@ -43,7 +44,7 @@ async def list_provider_models(provider_name: str, config: ProviderConfig) -> Un
         models = await get_provider_models(provider_name, config)
         return ProviderModelsResponse(provider=provider_name, models=models)
     except ValidationError as e:
-        return format_provider_validation_error(e, provider_name)
+        return format_provider_validation_error(e)
     except Exception as e:
         logger.error(f"Error getting models for {provider_name}: {str(e)}")
         logger.error(traceback.format_exc())
@@ -69,7 +70,7 @@ async def test_connection(provider_name: str, config: ProviderConfig):
         result = await test_provider_connection(provider_name, config)
         return {"status": "success", "message": "Connection successful", "result": result}
     except ValidationError as e:
-        return format_provider_validation_error(e, provider_name)
+        return format_provider_validation_error(e)
     except Exception as e:
         logger.error(f"Error testing connection to {provider_name}: {str(e)}")
         logger.error(traceback.format_exc())
