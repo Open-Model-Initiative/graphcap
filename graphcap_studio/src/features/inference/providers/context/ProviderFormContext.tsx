@@ -25,7 +25,6 @@ interface ProviderFormContextType {
 	// Selected model state
 	selectedModelId: string | null;
 	providerModels: Array<{ id: string; name: string; is_default?: boolean }> | null;
-	isLoadingModels: boolean;
 	
 	// Actions
 	setProvider: (provider: Provider | null) => void;

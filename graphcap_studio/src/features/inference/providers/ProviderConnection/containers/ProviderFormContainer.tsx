@@ -1,3 +1,4 @@
+import { DEFAULT_PROVIDER_FORM_DATA } from "@/features/inference/constants";
 import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 import { denormalizeProviderId, toServerConfig } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
@@ -7,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { useCreateProvider, useProviders, useTestProviderConnection, useUpdateProvider } from "../../../services/providers";
 import { useInferenceProviderContext } from "../../context/InferenceProviderContext";
 import { ProviderFormProvider } from "../../context/ProviderFormContext";
-
 // Simplified dialog state type
 type DialogType = null | "error" | "success" | "formError" | "save";
 
@@ -27,8 +27,6 @@ export function ProviderFormContainer({
 		selectedProvider: contextSelectedProvider,
 		selectedModelId,
 		setSelectedModelId,
-		providerModelsData,
-		isLoadingModels,
 		onCancel: onContextCancel,
 	} = useInferenceProviderContext();
 
@@ -65,16 +63,7 @@ export function ProviderFormContainer({
 		
 		if (newProvider) {
 			// Reset form with provider data
-			reset({
-				name: newProvider.name,
-				kind: newProvider.kind,
-				environment: newProvider.environment,
-				baseUrl: newProvider.baseUrl,
-				apiKey: newProvider.apiKey ?? "",
-				isEnabled: newProvider.isEnabled,
-				defaultModel: newProvider.defaultModel,
-				models: newProvider.models
-			});
+			reset(DEFAULT_PROVIDER_FORM_DATA);
 		}
 	}, [reset]);
 
@@ -203,7 +192,7 @@ export function ProviderFormContainer({
 	}, [setSelectedModelId]);
 	
 	// Enhanced cancel handler to properly reset the form
-	const handleCancelEdit = useCallback(() => {
+	const handleCancel = useCallback(() => {
 		// Reset the form data to the original provider values
 		if (provider) {
 			reset({
@@ -226,41 +215,43 @@ export function ProviderFormContainer({
 		onContextCancel();
 	}, [provider, reset, setContextMode, onContextCancel]);
 
+	// Provide context value to ProviderFormContext
+	const providerFormValue = {
+		// Core state
+		provider,
+		mode,
+		
+		// Form state
+		control,
+		errors,
+		watch,
+		
+		// UI state
+		isSubmitting,
+		dialog,
+		error,
+		connectionDetails,
+		
+		// Selected model state
+		selectedModelId,
+		providerModels: provider?.models || null,
+		
+		// Actions
+		setProvider: handleProviderSelect,
+		setMode: handleSetMode,
+		setSelectedModelId: handleSetSelectedModelId,
+		openDialog,
+		closeDialog,
+		
+		// Form actions
+		handleSubmit,
+		cancelEdit: handleCancel,
+		testConnection: testProviderConnection
+	};
+
 	return (
 		<ProviderFormProvider
-			value={{
-				// Core state
-				provider,
-				mode,
-				
-				// Form state
-				control,
-				errors,
-				watch,
-				
-				// UI state
-				isSubmitting,
-				dialog,
-				error,
-				connectionDetails,
-				
-				// Selected model state
-				selectedModelId,
-				providerModels: providerModelsData?.models || null,
-				isLoadingModels,
-				
-				// Actions
-				setProvider: handleProviderSelect,
-				setMode: handleSetMode,
-				setSelectedModelId: handleSetSelectedModelId,
-				openDialog,
-				closeDialog,
-				
-				// Form actions
-				handleSubmit,
-				cancelEdit: handleCancelEdit,
-				testConnection: testProviderConnection,
-			}}
+			value={providerFormValue}
 		>
 			{children}
 		</ProviderFormProvider>

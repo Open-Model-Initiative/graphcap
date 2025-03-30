@@ -28,17 +28,6 @@ const SELECTED_PROVIDER_STORAGE_KEY = "graphcap-selected-provider";
 
 type ViewMode = "view" | "edit" | "create";
 
-// Type for provider models data from the API
-interface ProviderModel {
-	id: string;
-	name: string;
-	is_default?: boolean;
-}
-
-interface ProviderModelsResponse {
-	models: ProviderModel[];
-}
-
 /**
  * Type definition for the Inference Provider Context
  * Contains all state and functions needed for provider management
@@ -58,10 +47,6 @@ type InferenceProviderContextType = {
 	// Model selection state
 	selectedModelId: string;
 	setSelectedModelId: (id: string) => void;
-	providerModelsData: ProviderModelsResponse | null;
-	isLoadingModels: boolean;
-	isModelsError: boolean;
-	modelsError: Error | null;
 	handleModelSelect: () => void;
 
 	// Basic actions
@@ -84,10 +69,6 @@ const defaultContextValue: InferenceProviderContextType = {
 	// Model selection state
 	selectedModelId: "",
 	setSelectedModelId: () => {},
-	providerModelsData: null,
-	isLoadingModels: false,
-	isModelsError: false,
-	modelsError: null,
 	handleModelSelect: () => {},
 
 	// Basic actions
@@ -221,10 +202,6 @@ export function InferenceProviderProvider({
 	const {
 		selectedModelId,
 		setSelectedModelId,
-		providerModelsData,
-		isLoadingModels,
-		isModelsError,
-		modelsError,
 		handleModelSelect: handleModelSelectBase,
 	} = useModelSelection(selectedProvider, onModelSelect);
 
@@ -258,10 +235,6 @@ export function InferenceProviderProvider({
 			// Model selection state
 			selectedModelId,
 			setSelectedModelId,
-			providerModelsData: providerModelsData || null,
-			isLoadingModels,
-			isModelsError,
-			modelsError,
 			handleModelSelect,
 
 			// Basic actions
@@ -273,10 +246,6 @@ export function InferenceProviderProvider({
 			providers,
 			selectedModelId,
 			setSelectedModelId,
-			providerModelsData,
-			isLoadingModels,
-			isModelsError,
-			modelsError,
 			handleModelSelect,
 			onCancelHandler,
 		],

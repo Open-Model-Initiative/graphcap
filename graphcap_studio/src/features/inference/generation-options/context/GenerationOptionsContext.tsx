@@ -110,8 +110,6 @@ export function GenerationOptionsProvider({
 		providersError,
 		models,
 		defaultModel,
-		isLoadingModels,
-		modelsError
 	} = useProviderModelOptions(options.provider_id);
 
 	// Save options to localStorage when they change
@@ -218,8 +216,6 @@ export function GenerationOptionsProvider({
 			models: {
 				items: models,
 				defaultModel,
-				isLoading: isLoadingModels,
-				error: modelsError
 			},
 			uiState: {
 				isDialogOpen,
@@ -249,8 +245,6 @@ export function GenerationOptionsProvider({
 			providersError,
 			models,
 			defaultModel,
-			isLoadingModels,
-			modelsError,
 			isDialogOpen,
 			isGenerating,
 			updateOption,

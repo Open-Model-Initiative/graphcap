@@ -20,7 +20,6 @@ export function ModelSelectionSection() {
 	const {
 		provider,
 		providerModels,
-		isLoadingModels,
 		selectedModelId,
 		setSelectedModelId,
 		isSubmitting,
@@ -85,10 +84,6 @@ export function ModelSelectionSection() {
 					<ProviderModelActions />
 				</Box>
 				
-				{isLoadingModels && (
-					<StatusMessage type="loading" message="Loading provider models..." />
-				)}
-				
 				{allModels.length > 0 && (
 					<Box pt={2}>
 						<Heading size="sm" mb={3}>Default Model Selection</Heading>
@@ -108,10 +103,6 @@ export function ModelSelectionSection() {
 	}
 
 	// View mode
-	if (isLoadingModels) {
-		return <StatusMessage type="loading" message="Loading models..." />;
-	}
-
 	if (allModels.length === 0) {
 		return (
 			<StatusMessage
