@@ -7,6 +7,7 @@ import { ProviderConnectionErrorDialog } from "./ProviderConnectionErrorDialog";
 import { ProviderConnectionSuccessDialog } from "./ProviderConnectionSuccessDialog";
 import { ProviderFormTabs } from "./ProviderFormTabs";
 import { AddProviderButton } from "./actions/AddProviderButton";
+import { RemoveProviderButton } from "./actions/RemoveProviderButton";
 import { ProviderFormSelect } from "./form/ProviderFormSelect";
 
 /**
@@ -33,7 +34,10 @@ export function ProviderFormView() {
 						<Box flex="1">
 							<ProviderFormSelect className="w-full" />
 						</Box>
-						<AddProviderButton />
+						<Flex gap={2}>
+							<RemoveProviderButton />
+							<AddProviderButton />
+						</Flex>
 					</Flex>
 				</Box>
 				

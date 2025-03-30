@@ -39,8 +39,8 @@ export function getDataServiceUrl(connections: ServerConnection[]): string {
 	);
 
 	return (
-		dataServiceConnection?.url ||
-		import.meta.env.VITE_DATA_SERVICE_URL ||
+		dataServiceConnection?.url ??
+		import.meta.env.VITE_DATA_SERVICE_URL ??
 		DEFAULT_URLS[SERVER_IDS.DATA_SERVICE]
 	);
 }
