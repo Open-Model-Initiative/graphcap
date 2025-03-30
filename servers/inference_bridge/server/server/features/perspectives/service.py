@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import aiohttp
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 from loguru import logger
 
 from graphcap.perspectives import get_perspective, get_perspective_list
@@ -373,35 +373,3 @@ async def generate_caption(
         raise HTTPException(status_code=500, detail=f"Error generating caption: {str(e)}")
 
 
-async def save_uploaded_file(file: UploadFile) -> Path:
-    """
-    Save an uploaded file to a temporary location.
-
-    Args:
-        file: Uploaded file object
-
-    Returns:
-        Path to the saved file
-
-    Raises:
-        HTTPException: If the file cannot be saved
-    """
-    try:
-        # Create a temporary file with appropriate extension
-        suffix = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
-        fd, temp_path = tempfile.mkstemp(suffix=suffix)
-        os.close(fd)
-        temp_file = Path(temp_path)
-
-        # Save the uploaded file
-        content = await file.read()
-        with open(temp_file, "wb") as f:
-            f.write(content)
-
-        # Reset file pointer for potential future reads
-        await file.seek(0)
-
-        return temp_file
-    except Exception as e:
-        logger.error(f"Error saving uploaded file: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Error saving uploaded file: {str(e)}")

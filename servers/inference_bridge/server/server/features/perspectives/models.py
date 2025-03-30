@@ -7,7 +7,6 @@ Defines data models for the perspectives API endpoints.
 
 from typing import Any, Dict, List, Optional, Union
 
-from fastapi import File, Form, UploadFile
 from pydantic import BaseModel, Field
 
 # Field description constants
@@ -143,45 +142,6 @@ class CaptionResponse(BaseModel):
     raw_text: Optional[str] = Field(None, description="Raw text response from the model")
 
 
-# Form data model for multipart/form-data requests with file uploads
-class CaptionFormRequest:
-    """Form request model for generating a caption with a perspective using file upload."""
-
-    def __init__(
-        self,
-        perspective: str = Form(..., description=DESC_PERSPECTIVE_NAME),
-        file: Optional[UploadFile] = File(None, description="Image file to caption"),
-        url: Optional[str] = Form(None, description="URL of the image to caption"),
-        base64: Optional[str] = Form(None, description="Base64-encoded image data"),
-        max_tokens: Optional[int] = Form(4096, description=DESC_MAX_TOKENS),
-        temperature: Optional[float] = Form(0.8, description=DESC_TEMPERATURE),
-        top_p: Optional[float] = Form(0.9, description=DESC_TOP_P),
-        repetition_penalty: Optional[float] = Form(1.15, description=DESC_REPETITION_PENALTY),
-        global_context: Optional[str] = Form(None, description=DESC_GLOBAL_CONTEXT),
-        context: Optional[str] = Form(None, description="Additional context for the caption (JSON array string)"),
-        resize_resolution: Optional[str] = Form(None, description=DESC_RESIZE_RESOLUTION),
-    ):
-        self.perspective = perspective
-        self.file = file
-        self.url = url
-        self.base64 = base64
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.top_p = top_p
-        self.repetition_penalty = repetition_penalty
-        self.global_context = global_context
-        self.resize_resolution = resize_resolution
-
-        # Parse context from JSON string if provided
-        self.context = None
-        if context:
-            import json
-
-            try:
-                self.context = json.loads(context)
-            except json.JSONDecodeError:
-                # If not valid JSON array, treat as a single context item
-                self.context = [context]
 
 
 class CaptionPathRequest(BaseModel):
