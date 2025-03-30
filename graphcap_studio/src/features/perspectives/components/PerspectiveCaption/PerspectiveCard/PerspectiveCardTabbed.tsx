@@ -175,8 +175,9 @@ export function PerspectiveCardTabbed({
 
 				{/* Metadata - e.g., timestamps or version info */}
 				<Text fontSize="xs" color={mutedTextColor}>
-					{data?.metadata?.timestamp &&
-						new Date(data.metadata.timestamp).toLocaleString()}
+					{data?.metadata?.generatedAt || data?.metadata?.timestamp ? 
+						new Date(data?.metadata?.generatedAt || data?.metadata?.timestamp || '').toLocaleString() : 
+						''}
 				</Text>
 			</Card.Footer>
 		</Card.Root>

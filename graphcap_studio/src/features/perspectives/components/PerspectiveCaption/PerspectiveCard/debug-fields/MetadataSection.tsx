@@ -77,6 +77,11 @@ function MetadataItem({
 	labelColor,
 	valueColor,
 }: MetadataItemProps) {
+	// Format date if this is the Generated timestamp field
+	const formattedValue = label === "Generated:" && value 
+		? new Date(value).toLocaleString() 
+		: value;
+
 	return (
 		<Box display="flex" justifyContent="space-between">
 			<Text fontSize="xs" color={labelColor}>
@@ -84,7 +89,7 @@ function MetadataItem({
 			</Text>
 			{value ? (
 				<Text fontSize="xs" color={valueColor}>
-					{value}
+					{formattedValue}
 				</Text>
 			) : (
 				<Badge colorScheme="red" fontSize="xs">

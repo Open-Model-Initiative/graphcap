@@ -421,7 +421,7 @@ export function PerspectivesDataProvider({
 				const perspectiveData = {
 					config_name: schemaName,
 					version: "1.0",
-					model: result.metadata?.model ?? "MISSING_MODEL",
+					model: result.metadata?.model ?? effectiveOptions.model_name ?? "MISSING_MODEL",
 					provider: effectiveProvider.name,
 					content: result.result || {},
 					options: {
@@ -433,6 +433,13 @@ export function PerspectivesDataProvider({
 						global_context: effectiveOptions.global_context,
 						context: effectiveOptions.context,
 						resize_resolution: effectiveOptions.resize_resolution
+					},
+					metadata: {
+						provider: effectiveProvider.name,
+						model: result.metadata?.model ?? effectiveOptions.model_name ?? "MISSING_MODEL",
+						version: "1.0",
+						config_name: schemaName,
+						generatedAt: new Date().toISOString()
 					}
 				};
 
@@ -451,7 +458,7 @@ export function PerspectivesDataProvider({
 						metadata: {
 							captioned_at: new Date().toISOString(),
 							provider: effectiveProvider?.name || "",
-							model: result.metadata?.model ?? "unknown",
+							model: result.metadata?.model ?? effectiveOptions.model_name ?? "unknown",
 						},
 					};
 

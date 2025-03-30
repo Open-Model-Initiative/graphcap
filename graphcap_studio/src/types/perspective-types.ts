@@ -203,11 +203,6 @@ export type CaptionOptions = {
 };
 
 /**
- * String alias that allows any perspective name to be used.
- */
-export type PerspectiveType = string;
-
-/**
  * Describes a provider with id and name.
  */
 export interface Provider {
@@ -223,7 +218,7 @@ export interface PerspectiveData {
 	version: string;
 	model: string;
 	provider: string;
-	content: Record<string, any>;
+	content: Record<string, unknown>;
 	options: CaptionOptions;
 }
 
@@ -244,24 +239,6 @@ export interface ImageCaptions {
 // SECTION D - COMPOSITE TYPES
 // ============================================================================
 
-/**
- * Result type for the useImagePerspectives hook.
- */
-export interface ImagePerspectivesResult {
-	isLoading: boolean;
-	error: string | null;
-	captions: ImageCaptions | null;
-	generatedPerspectives: PerspectiveType[];
-	generatingPerspectives: string[];
-	generatePerspective: (
-		perspective: PerspectiveType,
-		providerId?: number,
-		options?: CaptionOptions,
-	) => void;
-	generateAllPerspectives: () => void;
-	availablePerspectives: Perspective[];
-	availableProviders: Provider[];
-}
 
 /**
  * Context type for the perspectives feature.
@@ -285,5 +262,5 @@ export interface PerspectivesContextType {
  */
 export interface PerspectivesProviderProps {
 	children: React.ReactNode;
-	initialSelectedProviderId?: number | undefined;
+	initialSelectedProviderId?: number;
 }

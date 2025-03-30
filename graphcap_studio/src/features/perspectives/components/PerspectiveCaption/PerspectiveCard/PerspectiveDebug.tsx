@@ -49,9 +49,7 @@ function processDebugInfo(
 			model: perspectiveData?.model,
 			version: perspectiveData?.version,
 			config_name: perspectiveData?.config_name ?? schema.name,
-			generatedAt: data.metadata?.timestamp
-				? new Date(data.metadata.timestamp).toISOString()
-				: null,
+			generatedAt: data.metadata?.generatedAt ?? null,
 		},
 		// Generation options - directly from the PerspectiveData interface
 		options: perspectiveData?.options || null,

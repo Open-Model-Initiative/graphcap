@@ -165,4 +165,3 @@ Custom hooks are provided for working with perspectives:
 
 - **usePerspectives** - Fetches available perspectives from the server
 - **useGeneratePerspectiveCaption** - Generates captions for images using perspectives
-- **useImagePerspectives** - Manages perspective data for a specific image 
