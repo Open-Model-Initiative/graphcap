@@ -40,11 +40,12 @@ export function ModelSelectorField() {
 			: [{ label: "No providers available", value: "none", disabled: false }]
 	});
 
+	// Create model collection using names as both label and value
 	const modelCollection = createListCollection({
 		items: models.items.length > 0
 			? models.items.map((model) => ({
 				label: model.name,
-				value: model.id,
+				value: model.name,
 				disabled: false,
 			}))
 			: [{ label: "No models available", value: "none", disabled: false }]

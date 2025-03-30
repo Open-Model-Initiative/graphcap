@@ -51,7 +51,7 @@ interface GenerationOptionsContextValue {
 		resetOptions: () => void;
 		setOptions: (options: Partial<GenerationOptions>) => void;
 		selectProvider: (providerId: string) => void;
-		selectModel: (modelId: string) => void;
+		selectModel: (modelName: string) => void;
 	};
 	uiActions: {
 		openDialog: () => void;
@@ -190,14 +190,9 @@ export function GenerationOptionsProvider({
 	}, [updateOption]);
 
 	// Model selection
-	const selectModel = useCallback((modelId: string) => {
-		// Find the model by ID to get its name
-		const model = models.find((m: ProviderModelInfo) => m.id === modelId);
-		if (!model) {
-			throw new Error(`Model with ID ${modelId} not found`);
-		}
-		updateOption("model_id", model.name);
-	}, [updateOption, models]);
+	const selectModel = useCallback((modelName: string) => {
+		updateOption("model_id", modelName);
+	}, [updateOption]);
 
 	// Dialog controls
 	const openDialog = useCallback(() => setIsDialogOpen(true), []);
