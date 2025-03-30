@@ -68,35 +68,53 @@ def _generate_error_message(invalid_fields: Set[str]) -> str:
         return "Invalid provider configuration"
 
 
+def _get_field_from_error(error: dict) -> str:
+    """Extract the field name from the error location."""
+    return ".".join(str(loc) for loc in error.get("loc", [])[1:]) if error.get("loc") else ""
+
+
+def _add_error_type_suggestion(error: dict, field: str, suggestions: list) -> None:
+    """Add suggestion based on error type."""
+    error_type = error.get("type", "")
+    
+    if error_type == "missing":
+        suggestions.append(f"Add the missing required parameter: '{field}'")
+    elif error_type == "string_type":
+        suggestions.append(f"Ensure '{field}' is a valid string")
+    elif error_type == "url_parsing":
+        suggestions.append(f"Use a valid URL format for '{field}'")
+    elif error_type and "enum" in error_type:
+        _add_enum_suggestion(error, field, suggestions)
+
+
+def _add_enum_suggestion(error: dict, field: str, suggestions: list) -> None:
+    """Add suggestion for enum validation errors."""
+    valid_values = error.get("ctx", {}).get("expected", [])
+    if valid_values:
+        values_str = ", ".join([f"'{v}'" for v in valid_values])
+        suggestions.append(f"Choose a valid option for '{field}': {values_str}")
+    else:
+        suggestions.append(f"Choose a valid option for '{field}'")
+
+
+def _add_field_specific_suggestion(field: str, suggestions: list) -> None:
+    """Add suggestion based on specific field name."""
+    if field == "api_key":
+        suggestions.append("Check the API key is correct for this provider")
+    elif field == "base_url":
+        suggestions.append("Verify the base URL format matches the provider's API documentation")
+    elif field == "environment":
+        suggestions.append("Valid environment values are typically 'cloud' or 'local'")
+
+
 def _generate_suggestions(errors) -> list:
     """Generate helpful suggestions based on validation errors."""
     suggestions = ["Check API key and endpoint URL", "Verify the provider is correctly configured"]
     
     for error in errors:
-        error_type = error.get("type", "")
-        field = ".".join(str(loc) for loc in error.get("loc", [])[1:]) if error.get("loc") else ""
-        
-        if error_type == "missing":
-            suggestions.append(f"Add the missing required parameter: '{field}'")
-        elif error_type == "string_type":
-            suggestions.append(f"Ensure '{field}' is a valid string")
-        elif error_type == "url_parsing":
-            suggestions.append(f"Use a valid URL format for '{field}'")
-        elif error_type and "enum" in error_type:
-            valid_values = error.get("ctx", {}).get("expected", [])
-            if valid_values:
-                values_str = ", ".join([f"'{v}'" for v in valid_values])
-                suggestions.append(f"Choose a valid option for '{field}': {values_str}")
-            else:
-                suggestions.append(f"Choose a valid option for '{field}'")
-        
-        # Add provider-specific field suggestions
-        if field == "api_key":
-            suggestions.append("Check the API key is correct for this provider")
-        elif field == "base_url":
-            suggestions.append("Verify the base URL format matches the provider's API documentation")
-        elif field == "environment":
-            suggestions.append("Valid environment values are typically 'cloud' or 'local'")
+        field = _get_field_from_error(error)
+        _add_error_type_suggestion(error, field, suggestions)
+        _add_field_specific_suggestion(field, suggestions)
     
     suggestions.append("Check server logs for more details")
     return list(dict.fromkeys(suggestions))  # Remove duplicates while preserving order
