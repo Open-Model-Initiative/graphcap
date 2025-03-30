@@ -27,6 +27,21 @@ def pretty_print_caption(caption_data: Dict[str, Any]) -> str:
     return json.dumps(caption_data["parsed"], indent=2, ensure_ascii=False)
 
 
+class CaptionError(Exception):
+    """Base exception for caption processing errors."""
+    pass
+
+
+class CaptionParsingError(CaptionError):
+    """Exception raised when parsing JSON response fails."""
+    pass
+
+
+class CaptionProcessingError(CaptionError):
+    """Exception raised when processing an image fails."""
+    pass
+
+
 class BaseCaptionProcessor(ABC):
     """
     Base class for caption processors.
@@ -198,7 +213,8 @@ class BaseCaptionProcessor(ABC):
             dict: Structured caption data according to schema
 
         Raises:
-            Exception: If image processing fails
+            CaptionParsingError: If parsing the JSON response fails
+            CaptionProcessingError: If processing the image fails
         """
         try:
             # Build prompt with context if provided
@@ -227,9 +243,9 @@ class BaseCaptionProcessor(ABC):
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
-            raise Exception(f"Error parsing response for {image_path}: {str(e)}")
+            raise CaptionParsingError(f"Error parsing response for {image_path}: {str(e)}")
         except Exception as e:
-            raise Exception(f"Error processing {image_path}: {str(e)}")
+            raise CaptionProcessingError(f"Error processing {image_path}: {str(e)}")
 
     # Note: process_batch has been removed as batch processing is being migrated to Kafka.
     # Batch processing functionality should now be implemented in Kafka-based pipeline components.
