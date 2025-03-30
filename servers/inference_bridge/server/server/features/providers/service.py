@@ -5,12 +5,13 @@ Providers Service
 Provides services for working with AI providers.
 """
 
-from typing import Any, Dict, List, Protocol, runtime_checkable
 import datetime
+from typing import Any, Dict, Protocol, runtime_checkable
+
+from loguru import logger
 
 from graphcap.providers.clients.base_client import BaseClient
-from graphcap.providers.factory import create_provider_client, get_provider_factory
-from loguru import logger
+from graphcap.providers.factory import create_provider_client
 
 from .models import ModelInfo, ProviderConfig
 
@@ -38,57 +39,6 @@ def _create_model_info(model_id: str) -> ModelInfo:
         name=model_id,
         is_default=False
     )
-
-
-async def get_provider_models(provider_name: str, config: ProviderConfig) -> List[ModelInfo]:
-    """
-    Get a list of available models for a specific provider.
-
-    Args:
-        provider_name: Name of the provider to get models for
-        config: Provider configuration for this request
-    Returns:
-        List of model information
-    """
-    # Initialize client with provided configuration
-    client = create_provider_client(
-        name=provider_name,
-        kind=config.kind,
-        environment=config.environment,
-        base_url=config.base_url,
-        api_key=config.api_key,
-        rate_limits=config.rate_limits,
-        use_cache=True,  # Cache clients for better performance
-    )
-    
-    models = []
-    
-    # Try to fetch models if configured
-    if config.fetch_models:
-        try:
-            logger.info(f"Fetching models from provider {provider_name}")
-            if hasattr(client, "get_available_models"):
-                provider_models = await client.get_available_models()
-                if hasattr(provider_models, "data"):
-                    for model in provider_models.data:
-                        model_id = _extract_model_id(model)
-                        models.append(_create_model_info(model_id))
-            elif hasattr(client, "get_models"):
-                provider_models = await client.get_models()
-                if hasattr(provider_models, "models"):
-                    for model in provider_models.models:
-                        model_id = _extract_model_id(model)
-                        models.append(_create_model_info(model_id))
-        except Exception as e:
-            logger.error(f"Error fetching models from provider {provider_name}: {str(e)}")
-            logger.info(f"Falling back to configured models for provider {provider_name}")
-
-    # Fall back to configured models if none fetched
-    if not models:
-        models = [_create_model_info(model_id) for model_id in config.models]
-        logger.info(f"Using {len(models)} configured models for provider {provider_name}")
-
-    return models
 
 
 def create_provider_client_from_config(config: ProviderConfig) -> BaseClient:
