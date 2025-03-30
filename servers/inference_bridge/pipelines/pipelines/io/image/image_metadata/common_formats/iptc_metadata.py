@@ -29,16 +29,16 @@ def extract_iptc_metadata(description: str) -> Dict[str, Any]:
         Dict[str, Any]: Extracted IPTC metadata.
     """
     result: Dict[str, Any] = {}
-    caption_match = re.search(r"IPTCCaption:\s*(.+?)(?:\s|$)", description)
+    caption_match = re.search(r"IPTCCaption:\s*(.+)(?:\s|$)", description)
     if caption_match:
         result["caption"] = caption_match.group(1).strip()
-    keywords_match = re.search(r"IPTCKeywords:\s*(.+?)(?:\s|$)", description)
+    keywords_match = re.search(r"IPTCKeywords:\s*(.+)(?:\s|$)", description)
     if keywords_match:
         result["keywords"] = keywords_match.group(1).strip()
-    location_match = re.search(r"IPTCLocation:\s*(.+?)(?:\s|$)", description)
+    location_match = re.search(r"IPTCLocation:\s*(.+)(?:\s|$)", description)
     if location_match:
         result["location"] = location_match.group(1).strip()
-    credits_match = re.search(r"IPTCCredits:\s*(.+?)(?:\s|$)", description)
+    credits_match = re.search(r"IPTCCredits:\s*(.+)(?:\s|$)", description)
     if credits_match:
         result["credits"] = credits_match.group(1).strip()
     # Extend with additional IPTC fields as needed.
