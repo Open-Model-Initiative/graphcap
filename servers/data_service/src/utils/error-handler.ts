@@ -44,13 +44,13 @@ export function createErrorResponse(
 export function handleValidationError(error: ZodError, c: Context): Response {
 	const validationErrors: Record<string, string[]> = {};
 
-	error.errors.forEach((err) => {
+	for (const err of error.errors) {
 		const path = err.path.join(".");
 		if (!validationErrors[path]) {
 			validationErrors[path] = [];
 		}
 		validationErrors[path].push(err.message);
-	});
+	}
 
 	const response = createErrorResponse(
 		"Validation error",

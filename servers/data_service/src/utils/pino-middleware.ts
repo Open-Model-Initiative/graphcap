@@ -91,7 +91,7 @@ const getRequestBody = async (c: Context, method: string): Promise<[unknown, boo
 		// Check if the request can be cloned
 		if (c.req.raw.clone && typeof c.req.raw.clone === 'function') {
 			const clonedReq = c.req.raw.clone();
-			const contentType = c.req.header("content-type") || "";
+			const contentType = c.req.header("content-type") ?? "";
 			const body = await parseRequestBody(clonedReq, contentType);
 			return [body, true];
 		}
