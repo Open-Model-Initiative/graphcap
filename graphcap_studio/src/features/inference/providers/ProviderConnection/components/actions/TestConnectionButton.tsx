@@ -10,7 +10,8 @@ export function TestConnectionButton() {
 
   return (
     <Button
-      colorScheme="teal"
+      bg="blue.900"
+      colorScheme="blue"
       variant="outline"
       onClick={testConnection}
       disabled={isSubmitting || !provider}

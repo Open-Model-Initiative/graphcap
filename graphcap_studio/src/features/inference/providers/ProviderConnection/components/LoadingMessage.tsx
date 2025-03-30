@@ -2,8 +2,8 @@
 import { Box, Spinner, Text } from "@chakra-ui/react";
 
 interface LoadingMessageProps {
-  isSubmitting: boolean;
-  saveSuccess: boolean;
+  readonly isSubmitting: boolean;
+  readonly saveSuccess: boolean;
 }
 
 export function LoadingMessage({ isSubmitting, saveSuccess }: LoadingMessageProps) {
