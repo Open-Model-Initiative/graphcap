@@ -6,7 +6,7 @@ Provides services for working with AI providers.
 """
 
 import datetime
-from typing import Any, Dict, Protocol, runtime_checkable
+from typing import Any, Dict, Protocol, cast, runtime_checkable
 
 from loguru import logger
 
@@ -66,21 +66,9 @@ def create_provider_client_from_config(config: ProviderConfig) -> BaseClient:
     )
 
 
-async def test_provider_connection(provider_name: str, config: ProviderConfig) -> Dict[str, Any]:
-    """
-    Test connection to a provider by initializing the client and performing a simple operation.
-
-    Args:
-        provider_name: Name of the provider to test
-        config: Provider configuration for this request
-
-    Returns:
-        Dictionary containing test results and additional information
-
-    Raises:
-        Exception: If the connection test fails
-    """
-    result = {
+def _create_initial_result(provider_name: str, config: ProviderConfig) -> Dict[str, Any]:
+    """Create initial result structure for connection test"""
+    return {
         "provider": provider_name,
         "details": {},
         "diagnostics": {
@@ -95,6 +83,84 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
             "warnings": []
         }
     }
+
+
+def _check_configuration_warnings(result: Dict[str, Any], config: ProviderConfig) -> None:
+    """Check for configuration warnings and add them to the result"""
+    # Check if an empty API key was provided
+    if not config.api_key:
+        result["diagnostics"]["warnings"].append({
+            "warning_type": "empty_api_key",
+            "message": "An empty API key was provided. This might not work with most providers."
+        })
+    
+    # Check if the base URL seems valid
+    if not config.base_url.startswith(("http://", "https://")):
+        result["diagnostics"]["warnings"].append({
+            "warning_type": "invalid_base_url",
+            "message": "The base URL doesn't start with http:// or https://"
+        })
+
+
+async def _try_list_models(client: ModelProvider, result: Dict[str, Any]) -> None:
+    """Attempt to list models from the provider"""
+    # Add diagnostic step for model list
+    result["diagnostics"]["connection_steps"].append({
+        "step": "list_models",
+        "status": "pending",
+        "timestamp": str(datetime.datetime.now())
+    })
+    
+    try:
+        if hasattr(client, "get_available_models"):
+            provider_models = await client.get_available_models()
+            result["details"]["method"] = "get_available_models"
+            
+            if hasattr(provider_models, "data"):
+                _extract_models_data(result, provider_models.data)
+                
+        elif hasattr(client, "get_models"):
+            provider_models = await client.get_models()
+            result["details"]["method"] = "get_models"
+            
+            if hasattr(provider_models, "models"):
+                _extract_models_data(result, provider_models.models)
+        
+        # Update diagnostic step
+        result["diagnostics"]["connection_steps"][-1]["status"] = "success"
+    
+    except Exception as e:
+        logger.warning(f"Could not list models: {str(e)}")
+        result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
+        result["diagnostics"]["connection_steps"][-1]["message"] = "Model listing not supported or failed"
+
+
+def _extract_models_data(result: Dict[str, Any], models_list: Any) -> None:
+    """Extract model data from provider response"""
+    models_data = []
+    for model in models_list:
+        model_id = _extract_model_id(model)
+        models_data.append({"id": model_id})
+    
+    result["details"]["available_models"] = models_data
+    result["details"]["models_count"] = len(models_data)
+
+
+async def test_provider_connection(provider_name: str, config: ProviderConfig) -> Dict[str, Any]:
+    """
+    Test connection to a provider by initializing the client and performing a simple operation.
+
+    Args:
+        provider_name: Name of the provider to test
+        config: Provider configuration for this request
+
+    Returns:
+        Dictionary containing test results and additional information
+
+    Raises:
+        Exception: If the connection test fails
+    """
+    result = _create_initial_result(provider_name, config)
     
     try:
         # Add diagnostic step
@@ -119,70 +185,19 @@ async def test_provider_connection(provider_name: str, config: ProviderConfig) -
         result["diagnostics"]["connection_steps"][-1]["status"] = "success"
         result["client_initialized"] = True
         
-        # Check if an empty API key was provided
-        if not config.api_key:
-            result["diagnostics"]["warnings"].append({
-                "warning_type": "empty_api_key",
-                "message": "An empty API key was provided. This might not work with most providers."
-            })
+        # Check for configuration warnings
+        _check_configuration_warnings(result, config)
         
-        # Check if the base URL seems valid
-        if not config.base_url.startswith(("http://", "https://")):
-            result["diagnostics"]["warnings"].append({
-                "warning_type": "invalid_base_url",
-                "message": "The base URL doesn't start with http:// or https://"
-            })
+        # Try to list models
+        await _try_list_models(cast(ModelProvider, client), result)
         
-        # Try to test the connection with a lightweight operation
-        # First check if we can get models (most providers support this)
-        try:
-            # Add diagnostic step for model list
-            result["diagnostics"]["connection_steps"].append({
-                "step": "list_models",
-                "status": "pending",
-                "timestamp": str(datetime.datetime.now())
-            })
-            
-            if hasattr(client, "get_available_models"):
-                provider_models = await client.get_available_models()
-                result["details"]["method"] = "get_available_models"
-                
-                # Add model information if available
-                if hasattr(provider_models, "data"):
-                    models_data = []
-                    for model in provider_models.data:
-                        model_id = _extract_model_id(model)
-                        models_data.append({"id": model_id})
-                    result["details"]["available_models"] = models_data
-                    result["details"]["models_count"] = len(models_data)
-                    
-            elif hasattr(client, "get_models"):
-                provider_models = await client.get_models()
-                result["details"]["method"] = "get_models"
-                
-                # Add model information if available
-                if hasattr(provider_models, "models"):
-                    models_data = []
-                    for model in provider_models.models:
-                        model_id = _extract_model_id(model)
-                        models_data.append({"id": model_id})
-                    result["details"]["available_models"] = models_data
-                    result["details"]["models_count"] = len(models_data)
-            
-            # Update diagnostic step
-            result["diagnostics"]["connection_steps"][-1]["status"] = "success"
-            
-        except Exception as e:
-            logger.warning(f"Could not list models for {provider_name}: {str(e)}")
-            result["diagnostics"]["connection_steps"][-1]["status"] = "skipped"
-            result["diagnostics"]["connection_steps"][-1]["message"] = "Model listing not supported or failed"
-            
         # Connection test successful
         result["connected"] = True
         result["success"] = True
         result["message"] = f"Successfully connected to {provider_name}"
         
         return result
+        
     except Exception as e:
         logger.error(f"Error testing connection to {provider_name}: {str(e)}")
         

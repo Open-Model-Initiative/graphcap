@@ -8,7 +8,7 @@ Provides base classes and shared functionality for different caption types.
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from loguru import logger
 from pydantic import BaseModel
@@ -90,6 +90,71 @@ class BaseCaptionProcessor(ABC):
 
         return result
 
+    def _build_prompt_with_context(
+        self, context: list[str] | None = None, global_context: str | None = None
+    ) -> str:
+        """
+        Build the prompt with optional context.
+
+        Args:
+            context: List of context strings
+            global_context: Global context string
+
+        Returns:
+            The complete prompt with context if provided
+        """
+        if not context and not global_context:
+            return self.vision_config.prompt
+
+        context_block = "<Contexts> Consider the following context when generating the caption:\n"
+        
+        if global_context:
+            context_block += f"<GlobalContext>\n{global_context}\n</GlobalContext>\n"
+            
+        if context:
+            for entry in context:
+                context_block += f"<Context>\n{entry}\n</Context>\n"
+                
+        context_block += "</Contexts>\n"
+        return f"{context_block}{self.vision_config.prompt}"
+
+    def _parse_completion_result(self, completion: Any) -> Dict[str, Any]:
+        """
+        Parse the completion result into a standardized format.
+
+        Args:
+            completion: The completion response from the vision model
+
+        Returns:
+            Parsed result as a dictionary
+
+        Raises:
+            json.JSONDecodeError: If JSON parsing fails
+        """
+        # Handle BaseModel responses through duck typing
+        if hasattr(completion, 'choices') and hasattr(completion.choices[0], 'message'):
+            result = completion.choices[0].message.parsed
+            if hasattr(result, 'model_dump'):
+                return result.model_dump()
+            return cast(Dict[str, Any], result)
+            
+        result = completion.choices[0].message.parsed
+        
+        # Handle string responses
+        if isinstance(result, str):
+            sanitized = self._sanitize_json_string(result)
+            return json.loads(sanitized)
+            
+        # Handle nested structure responses
+        if isinstance(result, dict):
+            if "choices" in result:
+                return cast(Dict[str, Any], result["choices"][0]["message"]["parsed"]["parsed"])
+                
+            if "message" in result:
+                return cast(Dict[str, Any], result["message"]["parsed"])
+            
+        return cast(Dict[str, Any], result)
+
     @abstractmethod
     def create_rich_table(self, caption_data: Dict[str, Any]) -> Table:
         """
@@ -114,7 +179,7 @@ class BaseCaptionProcessor(ABC):
         repetition_penalty: Optional[float] = 1.15,
         context: list[str] | None = None,
         global_context: str | None = None,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
         Process a single image and return caption data.
 
@@ -125,6 +190,9 @@ class BaseCaptionProcessor(ABC):
             max_tokens: Maximum tokens for model response
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
+            repetition_penalty: Repetition penalty parameter
+            context: List of context strings
+            global_context: Global context string
 
         Returns:
             dict: Structured caption data according to schema
@@ -132,50 +200,34 @@ class BaseCaptionProcessor(ABC):
         Raises:
             Exception: If image processing fails
         """
-        if context or global_context:
-            context_block = "<Contexts> Consider the following context when generating the caption:\n"
-            if global_context:
-                context_block += f"<GlobalContext>\n{global_context}\n</GlobalContext>\n"
-            if context:
-                for entry in context:
-                    context_block += f"<Context>\n{entry}\n</Context>\n"
-            context_block += "</Contexts>\n"
-            prompt = f"{context_block}{self.vision_config.prompt}"
-        else:
-            prompt = self.vision_config.prompt
         try:
+            # Build prompt with context if provided
+            prompt = self._build_prompt_with_context(context, global_context)
+            
+            # Handle optional parameters with defaults
+            tokens = 4096 if max_tokens is None else max_tokens
+            temp = 0.8 if temperature is None else temperature
+            nucleus = 0.9 if top_p is None else top_p
+            rep_penalty = 1.15 if repetition_penalty is None else repetition_penalty
+            
+            # Process image with vision model
             completion = await provider.vision(
                 prompt=prompt,
                 image=image_path,
                 schema=self.vision_config.schema,
                 model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                top_p=top_p,
-                repetition_penalty=repetition_penalty,
+                max_tokens=tokens,
+                temperature=temp,
+                top_p=nucleus,
+                repetition_penalty=rep_penalty,
             )
 
-            # Handle response parsing with sanitization
-            if isinstance(completion, BaseModel):
-                result = completion.choices[0].message.parsed
-                if isinstance(result, BaseModel):
-                    result = result.model_dump()
-            else:
-                result = completion.choices[0].message.parsed
-                # Handle string responses that need parsing
-                if isinstance(result, str):
-                    sanitized = self._sanitize_json_string(result)
-                    try:
-                        result = json.loads(sanitized)
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse sanitized JSON: {e}")
-                        raise
-                elif "choices" in result:
-                    result = result["choices"][0]["message"]["parsed"]["parsed"]
-                elif "message" in result:
-                    result = result["message"]["parsed"]
-
-            return result
+            # Parse the completion result
+            return self._parse_completion_result(completion)
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response: {e}")
+            raise Exception(f"Error parsing response for {image_path}: {str(e)}")
         except Exception as e:
             raise Exception(f"Error processing {image_path}: {str(e)}")
 

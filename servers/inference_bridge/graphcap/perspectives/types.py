@@ -26,4 +26,4 @@ class StructuredVisionConfig:
     config_name: str
     version: str
     prompt: str
-    schema: BaseModel
+    schema: type[BaseModel]
