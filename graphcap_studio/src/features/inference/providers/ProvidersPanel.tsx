@@ -68,7 +68,6 @@ export function ProvidersPanel() {
 			providers={providersData}
 			selectedProvider={initialSelectedProvider}
 			isCreating={false}
-			onCancel={() => {}}
 		>
 			<PanelContent />
 		</InferenceProviderProvider>

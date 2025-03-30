@@ -201,6 +201,30 @@ export function ProviderFormContainer({
 			setSelectedModelId(id);
 		}
 	}, [setSelectedModelId]);
+	
+	// Enhanced cancel handler to properly reset the form
+	const handleCancelEdit = useCallback(() => {
+		// Reset the form data to the original provider values
+		if (provider) {
+			reset({
+				name: provider.name,
+				kind: provider.kind,
+				environment: provider.environment,
+				baseUrl: provider.baseUrl,
+				apiKey: provider.apiKey ?? "",
+				isEnabled: provider.isEnabled,
+				defaultModel: provider.defaultModel,
+				models: provider.models
+			});
+		}
+		
+		// Switch mode back to view
+		setMode("view");
+		setContextMode("view");
+		
+		// Call the parent context cancel if provided
+		onContextCancel();
+	}, [provider, reset, setContextMode, onContextCancel]);
 
 	return (
 		<ProviderFormProvider
@@ -234,7 +258,7 @@ export function ProviderFormContainer({
 				
 				// Form actions
 				handleSubmit,
-				cancelEdit: onContextCancel,
+				cancelEdit: handleCancelEdit,
 				testConnection: testProviderConnection,
 			}}
 		>
