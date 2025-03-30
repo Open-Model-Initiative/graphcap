@@ -119,7 +119,7 @@ export function createProviderModel(
 	id?: string,
 ): ProviderModel {
 	return {
-		id: id || crypto.randomUUID(), // Generate UUID if no ID provided
+		id: id ?? crypto.randomUUID(), // Generate UUID if no ID provided
 		providerId,
 		name,
 		isEnabled: true,

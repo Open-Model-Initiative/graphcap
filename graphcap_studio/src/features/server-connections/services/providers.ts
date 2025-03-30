@@ -155,7 +155,7 @@ export function useUpdateProvider() {
 			
 			const client = createDataServiceClient(connections);
 			// Convert application data to API format
-			const apiData = toApiProvider(data as Provider);
+			const apiData = toApiProvider(data);
 			// Create a new object without the ID
 			const { id: _, ...apiDataWithoutId } = apiData;
 			

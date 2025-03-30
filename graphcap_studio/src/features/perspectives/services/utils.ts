@@ -5,7 +5,6 @@
  * This module provides utility functions for the perspectives service.
  */
 
-import { DEFAULTS } from "@/features/perspectives/constants/index";
 import type { ServerConnection } from "@/features/perspectives/types";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 
@@ -19,8 +18,8 @@ export function getGraphCapServerUrl(connections: ServerConnection[]): string {
 
 	// Use connection URL or fallback to environment variable or default
 	const serverUrl =
-		serverConnection?.url ||
-		import.meta.env.VITE_INFERENCE_BRIDGE_URL ||
+		serverConnection?.url ??
+		import.meta.env.VITE_INFERENCE_BRIDGE_URL ??
 		"http://localhost:32100";
 
 	console.debug(`Using Inference Bridge URL: ${serverUrl}`);

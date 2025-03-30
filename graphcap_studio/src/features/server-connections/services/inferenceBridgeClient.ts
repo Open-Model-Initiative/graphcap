@@ -74,8 +74,8 @@ export function getInferenceBridgeUrl(connections: ServerConnection[]): string {
 	);
 
 	return (
-		inferenceBridgeConnection?.url ||
-		import.meta.env.VITE_INFERENCE_BRIDGE_URL ||
+		inferenceBridgeConnection?.url ??
+		import.meta.env.VITE_INFERENCE_BRIDGE_URL ??
 		DEFAULT_URLS[SERVER_IDS.INFERENCE_BRIDGE]
 	);
 }
