@@ -12,7 +12,9 @@ import { db } from "../../db";
 import { providerModels, providerRateLimits, providers } from "../../db/schema";
 import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
 import { processApiKeyForUpdate } from "./api-key-manager";
-import type { ProviderCreate, ProviderUpdate } from "./schemas";
+import type { Provider, ProviderCreate, ProviderUpdate } from "./schemas";
+
+
 
 // Type for the validated parameters
 type ValidatedParams = {
@@ -403,6 +405,62 @@ const validateProviderUpdate = (
 };
 
 /**
+ * Checks if a value has changed
+ */
+const hasValueChanged = (existingValue: unknown, newValue: unknown): boolean => {
+	return existingValue !== newValue && newValue !== undefined;
+};
+
+/**
+ * Creates a log entry for API key changes
+ */
+const createApiKeyLogEntry = (
+	existingValue: unknown, 
+	value: unknown
+): { from: unknown; to: unknown } => {
+	return {
+		from: existingValue ? "[ENCRYPTED]" : "[EMPTY]",
+		to: value ? "[NEW_VALUE]" : "[EMPTY]",
+	};
+};
+
+/**
+ * Logs an API key change
+ */
+const logApiKeyChange = (
+	logger: Logger,
+	id: string,
+	existingValue: unknown,
+	value: unknown
+): void => {
+	logger.info(
+		{ providerId: id },
+		`Updating API key from ${existingValue ? "existing value" : "empty"} to ${value ? "new value" : "empty"}`,
+	);
+};
+
+/**
+ * Logs all field changes
+ */
+const logAllFieldChanges = (
+	logger: Logger,
+	id: string,
+	existingProvider: Record<string, unknown>,
+	updatedFields: Record<string, { from: unknown; to: unknown }>
+): void => {
+	if (Object.keys(updatedFields).length > 0) {
+		logger.info(
+			{
+				providerId: id,
+				provider: existingProvider.name,
+				updatedFields,
+			},
+			"Provider fields being updated",
+		);
+	}
+};
+
+/**
  * Logs field changes between existing provider and update data
  */
 const logFieldChanges = (
@@ -416,18 +474,13 @@ const logFieldChanges = (
 	// Compare each field being updated with existing values
 	for (const [key, value] of Object.entries(providerData)) {
 		const existingValue = (existingProvider as Record<string, unknown>)[key];
-		// Only log if the value is actually changing
-		if (existingValue !== value && value !== undefined) {
+		
+		// Only process if the value is actually changing
+		if (hasValueChanged(existingValue, value)) {
 			// Special handling for API key to avoid logging actual values
 			if (key === "apiKey") {
-				updatedFields[key] = {
-					from: existingValue ? "[ENCRYPTED]" : "[EMPTY]",
-					to: value ? "[NEW_VALUE]" : "[EMPTY]",
-				};
-				logger.info(
-					{ providerId: id },
-					`Updating API key from ${existingValue ? "existing value" : "empty"} to ${value ? "new value" : "empty"}`,
-				);
+				updatedFields[key] = createApiKeyLogEntry(existingValue, value);
+				logApiKeyChange(logger, id, existingValue, value);
 			} else {
 				updatedFields[key] = { from: existingValue, to: value };
 			}
@@ -435,16 +488,7 @@ const logFieldChanges = (
 	}
 
 	// Log all field changes
-	if (Object.keys(updatedFields).length > 0) {
-		logger.info(
-			{
-				providerId: id,
-				provider: existingProvider.name,
-				updatedFields,
-			},
-			"Provider fields being updated",
-		);
-	}
+	logAllFieldChanges(logger, id, existingProvider, updatedFields);
 
 	return updatedFields;
 };
@@ -536,7 +580,7 @@ const updateProviderInDatabase = async (
 	providerData: Partial<ProviderUpdate>,
 	models?: ProviderUpdate["models"],
 	rateLimits?: ProviderUpdate["rateLimits"],
-) => {
+): Promise<Provider | null> => {
 	// Get the current provider from the database to ensure we have the latest data
 	const currentProvider = await tx.query.providers.findFirst({
 		where: eq(providers.id, Number.parseInt(id)),
@@ -573,13 +617,16 @@ const updateProviderInDatabase = async (
 	}
 
 	// Return the updated provider with relations
-	return await tx.query.providers.findFirst({
+	const result = await tx.query.providers.findFirst({
 		where: eq(providers.id, Number.parseInt(id)),
 		with: {
 			models: true,
 			rateLimits: true,
 		},
 	});
+	
+	// Cast to ensure type safety
+	return result as Provider | null;
 };
 
 /**
@@ -613,6 +660,122 @@ const handleProviderUpdateError = (c: Context, error: unknown) => {
 };
 
 /**
+ * Checks if a provider exists
+ */
+const checkProviderExists = async (id: string): Promise<boolean> => {
+	const provider = await db.query.providers.findFirst({
+		where: eq(providers.id, Number.parseInt(id)),
+	});
+	return !!provider;
+};
+
+/**
+ * Fetches existing provider with models and rate limits
+ */
+const fetchExistingProvider = async (id: string): Promise<Provider | null> => {
+	const provider = await db.query.providers.findFirst({
+		where: eq(providers.id, Number.parseInt(id)),
+		with: {
+			models: true,
+			rateLimits: true,
+		},
+	});
+	
+	// Cast to ensure type safety
+	return provider as Provider | null;
+};
+
+/**
+ * Logs API key status for debugging
+ */
+const logApiKeyStatus = (
+	logger: Logger,
+	id: string, 
+	existingProvider: Provider, 
+	providerData: Partial<ProviderUpdate>
+): void => {
+	logger.debug(
+		{
+			providerId: id,
+			original_apiKey_present: existingProvider.apiKey !== null,
+			update_apiKey_present: "apiKey" in providerData,
+			update_apiKey_value_present:
+				providerData.apiKey !== undefined && providerData.apiKey !== null,
+		},
+		"API key update status",
+	);
+};
+
+/**
+ * Logs model updates
+ */
+const logModelUpdates = (
+	logger: Logger,
+	id: string,
+	models: ProviderUpdate["models"]
+): void => {
+	if (models && models.length > 0) {
+		logger.info(
+			{ providerId: id, modelCount: models.length },
+			"Updating provider models",
+		);
+	}
+};
+
+/**
+ * Fetches and logs rate limit information
+ */
+const fetchAndLogRateLimits = async (
+	logger: Logger,
+	id: string,
+	existingProvider: Provider,
+	rateLimits: ProviderUpdate["rateLimits"]
+): Promise<void> => {
+	if (!rateLimits) return;
+
+	// Query for existing rate limits
+	const existingRateLimitsQuery =
+		await db.query.providerRateLimits.findFirst({
+			where: eq(providerRateLimits.providerId, Number.parseInt(id)),
+		});
+
+	logger.info(
+		{
+			providerId: id,
+			provider: existingProvider.name,
+			existingRateLimits: existingRateLimitsQuery
+				? {
+						requestsPerMinute: existingRateLimitsQuery.requestsPerMinute,
+						tokensPerMinute: existingRateLimitsQuery.tokensPerMinute,
+					}
+				: { requestsPerMinute: null, tokensPerMinute: null },
+			newRateLimits: rateLimits,
+		},
+		"Updating provider rate limits",
+	);
+};
+
+/**
+ * Log the result of a successful provider update
+ */
+const logSuccessfulUpdate = (
+	logger: Logger,
+	id: string,
+	result: Provider | null
+): void => {
+	logger.info(
+		{
+			providerId: id,
+			provider: {
+				name: result?.name,
+				kind: result?.kind,
+			},
+		},
+		"Provider updated successfully",
+	);
+};
+
+/**
  * Update an existing provider
  */
 export const updateProvider = async (c: Context) => {
@@ -634,13 +797,7 @@ export const updateProvider = async (c: Context) => {
 		);
 
 		// Check if provider exists
-		const existingProvider = await db.query.providers.findFirst({
-			where: eq(providers.id, Number.parseInt(id)),
-			with: {
-				models: true,
-				rateLimits: true,
-			},
-		});
+		const existingProvider = await fetchExistingProvider(id);
 
 		if (!existingProvider) {
 			logger.debug({ id }, "Provider not found for update");
@@ -680,66 +837,27 @@ export const updateProvider = async (c: Context) => {
 		const { models, rateLimits, ...providerData } = data;
 
 		// Log API key status for debugging
-		logger.debug(
-			{
-				providerId: id,
-				original_apiKey_present: existingProvider.apiKey !== null,
-				update_apiKey_present: "apiKey" in providerData,
-				update_apiKey_value_present:
-					providerData.apiKey !== undefined && providerData.apiKey !== null,
-			},
-			"API key update status",
-		);
+		logApiKeyStatus(logger, id, existingProvider, providerData);
 
 		// Log field changes
 		logFieldChanges(logger, id, existingProvider, providerData);
 
 		// Log model and rate limit changes
-		if (models && models.length > 0) {
-			logger.info(
-				{ providerId: id, modelCount: models.length },
-				"Updating provider models",
-			);
-		}
-
-		if (rateLimits) {
-			// Query for existing rate limits
-			const existingRateLimitsQuery =
-				await db.query.providerRateLimits.findFirst({
-					where: eq(providerRateLimits.providerId, Number.parseInt(id)),
-				});
-
-			logger.info(
-				{
-					providerId: id,
-					provider: existingProvider.name,
-					existingRateLimits: existingRateLimitsQuery
-						? {
-								requestsPerMinute: existingRateLimitsQuery.requestsPerMinute,
-								tokensPerMinute: existingRateLimitsQuery.tokensPerMinute,
-							}
-						: { requestsPerMinute: null, tokensPerMinute: null },
-					newRateLimits: rateLimits,
-				},
-				"Updating provider rate limits",
-			);
-		}
+		logModelUpdates(logger, id, models);
+		
+		// Log rate limit changes if provided
+		await fetchAndLogRateLimits(logger, id, existingProvider, rateLimits);
 
 		// Update the provider in the database
 		const result = await db.transaction(async (tx) => {
 			return updateProviderInDatabase(tx, id, providerData, models, rateLimits);
 		});
 
-		logger.info(
-			{
-				providerId: id,
-				provider: {
-					name: result?.name,
-					kind: result?.kind,
-				},
-			},
-			"Provider updated successfully",
-		);
+		// Log successful update (only if result is not null)
+		if (result) {
+			logSuccessfulUpdate(logger, id, result);
+		}
+		
 		return c.json(result);
 	} catch (error) {
 		return handleProviderUpdateError(c, error);
@@ -757,11 +875,9 @@ export const deleteProvider = async (c: Context) => {
 
 	try {
 		// Check if provider exists
-		const existingProvider = await db.query.providers.findFirst({
-			where: eq(providers.id, Number.parseInt(id)),
-		});
+		const providerExists = await checkProviderExists(id);
 
-		if (!existingProvider) {
+		if (!providerExists) {
 			logger.debug({ id }, "Provider not found for deletion");
 			return c.json({ error: "Provider not found" }, 404);
 		}
