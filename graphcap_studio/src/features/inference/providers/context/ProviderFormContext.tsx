@@ -51,8 +51,8 @@ export function useProviderFormContext() {
 }
 
 interface ProviderFormProviderProps {
-	children: ReactNode;
-	value: ProviderFormContextType;
+	readonly children: ReactNode;
+	readonly value: ProviderFormContextType;
 }
 
 export function ProviderFormProvider({ children, value }: ProviderFormProviderProps) {

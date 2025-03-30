@@ -12,8 +12,8 @@ import { ProviderFormProvider } from "../../context/ProviderFormContext";
 type DialogType = null | "error" | "success" | "formError" | "save";
 
 interface ProviderFormContainerProps {
-	children: ReactNode;
-	initialData?: Partial<ProviderCreate | ProviderUpdate>;
+	readonly children: ReactNode;
+	readonly initialData?: Partial<ProviderCreate | ProviderUpdate>;
 }
 
 export function ProviderFormContainer({
@@ -70,7 +70,7 @@ export function ProviderFormContainer({
 				kind: newProvider.kind,
 				environment: newProvider.environment,
 				baseUrl: newProvider.baseUrl,
-				apiKey: newProvider.apiKey || "",
+				apiKey: newProvider.apiKey ?? "",
 				isEnabled: newProvider.isEnabled,
 				defaultModel: newProvider.defaultModel,
 				models: newProvider.models
@@ -179,7 +179,21 @@ export function ProviderFormContainer({
 	const handleSetMode = useCallback((newMode: "view" | "edit" | "create") => {
 		setMode(newMode);
 		setContextMode(newMode);
-	}, [setContextMode]);
+		
+		// When switching to create mode, reset the form to empty values
+		if (newMode === "create") {
+			reset({
+				name: "",
+				kind: "",
+				environment: "cloud",
+				baseUrl: "",
+				apiKey: "",
+				isEnabled: true,
+				defaultModel: "",
+				models: []
+			});
+		}
+	}, [setContextMode, reset]);
 
 	// Handle model selection with proper type handling
 	const handleSetSelectedModelId = useCallback((id: string | null) => {

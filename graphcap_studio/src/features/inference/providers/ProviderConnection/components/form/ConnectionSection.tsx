@@ -91,7 +91,7 @@ export function ConnectionSection() {
         control={control}
         render={({ field }) => {
           // Ensure we always have a defined string value
-          const value = field.value || "";
+          const value = field.value ?? "";
           return (
             <Field.Root invalid={!!errors.apiKey}>
               <Field.Label color={labelColor}>API Key</Field.Label>

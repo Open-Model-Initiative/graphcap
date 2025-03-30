@@ -218,7 +218,7 @@ export function toServerConfig(provider: Provider): ServerProviderConfig {
 		kind: provider.kind,
 		environment: provider.environment,
 		base_url: provider.baseUrl,
-		api_key: provider.apiKey || "",
+		api_key: provider.apiKey ??  "",
 		default_model: provider.defaultModel,
 		models: provider.models?.map((m) => m.name) || [],
 	};

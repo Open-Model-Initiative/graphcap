@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Button, Flex, Heading } from "@chakra-ui/react";
+import { Box, Flex, Heading } from "@chakra-ui/react";
 import { useProviderFormContext } from "../../context/ProviderFormContext";
 import { LoadingMessage } from "./LoadingMessage";
 import { ProviderActions } from "./ProviderActions";
 import { ProviderConnectionErrorDialog } from "./ProviderConnectionErrorDialog";
 import { ProviderConnectionSuccessDialog } from "./ProviderConnectionSuccessDialog";
 import { ProviderFormTabs } from "./ProviderFormTabs";
+import { AddProviderButton } from "./actions/AddProviderButton";
 import { ProviderFormSelect } from "./form/ProviderFormSelect";
 
 /**
@@ -20,11 +21,7 @@ export function ProviderFormView() {
 		error,
 		connectionDetails,
 		provider,
-		setMode	} = useProviderFormContext();
-
-	const handleAddProvider = () => {
-		setMode("create");
-	};
+	} = useProviderFormContext();
 	
 	return (
 		<form onSubmit={handleSubmit}>
@@ -36,13 +33,7 @@ export function ProviderFormView() {
 						<Box flex="1">
 							<ProviderFormSelect className="w-full" />
 						</Box>
-						<Button 
-							colorScheme="blue" 
-							size="sm"
-							onClick={handleAddProvider}
-						>
-							Add Provider
-						</Button>
+						<AddProviderButton />
 					</Flex>
 				</Box>
 				
@@ -61,7 +52,7 @@ export function ProviderFormView() {
 					isOpen={dialog === "formError"}
 					onClose={() => closeDialog()}
 					error={error}
-					providerName={provider?.name || "Provider"}
+					providerName={provider?.name ?? "Provider"}
 				/>
 
 				{/* Connection Error Dialog */}
@@ -69,14 +60,14 @@ export function ProviderFormView() {
 					isOpen={dialog === "error"}
 					onClose={() => closeDialog()}
 					error={error}
-					providerName={provider?.name || "Provider"}
+					providerName={provider?.name ?? "Provider"}
 				/>
 
 				{/* Success Dialog */}
 				<ProviderConnectionSuccessDialog
 					isOpen={dialog === "success"}
 					onClose={() => closeDialog()}
-					providerName={provider?.name || "Provider"}
+					providerName={provider?.name ?? "Provider"}
 					connectionDetails={connectionDetails}
 				/>
 			</Box>
