@@ -9,9 +9,9 @@ import { Box, Heading, Text } from "@chakra-ui/react";
 export type ModelItem = ModelOption;
 
 export interface ModelSelectorProps {
-	modelItems: ModelItem[];
-	selectedModelId: string | null;
-	setSelectedModelId: (id: string | null) => void;
+	readonly modelItems: ModelItem[];
+	readonly selectedModelId: string | null;
+	readonly setSelectedModelId: (id: string | null) => void;
 }
 
 /**

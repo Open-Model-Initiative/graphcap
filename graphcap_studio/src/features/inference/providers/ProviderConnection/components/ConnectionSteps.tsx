@@ -6,11 +6,11 @@ import { LuCheck, LuCircleAlert, LuSkipForward } from "react-icons/lu";
  * Component that displays connection test steps and their results
  */
 interface ConnectionStep {
-  step: string;
-  status: "success" | "failed" | "skipped" | "pending";
-  timestamp: string;
-  error?: string;
-  message?: string;
+	readonly step: string;
+	readonly status: "success" | "failed" | "skipped" | "pending";
+	readonly timestamp: string;
+	readonly error?: string;
+	readonly message?: string;
 }
 
 interface ConnectionStepsProps {
@@ -32,7 +32,7 @@ function StepIcon({ status }: { status: ConnectionStep["status"] }) {
 }
 
 function ConnectionStepResult({ step, labels }: { step: ConnectionStep; labels?: Record<string, string> }) {
-  const stepLabel = labels?.[step.step] || step.step;
+  const stepLabel = labels?.[step.step] ?? step.step;
 
   return (
     <HStack gap={3} align="flex-start">
@@ -67,4 +67,5 @@ export function ConnectionSteps({ steps, stepLabels = {} }: ConnectionStepsProps
   );
 }
 
-export type { ConnectionStep }; 
+export type { ConnectionStep };
+

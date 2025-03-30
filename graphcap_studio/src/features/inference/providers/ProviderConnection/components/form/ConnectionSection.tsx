@@ -19,7 +19,7 @@ import { useProviderFormContext } from "../../../context/ProviderFormContext";
  * Component for displaying and editing provider connection settings
  */
 export function ConnectionSection() {
-  const { control, errors, watch, mode, selectedProvider } =
+  const { control, errors, watch, mode, provider } =
     useProviderFormContext();
   const isEditing = mode === "edit" || mode === "create";
   const [showApiKey, setShowApiKey] = useState(false);
@@ -32,6 +32,14 @@ export function ConnectionSection() {
 
   // Toggle API key visibility
   const toggleShowApiKey = () => setShowApiKey(!showApiKey);
+
+  // Get API key display value
+  const getApiKeyDisplayValue = () => {
+    if (showApiKey) {
+      return provider?.apiKey;
+    }
+    return provider?.apiKey ? "••••••••••••••••" : "Not set";
+  };
 
   if (!isEditing) {
     return (
@@ -50,7 +58,7 @@ export function ConnectionSection() {
           <Group position="relative">
             <Input
               type={showApiKey ? "text" : "password"}
-              value={selectedProvider?.apiKey ? "••••••••••••••••" : "Not set"}
+              value={getApiKeyDisplayValue()}
               readOnly
               pe="4.5rem"
             />
