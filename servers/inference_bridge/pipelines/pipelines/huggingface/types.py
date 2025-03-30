@@ -151,13 +151,13 @@ class DatasetAnnotation:
     id: str
     content: str
     annotation: dict
-    manuallyAdjusted: bool
+    manually_adjusted: bool
     embedding: Optional[Any]
-    fromUser: str
-    fromTeam: str
-    createdAt: str
-    updatedAt: str
-    overallRating: Optional[Any]
+    from_user: str
+    from_team: str
+    created_at: str
+    updated_at: str
+    overall_rating: Optional[Any]
 
 
 @dataclass
@@ -172,18 +172,18 @@ class DatasetRow:
     status: str
     flags: int
     meta: dict
-    fromUser: str
-    fromTeam: str
+    from_user: str
+    from_team: str
     embeddings: List[Any]
-    createdAt: str
-    updatedAt: str
+    created_at: str
+    updated_at: str
     name: Optional[str]
     width: Optional[int]
     height: Optional[int]
     format: Optional[str]
     license: Optional[str]
-    licenseUrl: Optional[str]
-    contentAuthor: Optional[str]
+    license_url: Optional[str]
+    content_author: Optional[str]
     annotations: List[DatasetAnnotation]
     image_column: Optional[str]
 
