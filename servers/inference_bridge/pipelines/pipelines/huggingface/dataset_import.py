@@ -27,7 +27,8 @@ from datasets import load_dataset
 from huggingface_hub import hf_hub_download
 from tqdm import tqdm
 
-from .types import DatasetImportConfig, DatasetParquetUrlDownloadConfig, DatasetParseConfig
+from .types import (DatasetImportConfig, DatasetParquetUrlDownloadConfig,
+                    DatasetParseConfig)
 
 
 def _clone_with_git_lfs(
@@ -242,93 +243,152 @@ def dataset_download_urls(
         dataset_download: Path to the downloaded dataset
         config: Configuration for URL downloading
     """
-    input_dir = Path(dataset_download) / config.parquet_dir
-    if not input_dir.exists():
-        raise ValueError(f"Parquet directory not found at {input_dir}")
-
-    # Find all parquet files
-    parquet_files = list(input_dir.glob("*.parquet"))
-    if not parquet_files:
-        raise ValueError(f"No parquet files found in {input_dir}")
-
-    context.log.info(f"Found {len(parquet_files)} parquet files")
-
-    # Create output directory
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Track progress
+    input_dir, output_dir = _setup_directories(context, dataset_download, config)
+    parquet_files = _find_parquet_files(context, input_dir)
+    
     successful_downloads = 0
     failed_downloads = 0
     total_urls = 0
-
-    # Process each parquet file
+    
     for parquet_file in parquet_files:
-        context.log.info(f"Processing {parquet_file}")
-        df = pd.read_parquet(parquet_file)
-
-        context.log.info(f"Loaded parquet file with {len(df)} rows")
-        context.log.info(f"Columns: {df.columns.tolist()}")
-
-        if config.url_column not in df.columns:
-            raise ValueError(
-                f"URL column '{config.url_column}' not found in {parquet_file}. "
-                f"Available columns: {df.columns.tolist()}"
-            )
-
-        # Process each row
-        with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
-            future_to_url = {}
-
-            for idx, row in df.iterrows():
-                if idx % 1000 == 0:
-                    context.log.info(f"Processing row {idx}")
-
-                # Extract URLs using helper function
-                urls = _extract_urls(row[config.url_column])
-                if not urls:
-                    context.log.debug(f"Skipping row {idx}: no valid URLs")
-                    continue
-
-                # Use row ID as base filename
-                base_filename = row["id"]
-                if not base_filename:
-                    context.log.warning(f"Skipping row {idx}: no ID")
-                    continue
-
-                for i, url in enumerate(urls):
-                    # Generate unique filename for each URL
-                    filename = f"{base_filename}_{i}.{config.default_extension}"
-                    output_path = output_dir / filename
-
-                    # Skip if file exists and no overwrite
-                    if output_path.exists() and not config.overwrite_existing:
-                        context.log.debug(f"Skipping existing file: {output_path}")
-                        continue
-
-                    # Limit batch size for rate limiting
-                    if len(future_to_url) >= config.max_workers * 2:
-                        # Wait for some downloads to complete before adding more
-                        successful_downloads, failed_downloads = _process_completed_downloads(
-                            future_to_url, context, successful_downloads, failed_downloads
-                        )
-                        future_to_url = {}
-
-                    # Submit download task
-                    future = executor.submit(_download_url, url, output_path, context)
-                    future_to_url[future] = (url, output_path)
-                    total_urls += 1
-
-            # Process remaining downloads
-            if future_to_url:
-                successful_downloads, failed_downloads = _process_completed_downloads(
-                    future_to_url, context, successful_downloads, failed_downloads
-                )
-
+        df = _load_parquet_file(context, parquet_file, config)
+        download_results = _process_dataframe(context, df, output_dir, config)
+        
+        successful_downloads += download_results["successful"]
+        failed_downloads += download_results["failed"]
+        total_urls += download_results["total"]
+    
     # Log summary
     context.log.info(
         f"Download complete. Successful: {successful_downloads}, Failed: {failed_downloads}, Total: {total_urls}"
     )
+
+
+def _setup_directories(
+    context: dg.AssetExecutionContext, dataset_download: str, config: DatasetParquetUrlDownloadConfig
+) -> tuple[Path, Path]:
+    """Setup input and output directories for URL downloads."""
+    input_dir = Path(dataset_download) / config.parquet_dir
+    if not input_dir.exists():
+        raise ValueError(f"Parquet directory not found at {input_dir}")
+        
+    output_dir = Path(config.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    return input_dir, output_dir
+
+
+def _find_parquet_files(context: dg.AssetExecutionContext, input_dir: Path) -> list[Path]:
+    """Find parquet files in the input directory."""
+    parquet_files = list(input_dir.glob("*.parquet"))
+    if not parquet_files:
+        raise ValueError(f"No parquet files found in {input_dir}")
+        
+    context.log.info(f"Found {len(parquet_files)} parquet files")
+    return parquet_files
+
+
+def _load_parquet_file(
+    context: dg.AssetExecutionContext, parquet_file: Path, config: DatasetParquetUrlDownloadConfig
+) -> pd.DataFrame:
+    """Load and validate a parquet file."""
+    context.log.info(f"Processing {parquet_file}")
+    df = pd.read_parquet(parquet_file)
+    
+    context.log.info(f"Loaded parquet file with {len(df)} rows")
+    context.log.info(f"Columns: {df.columns.tolist()}")
+    
+    if config.url_column not in df.columns:
+        raise ValueError(
+            f"URL column '{config.url_column}' not found in {parquet_file}. "
+            f"Available columns: {df.columns.tolist()}"
+        )
+    
+    return df
+
+
+def _process_dataframe(
+    context: dg.AssetExecutionContext,
+    df: pd.DataFrame,
+    output_dir: Path,
+    config: DatasetParquetUrlDownloadConfig,
+) -> dict:
+    """Process a dataframe and download URLs."""
+    successful_downloads = 0
+    failed_downloads = 0
+    total_urls = 0
+    
+    with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
+        future_to_url = {}
+        
+        for idx, row in df.iterrows():
+            if idx % 1000 == 0:
+                context.log.info(f"Processing row {idx}")
+                
+            download_batch = _prepare_download_batch(context, row, output_dir, config)
+            if not download_batch:
+                continue
+                
+            for url, output_path in download_batch:
+                if len(future_to_url) >= config.max_workers * 2:
+                    # Process current batch before adding more
+                    results = _process_completed_downloads(
+                        future_to_url, context, successful_downloads, failed_downloads
+                    )
+                    successful_downloads, failed_downloads = results
+                    future_to_url = {}
+                
+                # Submit download task
+                future = executor.submit(_download_url, url, output_path, context)
+                future_to_url[future] = (url, output_path)
+                total_urls += 1
+        
+        # Process remaining downloads
+        if future_to_url:
+            results = _process_completed_downloads(
+                future_to_url, context, successful_downloads, failed_downloads
+            )
+            successful_downloads, failed_downloads = results
+    
+    return {
+        "successful": successful_downloads,
+        "failed": failed_downloads,
+        "total": total_urls
+    }
+
+
+def _prepare_download_batch(
+    context: dg.AssetExecutionContext,
+    row: pd.Series,
+    output_dir: Path,
+    config: DatasetParquetUrlDownloadConfig,
+) -> list[tuple[str, Path]]:
+    """Prepare a batch of URLs to download for a single row."""
+    # Extract URLs
+    urls = _extract_urls(row[config.url_column])
+    if not urls:
+        return []
+    
+    # Use row ID as base filename
+    base_filename = row.get("id")
+    if not base_filename:
+        context.log.warning("Skipping row: no ID")
+        return []
+    
+    download_batch = []
+    for i, url in enumerate(urls):
+        # Generate unique filename for each URL
+        filename = f"{base_filename}_{i}.{config.default_extension}"
+        output_path = output_dir / filename
+        
+        # Skip if file exists and no overwrite
+        if output_path.exists() and not config.overwrite_existing:
+            context.log.debug(f"Skipping existing file: {output_path}")
+            continue
+            
+        download_batch.append((url, output_path))
+    
+    return download_batch
 
 
 def _process_completed_downloads(
