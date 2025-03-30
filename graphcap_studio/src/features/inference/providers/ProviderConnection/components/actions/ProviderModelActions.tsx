@@ -15,10 +15,14 @@ export function ProviderModelActions() {
   const handleAddModel = () => {
     if (!newModelName.trim() || !provider) return;
 
-    // Only create a simple model object with name and isEnabled
+    // Create a complete model object with all required properties
     const newModel = {
+      id: crypto.randomUUID(),
       name: newModelName.trim(),
-      isEnabled: true
+      isEnabled: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      providerId: provider.id || ""
     };
 
     // Update the provider with the new model
@@ -65,7 +69,7 @@ export function ProviderModelActions() {
           <Heading size="sm">Current Models</Heading>
           {currentModels.map((model, index) => (
             <Flex 
-              key={index}
+              key={`model-${model.name}-${index}`}
               justifyContent="space-between"
               alignItems="center"
               p="2"

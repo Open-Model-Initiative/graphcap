@@ -81,14 +81,19 @@ export function ProviderConnectionSuccessDialog({
 	}
 
 	const { result } = connectionDetails;
+	
+	if (typeof result === 'boolean') {
+		return null;
+	}
+	
 	const steps = result.diagnostics.connection_steps;
 	const warnings = result.diagnostics.warnings;
 	const details = result.details;
 
 	// Check if any required steps were skipped or failed
-	const hasSkippedSteps = steps.some((step) => step.status === "skipped");
-	const hasFailedSteps = steps.some((step) => step.status === "failed");
-	const allStepsSuccessful = steps.every((step) => step.status === "success");
+	const hasSkippedSteps = steps.some((step: ConnectionStep) => step.status === "skipped");
+	const hasFailedSteps = steps.some((step: ConnectionStep) => step.status === "failed");
+	const allStepsSuccessful = steps.every((step: ConnectionStep) => step.status === "success");
 
 	// Determine the overall status
 	const getStatusInfo = () => {
@@ -118,6 +123,14 @@ export function ProviderConnectionSuccessDialog({
 	};
 
 	const status = getStatusInfo();
+	
+	const getButtonColorScheme = () => {
+		if (allStepsSuccessful) return "green";
+		if (hasFailedSteps) return "red";
+		return "yellow";
+	};
+	
+	const buttonColorScheme = getButtonColorScheme();
 
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={(e) => !e.open && onClose()}>
@@ -156,7 +169,7 @@ export function ProviderConnectionSuccessDialog({
 											<Text fontWeight="medium" color="yellow.600">
 												Warnings:
 											</Text>
-											{warnings.map((warning) => (
+											{warnings.map((warning: { warning_type: string; message: string }) => (
 												<Text
 													key={`${warning.warning_type}-${warning.message}`}
 													fontSize="sm"
@@ -186,13 +199,7 @@ export function ProviderConnectionSuccessDialog({
 
 						<Dialog.Footer>
 							<Button
-								colorScheme={
-									allStepsSuccessful
-										? "green"
-										: hasFailedSteps
-											? "red"
-											: "yellow"
-								}
+								colorScheme={buttonColorScheme}
 								onClick={onClose}
 							>
 								Close

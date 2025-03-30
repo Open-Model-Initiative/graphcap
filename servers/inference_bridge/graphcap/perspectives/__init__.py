@@ -11,17 +11,14 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from .constants import WORKSPACE_PERSPECTIVES_DIR
-from .perspective_loader import (
-    # Classes
+from .perspective_loader import (  # Classes; Models; Functions
     JsonPerspectiveProcessor,
     ModuleConfig,
     PerspectiveConfig,
     PerspectiveModule,
     PerspectiveSettings,
-    # Models
     SchemaField,
     get_all_modules,
-    # Functions
     get_perspective_directories,
     load_all_perspectives,
     load_module_settings,
@@ -55,7 +52,7 @@ except Exception as e:
     logger.exception(e)
 
 
-def get_perspective(perspective_name: str, **kwargs):
+def get_perspective(perspective_name: str):
     """
     Get a perspective processor by name.
 

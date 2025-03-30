@@ -26,6 +26,7 @@ import React, {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 	type ReactNode,
 } from "react";
@@ -309,7 +310,7 @@ export function PerspectivesDataProvider({
 	}, [refetchProviders]);
 
 	// Refetch perspectives and return the data
-	const refetchPerspectives = async (): Promise<Perspective[]> => {
+	const refetchPerspectives = useCallback(async (): Promise<Perspective[]> => {
 		if (!isServerConnected) {
 			throw new Error(
 				"Cannot refetch perspectives: Server connection not established",
@@ -323,7 +324,7 @@ export function PerspectivesDataProvider({
 			console.error("Error refetching perspectives:", error);
 			throw error;
 		}
-	};
+	}, [isServerConnected, refetchPerspectivesQuery]);
 
 	// Load captions from localStorage when image changes
 	useEffect(() => {
@@ -507,13 +508,13 @@ export function PerspectivesDataProvider({
 
 			// Always return the complete perspective data object
 			// to preserve options and metadata
-			return perspectiveData as Record<string, unknown> | null;
+			return perspectiveData ? { ...perspectiveData } as Record<string, unknown> : null;
 		},
 		[captions],
 	);
 
 	// Create consolidated context value
-	const value: PerspectivesDataContextType = {
+	const value = useMemo<PerspectivesDataContextType>(() => ({
 		// Provider state
 		selectedProvider,
 		availableProviders,
@@ -565,7 +566,34 @@ export function PerspectivesDataProvider({
 		togglePerspectiveVisibility,
 		isPerspectiveVisible,
 		setAllPerspectivesVisible,
-	};
+	}), [
+		selectedProvider,
+		availableProviders,
+		isGeneratingAll,
+		handleProviderChange,
+		fetchProviders,
+		isLoadingProviders,
+		providerError,
+		perspectivesData,
+		schemas,
+		isLoadingPerspectives,
+		perspectivesError,
+		refetchPerspectives,
+		captions,
+		generatedPerspectives,
+		generatingPerspectives.length,
+		isServerConnected,
+		generationOptions.options,
+		currentImage,
+		generatePerspective,
+		isPerspectiveGenerated,
+		isPerspectiveGenerating,
+		getPerspectiveData,
+		hiddenPerspectives,
+		togglePerspectiveVisibility,
+		isPerspectiveVisible,
+		setAllPerspectivesVisible
+	]);
 
 	return (
 		<PerspectivesDataContext.Provider value={value}>

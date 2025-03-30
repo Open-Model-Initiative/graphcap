@@ -60,7 +60,7 @@ class ProviderFactory:
             return self._client_cache[cache_key]
 
         logger.info(f"Creating new client for provider: {name}")
-        logger.info(f"Provider config details:")
+        logger.info("Provider config details:")
         logger.info(f"  - kind: {kind}")
         logger.info(f"  - environment: {environment}")
         logger.info(f"  - base_url: {base_url}")
@@ -90,7 +90,7 @@ class ProviderFactory:
 
         except Exception as e:
             logger.error(f"Failed to create client for {name}: {str(e)}")
-            logger.error(f"Provider config details:")
+            logger.error("Provider config details:")
             logger.error(f"  - kind: {kind}")
             logger.error(f"  - environment: {environment}")
             logger.error(f"  - base_url: {base_url}")

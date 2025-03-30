@@ -12,7 +12,6 @@ import {
  * Panel content that requires context
  */
 function PanelContent() {
-	const { colorMode } = useColorMode();
 
 	return (
 		<Flex direction="column" h="full">

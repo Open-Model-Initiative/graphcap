@@ -7,10 +7,7 @@ import dagster as dg
 from graphcap.perspectives.types import PerspectiveCaptionOutput
 from huggingface_hub import HfApi, upload_file
 
-from .dataset_manifest import (
-    create_dataset_manifest,
-    load_perspective_results_from_manifest,
-)
+from .dataset_manifest import create_dataset_manifest, load_perspective_results_from_manifest
 from .dataset_prep import create_huggingface_dataset
 from .dataset_readme import generate_readme_content
 from .perspective_export import upload_perspective_dataset_to_huggingface
@@ -92,7 +89,6 @@ def huggingface_upload_manifest(
     if not manifest_path_str:
         raise ValueError("Manifest path not found in dataset_export_manifest metadata.")
 
-    # export_dir = Path(str(export_dir_str))
     manifest_path = Path(str(manifest_path_str))
 
     # Load perspective results from manifest
