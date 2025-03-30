@@ -5,7 +5,10 @@
  * This module provides utilities for persisting generation options to localStorage.
  */
 
-import { GenerationOptions, GenerationOptionsSchema } from "./schema";
+import {
+	type GenerationOptions,
+	GenerationOptionsSchema,
+} from "@/types/generation-option-types";
 
 /**
  * Storage key for saving generation options in localStorage
@@ -35,6 +38,7 @@ export function loadGenerationOptions(): GenerationOptions | null {
 		if (!serialized) return null;
 
 		const parsed = JSON.parse(serialized);
+		
 		// Validate the loaded data against the schema
 		return GenerationOptionsSchema.parse(parsed);
 	} catch (error) {

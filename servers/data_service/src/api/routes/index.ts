@@ -5,7 +5,7 @@
  * This file exports route definitions for client consumption.
  */
 
+import { providerRoutes } from '../../features/provider_config/routes';
 import { batchQueueRoutes } from './batch_queue';
-import { providerRoutes } from './providers';
 
 export { providerRoutes, batchQueueRoutes }; 

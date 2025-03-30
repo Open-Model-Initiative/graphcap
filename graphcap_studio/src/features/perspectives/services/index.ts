@@ -17,7 +17,6 @@ export { perspectivesApi } from "./api";
 
 // Export hooks from the hooks directory
 export {
-	usePerspectives,
-	useGeneratePerspectiveCaption,
-	useImagePerspectives,
+	useGeneratePerspectiveCaption, usePerspectives
 } from "@/features/perspectives/hooks";
+

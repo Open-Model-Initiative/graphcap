@@ -49,7 +49,7 @@ exclude = [
 ]
 
 # Source directories
-src = ["./servers/inference_server"]
+src = ["./servers/inference_bridge"]
 
 # Same as Black
 line-length = 120

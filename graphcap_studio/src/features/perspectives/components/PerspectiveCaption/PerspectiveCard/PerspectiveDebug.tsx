@@ -1,4 +1,5 @@
 import { ClipboardButton } from "@/components/ui/buttons";
+import type { PerspectiveData, PerspectiveSchema } from "@/types";
 import { Box, Stack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 /**
@@ -8,7 +9,6 @@ import { Box, Stack } from "@chakra-ui/react";
  * including its data, options, and metadata.
  */
 import { useEffect } from "react";
-import type { PerspectiveData, PerspectiveSchema } from "../../../types";
 import {
 	DataStatistics,
 	MetadataSection,
@@ -49,9 +49,7 @@ function processDebugInfo(
 			model: perspectiveData?.model,
 			version: perspectiveData?.version,
 			config_name: perspectiveData?.config_name ?? schema.name,
-			generatedAt: data.metadata?.timestamp
-				? new Date(data.metadata.timestamp).toISOString()
-				: null,
+			generatedAt: data.metadata?.generatedAt ?? null,
 		},
 		// Generation options - directly from the PerspectiveData interface
 		options: perspectiveData?.options || null,

@@ -6,11 +6,11 @@
  */
 
 export * from "./PerspectiveCaption/EmptyPerspectives";
-export * from "./PerspectivesErrorState";
-export * from "./PerspectiveManagement/PerspectiveFilterPanel";
 export * from "./PerspectiveCaption/ErrorMessage";
+export * from "./PerspectiveCaption/PerspectiveActions";
+export { MetadataDisplay } from "./PerspectiveCaption/PerspectiveCard/MetadataDisplay";
 export { PerspectiveHeader } from "./PerspectiveCaption/PerspectiveNavigation/PerspectiveHeader";
 export { PerspectivesPager } from "./PerspectiveCaption/PerspectiveNavigation/PerspectivesPager";
-export { MetadataDisplay } from "./PerspectiveCaption/PerspectiveCard/MetadataDisplay";
-export * from "./PerspectiveCaption/PerspectiveActions";
 export * from "./PerspectiveManagement/PerspectiveManagementPanel";
+export * from "./PerspectivesErrorState";
+

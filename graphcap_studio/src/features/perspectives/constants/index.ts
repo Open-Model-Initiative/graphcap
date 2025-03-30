@@ -54,7 +54,6 @@ export const perspectivesQueryKeys = {
 // Constants for API endpoints
 export const API_ENDPOINTS = {
 	LIST_PERSPECTIVES: "/perspectives/list",
-	GENERATE_CAPTION: "/perspectives/caption",
 	VIEW_IMAGE: "/images/view",
 	REST_LIST_PERSPECTIVES: "/perspectives/list",
 	REST_GENERATE_CAPTION: "/perspectives/caption-from-path",
@@ -72,6 +71,5 @@ export const CACHE_TIMES = {
 // Default values
 export const DEFAULTS = {
 	SERVER_URL: "http://localhost:32100",
-	PROVIDER: "gemini",
-	DEFAULT_FILENAME: "image.jpg",
+
 };

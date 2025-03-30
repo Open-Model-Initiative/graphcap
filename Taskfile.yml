@@ -3,7 +3,7 @@ dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 includes:
   data:      ./servers/data_service/Taskfile.data.yml
-  inference: ./servers/inference_server/server/Taskfile.inference.yml
+  inference: ./servers/inference_bridge/server/Taskfile.inference.yml
   studio:    ./graphcap_studio/Taskfile.studio.yml
 
 tasks:

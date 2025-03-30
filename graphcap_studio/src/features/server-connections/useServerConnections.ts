@@ -1,3 +1,4 @@
+import type { ServerConnection } from "@/types/server-connection-types";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -7,11 +8,10 @@ import {
 	SERVER_NAMES,
 } from "./constants";
 import { checkServerHealthById } from "./services/serverConnections";
-import { ServerConnection } from "./types";
 
 // Local storage keys
-const STORAGE_KEY = "graphcap-server-connections";
-const VERSION_KEY = "graphcap-server-connections-version";
+const STORAGE_KEY = "inference-bridge-connections";
+const VERSION_KEY = "inference-bridge-connections-version";
 
 // Current version of the connections schema
 const CURRENT_VERSION = 1;
@@ -30,12 +30,12 @@ const getDefaultConnections = (): ServerConnection[] => {
 				DEFAULT_URLS[SERVER_IDS.MEDIA_SERVER],
 		},
 		{
-			id: SERVER_IDS.GRAPHCAP_SERVER,
-			name: SERVER_NAMES[SERVER_IDS.GRAPHCAP_SERVER],
+			id: SERVER_IDS.INFERENCE_BRIDGE,
+			name: SERVER_NAMES[SERVER_IDS.INFERENCE_BRIDGE],
 			status: "disconnected",
 			url:
 				import.meta.env.VITE_API_URL ||
-				DEFAULT_URLS[SERVER_IDS.GRAPHCAP_SERVER],
+				DEFAULT_URLS[SERVER_IDS.INFERENCE_BRIDGE],
 		},
 		{
 			id: SERVER_IDS.DATA_SERVICE,
@@ -146,7 +146,7 @@ const saveConnectionsToStorage = (connections: ServerConnection[]): void => {
  * Custom hook for managing server connections
  *
  * This hook provides state and handlers for managing server connections
- * such as Media Server and GraphCap Server.
+ * such as Media Server and Inference Bridge.
  */
 export function useServerConnections() {
 	// Initialize connections with values from local storage or defaults

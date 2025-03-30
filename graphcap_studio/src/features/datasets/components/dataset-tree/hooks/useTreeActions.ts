@@ -3,7 +3,7 @@
 import { useNavigate } from "@tanstack/react-router";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from "react";
-import { TreeContextMenuAction, TreeItemData } from "../types";
+import type { TreeContextMenuAction, TreeItemData } from "../types";
 
 /**
  * Custom hook for common tree actions like deletion, navigation, etc.

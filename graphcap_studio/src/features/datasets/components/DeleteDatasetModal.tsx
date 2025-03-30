@@ -1,7 +1,7 @@
 import { useDeleteDataset } from "@/services/dataset";
+import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
-import { toast } from "sonner";
 
 type DeleteDatasetModalProps = {
 	readonly isOpen: boolean;
@@ -32,7 +32,7 @@ export function DeleteDatasetModal({
 
 		try {
 			await deleteDatasetMutation.mutateAsync(datasetName);
-			toast.success(`Dataset "${datasetName}" deleted successfully`);
+			toast.success({ title: `Dataset "${datasetName}" deleted successfully` });
 			onDatasetDeleted();
 			onClose();
 		} catch (error) {

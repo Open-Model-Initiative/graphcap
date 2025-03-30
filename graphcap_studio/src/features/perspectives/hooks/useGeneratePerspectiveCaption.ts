@@ -7,15 +7,21 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import type { ServerConnection } from "@/features/server-connections/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_ENDPOINTS, perspectivesQueryKeys } from "../services/constants";
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import type { CaptionResponse } from "@/types";
 import {
-	ensureWorkspacePath,
-	getGraphCapServerUrl,
-	handleApiError,
-} from "../services/utils";
-import type { CaptionOptions, CaptionResponse } from "../types";
+	type GenerationOptions,
+	formatApiOptions
+} from "@/types/generation-option-types";
+import {
+	type Provider,
+	toServerConfig,
+} from "@/types/provider-config-types";
+import type { ServerConnection } from "@/types/server-connection-types";
+import { toast } from "@/utils/toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { perspectivesQueryKeys } from "../services/constants";
+import { ensureWorkspacePath, handleApiError } from "../services/utils";
 
 /**
  * Hook to generate a perspective caption for an image
@@ -32,13 +38,13 @@ export function useGeneratePerspectiveCaption() {
 		{
 			perspective: string;
 			imagePath: string;
-			provider_name: string;
-			options?: CaptionOptions;
+			provider: Provider;
+			options: GenerationOptions;
 		}
 	>({
-		mutationFn: async ({ perspective, imagePath, provider_name, options }) => {
+		mutationFn: async ({ perspective, imagePath, provider, options }) => {
 			const graphcapServerConnection = connections.find(
-				(conn: ServerConnection) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+				(conn: ServerConnection) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 			);
 			const isConnected = graphcapServerConnection?.status === "connected";
 
@@ -50,58 +56,47 @@ export function useGeneratePerspectiveCaption() {
 				throw new Error("Caption generation options are required");
 			}
 
-			const baseUrl = getGraphCapServerUrl(connections);
-			if (!baseUrl) {
-				throw new Error("No GraphCap server URL available");
+			// Check if a model is specified in the options
+			if (!options.model_name) {
+				throw new Error("A model must be specified in the options");
 			}
+
+			// Use the inference bridge client instead of direct fetch
+			const client = createInferenceBridgeClient(connections);
 
 			// Normalize the image path to ensure it starts with /workspace
 			const normalizedImagePath = ensureWorkspacePath(imagePath);
+
+			// Convert provider to server config
+			const providerConfig = toServerConfig(provider);
 
 			console.log(
 				`Generating caption for image: ${normalizedImagePath} using perspective: ${perspective}`,
 			);
 
-			const endpoint = API_ENDPOINTS.REST_GENERATE_CAPTION;
-			const url = `${baseUrl}${endpoint}`;
-
+			// Format options for API request
+			const apiOptions = formatApiOptions(options);
+			
 			// Prepare the request body according to the server's expected format
 			const requestBody = {
 				perspective,
 				image_path: normalizedImagePath,
-				provider: provider_name,
-				max_tokens: options.max_tokens,
-				temperature: options.temperature,
-				top_p: options.top_p,
-				repetition_penalty: options.repetition_penalty,
-				context: options.context || [],
-				global_context: options.global_context ?? "",
-				resize: options.resize ?? false,
-				resize_resolution: options.resize_resolution ?? "HD_720P",
+				provider: provider.name,
+				model: options.model_name, // Use model_name from GenerationOptions
+				provider_config: providerConfig, // Include the full provider configuration
+				...apiOptions, // Spread the formatted API options
 			};
 
-			console.log(`Sending caption generation request to: ${url}`, {
+			console.log("Sending caption generation request using API client", {
 				perspective,
 				image_path: normalizedImagePath,
-				provider: provider_name,
-				options: {
-					max_tokens: requestBody.max_tokens,
-					temperature: requestBody.temperature,
-					top_p: requestBody.top_p,
-					repetition_penalty: requestBody.repetition_penalty,
-					context: requestBody.context,
-					global_context: requestBody.global_context,
-					resize: requestBody.resize,
-					resize_resolution: requestBody.resize_resolution,
-				},
+				provider: provider.name,
+				model: options.model_name, // Log the model_name from options
+				options: apiOptions,
 			});
 
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(requestBody),
+			const response = await client.perspectives["caption-from-path"].$post({
+				json: requestBody,
 			});
 
 			if (!response.ok) {
@@ -140,6 +135,10 @@ export function useGeneratePerspectiveCaption() {
 		},
 		onError: (error) => {
 			console.error("Caption generation failed", error);
+			toast.error({
+				title: "Caption generation failed",
+				description: error.message,
+			});
 		},
 	});
 }

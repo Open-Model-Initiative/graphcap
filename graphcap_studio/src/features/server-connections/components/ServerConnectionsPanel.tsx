@@ -1,7 +1,7 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import { CONNECTION_STATUS } from "@/features/server-connections/constants";
-import { ServerConnectionsPanelProps } from "@/features/server-connections/types";
+import type { ServerConnectionsPanelProps } from "@/types/server-connection-types";
 import { Box, Button, Flex, Heading, Spinner, Stack } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { memo, useMemo } from "react";

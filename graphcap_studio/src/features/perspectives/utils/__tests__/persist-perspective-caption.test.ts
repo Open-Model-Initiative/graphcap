@@ -3,8 +3,8 @@
  * Unit tests for perspective caption persistence utilities
  */
 
+import type { PerspectiveData } from "@/types/perspective-types";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { PerspectiveData } from "../../types";
 import {
 	clearAllPerspectiveCaptions,
 	deletePerspectiveCaption,

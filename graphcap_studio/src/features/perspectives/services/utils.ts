@@ -5,29 +5,34 @@
  * This module provides utility functions for the perspectives service.
  */
 
-import { DEFAULTS } from "@/features/perspectives/constants/index";
 import type { ServerConnection } from "@/features/perspectives/types";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 
 /**
- * Get the GraphCap Server URL from server connections context
+ * Get the Inference Bridge URL from server connections context
  */
 export function getGraphCapServerUrl(connections: ServerConnection[]): string {
-	const graphcapServerConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+	const serverConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 
-	// Get URL from connection, environment variable, or default
+	// Use connection URL or fallback to environment variable or default
 	const serverUrl =
-		graphcapServerConnection?.url ??
-		import.meta.env.VITE_GRAPHCAP_SERVER_URL ??
-		import.meta.env.VITE_API_URL ??
-		DEFAULTS.SERVER_URL;
+		serverConnection?.url ??
+		import.meta.env.VITE_INFERENCE_BRIDGE_URL ??
+		"http://localhost:32100";
 
-	// Log the server URL being used for debugging
-	console.debug(`Using GraphCap server URL: ${serverUrl}`);
-
+	console.debug(`Using Inference Bridge URL: ${serverUrl}`);
 	return serverUrl;
+}
+
+/**
+ * Get the full Inference Bridge API URL (including /api/v1)
+ */
+export function getInferenceBridgeApiUrl(connections: ServerConnection[]): string {
+	const baseUrl = getGraphCapServerUrl(connections);
+	// Ensure the URL doesn't already have /api/v1
+	return baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
 }
 
 /**

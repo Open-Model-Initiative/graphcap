@@ -170,7 +170,7 @@ export function PerspectiveModuleFilter({
 						alignItems="center"
 						justifyContent="center"
 						color={buttonColor}
-						width="20px"
+						width="60px"
 						height="20px"
 						borderWidth="1px"
 						borderColor="currentColor"
@@ -178,7 +178,7 @@ export function PerspectiveModuleFilter({
 						ml={1}
 						_hover={{ bg: hoverBgColor }}
 					>
-						→
+						View →
 					</Box>
 				</Link>
 			</Flex>

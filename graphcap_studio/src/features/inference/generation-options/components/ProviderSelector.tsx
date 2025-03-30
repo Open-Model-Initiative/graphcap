@@ -5,14 +5,7 @@
  * A component for selecting an inference provider.
  */
 
-import {
-	SelectContent,
-	SelectItem,
-	SelectRoot,
-	SelectTrigger,
-	SelectValueText,
-} from "@/components/ui/select";
-import { Box, createListCollection } from "@chakra-ui/react";
+import { ProviderSelector as CommonProviderSelector, type ProviderOption } from "@/components/common_inference/ProviderSelector";
 
 export interface Provider {
 	id: number;
@@ -44,55 +37,25 @@ export function ProviderSelector({
 	placeholder = "Select provider",
 	className,
 }: ProviderSelectorProps) {
-	// Convert providers to the format expected by SelectRoot
-	const providerItems = providers.map((provider) => ({
+	// Convert providers to ProviderOption format
+	const providerOptions: ProviderOption[] = providers.map((provider) => ({
 		label: provider.name,
 		value: provider.name,
+		id: provider.id,
 	}));
 
-	const providerCollection = createListCollection({
-		items: providerItems,
-	});
-
-	// Convert selectedProvider to string array format required by SelectRoot
-	const value = selectedProvider ? [selectedProvider] : [];
-
-	const handleValueChange = (details: any) => {
-		if (details.value && details.value.length > 0) {
-			onChange(details.value[0]);
-		} else {
-			onChange("");
-		}
-	};
-
-	const boxProps = {
-		...(maxWidth ? { maxWidth } : {}),
-		...(minWidth ? { minWidth } : {}),
-		...(width ? { width } : {}),
-		className,
-	};
-
 	return (
-		<Box {...boxProps}>
-			<SelectRoot
-				collection={providerCollection}
-				value={value}
-				onValueChange={handleValueChange}
-				disabled={isDisabled}
-				positioning={{ placement: "top", flip: false }}
-				size={size}
-			>
-				<SelectTrigger>
-					<SelectValueText placeholder={placeholder} />
-				</SelectTrigger>
-				<SelectContent>
-					{providerItems.map((item) => (
-						<SelectItem key={item.value} item={item}>
-							{item.label}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</SelectRoot>
-		</Box>
+		<CommonProviderSelector
+			options={providerOptions}
+			value={selectedProvider}
+			onChange={onChange}
+			isDisabled={isDisabled}
+			maxWidth={maxWidth}
+			minWidth={minWidth}
+			width={width}
+			size={size}
+			placeholder={placeholder}
+			className={className}
+		/>
 	);
 }

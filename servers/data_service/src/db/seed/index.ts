@@ -6,8 +6,8 @@
  * Add new seed operations here in the desired order.
  */
 
+import { seedProviders } from '../../features/provider_config/seed_providers';
 import { logger } from '../../utils/logger';
-import { seedProviders } from './providers';
 
 /**
  * Main seed function that orchestrates all seeding operations

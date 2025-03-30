@@ -1,20 +1,18 @@
-import { useProviderFormContext } from "./context";
+import type { ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
-import { ProviderSelect } from "./form";
-
-type ProvidersListProps = {
-	readonly onSelectProvider: (id: number) => void;
-};
+import { useProviders } from "../services/providers";
+import { ProviderFormSelect } from "./ProviderConnection/components/form/ProviderFormSelect";
+import { ProviderFormContainer } from "./ProviderConnection/containers/ProviderFormContainer";
 
 /**
  * Component for displaying a list of providers as a dropdown
+ * This component includes the necessary context providers
  */
-export default function ProvidersList({
-	onSelectProvider,
-}: ProvidersListProps) {
-	const { providers } = useProviderFormContext();
+export default function ProvidersList() {
+	const { data: providers = [], isLoading } = useProviders();
 
-	if (providers.length === 0) {
+	// No need to check context.providers as we fetch directly here
+	if (providers.length === 0 && !isLoading) {
 		return (
 			<div className="p-4 text-center">
 				<p className="text-sm text-gray-500">No providers available</p>
@@ -22,9 +20,18 @@ export default function ProvidersList({
 		);
 	}
 
+	// Create a simple handler for form submission - just updates the global context
+	const handleSubmit = async (data: ProviderCreate | ProviderUpdate) => {
+		// This is a simple wrapper, so we don't actually need to do anything on submit
+		console.log("Provider selected in list:", data);
+	};
+
 	return (
 		<div className="p-4">
-			<ProviderSelect onChange={onSelectProvider} className="w-full" />
+			{/* Wrap in provider form container to provide the necessary context */}
+			<ProviderFormContainer initialData={{}} onSubmit={handleSubmit}>
+				<ProviderFormSelect className="w-full" />
+			</ProviderFormContainer>
 		</div>
 	);
 }

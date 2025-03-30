@@ -5,6 +5,7 @@
  * This module exports all components for generation options.
  */
 
-export * from "./GenerationOptionsPopover";
-export * from "./GenerationOptionsButton";
+export * from "./fields";
+export * from "./GenerationOptionsPanel";
 export * from "./ProviderSelector";
+

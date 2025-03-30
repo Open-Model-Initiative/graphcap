@@ -1,0 +1,1 @@
+ALTER TABLE "providers" DROP COLUMN IF EXISTS "env_var";

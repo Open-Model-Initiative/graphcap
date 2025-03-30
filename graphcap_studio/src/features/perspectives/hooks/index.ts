@@ -9,10 +9,9 @@
 export { usePerspectiveUI } from "./usePerspectiveUI";
 
 // API Hooks
-export { usePerspectives } from "./usePerspectives";
-export { usePerspectiveModules } from "./usePerspectiveModules";
 export { useGeneratePerspectiveCaption } from "./useGeneratePerspectiveCaption";
-export { useImagePerspectives } from "./useImagePerspectives";
+export { usePerspectiveModules } from "./usePerspectiveModules";
+export { usePerspectives } from "./usePerspectives";
 
 
 // Utilities

@@ -1,6 +1,6 @@
 import { Status } from "@/components/ui/status";
 import { CONNECTION_STATUS } from "@/features/server-connections/constants";
-import { ConnectionStatusIndicatorProps } from "@/features/server-connections/types";
+import type { ConnectionStatusIndicatorProps } from "@/types/server-connection-types";
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from "react";
 

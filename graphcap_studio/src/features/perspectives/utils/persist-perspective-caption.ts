@@ -7,7 +7,7 @@
  * and perspective name.
  */
 
-import { PerspectiveData } from "../types";
+import type { PerspectiveData } from "@/types/perspective-types";
 
 /**
  * Storage key prefix for saving perspective captions in localStorage

@@ -58,7 +58,7 @@ export const DEFAULTS = {
 	/**
 	 * Default server URL
 	 */
-	SERVER_URL: "http://localhost:32100/api",
+	SERVER_URL: "http://localhost:32100/",
 };
 
 /**

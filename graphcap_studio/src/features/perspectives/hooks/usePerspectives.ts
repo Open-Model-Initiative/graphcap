@@ -8,16 +8,16 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import type { ServerConnection } from "@/features/server-connections/types";
+import { createInferenceBridgeClient } from "@/features/server-connections/services/apiClients";
+import type { Perspective, PerspectiveListResponse } from "@/types";
+import type { ServerConnection } from "@/types/server-connection-types";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
-	API_ENDPOINTS,
 	CACHE_TIMES,
-	perspectivesQueryKeys,
+	perspectivesQueryKeys
 } from "../services/constants";
-import { getGraphCapServerUrl, handleApiError } from "../services/utils";
-import type { Perspective, PerspectiveListResponse } from "../types";
+import { handleApiError } from "../services/utils";
 
 /**
  * Custom error class for perspective fetching errors
@@ -51,7 +51,7 @@ export class PerspectiveError extends Error {
 export function usePerspectives() {
 	const { connections } = useServerConnectionsContext();
 	const graphcapServerConnection = connections.find(
-		(conn: ServerConnection) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
+		(conn: ServerConnection) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isConnected = graphcapServerConnection?.status === "connected";
 
@@ -68,33 +68,29 @@ export function usePerspectives() {
 					});
 				}
 
-				const baseUrl = getGraphCapServerUrl(connections);
-				if (!baseUrl) {
-					console.warn("No GraphCap server URL available");
-					throw new PerspectiveError("No GraphCap server URL available", {
-						code: "MISSING_SERVER_URL",
-						context: { connections },
-					});
+				// Use the inference bridge client instead of direct fetch
+				const client = createInferenceBridgeClient(connections);
+
+				console.debug("Fetching perspectives from server using API client");
+
+				try {
+					const response = await client.perspectives.list.$get();
+
+					if (!response.ok) {
+						return handleApiError(response, "Failed to fetch perspectives");
+					}
+
+					const data = (await response.json()) as PerspectiveListResponse;
+
+					console.debug(
+						`Successfully fetched ${data.perspectives.length} perspectives`,
+					);
+
+					return data.perspectives;
+				} catch (error) {
+					console.error("API client error:", error);
+					throw error;
 				}
-
-				const endpoint = API_ENDPOINTS.LIST_PERSPECTIVES;
-				const url = `${baseUrl}${endpoint}`;
-
-				console.debug(`Fetching perspectives from server: ${url}`);
-
-				const response = await fetch(url);
-
-				if (!response.ok) {
-					return handleApiError(response, "Failed to fetch perspectives");
-				}
-
-				const data = (await response.json()) as PerspectiveListResponse;
-
-				console.debug(
-					`Successfully fetched ${data.perspectives.length} perspectives`,
-				);
-
-				return data.perspectives;
 			} catch (error) {
 				// Improve error handling - log the error and rethrow
 				console.error("Error fetching perspectives:", error);

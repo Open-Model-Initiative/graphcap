@@ -7,5 +7,5 @@
 
 export * from "./components";
 export * from "./context";
-export * from "./schema";
 export * from "./persist-generation-options";
+

@@ -1,5 +1,5 @@
 import { CONNECTION_STATUS } from "@/features/server-connections/constants";
-import { ConnectionActionButtonProps } from "@/features/server-connections/types";
+import type { ConnectionActionButtonProps } from "@/types/server-connection-types";
 import { Button } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from "react";

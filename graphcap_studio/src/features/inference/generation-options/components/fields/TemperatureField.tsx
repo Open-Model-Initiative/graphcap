@@ -12,7 +12,9 @@ import { OptionField } from "./OptionField";
  * Temperature control field component
  */
 export function TemperatureField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 
 	const handleChange = (value: number) => {
 		updateOption("temperature", value);

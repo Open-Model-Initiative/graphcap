@@ -6,15 +6,17 @@
  */
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { RESOLUTION_PRESETS } from "@/types/generation-option-types";
 import { Box, HStack } from "@chakra-ui/react";
 import { useGenerationOptions } from "../../context";
-import { RESOLUTION_PRESETS } from "../../schema";
 
 /**
  * Field component for adjusting image resize resolution
  */
 export function ResizeResolutionField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 
 	// Color values for theming
 	const labelColor = useColorModeValue("gray.700", "gray.300");

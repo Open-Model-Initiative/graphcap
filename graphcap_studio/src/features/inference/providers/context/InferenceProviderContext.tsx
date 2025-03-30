@@ -1,3 +1,4 @@
+import type { Provider } from "@/types/provider-config-types";
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Inference Provider Context
@@ -8,9 +9,8 @@
  * The context includes:
  * - View state (mode, selected provider)
  * - Providers data
- * - Form state and validation
  * - Model selection state
- * - Form actions and callbacks
+ * - Basic view actions
  */
 import {
 	type ReactNode,
@@ -21,15 +21,12 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { DEFAULT_PROVIDER_FORM_DATA } from "../../constants";
-import { useModelSelection, useProviderForm } from "../../hooks";
-import type { Provider, ProviderCreate, ProviderUpdate } from "../types";
+import { useModelSelection } from "../../hooks";
 
 // Local storage key for selected provider
 const SELECTED_PROVIDER_STORAGE_KEY = "graphcap-selected-provider";
 
 type ViewMode = "view" | "edit" | "create";
-type FormData = ProviderCreate | ProviderUpdate;
 
 /**
  * Type definition for the Inference Provider Context
@@ -47,29 +44,12 @@ type InferenceProviderContextType = {
 	providers: Provider[];
 	setProviders: (providers: Provider[]) => void;
 
-	// Form state
-	control: any;
-	handleSubmit: any;
-	errors: any;
-	watch: any;
-	providerName: string | undefined;
-	reset: any;
-
 	// Model selection state
 	selectedModelId: string;
 	setSelectedModelId: (id: string) => void;
-	providerModelsData: any;
-	isLoadingModels: boolean;
-	isModelsError: boolean;
-	modelsError: any;
-
-	// Form actions
 	handleModelSelect: () => void;
-	isSubmitting: boolean;
-	isCreating: boolean;
 
-	// Form callbacks
-	onSubmit: (data: FormData) => Promise<void>;
+	// Basic actions
 	onCancel: () => void;
 };
 
@@ -86,29 +66,12 @@ const defaultContextValue: InferenceProviderContextType = {
 	providers: [],
 	setProviders: () => {},
 
-	// Form state
-	control: null,
-	handleSubmit: () => ({}),
-	errors: {},
-	watch: () => undefined,
-	providerName: undefined,
-	reset: () => {},
-
 	// Model selection state
 	selectedModelId: "",
 	setSelectedModelId: () => {},
-	providerModelsData: null,
-	isLoadingModels: false,
-	isModelsError: false,
-	modelsError: null,
-
-	// Form actions
 	handleModelSelect: () => {},
-	isSubmitting: false,
-	isCreating: false,
 
-	// Form callbacks
-	onSubmit: async () => Promise.resolve(),
+	// Basic actions
 	onCancel: () => {},
 };
 
@@ -134,9 +97,6 @@ export function useInferenceProviderContext() {
 	}
 	return context;
 }
-
-// For backward compatibility
-export const useProviderFormContext = useInferenceProviderContext;
 
 /**
  * Save provider to localStorage
@@ -176,11 +136,8 @@ const loadProviderFromStorage = (): Provider | null => {
  */
 type InferenceProviderProviderProps = {
 	readonly children: ReactNode;
-	readonly initialData?: Partial<ProviderCreate | ProviderUpdate>;
-	readonly isCreating: boolean;
-	readonly onSubmit: (data: FormData) => void;
-	readonly onCancel: () => void;
-	readonly isSubmitting: boolean;
+	readonly isCreating?: boolean;
+	readonly onCancel?: () => void;
 	readonly onModelSelect?: (providerName: string, modelId: string) => void;
 	readonly selectedProvider?: Provider | null;
 	readonly providers?: Provider[];
@@ -193,20 +150,16 @@ type InferenceProviderProviderProps = {
  * available to all child components through the context. It handles:
  *
  * - Provider selection and management
- * - Form state and validation
  * - Model selection
- * - Form submission and cancellation
+ * - Basic view actions
  *
  * @param props - The provider props
  * @returns A context provider component
  */
 export function InferenceProviderProvider({
 	children,
-	initialData = {},
-	isCreating,
-	onSubmit: onSubmitProp,
-	onCancel,
-	isSubmitting,
+	isCreating = false,
+	onCancel = () => {},
 	onModelSelect,
 	selectedProvider: selectedProviderProp,
 	providers: providersProp = [],
@@ -223,79 +176,41 @@ export function InferenceProviderProvider({
 
 	// Update selected provider when prop changes
 	useEffect(() => {
-		if (selectedProviderProp) {
+		if (selectedProviderProp && JSON.stringify(selectedProviderProp) !== JSON.stringify(selectedProvider)) {
 			setSelectedProvider(selectedProviderProp);
 		}
-	}, [selectedProviderProp]);
+	}, [selectedProviderProp, selectedProvider]);
 
 	// Save selected provider to localStorage when it changes
 	useEffect(() => {
-		saveProviderToStorage(selectedProvider);
+		if (selectedProvider) {
+			saveProviderToStorage(selectedProvider);
+		}
 	}, [selectedProvider]);
 
-	// Update providers when prop changes
+	// Update providers when prop changes - only if we have providers and they're different
 	useEffect(() => {
-		setProviders(providersProp);
-	}, [providersProp]);
-
-	// Use the form hook
-	const {
-		control,
-		handleSubmit,
-		errors,
-		providerName,
-		onSubmit: onSubmitForm,
-		watch,
-		reset,
-	} = useProviderForm(initialData);
-
-	// Reset form data when selected provider changes
-	useEffect(() => {
-		if (selectedProvider && mode !== "create") {
-			reset({
-				name: selectedProvider.name,
-				kind: selectedProvider.kind,
-				environment: selectedProvider.environment,
-				baseUrl: selectedProvider.baseUrl,
-				envVar: selectedProvider.envVar,
-				isEnabled: selectedProvider.isEnabled,
-				rateLimits: selectedProvider.rateLimits || {
-					requestsPerMinute: 0,
-					tokensPerMinute: 0,
-				},
-			});
-		} else if (mode === "create") {
-			reset(DEFAULT_PROVIDER_FORM_DATA);
+		const hasProviders = Array.isArray(providersProp) && providersProp.length > 0;
+		const providersChanged = JSON.stringify(providersProp) !== JSON.stringify(providers);
+		
+		if (hasProviders && providersChanged) {
+			setProviders(providersProp);
 		}
-	}, [selectedProvider, mode, reset]);
+	}, [providersProp, providers]);
 
-	// Use the model selection hook with null check
+	// Use the model selection hook with selectedProvider
 	const {
 		selectedModelId,
 		setSelectedModelId,
-		providerModelsData,
-		isLoadingModels,
-		isModelsError,
-		modelsError,
 		handleModelSelect: handleModelSelectBase,
-	} = useModelSelection(selectedProvider?.name ?? "", onModelSelect);
+	} = useModelSelection(selectedProvider, onModelSelect);
 
 	// Create a memoized version of handleModelSelect
 	const handleModelSelect = useCallback(() => {
-		handleModelSelectBase();
-	}, [handleModelSelectBase]);
-
-	// Create a memoized version of onSubmit that calls both form and prop handlers
-	const onSubmitHandler = useCallback(
-		async (data: FormData) => {
-			const result = await onSubmitForm(data, isCreating, selectedProvider?.id);
-			if (result.success) {
-				onSubmitProp(data);
-				setMode("view");
-			}
-		},
-		[onSubmitForm, onSubmitProp, setMode, isCreating, selectedProvider?.id],
-	);
+		if (selectedProvider) {
+			handleModelSelectBase();
+		}
+	}, [handleModelSelectBase, selectedProvider]);
 
 	// Create a memoized version of onCancel that resets mode
 	const onCancelHandler = useCallback(() => {
@@ -317,51 +232,21 @@ export function InferenceProviderProvider({
 			providers,
 			setProviders,
 
-			// Form state
-			control,
-			handleSubmit,
-			errors,
-			watch,
-			providerName,
-			reset,
-
 			// Model selection state
 			selectedModelId,
 			setSelectedModelId,
-			providerModelsData,
-			isLoadingModels,
-			isModelsError,
-			modelsError,
-
-			// Form actions
 			handleModelSelect,
-			isSubmitting,
-			isCreating,
 
-			// Form callbacks
-			onSubmit: onSubmitHandler,
+			// Basic actions
 			onCancel: onCancelHandler,
 		}),
 		[
 			mode,
 			selectedProvider,
 			providers,
-			control,
-			handleSubmit,
-			errors,
-			watch,
-			providerName,
-			reset,
 			selectedModelId,
 			setSelectedModelId,
-			providerModelsData,
-			isLoadingModels,
-			isModelsError,
-			modelsError,
 			handleModelSelect,
-			isSubmitting,
-			isCreating,
-			onSubmitHandler,
 			onCancelHandler,
 		],
 	);
@@ -372,6 +257,3 @@ export function InferenceProviderProvider({
 		</InferenceProviderContext.Provider>
 	);
 }
-
-// For backward compatibility
-export const ProviderFormProvider = InferenceProviderProvider;

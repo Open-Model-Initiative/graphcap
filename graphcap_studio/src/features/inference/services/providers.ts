@@ -8,69 +8,32 @@
 
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { hc } from "hono/client";
-import type { AppType } from "../../../../../data_service/src/app"; // TODO: Refactor
+import {
+	createDataServiceClient,
+	createInferenceBridgeClient,
+} from "@/features/server-connections/services/apiClients";
 import type {
 	Provider,
-	ProviderApiKey,
 	ProviderCreate,
-	ProviderModelsResponse,
 	ProviderUpdate,
-	SuccessResponse,
-} from "../providers/types";
+	ServerProviderConfig,
+	SuccessResponse
+} from "@/types/provider-config-types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Query keys for TanStack Query
 export const queryKeys = {
 	providers: ["providers"] as const,
-	provider: (id: number) => [...queryKeys.providers, id] as const,
+	provider: (id: number) => ["providers", id] as const,
 	providerModels: (providerName: string) =>
-		[...queryKeys.providers, "models", providerName] as const,
+		["providers", "models", providerName] as const,
 };
 
-// Define a more specific type for the client
-interface DataServiceClient {
-	providers: {
-		$get: () => Promise<Response>;
-		$post: (options: { json: ProviderCreate }) => Promise<Response>;
-		[":id"]: {
-			$get: (options: { param: { id: string } }) => Promise<Response>;
-			$put: (options: {
-				param: { id: string };
-				json: ProviderUpdate;
-			}) => Promise<Response>;
-			$delete: (options: { param: { id: string } }) => Promise<Response>;
-			"api-key": {
-				$put: (options: {
-					param: { id: string };
-					json: ProviderApiKey;
-				}) => Promise<Response>;
-			};
-		};
-	};
-}
-
 /**
- * Get the Data Service URL from server connections context
+ * Extended Error interface with cause property
  */
-function getDataServiceUrl(connections: any[]): string {
-	const dataServiceConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
-	);
-
-	return (
-		dataServiceConnection?.url ||
-		import.meta.env.VITE_DATA_SERVICE_URL ||
-		"http://localhost:32550"
-	);
-}
-
-/**
- * Create a Hono client for the Data Service
- */
-function createDataServiceClient(connections: any[]): DataServiceClient {
-	const baseUrl = getDataServiceUrl(connections);
-	return hc<AppType>(`${baseUrl}/api/v1`) as DataServiceClient;
+interface ErrorWithCause extends Error {
+	cause?: unknown;
 }
 
 /**
@@ -143,7 +106,33 @@ export function useCreateProvider() {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to create provider: ${response.status}`);
+				// Try to get detailed error information
+				try {
+					const errorData = await response.json();
+					console.error("Provider creation error:", errorData);
+
+					// Check if we have a structured error response
+					if (errorData.status === "error" || errorData.validationErrors) {
+						throw errorData;
+					}
+
+					// Simple error with a message
+					if (errorData.message) {
+						throw new Error(errorData.message);
+					}
+
+					// Fallback error
+					throw new Error(`Failed to create provider: ${response.status}`);
+				} catch (parseError) {
+					// If we can't parse the error as JSON, throw a general error
+					if (
+						parseError instanceof Error &&
+						parseError.message !== "Failed to create provider"
+					) {
+						throw parseError;
+					}
+					throw new Error(`Failed to create provider: ${response.status}`);
+				}
 			}
 
 			return response.json() as Promise<Provider>;
@@ -164,21 +153,30 @@ export function useUpdateProvider() {
 
 	return useMutation({
 		mutationFn: async ({ id, data }: { id: number; data: ProviderUpdate }) => {
+			console.log("Updating provider with data:", data);
+			
+			const apiData = { ...data };
+			
 			const client = createDataServiceClient(connections);
 			const response = await client.providers[":id"].$put({
 				param: { id: id.toString() },
-				json: data,
+				json: apiData,
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to update provider: ${response.status}`);
+				const errorData = await response.json();
+				console.error("Provider update error:", errorData);
+				throw errorData;
 			}
 
 			return response.json() as Promise<Provider>;
 		},
 		onSuccess: (data) => {
+			// Convert string ID to number for query invalidation
+			const numericId = typeof data.id === 'string' ? Number.parseInt(data.id, 10) : data.id;
+			
 			// Invalidate specific provider query
-			queryClient.invalidateQueries({ queryKey: queryKeys.provider(data.id) });
+			queryClient.invalidateQueries({ queryKey: queryKeys.provider(numericId) });
 			// Invalidate providers list
 			queryClient.invalidateQueries({ queryKey: queryKeys.providers });
 		},
@@ -215,73 +213,59 @@ export function useDeleteProvider() {
 }
 
 /**
- * Hook to update a provider's API key
+ * Hook to test provider connection
  */
-export function useUpdateProviderApiKey() {
-	const queryClient = useQueryClient();
+export function useTestProviderConnection() {
 	const { connections } = useServerConnectionsContext();
 
 	return useMutation({
-		mutationFn: async ({ id, apiKey }: { id: number; apiKey: string }) => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"]["api-key"].$put({
-				param: { id: id.toString() },
-				json: { apiKey } as ProviderApiKey,
+		mutationFn: async ({
+			providerName,
+			config,
+		}: { providerName: string; config: ServerProviderConfig }) => {
+			const client = createInferenceBridgeClient(connections);
+
+			console.log("Testing connection with config:", JSON.stringify(config));
+
+			const response = await client.providers[":provider_name"][
+				"test-connection"
+			].$post({
+				param: { provider_name: providerName },
+				json: config,
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to update API key: ${response.status}`);
+				const errorData = await response.json();
+				console.error("Error response:", errorData);
+
+				if (errorData.status === "error" && errorData.details) {
+					const error = new Error(
+						errorData.message || "Connection test failed",
+					) as ErrorWithCause;
+					error.cause = errorData;
+					throw error;
+				}
+
+				// Handle different error formats
+				if (errorData.detail) {
+					throw new Error(errorData.detail);
+				}
+
+				if (errorData.message) {
+					throw new Error(errorData.message);
+				}
+
+				if (typeof errorData === "object") {
+					const error = new Error("Connection test failed") as ErrorWithCause;
+					error.cause = errorData;
+					throw error;
+				}
+
+				// Fallback to simple error
+				throw new Error(`Connection test failed: ${response.status}`);
 			}
 
-			return response.json() as Promise<SuccessResponse>;
+			return response.json();
 		},
-		onSuccess: (_, { id }) => {
-			// Invalidate specific provider query
-			queryClient.invalidateQueries({ queryKey: queryKeys.provider(id) });
-		},
-	});
-}
-
-/**
- * Get the GraphCap Server URL from server connections context
- */
-function getGraphCapServerUrl(connections: any[]): string {
-	const graphcapServerConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
-	);
-
-	return (
-		graphcapServerConnection?.url ||
-		import.meta.env.VITE_GRAPHCAP_SERVER_URL ||
-		"http://localhost:32100"
-	);
-}
-
-/**
- * Hook to get available models for a provider from the GraphCap server
- */
-export function useProviderModels(providerName: string) {
-	const { connections } = useServerConnectionsContext();
-	const graphcapServerConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.GRAPHCAP_SERVER,
-	);
-	const isConnected = graphcapServerConnection?.status === "connected";
-
-	return useQuery({
-		queryKey: queryKeys.providerModels(providerName),
-		queryFn: async () => {
-			const baseUrl = getGraphCapServerUrl(connections);
-			const response = await fetch(
-				`${baseUrl}/providers/${providerName}/models`,
-			);
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch provider models: ${response.status}`);
-			}
-
-			return response.json() as Promise<ProviderModelsResponse>;
-		},
-		enabled: isConnected && !!providerName,
-		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 }

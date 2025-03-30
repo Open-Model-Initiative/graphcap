@@ -14,8 +14,8 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
 # services:
-#   graphcap_server:
-#     container_name: graphcap_server
+#   inference_bridge:
+#     container_name: inference_bridge
 #     build:
 #       context: ./src
 #       dockerfile: ./server/Dockerfile.server
@@ -45,7 +45,7 @@ name: graphcap
 #     ports:
 #       - "35433:5432"
 #     volumes:
-#       - graphcap_server_db:/var/lib/postgresql/data
+#       - inference_bridge_db:/var/lib/postgresql/data
 #     healthcheck:
 #       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
 #       interval: 5s
@@ -95,7 +95,7 @@ name: graphcap
   #         target: /app/pnpm-lock.yaml
   #   environment:
   #     - NODE_ENV=${NODE_ENV:-development}
-  #     - VITE_API_URL=http://localhost:32100/api
+  #     - VITE_API_URL=http://localhost:32100/
   #     - VITE_WORKSPACE_PATH=/workspace/.local
   #     - VITE_MEDIA_SERVER_URL=http://localhost:32400
   #   networks:
@@ -181,7 +181,7 @@ name: graphcap
 
 
 # volumes:
-#   graphcap_server_db:
+#   inference_bridge_db:
 
 # networks:
 #   graphcap:

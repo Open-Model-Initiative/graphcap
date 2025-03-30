@@ -6,9 +6,9 @@
  * to simplify usage in component trees.
  */
 
-import { Image } from "@/services/images";
-import { ReactNode } from "react";
-import { Provider } from "../types";
+import type { Image } from "@/services/images";
+import type { Provider } from "@/types/provider-config-types";
+import type { ReactNode } from "react";
 import { PerspectiveUIProvider } from "./PerspectiveUIContext";
 import { PerspectivesDataProvider } from "./PerspectivesDataContext";
 

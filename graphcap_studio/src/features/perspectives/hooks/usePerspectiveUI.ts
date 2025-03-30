@@ -5,16 +5,15 @@
  * This hook provides UI-related functionality for the perspectives components.
  */
 
-import { PerspectiveType } from "@/features/perspectives/types";
 import { useCallback, useState } from "react";
 
 interface UsePerspectiveUIOptions {
 	onGeneratePerspective?: (
-		perspective: PerspectiveType,
+		perspective: string,
 		provider?: string,
 	) => void;
 	initialSelectedProvider?: string;
-	perspectiveKey?: PerspectiveType;
+	perspectiveKey?: string;
 }
 
 /**

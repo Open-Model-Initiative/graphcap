@@ -1,7 +1,7 @@
-import { Image } from "@/services/images";
+import type { Image } from "@/services/images";
+import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from "react";
-import { toast } from "sonner";
 
 interface UseImageActionsProps {
 	selectedImage: Image | null;
@@ -37,7 +37,7 @@ export function useImageActions({
 	const handleDownload = useCallback(() => {
 		if (selectedImage) {
 			// Implementation for download
-			toast.success("Download started");
+			toast.success({ title: "Download started" });
 		}
 	}, [selectedImage]);
 
@@ -45,7 +45,7 @@ export function useImageActions({
 	const handleDelete = useCallback(() => {
 		if (selectedImage) {
 			// Implementation for delete
-			toast.success("Image deleted");
+			toast.success({ title: "Image deleted" });
 		}
 	}, [selectedImage]);
 

@@ -7,14 +7,14 @@
 
 import {
 	DatasetIcon,
-	FlagIcon,
+	GenerationOptionsIcon,
 	PerspectiveLayersIcon,
 	ProviderIcon,
-	SettingsIcon,
+	SettingsIcon
 } from "@/components/icons";
 import { SettingsPanel } from "@/features/app-settings";
-import { FeatureFlagsPanel } from "@/features/app-settings/feature-flags";
 import { DatasetPanel } from "@/features/datasets";
+import { GenerationOptionsPanel } from "@/features/inference/generation-options/components/GenerationOptionsPanel";
 import { ProvidersPanel } from "@/features/inference/providers";
 import { PerspectiveManagementPanel } from "@/features/perspectives/components/PerspectiveManagement/PerspectiveManagementPanel";
 import { ActionPanel } from "./ActionPanel";
@@ -27,13 +27,13 @@ export function RootLeftActionPanel() {
 		<ActionPanel
 			side="left"
 			defaultExpanded={false}
-			expandedWidth={350}
+			expandedWidth={450}
 			sections={[
 				{
-					id: "feature-flags",
-					title: "Feature Flags",
-					icon: <FlagIcon />,
-					content: <FeatureFlagsPanel />,
+					id: "generation-options",
+					title: "Generation Options",
+					icon: <GenerationOptionsIcon />,
+					content: <GenerationOptionsPanel />,
 				},
 				{
 					id: "datasets",

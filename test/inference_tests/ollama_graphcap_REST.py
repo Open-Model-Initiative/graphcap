@@ -1,6 +1,6 @@
 """
 curl -X 'POST' \
-  'http://localhost:32100/api/v1/perspectives/caption-from-path' \
+  'http://localhost:32100//v1/perspectives/caption-from-path' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{

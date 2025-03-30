@@ -1,11 +1,11 @@
 import {
-	ImageProcessResponse,
+	type ImageProcessResponse,
 	getImageUrl,
 	useProcessImage,
 } from "@/services/images";
+import { toast } from "@/utils/toast";
 import { useCallback, useState } from "react";
-import Cropper, { Area } from "react-easy-crop";
-import { toast } from "sonner";
+import Cropper, { type Area } from "react-easy-crop";
 import { ImageViewer } from "../../gallery-viewer";
 
 interface ImageEditorProps {
@@ -36,7 +36,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 
 	const handleSave = async () => {
 		if (!croppedAreaPixels) {
-			toast.error("No crop area selected");
+			toast.error({ title: "No crop area selected" });
 			return;
 		}
 
@@ -55,12 +55,12 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 				},
 			});
 
-			toast.success("Image saved successfully");
+			toast.success({ title: "Image saved successfully" });
 			onSave?.(result);
 		} catch (error) {
-			toast.error(
-				`Failed to save image: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			toast.error({
+				title: `Failed to save image: ${error instanceof Error ? error.message : String(error)}`,
+			});
 		} finally {
 			setIsSaving(false);
 		}

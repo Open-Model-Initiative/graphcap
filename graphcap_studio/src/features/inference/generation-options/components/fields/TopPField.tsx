@@ -9,10 +9,12 @@ import { useGenerationOptions } from "../../context";
 import { OptionField } from "./OptionField";
 
 /**
- * Top P control field component
+ * Top-P (nucleus sampling) control field component
  */
 export function TopPField() {
-	const { options, updateOption, isGenerating } = useGenerationOptions();
+	const { options, actions, uiState } = useGenerationOptions();
+	const { updateOption } = actions;
+	const { isGenerating } = uiState;
 
 	const handleChange = (value: number) => {
 		updateOption("top_p", value);
