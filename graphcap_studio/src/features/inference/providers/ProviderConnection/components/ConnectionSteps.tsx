@@ -18,7 +18,16 @@ interface ConnectionStepsProps {
 	readonly stepLabels?: Record<string, string>;
 }
 
-function StepIcon({ status }: { status: ConnectionStep["status"] }) {
+interface StepIconProps {
+	readonly status: ConnectionStep["status"];
+}
+
+interface StepLabelProps {
+	readonly step: ConnectionStep;
+	readonly labels?: Record<string, string>;
+}
+
+function StepIcon({ status }: StepIconProps) {
   switch (status) {
     case "success":
       return <Icon as={LuCheck} boxSize={5} color="green.500" />;
@@ -31,7 +40,7 @@ function StepIcon({ status }: { status: ConnectionStep["status"] }) {
   }
 }
 
-function ConnectionStepResult({ step, labels }: { step: ConnectionStep; labels?: Record<string, string> }) {
+function ConnectionStepResult({ step, labels }: StepLabelProps) {
   const stepLabel = labels?.[step.step] ?? step.step;
 
   return (
