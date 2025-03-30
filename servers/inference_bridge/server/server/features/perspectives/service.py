@@ -323,43 +323,28 @@ async def generate_caption(
                 f"Generating caption for {image_path} using {perspective_name} perspective and {provider_name} provider"
             )
 
-            # Check if the perspective has process_batch method
-            if hasattr(perspective, "process_batch"):
-                logger.info(f"Using process_batch method for {perspective_name}")
-                # Use process_batch with a single image to match the pipeline implementation
-                caption_data_list = await perspective.process_batch(
-                    provider=provider,
-                    image_paths=[image_path],
-                    model=model,
-                    output_dir=output_dir,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    repetition_penalty=repetition_penalty,
-                    global_context=global_context,
-                    name=perspective_name,
-                )
+            # Use process_single directly as process_batch has been deprecated
+            logger.info(f"Using process_single for {perspective_name}")
+            caption_data = await perspective.process_single(
+                provider=provider,
+                image_path=image_path,
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
+                context=context,
+                global_context=global_context,
+            )
 
-                # Get the first (and only) result
-                if not caption_data_list or len(caption_data_list) == 0:
-                    logger.error(f"No caption data returned for {image_path}")
-                    raise HTTPException(status_code=500, detail="No caption data returned")
-
-                caption_data = caption_data_list[0]
-            else:
-                # Fallback to process_single if process_batch is not available
-                logger.info(f"Falling back to process_single method for {perspective_name}")
-                caption_data = await perspective.process_single(
-                    provider=provider,
-                    image_path=image_path,
-                    model=model,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    repetition_penalty=repetition_penalty,
-                    context=context,
-                    global_context=global_context,
-                )
+            caption_data = {
+                "filename": f"./{image_path.name}",
+                "config_name": getattr(perspective, 'config_name', perspective_name),
+                "version": getattr(perspective, 'version', '1.0'),
+                "model": model,
+                "provider": provider.name,
+                "parsed": caption_data,
+            }
 
             # Log the result
             logger.info(f"Caption generated successfully: {caption_data.keys() if caption_data else 'None'}")

@@ -1,17 +1,142 @@
 # SPDX-License-Identifier: Apache-2.0
 """Assets and ops for basic text captioning."""
 
+import asyncio
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
 import dagster as dg
 import pandas as pd
+from loguru import logger
+from tqdm.asyncio import tqdm_asyncio
+
 from graphcap.perspectives import get_perspective, get_synthesizer
 
 from ..common.logging import write_caption_results
 from ..perspectives.jobs.config import PerspectivePipelineConfig
 from ..providers.util import get_provider
+
+# File constants
+JOB_INFO_FILENAME = "job_info.json"
+CAPTIONS_FILENAME = "captions.jsonl"
+
+# Temporary batch processing function to replace BaseCaptionProcessor.process_batch
+# This will be replaced with Kafka-based processing in the future
+async def process_images_in_batch(
+    processor,
+    provider,
+    image_paths,
+    model="gemini-2.0-flash-exp",
+    max_tokens=4096,
+    temperature=0.8,
+    top_p=0.9,
+    repetition_penalty=1.15,
+    max_concurrent=3,
+    output_dir=None,
+    global_context=None,
+    contexts=None,
+    name=None,
+):
+    """
+    Temporary batch processing function to replace BaseCaptionProcessor.process_batch.
+    Will be replaced with Kafka-based processing in the future.
+    
+    Processes multiple images by calling process_single for each in parallel.
+    """
+    logger.info(f"[DEPRECATED] Processing {len(image_paths)} images with {provider.name}")
+    logger.info(f"Using max concurrency of {max_concurrent} requests")
+    
+    # Create job directory for output if requested
+    job_dir = None
+    if output_dir:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        job_dir = output_dir / f"batch_{name or timestamp}"
+        job_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Writing results to {job_dir}")
+        
+        # Create captions.jsonl file and job_info.json with basic info
+        with open(job_dir / JOB_INFO_FILENAME, "w") as f:
+            job_info = {
+                "started_at": timestamp,
+                "provider": provider.name,
+                "model": model,
+                "config_name": getattr(processor, "config_name", name),
+                "version": getattr(processor, "version", "1.0"),
+                "total_images": len(image_paths),
+                "global_context": global_context,
+                "note": "This is a temporary implementation of batch processing until Kafka-based processing is implemented."
+            }
+            json.dump(job_info, f, indent=2)
+    
+    # Process images in parallel with limited concurrency
+    semaphore = asyncio.Semaphore(max_concurrent)
+    
+    async def process_image(path):
+        async with semaphore:
+            try:
+                result = await processor.process_single(
+                    provider=provider,
+                    image_path=path,
+                    model=model,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
+                    repetition_penalty=repetition_penalty,
+                    context=contexts.get(path.name) if contexts else None,
+                    global_context=global_context,
+                )
+                
+                caption_data = {
+                    "filename": f"./{path.name}",
+                    "config_name": getattr(processor, "config_name", name),
+                    "version": getattr(processor, "version", "1.0"),
+                    "model": model,
+                    "provider": provider.name,
+                    "parsed": result,
+                }
+                
+                # Write to captions.jsonl if job_dir exists
+                if job_dir:
+                    with open(job_dir / CAPTIONS_FILENAME, "a") as f:
+                        f.write(json.dumps(caption_data) + "\n")
+                
+                return caption_data
+            except Exception as e:
+                logger.error(f"Error processing {path}: {e}")
+                error_data = {
+                    "filename": f"./{path.name}",
+                    "config_name": getattr(processor, "config_name", name),
+                    "version": getattr(processor, "version", "1.0"),
+                    "model": model,
+                    "provider": provider.name,
+                    "parsed": {"error": str(e)},
+                }
+                
+                # Write error to captions.jsonl if job_dir exists
+                if job_dir:
+                    with open(job_dir / CAPTIONS_FILENAME, "a") as f:
+                        f.write(json.dumps(error_data) + "\n")
+                
+                return error_data
+    
+    tasks = [process_image(path) for path in image_paths]
+    results = await tqdm_asyncio.gather(*tasks, desc=f"Processing images with {provider.name}")
+    
+    # Update job_info.json with completion info
+    if job_dir:
+        with open(job_dir / JOB_INFO_FILENAME, "r") as f:
+            job_info = json.load(f)
+        
+        job_info["completed_at"] = datetime.now().strftime("%Y%m%d_%H%M%S")
+        job_info["success_count"] = sum(1 for r in results if "error" not in r["parsed"])
+        job_info["failed_count"] = sum(1 for r in results if "error" in r["parsed"])
+        
+        with open(job_dir / JOB_INFO_FILENAME, "w") as f:
+            json.dump(job_info, f, indent=2)
+    
+    return results
 
 
 @dg.asset(
@@ -45,11 +170,13 @@ async def perspective_caption(
         processor = get_perspective(perspective)
 
         try:
-            # Process images in batch
+            # Process images using the temporary batch processing function
             image_paths = [Path(image) for image in perspective_image_list]
-            caption_data_list = await processor.process_batch(
+            caption_data_list = await process_images_in_batch(
+                processor,
                 client,
                 image_paths,
+                model=getattr(provider_config, "model", "gemini-2.0-flash-exp"),
                 output_dir=Path(io_config.run_dir),
                 global_context=perspective_config.global_context,
                 name=perspective,
@@ -128,8 +255,15 @@ async def synthesizer_caption(
 
     image_dir = Path(io_config.output_dir) / "images"
     paths = [image_dir / path for path in caption_contexts.keys()]
-    results = await synthesizer.process_batch(
-        client, paths, output_dir=Path(io_config.run_dir), contexts=caption_contexts, name="synthesized_caption"
+    
+    # Use the temporary batch processing function
+    results = await process_images_in_batch(
+        synthesizer,
+        client,
+        paths,
+        output_dir=Path(io_config.run_dir),
+        contexts=caption_contexts,
+        name="synthesized_caption"
     )
 
     # Format the results to match the perspective_caption output
