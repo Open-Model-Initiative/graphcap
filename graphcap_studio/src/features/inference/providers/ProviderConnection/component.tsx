@@ -8,7 +8,6 @@ import { ProviderFormContainer } from "./containers/ProviderFormContainer";
 
 interface ProviderConnectionProps {
 	readonly initialData?: Partial<ProviderCreate | ProviderUpdate>;
-	readonly onSubmit?: (data: ProviderCreate | ProviderUpdate) => Promise<void>;
 }
 
 /**
@@ -16,22 +15,10 @@ interface ProviderConnectionProps {
  */
 export function ProviderConnection({
 	initialData,
-	onSubmit,
 }: ProviderConnectionProps) {
-	// Create a default no-op submit handler if none is provided
-	const defaultSubmitHandler = async (
-		data: ProviderCreate | ProviderUpdate,
-	) => {
-		console.log("Provider form submitted:", data);
-		// Default implementation just logs the data
-		// In a real app, this would call an API
-	};
-
-	// Use provided onSubmit if available, otherwise use the default handler
-	const handleSubmit = onSubmit || defaultSubmitHandler;
 
 	return (
-		<ProviderFormContainer initialData={initialData} onSubmit={handleSubmit}>
+		<ProviderFormContainer initialData={initialData}>
 			<ProviderFormView />
 		</ProviderFormContainer>
 	);
