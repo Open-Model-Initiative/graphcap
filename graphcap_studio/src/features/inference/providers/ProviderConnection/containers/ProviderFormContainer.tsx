@@ -184,7 +184,7 @@ export function ProviderFormContainer({
 		if (newMode === "create") {
 			reset({
 				name: "",
-				kind: "",
+				kind: "openai", // Default to the first provider kind
 				environment: "cloud",
 				baseUrl: "",
 				apiKey: "",

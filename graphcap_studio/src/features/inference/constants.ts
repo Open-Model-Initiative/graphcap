@@ -5,7 +5,7 @@
  */
 export const DEFAULT_PROVIDER_FORM_DATA = {
 	name: "",
-	kind: "",
+	kind: "openai" as const,
 	environment: "cloud" as const,
 	baseUrl: "",
 	apiKey: "",
@@ -24,7 +24,7 @@ export const PROVIDER_ENVIRONMENTS = ["cloud", "local"] as const;
  */
 export const PROVIDER_KINDS = [
 	"openai",
-	"google",
+	"gemini",
 	"ollama",
 	"vllm",
 ] as const;
