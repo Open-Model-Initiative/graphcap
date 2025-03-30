@@ -62,7 +62,19 @@ export function ProviderFormContainer({
 		setProvider(newProvider);
 		
 		if (newProvider) {
-			// Reset form with provider data
+			// Reset form with the selected provider's data instead of default data
+			reset({
+				name: newProvider.name,
+				kind: newProvider.kind,
+				environment: newProvider.environment,
+				baseUrl: newProvider.baseUrl,
+				apiKey: newProvider.apiKey ?? "",
+				isEnabled: newProvider.isEnabled,
+				defaultModel: newProvider.defaultModel,
+				models: newProvider.models
+			});
+		} else {
+			// Reset to default data if no provider is selected
 			reset(DEFAULT_PROVIDER_FORM_DATA);
 		}
 	}, [reset]);
