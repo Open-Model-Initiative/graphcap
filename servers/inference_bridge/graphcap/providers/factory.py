@@ -77,7 +77,8 @@ class ProviderFactory:
             # Set rate limits if configured
             if rate_limits:
                 logger.debug(
-                    f"Setting rate limits for {name} - requests: {rate_limits.get('requests_per_minute')}/min, tokens: {rate_limits.get('tokens_per_minute')}/min"
+                    f"Setting rate limits for {name} - requests: {rate_limits.get('requests_per_minute')}/min, ",
+                    f"tokens: {rate_limits.get('tokens_per_minute')}/min"
                 )
                 client.requests_per_minute = rate_limits.get("requests_per_minute")
                 client.tokens_per_minute = rate_limits.get("tokens_per_minute")

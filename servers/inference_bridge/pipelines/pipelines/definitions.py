@@ -13,17 +13,10 @@ from .common.logging import configure_loggers
 from .common.resources import FileSystemConfig, PerspectiveConfig, PostgresConfig, ProviderConfigFile
 from .huggingface import huggingface_client
 from .huggingface.types import HfUploadManifestConfig
-from .perspectives.jobs import PerspectivePipelineRunConfig
 
 # Import jobs
 from .jobs import JOBS
-
-# # Import sensors
-# from .sensors.image_sensors import (
-#     new_image_sensor,
-#     art_analysis_asset_sensor
-# )
-
+from .perspectives.jobs import PerspectivePipelineRunConfig
 
 # Configure custom loggers
 loggers = configure_loggers()
@@ -43,6 +36,4 @@ defs = dg.Definitions(
         **loggers,  # Integrate custom loggers into resources
     },
     jobs=[*JOBS],
-    # schedules=[daily_caption_schedule],
-    # sensors=[new_image_sensor, art_analysis_asset_sensor]
 )

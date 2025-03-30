@@ -8,9 +8,6 @@ Contains the data models used for perspective configuration and management.
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
-from typing_extensions import override
-
-from .base import PerspectiveData
 
 
 class SchemaField(BaseModel):

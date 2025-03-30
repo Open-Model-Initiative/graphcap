@@ -23,7 +23,6 @@ Classes:
 
 import asyncio
 import base64
-import os
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
