@@ -13,10 +13,10 @@ import { useMemo } from "react";
 /**
  * Hook for accessing provider and model selection options
  * 
- * @param providerId - The selected provider ID
+ * @param providerName - The selected provider name
  * @returns Provider and model data with loading states
  */
-export function useProviderModelOptions(providerId?: string) {
+export function useProviderModelOptions(providerName?: string) {
   // Fetch all providers
   const { 
     data: providers = [], 
@@ -26,9 +26,11 @@ export function useProviderModelOptions(providerId?: string) {
   
   // Find the selected provider object
   const selectedProvider = useMemo(() => {
-    if (!providerId) return null;
-    return providers.find((p: Provider) => p.id === providerId) || null;
-  }, [providers, providerId]);
+    if (!providerName || !providers.length) return null;
+    
+    // Find provider by name
+    return providers.find((p: Provider) => p.name === providerName) || null;
+  }, [providers, providerName]);
   
   // Process models data directly from the provider
   const models = useMemo<ProviderModelInfo[]>(() => {

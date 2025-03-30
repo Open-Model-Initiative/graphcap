@@ -425,7 +425,7 @@ export function PerspectivesDataProvider({
 					provider: effectiveProvider.name,
 					content: result.result || {},
 					options: {
-						model: effectiveOptions.model_id, // model_id now contains the name
+						model: effectiveOptions.model_name,
 						max_tokens: effectiveOptions.max_tokens,
 						temperature: effectiveOptions.temperature,
 						top_p: effectiveOptions.top_p,

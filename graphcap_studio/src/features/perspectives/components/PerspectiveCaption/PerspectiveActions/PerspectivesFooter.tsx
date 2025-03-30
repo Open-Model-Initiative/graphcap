@@ -75,40 +75,17 @@ export function PerspectivesFooter() {
 	const borderColor = useColorModeValue("gray.200", "gray.700");
 	const infoTextColor = useColorModeValue("gray.600", "gray.400");
 
-	// Get provider and model names
 	// Log information for debugging
 	console.log("GenerationOptions:", generationOptions);
 	console.log("Available providers:", availableProviders);
 	
-	// Get provider information safely (without throwing during render)
-	const providerInfo = useMemo(() => {
-		// Don't attempt to find providers if the list is empty or loading
-		if (!availableProviders.length) {
-			return { providerName: "Loading...", modelName: "Loading..." };
-		}
-		
-		// Try to find provider by ID
-		const providerObj = availableProviders.find(p => 
-			p.id.toString() === generationOptions.provider_id
-		);
-		
-		// If provider not found, return a placeholder but don't throw
-		if (!providerObj) {
-			console.warn(`Provider with ID ${generationOptions.provider_id} not found yet`);
-			return { 
-				providerName: `ID: ${generationOptions.provider_id}`,
-				modelName: generationOptions.model_id || "None"
-			};
-		}
-		
-		// Provider found, return proper info
+	// Get provider information safely
+	const { providerName, modelName } = useMemo(() => {
 		return {
-			providerName: providerObj.name,
-			modelName: generationOptions.model_id || "None"
+			providerName: generationOptions.provider_name || "Select Provider",
+			modelName: generationOptions.model_name || "Select Model"
 		};
-	}, [availableProviders, generationOptions.provider_id, generationOptions.model_id]);
-	
-	const { providerName, modelName } = providerInfo;
+	}, [generationOptions.provider_name, generationOptions.model_name]);
 
 	// Fetch providers on component mount
 	useEffect(() => {
@@ -128,7 +105,7 @@ export function PerspectivesFooter() {
 			return false;
 		}
 
-		if (!generationOptions.provider_id) {
+		if (!generationOptions.provider_name) {
 			showMessage(
 				"No provider selected",
 				"Please select an inference provider",
@@ -147,7 +124,7 @@ export function PerspectivesFooter() {
 		}
 
 		return true;
-	}, [activeSchemaName, generationOptions.provider_id, currentImage, showMessage]);
+	}, [activeSchemaName, generationOptions.provider_name, currentImage, showMessage]);
 
 	// Handle generate button click
 	const handleGenerate = useCallback(async () => {
@@ -161,11 +138,11 @@ export function PerspectivesFooter() {
 
 		try {
 			console.log("Calling generatePerspective...");
-			// Find the provider object from the available providers using the provider_id
-			const providerObject = availableProviders.find(p => p.id.toString() === generationOptions.provider_id);
+			// Find the provider object from the available providers using provider_name
+			const providerObject = availableProviders.find(p => p.name === generationOptions.provider_name);
 			
 			if (!providerObject) {
-				throw new Error(`Provider with ID "${generationOptions.provider_id}" not found in available providers`);
+				throw new Error(`Provider "${generationOptions.provider_name}" not found in available providers`);
 			}
 			
 			await generatePerspective(
@@ -201,13 +178,13 @@ export function PerspectivesFooter() {
 	// Combine loading states
 	const isProcessing = isLoading || isGenerating;
 
-	// Check if button should be disabled - use generationOptions.provider_id instead of selectedProvider
+	// Check if button should be disabled
 	const isGenerateDisabled =
-		isProcessing || !activeSchemaName || !generationOptions.provider_id;
+		isProcessing || !activeSchemaName || !generationOptions.provider_name;
 
-	// Get title for the generate button - also use generationOptions.provider_id
+	// Get title for the generate button
 	const buttonTitle = getButtonTitle(
-		generationOptions.provider_id ? providerName : undefined,
+		generationOptions.provider_name,
 		activeSchemaName,
 		isProcessing,
 		isGenerated,

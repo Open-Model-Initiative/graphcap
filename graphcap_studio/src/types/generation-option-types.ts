@@ -37,8 +37,8 @@ export const DEFAULT_OPTIONS = {
 	resize_resolution: "NONE", // Default to no resize
 	global_context: "You are a visual captioning perspective.",
 	context: [] as string[], // Default to empty context array
-	provider_id: "", // Default to empty (will be populated later)
-	model_id: "", // Default to empty (will be populated later)
+	provider_name: "", // Default to empty (will be populated later)
+	model_name: "", // Default to empty (will be populated later)
 } as const;
 
 // Schema for generation options
@@ -75,10 +75,10 @@ export const GenerationOptionsSchema = z.object({
 	// Added context array (was in CaptionOptions)
 	context: z.array(z.string()).default([]),
 	
-	// Provider and model selection
-	provider_id: z.string().default(DEFAULT_OPTIONS.provider_id),
+	// Provider and model selection (using names instead of IDs)
+	provider_name: z.string().default(DEFAULT_OPTIONS.provider_name),
 	
-	model_id: z.string().default(DEFAULT_OPTIONS.model_id),
+	model_name: z.string().default(DEFAULT_OPTIONS.model_name),
 });
 
 // Type for generation options
@@ -90,7 +90,7 @@ export type GenerationOptions = z.infer<typeof GenerationOptionsSchema>;
  */
 export function formatApiOptions(options: GenerationOptions): Record<string, unknown> {
 	return {
-		model: options.model_id, // API expects 'model' instead of model_id
+		model: options.model_name, // API expects 'model' instead of model_name
 		temperature: options.temperature,
 		max_tokens: options.max_tokens,
 		top_p: options.top_p,
@@ -103,11 +103,18 @@ export function formatApiOptions(options: GenerationOptions): Record<string, unk
 
 /**
  * Format a complete caption request
+ * 
+ * @param imagePath Path to the image
+ * @param perspective Perspective name
+ * @param options Generation options
+ * @param providerId Provider ID to use with the API
+ * @returns Formatted request object
  */
 export function formatCaptionRequest(
 	imagePath: string,
 	perspective: string,
-	options: GenerationOptions
+	options: GenerationOptions,
+	providerId: string
 ): {
 	image_path: string;
 	perspective: string;
@@ -117,7 +124,7 @@ export function formatCaptionRequest(
 	return {
 		image_path: imagePath,
 		perspective: perspective,
-		provider_id: options.provider_id,
+		provider_id: providerId,
 		options: formatApiOptions(options),
 	};
 }

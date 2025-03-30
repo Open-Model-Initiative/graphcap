@@ -1,6 +1,7 @@
 import { DEFAULT_PROVIDER_FORM_DATA } from "@/features/inference/constants";
 import type { ConnectionDetails, ErrorDetails, Provider, ProviderCreate, ProviderUpdate } from "@/types/provider-config-types";
 import { denormalizeProviderId, toServerConfig } from "@/types/provider-config-types";
+import { useQueryClient } from '@tanstack/react-query';
 // SPDX-License-Identifier: Apache-2.0
 import type { ReactNode } from "react";
 import { useCallback, useState } from "react";
@@ -38,6 +39,9 @@ export function ProviderFormContainer({
 	const [error, setError] = useState<ErrorDetails | null>(null);
 	const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails | null>(null);
 
+	// Get query client for cache invalidation
+	const queryClient = useQueryClient();
+
 	// Form setup
 	const { 
 		control, 
@@ -54,8 +58,6 @@ export function ProviderFormContainer({
 	const testConnection = useTestProviderConnection();
 	const createProvider = useCreateProvider();
 	const updateProvider = useUpdateProvider();
-
-	// Use either API providers or context providers
 
 	// Handle provider selection
 	const handleProviderSelect = useCallback((newProvider: Provider | null) => {
@@ -107,14 +109,23 @@ export function ProviderFormContainer({
 				})(e);
 			});
 			
+			let savedProvider: Provider | null = null;
+			
 			if (mode === "edit" && provider?.id) {
-				await updateProvider.mutateAsync({
+				savedProvider = await updateProvider.mutateAsync({
 					id: denormalizeProviderId(provider.id),
 					data: formData as ProviderUpdate
 				});
 			} else if (mode === "create") {
-				await createProvider.mutateAsync(formData as ProviderCreate);
+				// Create the provider
+				savedProvider = await createProvider.mutateAsync(formData as ProviderCreate);
 			}
+			
+			if (savedProvider) {
+				setProvider(savedProvider);
+			}
+			
+			await queryClient.invalidateQueries({ queryKey: ['providers'] });
 			
 			openDialog("success");
 			setMode("view");

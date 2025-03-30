@@ -21,8 +21,8 @@ export function RemoveProviderButton() {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const deleteProvider = useDeleteProvider();
 
-  // Only show the button if we have a provider
-  if (!provider || !provider.id) {
+  // Only show the button if we don't have a provider or the provider doesn't have an ID
+  if (!provider?.id) {
     return null;
   }
 
@@ -35,11 +35,11 @@ export function RemoveProviderButton() {
 
       await deleteProvider.mutateAsync(providerId);
       
-      // Reset the provider selection
       setProvider(null);
       
-      // Close the dialog
       onClose();
+      
+      console.log(`Provider "${provider.name}" successfully removed`);
     } catch (error) {
       console.error("Failed to delete provider:", error);
     }

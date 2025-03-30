@@ -34,7 +34,7 @@ export function ModelSelectorField() {
 		items: providers.items.length > 0
 			? providers.items.map((provider) => ({
 				label: provider.name,
-				value: provider.id,
+				value: provider.name,
 				disabled: false,
 			}))
 			: [{ label: "No providers available", value: "none", disabled: false }]
@@ -68,8 +68,6 @@ export function ModelSelectorField() {
 	// Check if any providers are available
 	const hasProviders = providers.items.length > 0;
 	
-	// Check if any models are available for the selected provider
-	
 	// Loading state
 	const isProvidersLoading = providers.isLoading;
 	const isModelsLoading = models.isLoading;
@@ -84,7 +82,7 @@ export function ModelSelectorField() {
 				<Field label="Provider">
 					<Select.Root
 						collection={providerCollection}
-						value={options.provider_id ? [options.provider_id] : []}
+						value={options.provider_name ? [options.provider_name] : []}
 						onValueChange={handleProviderChange}
 						disabled={isProvidersLoading || isGenerating}
 						size="sm"
@@ -119,7 +117,7 @@ export function ModelSelectorField() {
 				<Field label="Model">
 					<Select.Root
 						collection={modelCollection}
-						value={options.model_id ? [options.model_id] : []}
+						value={options.model_name ? [options.model_name] : []}
 						onValueChange={handleModelChange}
 						disabled={isModelsLoading || !hasProviders || isGenerating}
 						size="sm"

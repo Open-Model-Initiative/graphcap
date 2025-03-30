@@ -50,7 +50,7 @@ interface GenerationOptionsContextValue {
 		updateOption: <K extends keyof GenerationOptions>(key: K, value: GenerationOptions[K]) => void;
 		resetOptions: () => void;
 		setOptions: (options: Partial<GenerationOptions>) => void;
-		selectProvider: (providerId: string) => void;
+		selectProvider: (providerName: string) => void;
 		selectModel: (modelName: string) => void;
 	};
 	uiActions: {
@@ -112,7 +112,7 @@ export function GenerationOptionsProvider({
 		defaultModel,
 		isLoading,
 		hasError
-	} = useProviderModelOptions(options.provider_id);
+	} = useProviderModelOptions(options.provider_name);
 
 	// Save options to localStorage when they change
 	useEffect(() => {
@@ -126,21 +126,21 @@ export function GenerationOptionsProvider({
 
 	// Initialize provider if available and not already set
 	useEffect(() => {
-		if (providers.length > 0 && !options.provider_id) {
+		if (providers.length > 0 && !options.provider_name && !isLoadingProviders) {
 			const firstProvider = providers[0];
-			updateOption("provider_id", firstProvider.id);
+			updateOption("provider_name", firstProvider.name);
 		}
-	}, [providers, options.provider_id]);
+	}, [providers, options.provider_name, isLoadingProviders]);
 
-	// Initialize model if available and not already set
+
 	useEffect(() => {
-		// If we have a provider but no model, and models are available
-		if (options.provider_id && !options.model_id && models.length > 0) {
+		// Only set model if we have a provider and no model is selected yet
+		if (options.provider_name && !options.model_name && models.length > 0) {
 			// Try to use default model first, otherwise use first available model
 			const modelToUse = defaultModel || models[0];
-			updateOption("model_id", modelToUse.name);
+			updateOption("model_name", modelToUse.name);
 		}
-	}, [options.provider_id, options.model_id, models, defaultModel]);
+	}, [options.provider_name, options.model_name, models, defaultModel]);
 
 	// Update a single option
 	const updateOption = useCallback(
@@ -183,15 +183,16 @@ export function GenerationOptionsProvider({
 	);
 
 	// Provider selection
-	const selectProvider = useCallback((providerId: string) => {
-		updateOption("provider_id", providerId);
-		// Clear model when provider changes
-		updateOption("model_id", "");
-	}, [updateOption]);
+	const selectProvider = useCallback((providerName: string) => {
+		if (providerName !== options.provider_name) {
+			updateOption("provider_name", providerName);
+			updateOption("model_name", "");
+		}
+	}, [updateOption, options.provider_name]);
 
 	// Model selection
 	const selectModel = useCallback((modelName: string) => {
-		updateOption("model_id", modelName);
+		updateOption("model_name", modelName);
 	}, [updateOption]);
 
 	// Dialog controls
@@ -255,8 +256,8 @@ export function GenerationOptionsProvider({
 			selectModel,
 			openDialog,
 			closeDialog,
-			toggleDialog
-		],
+			toggleDialog,
+		]
 	);
 
 	return (
@@ -267,17 +268,17 @@ export function GenerationOptionsProvider({
 }
 
 /**
- * Hook to access the generation options context
+ * Hook to use generation options context
+ *
+ * Must be used within a GenerationOptionsProvider
  */
 export function useGenerationOptions() {
 	const context = useContext(GenerationOptionsContext);
-
-	if (context === undefined) {
+	if (!context) {
 		throw new Error(
 			"useGenerationOptions must be used within a GenerationOptionsProvider",
 		);
 	}
-
 	return context;
 }
 

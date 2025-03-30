@@ -53,10 +53,10 @@ export function formatCaptionRequest(
  */
 export function legacyCaptionToGenerationOptions(
   captionOptions: LegacyCaptionOptions,
-  providerId: string
+  providerName: string
 ): GenerationOptions {
   return {
-    model_id: captionOptions.model,
+    model_name: captionOptions.model,
     max_tokens: captionOptions.max_tokens ?? 4096,
     temperature: captionOptions.temperature ?? 0.7,
     top_p: captionOptions.top_p ?? 0.95,
@@ -64,7 +64,7 @@ export function legacyCaptionToGenerationOptions(
     global_context: captionOptions.global_context ?? "You are a visual captioning perspective.",
     context: captionOptions.context ?? [],
     resize_resolution: captionOptions.resize_resolution ?? "NONE",
-    provider_id: providerId
+    provider_name: providerName
   };
 }
 
@@ -81,20 +81,20 @@ interface PerspectiveDataWithOptions {
  */
 export function perspectiveDataToGenerationOptions(
   perspectiveData: PerspectiveDataWithOptions,
-  providerIdMap: Record<string, string>
+  providerNameMap: Record<string, string>
 ): GenerationOptions {
   // If we have structured options, use those
   if (perspectiveData.options) {
     return legacyCaptionToGenerationOptions(
       perspectiveData.options,
-      providerIdMap[perspectiveData.provider] || ""
+      providerNameMap[perspectiveData.provider] || perspectiveData.provider
     );
   }
   
   // Otherwise create minimal options
   return {
-    model_id: perspectiveData.model,
-    provider_id: providerIdMap[perspectiveData.provider] || "",
+    model_name: perspectiveData.model,
+    provider_name: providerNameMap[perspectiveData.provider] || perspectiveData.provider,
     max_tokens: 4096,
     temperature: 0.7,
     top_p: 0.95,

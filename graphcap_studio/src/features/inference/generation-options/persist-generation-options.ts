@@ -20,20 +20,7 @@ const STORAGE_KEY = "graphcap:generation-options";
  */
 export function saveGenerationOptions(options: GenerationOptions): void {
 	try {
-		// Create a copy to ensure we don't modify the original
-		const optionsToSave = { ...options };
-		
-		// Ensure provider_id is stored as a string
-		if (optionsToSave.provider_id !== undefined) {
-			optionsToSave.provider_id = String(optionsToSave.provider_id);
-		}
-		
-		// Verify we have a model name, not an ID
-		if (optionsToSave.model_id && /^\d+$/.test(optionsToSave.model_id)) {
-			throw new Error('model_id must be a model name, not a numeric ID');
-		}
-		
-		const serialized = JSON.stringify(optionsToSave);
+		const serialized = JSON.stringify(options);
 		localStorage.setItem(STORAGE_KEY, serialized);
 	} catch (error) {
 		console.error("Failed to save generation options to localStorage:", error);
@@ -51,17 +38,6 @@ export function loadGenerationOptions(): GenerationOptions | null {
 		if (!serialized) return null;
 
 		const parsed = JSON.parse(serialized);
-		
-		// If provider_id exists and is a number, convert it to string
-		if (parsed.provider_id !== undefined && typeof parsed.provider_id === 'number') {
-			parsed.provider_id = parsed.provider_id.toString();
-		}
-		
-		// Check if model_id appears to be a numeric ID and not a name
-		if (parsed.model_id && /^\d+$/.test(parsed.model_id)) {
-			console.error('Invalid model_id format: Must be a model name, not a numeric ID');
-			throw new Error('model_id must be a model name, not a numeric ID');
-		}
 		
 		// Validate the loaded data against the schema
 		return GenerationOptionsSchema.parse(parsed);

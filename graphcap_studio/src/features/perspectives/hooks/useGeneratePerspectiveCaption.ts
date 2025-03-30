@@ -57,7 +57,7 @@ export function useGeneratePerspectiveCaption() {
 			}
 
 			// Check if a model is specified in the options
-			if (!options.model_id) {
+			if (!options.model_name) {
 				throw new Error("A model must be specified in the options");
 			}
 
@@ -82,7 +82,7 @@ export function useGeneratePerspectiveCaption() {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
-				model: options.model_id, // Use model_id from GenerationOptions
+				model: options.model_name, // Use model_name from GenerationOptions
 				provider_config: providerConfig, // Include the full provider configuration
 				...apiOptions, // Spread the formatted API options
 			};
@@ -91,7 +91,7 @@ export function useGeneratePerspectiveCaption() {
 				perspective,
 				image_path: normalizedImagePath,
 				provider: provider.name,
-				model: options.model_id, // Log the model_id from options
+				model: options.model_name, // Log the model_name from options
 				options: apiOptions,
 			});
 

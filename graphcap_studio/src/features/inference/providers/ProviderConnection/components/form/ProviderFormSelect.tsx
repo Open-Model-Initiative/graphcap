@@ -26,15 +26,15 @@ export function ProviderFormSelect({
 	// Convert providers to the format expected by ProviderSelector
 	const providerOptions: ProviderOption[] = providers.map((p: Provider) => ({
 		label: p.name,
-		value: String(p.id),
+		value: p.name,
 		id: String(p.id),
 	}));
 
 	const handleProviderChange = (value: string) => {
 		if (!value) return;
 		
-		// Find the selected provider from the providers list
-		const selectedProvider = providers.find((p: Provider) => String(p.id) === value);
+		// Find the selected provider from the providers list by name
+		const selectedProvider = providers.find((p: Provider) => p.name === value);
 		if (selectedProvider) {
 			setProvider(selectedProvider);
 		}
@@ -43,7 +43,7 @@ export function ProviderFormSelect({
 	return (
 		<ProviderSelector
 			options={providerOptions}
-			value={provider?.id ? String(provider.id) : null}
+			value={provider?.name ?? null}
 			onChange={handleProviderChange}
 			placeholder="Select a provider"
 			className={className}
