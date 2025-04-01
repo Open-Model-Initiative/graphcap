@@ -78,7 +78,6 @@ interface ImageCarouselProviderProps {
 	readonly isEmpty?: boolean;
 	readonly selectedImage?: Image | null;
 	readonly onSelectImage: (image: Image) => void;
-	readonly datasetName?: string;
 	readonly onUploadComplete?: () => void;
 	readonly thumbnailOptions?: {
 		readonly minWidth?: number;
@@ -104,7 +103,6 @@ interface ImageCarouselProviderProps {
  * @param isEmpty - Whether the carousel is empty
  * @param selectedImage - Initial selected image
  * @param onSelectImage - Callback to select an image
- * @param datasetName - Optional override for dataset name
  * @param onUploadComplete - Callback when upload is complete
  * @param thumbnailOptions - Thumbnail options
  * @param preloadOptions - Preload options
@@ -116,7 +114,6 @@ export function ImageCarouselProvider({
 	isEmpty = false,
 	selectedImage: initialSelectedImage = null,
 	onSelectImage,
-	datasetName: propDatasetName,
 	onUploadComplete,
 	thumbnailOptions = {},
 	preloadOptions = {},
@@ -124,8 +121,8 @@ export function ImageCarouselProvider({
 	// Get dataset context
 	const { currentDataset } = useDatasetContext();
 
-	// Use prop datasetName if provided, otherwise use currentDataset from context
-	const datasetName = propDatasetName ?? currentDataset;
+	// Use currentDataset directly from context
+	const datasetName = currentDataset;
 
 	// Memoize normalized thumbnail options
 	const normalizedThumbnailOptions = useMemo(() => ({
