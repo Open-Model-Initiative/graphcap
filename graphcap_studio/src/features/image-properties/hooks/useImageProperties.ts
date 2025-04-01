@@ -1,14 +1,14 @@
-import { useEditorContext } from "@/features/editor/context/EditorContext";
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from "react";
 
-export interface ImagePropertiesData {
+export interface ImagePropertiesData {	
 	title: string;
 	description: string;
 	tags: string[];
 	rating: number;
-	metadata: Record<string, any>;
+	metadata: Record<string, string>;
 }
 
 /**
@@ -18,37 +18,54 @@ export interface ImagePropertiesData {
  * It uses localStorage for persistence in the demo version.
  */
 export function useImageProperties(image: Image | null) {
-	const { dataset } = useEditorContext();
+	const {
+		selectedDataset,
+		isLoadingDataset,
+		datasetError,
+	} = useDatasetContext();
 
-	const [properties, setProperties] = useState<ImagePropertiesData>({
-		title: "",
-		description: "",
-		tags: [],
-		rating: 0,
-		metadata: {},
-	});
+	const [properties, setProperties] = useState<ImagePropertiesData | null>(null);
 	const [newTag, setNewTag] = useState("");
 	const [isEditing, setIsEditing] = useState(false);
-	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Load properties from localStorage if available
+	// Load/initialize properties when image or dataset context changes
 	useEffect(() => {
+		// Reset state initially
+		setError(null);
+		setProperties(null);
+
 		if (!image) {
 			setError("No image selected");
-			setIsLoading(false);
 			return;
 		}
 
-		setIsLoading(true);
-		setError(null);
+		// Wait for dataset context to be ready
+		if (isLoadingDataset) {
+			return;
+		}
+
+		// Handle dataset context error state
+		if (datasetError) {
+			setError(`Cannot load properties: Dataset error - ${datasetError.message}`);
+			return;
+		}
+
+		// Handle case where context resolved but dataset is missing
+		if (!selectedDataset) {
+			setError("Cannot load properties: Dataset not found.");
+			return;
+		}
+
+		// --- Context is ready, image exists, dataset is selected --- //
+		// Now attempt to load/initialize properties specifically for this image
 
 		try {
 			const savedProps = localStorage.getItem(`image-props:${image.path}`);
 			if (savedProps) {
 				setProperties(JSON.parse(savedProps));
 			} else {
-				// Initialize with default properties and image info
+				// Initialize with default properties
 				setProperties({
 					title: image.name || "Untitled",
 					description: "",
@@ -58,44 +75,59 @@ export function useImageProperties(image: Image | null) {
 						path: image.path,
 						directory: image.directory,
 						url: image.url,
-						datasetName: dataset?.name ?? undefined,
+						datasetName: selectedDataset.name,
 					},
 				});
 			}
-			setIsLoading(false);
-		} catch (error) {
-			console.error("Error loading image properties:", error);
-			setError("Failed to load properties");
-			setIsLoading(false);
+		} catch (err) {
+			console.error("Error loading/initializing image properties from storage:", err);
+			// Set local error for issues specific to property loading/parsing
+			setError("Failed to load or initialize properties for this image.");
+			setProperties(null);
 		}
-	}, [image, dataset]);
+	}, [image, selectedDataset, isLoadingDataset, datasetError]);
 
-	const handlePropertyChange = (key: keyof ImagePropertiesData, value: any) => {
-		setProperties((prev) => ({
-			...prev,
-			[key]: value,
-		}));
+	const handlePropertyChange = <K extends keyof ImagePropertiesData>(
+		key: K,
+		value: ImagePropertiesData[K],
+	) => {
+		setProperties((prev) => {
+			if (!prev) return null;
+			return {
+				...prev,
+				[key]: value,
+			};
+		});
 	};
 
 	const handleAddTag = () => {
 		if (!newTag.trim()) return;
 
-		setProperties((prev) => ({
-			...prev,
-			tags: [...prev.tags, newTag.trim()],
-		}));
+		setProperties((prev) => {
+			if (!prev) return null;
+			return {
+				...prev,
+				tags: [...prev.tags, newTag.trim()],
+			};
+		});
 		setNewTag("");
 	};
 
 	const handleRemoveTag = (tag: string) => {
-		setProperties((prev) => ({
-			...prev,
-			tags: prev.tags.filter((t) => t !== tag),
-		}));
+		setProperties((prev) => {
+			if (!prev) return null;
+			return {
+				...prev,
+				tags: prev.tags.filter((t) => t !== tag),
+			};
+		});
 	};
 
 	const handleSave = () => {
-		if (!image) return;
+		if (!image || !properties) {
+			console.error("Cannot save: Image or properties are missing.");
+			return;
+		}
 
 		// Save to localStorage for demo purposes
 		localStorage.setItem(
@@ -109,7 +141,6 @@ export function useImageProperties(image: Image | null) {
 		properties,
 		newTag,
 		isEditing,
-		isLoading,
 		error,
 		handlePropertyChange,
 		handleAddTag,

@@ -51,6 +51,7 @@ export function ImageViewer({
 		padding,
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Need to reset loading/error state when imagePath changes
 	useEffect(() => {
 		setLoading(true);
 		setError(null);
@@ -61,7 +62,7 @@ export function ImageViewer({
 		onLoad?.();
 	};
 
-	const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+	const handleError = (_e: React.SyntheticEvent<HTMLImageElement, Event>) => {
 		const error = new Error(`Failed to load image: ${imagePath}`);
 		setError(error);
 		setLoading(false);
@@ -73,7 +74,7 @@ export function ImageViewer({
 		<div ref={containerRef} className={`${styles.container} ${className}`}>
 			{loading && (
 				<div className={styles.loadingOverlay}>
-					<div className={styles.spinner}></div>
+					<div className={styles.spinner} />
 				</div>
 			)}
 			{error && (
@@ -83,7 +84,9 @@ export function ImageViewer({
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
+						role="img" aria-label="Error Icon"
 					>
+						<title>Error loading image</title>
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"

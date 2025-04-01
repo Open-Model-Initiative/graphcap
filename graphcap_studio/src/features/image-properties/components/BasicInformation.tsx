@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/select";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 // SPDX-License-Identifier: Apache-2.0
+import type { SelectValueChangeDetails } from "@chakra-ui/react";
 import {
 	Box,
 	Button,
@@ -18,8 +19,7 @@ import {
 	Textarea,
 	createListCollection,
 } from "@chakra-ui/react";
-import type { SelectValueChangeDetails } from "@chakra-ui/react";
-import { ImagePropertiesData } from "../hooks/useImageProperties";
+import type { ImagePropertiesData } from "../hooks/useImageProperties";
 
 interface BasicInformationProps {
 	readonly properties: ImagePropertiesData;
@@ -27,7 +27,7 @@ interface BasicInformationProps {
 	readonly newTag: string;
 	readonly onPropertyChange: (
 		key: keyof ImagePropertiesData,
-		value: any,
+		value: string,
 	) => void;
 	readonly onNewTagChange: (value: string) => void;
 	readonly onAddTag: () => void;
@@ -71,7 +71,7 @@ export function BasicInformation({
 	const handleRatingChange = (
 		details: SelectValueChangeDetails<(typeof ratingItems)[0]>,
 	) => {
-		onPropertyChange("rating", Number(details.value[0]));
+		onPropertyChange("rating", details.value[0]);
 	};
 
 	return (

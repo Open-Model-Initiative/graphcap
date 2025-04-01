@@ -16,7 +16,9 @@ export function ErrorState({ message }: ErrorStateProps) {
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
+					aria-label="Error Icon"
 				>
+					<title>Error Icon</title>
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
