@@ -1,8 +1,8 @@
 import { useEditorContext } from "@/features/editor/context/EditorContext";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useContext,
 	useEffect,

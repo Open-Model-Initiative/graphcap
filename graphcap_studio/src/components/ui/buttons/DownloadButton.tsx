@@ -1,4 +1,4 @@
-import type { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { downloadImage } from "@/utils/download";
 // SPDX-License-Identifier: Apache-2.0
 import type { IconButtonProps } from "@chakra-ui/react";

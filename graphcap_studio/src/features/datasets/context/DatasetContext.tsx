@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Dataset } from "@/services/dataset";
 import { useAddImageToDataset, useCreateDataset } from "@/services/dataset";
-import type { Image } from "@/services/images";
+import type { Dataset, Image } from "@/types";
 import { toast } from "@/utils/toast";
 import {
 	type ReactNode,

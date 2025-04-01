@@ -1,5 +1,5 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Heading, Text } from "@chakra-ui/react";
 

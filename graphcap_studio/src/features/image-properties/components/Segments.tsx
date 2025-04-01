@@ -1,6 +1,6 @@
 import { FeatureStub } from "@/components/ui/status/FeatureStub";
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 
 interface SegmentsProps {
 	readonly image: Image;

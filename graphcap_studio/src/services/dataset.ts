@@ -1,8 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // SPDX-License-Identifier: Apache-2.0
-import { z } from "zod";
+import {
+	AddImageToDatasetResponseSchema,
+	DatasetCreateResponseSchema,
+	DatasetDeleteResponseSchema,
+	DatasetListResponseSchema,
+} from "@/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryClient } from "../utils/queryClient";
-import { ImageSchema } from "./images";
 
 /**
  * Dataset service for interacting with the Graphcap Media Server
@@ -26,49 +30,6 @@ const DATASETS_PATH =
 // Log the media server URL for debugging
 console.log("Media Server URL:", MEDIA_SERVER_URL);
 console.log("Datasets Path:", DATASETS_PATH);
-
-// Define the dataset schema
-export const DatasetSchema = z.object({
-	name: z.string(),
-	images: z.array(ImageSchema),
-});
-
-export type Dataset = z.infer<typeof DatasetSchema>;
-
-// Define the dataset list response schema
-export const DatasetListResponseSchema = z.object({
-	datasets: z.array(DatasetSchema),
-});
-
-export type DatasetListResponse = z.infer<typeof DatasetListResponseSchema>;
-
-// Define the dataset creation response schema
-export const DatasetCreateResponseSchema = z.object({
-	success: z.boolean(),
-	path: z.string().optional(),
-	message: z.string().optional(),
-});
-
-export type DatasetCreateResponse = z.infer<typeof DatasetCreateResponseSchema>;
-
-// Define the add image to dataset response schema
-export const AddImageToDatasetResponseSchema = z.object({
-	success: z.boolean(),
-	path: z.string().optional(),
-	message: z.string().optional(),
-});
-
-export type AddImageToDatasetResponse = z.infer<
-	typeof AddImageToDatasetResponseSchema
->;
-
-// Define the dataset deletion response schema
-export const DatasetDeleteResponseSchema = z.object({
-	success: z.boolean(),
-	message: z.string().optional(),
-});
-
-export type DatasetDeleteResponse = z.infer<typeof DatasetDeleteResponseSchema>;
 
 // Query keys for TanStack Query
 export const queryKeys = {

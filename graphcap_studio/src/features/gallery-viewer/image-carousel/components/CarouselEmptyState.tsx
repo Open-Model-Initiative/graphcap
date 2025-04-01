@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/ui/status/EmptyState";
-import { UploadDropzone } from "@/features/gallery-viewer/image-uploader";
+import { UploadDropzone } from "@/features/datasets/components/image-uploader";
 import { Upload } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
 import React from "react";

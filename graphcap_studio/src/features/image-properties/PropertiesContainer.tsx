@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ImageProperties } from "@/features/image-properties";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { ImagePropertiesProvider } from "./context";
 
 interface PropertiesContainerProps {

@@ -1,9 +1,9 @@
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { useDatasets } from "@/features/datasets/hooks/useDatasets";
-import { Dataset, Image } from "@/services/images";
+import type { Dataset, Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useContext,
 	useEffect,

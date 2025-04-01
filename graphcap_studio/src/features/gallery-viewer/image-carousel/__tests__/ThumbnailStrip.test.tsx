@@ -1,7 +1,7 @@
+import type { Image } from "@/types";
+import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import "@testing-library/jest-dom";
-import { Image } from "@/services/images";
 import { ThumbnailStrip } from "../ThumbnailStrip";
 
 // Mock the ThumbnailImage component
@@ -63,9 +63,9 @@ describe("ThumbnailStrip", () => {
 		global.ResizeObserver = ResizeObserverMock;
 
 		// Mock Element.scrollTo
-		Element.prototype.scrollTo = function (_x: number, _y: number) {
+		Element.prototype.scrollTo = ((_x: number, _y: number) => {
 			// Mock implementation
-		} as any;
+		}) as any;
 	});
 
 	test("renders thumbnails for all images", () => {

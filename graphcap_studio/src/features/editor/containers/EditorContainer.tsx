@@ -3,7 +3,7 @@ import { ViewerContainer } from "@/features/gallery-viewer";
 import { PropertiesContainer } from "@/features/image-properties";
 import { EditorLayout } from "@/pages/gallery/GalleryLayout";
 // SPDX-License-Identifier: Apache-2.0
-import { Dataset } from "@/services/images";
+import type { Dataset } from "@/types";
 import { ImageEditor } from "../components/ImageEditor";
 import { useImageActions, useImageEditor } from "../hooks";
 

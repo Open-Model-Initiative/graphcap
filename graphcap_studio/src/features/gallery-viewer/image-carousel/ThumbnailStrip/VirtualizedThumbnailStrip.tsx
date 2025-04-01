@@ -1,5 +1,5 @@
 import { ThumbnailImage } from "@/components/responsive-image";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { memo, useEffect, useState } from "react";
 import { FixedSizeList as List } from "react-window";

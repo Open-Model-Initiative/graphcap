@@ -1,4 +1,4 @@
-import type { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from "react";

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { ImageGalleryContent } from "./ImageGalleryContent";
 import { ViewModeToggle } from "./components";
-import { DEFAULT_VIEW_MODE, ViewMode } from "./components/ImageGallery";
+import { DEFAULT_VIEW_MODE, type ViewMode } from "./components/ImageGallery";
 import { useViewerContainer } from "./hooks";
 import { GalleryViewerProvider } from "./hooks/useGalleryViewerContext";
 

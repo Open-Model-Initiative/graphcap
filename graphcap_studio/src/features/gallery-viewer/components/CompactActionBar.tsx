@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/buttons";
 // SPDX-License-Identifier: Apache-2.0
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { Flex, Text } from "@chakra-ui/react";
 import { AddToDatasetMenu } from "./AddToDatasetMenu";
 

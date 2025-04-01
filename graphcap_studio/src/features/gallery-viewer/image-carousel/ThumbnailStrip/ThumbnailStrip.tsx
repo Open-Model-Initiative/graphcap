@@ -1,6 +1,6 @@
 import { ThumbnailImage } from "@/components/responsive-image";
-import { UploadDropzone } from "@/features/gallery-viewer/image-uploader";
-import { Image } from "@/services/images";
+import { UploadDropzone } from "@/features/datasets/components/image-uploader";
+import type { Image } from "@/types";
 import { Upload } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
 import { memo } from "react";

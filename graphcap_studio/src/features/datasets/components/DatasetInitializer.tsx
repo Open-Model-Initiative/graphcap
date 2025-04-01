@@ -1,6 +1,6 @@
-import { Dataset } from "@/services/images";
+import type { Dataset } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { DatasetProvider } from "../context/DatasetContext";
 import { useDatasets } from "../hooks/useDatasets";
 

@@ -33,8 +33,8 @@ export function useImageUploader({
 	const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
 		{},
 	);
-
-	// Use the upload image mutation
+	console.log("Dataset name", datasetName);
+	// Use the upload image mutation	
 	const uploadImageMutation = useUploadImage();
 
 	const onDrop = useCallback(

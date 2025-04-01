@@ -1,5 +1,5 @@
 import { queryKeys } from "@/services/dataset";
-import type { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { toast } from "@/utils/toast";
 import { useQueryClient } from "@tanstack/react-query";
 // SPDX-License-Identifier: Apache-2.0
