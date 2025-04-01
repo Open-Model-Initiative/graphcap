@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { Route } from "@/routes/gallery/$datasetId/content/$contentId";
 import type { Image } from "@/types";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -40,7 +41,7 @@ export function LazyImage({
 	isSelected,
 	ImageComponent,
 }: LazyImageProps) {
-	const navigate = useNavigate();
+	const navigate = useNavigate({ from: Route.id });
 	const { selectedDataset } = useDatasetContext();
 
 	const [isLoaded, setIsLoaded] = useState(false);
@@ -81,7 +82,7 @@ export function LazyImage({
 			navigate({
 				to: "/gallery/$datasetId/content/$contentId",
 				params: { datasetId, contentId },
-				// Consider search/hash params if needed
+				search: (prev) => ({ ...prev }), // Preserve existing search params
 			});
 		} else {
 			console.warn("Cannot navigate: Missing datasetId or contentId", { datasetId, contentId });

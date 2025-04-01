@@ -1,27 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
 import { useDatasets } from "@/features/datasets/hooks/useDatasets";
-import { EditorContainer } from "@/features/editor/containers/EditorContainer";
-import type { Dataset } from "@/types";
+
 import { useParams } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 
-	
-/**
- * Inner component now receives state via props and renders children
- */
-function GalleryContainerInner({ currentDataset, selectedSubfolder, children }: {
-	readonly currentDataset: Dataset | null;
-	readonly selectedSubfolder: string | null;
-	readonly children: ReactNode;
-}) {
-	return (
-			<div className="h-full w-full overflow-hidden">
-				{children}
-			</div>
-	);
-}
 
 /**
  * Container component for the gallery page.
@@ -32,8 +16,6 @@ export function GalleryContainer({ children }: { children: ReactNode }) {
 	const { datasetId } = useParams({ from: "/gallery/$datasetId" });
 
 	const {
-		selectedDataset,
-		selectedSubfolder,
 		isLoading,
 		error,
 	} = useDatasets(datasetId);
@@ -55,11 +37,8 @@ export function GalleryContainer({ children }: { children: ReactNode }) {
 	}
 
 	return (
-		<GalleryContainerInner
-			currentDataset={selectedDataset}
-			selectedSubfolder={selectedSubfolder}
-		>
+		<>
 			{children}
-		</GalleryContainerInner>
+		</>
 	);
 }
