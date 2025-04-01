@@ -45,6 +45,32 @@ export function ImageGalleryContent({
 	// Only show action bar in grid/carousel modes
 	const showActionBar = viewMode !== "edit";
 
+	// Determine the content based on viewMode and selectedImage
+	let content: React.ReactNode;
+	if (viewMode === "edit" && selectedImage) {
+		content = (
+			<ImageEditor
+				imagePath={selectedImage.path}
+				onSave={handleSave}
+				onCancel={handleCancel}
+			/>
+		);
+	} else if (viewMode === "grid") {
+		content = (
+			<GridViewer
+				ImageComponent={ImageViewer}
+				className="h-full w-full"
+			/>
+		);
+	} else {
+		content = (
+			<CarouselViewer
+				thumbnailOptions={thumbnailOptions}
+				className="h-full w-full"
+			/>
+		);
+	}
+
 	return (
 		<div className="h-full w-full flex flex-col bg-gray-900 overflow-hidden">
 			{/* Compact action bar at the top */}
@@ -59,23 +85,7 @@ export function ImageGalleryContent({
 
 			{/* Main content area - flex-grow to take available space */}
 			<div className="flex-grow overflow-hidden">
-				{viewMode === "edit" && selectedImage ? (
-					<ImageEditor
-						imagePath={selectedImage.path}
-						onSave={handleSave}
-						onCancel={handleCancel}
-					/>
-				) : viewMode === "grid" ? (
-					<GridViewer
-						ImageComponent={ImageViewer}
-						className="h-full w-full"
-					/>
-				) : (
-					<CarouselViewer
-						thumbnailOptions={thumbnailOptions}
-						className="h-full w-full"
-					/>
-				)}
+				{content}
 			</div>
 		</div>
 	);

@@ -4,7 +4,6 @@ import { UploadDropzone } from "@/features/datasets/components/image-uploader";
 // SPDX-License-Identifier: Apache-2.0
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { LazyImage } from "@/features/gallery-viewer/image-grid/LazyImage";
-import type { Image } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FixedSizeGrid } from "react-window";
 
@@ -23,7 +22,6 @@ interface GridViewerProps {
 	readonly className?: string;
 	readonly containerWidth?: number;
 	readonly containerHeight?: number;
-	readonly onEditImage?: (image: Image) => void;
 	/**
 	 * Optional custom component to render individual images
 	 * If not provided, a default img element will be used
@@ -49,7 +47,6 @@ interface GridViewerProps {
  * @param className - Additional CSS classes
  * @param containerWidth - Optional explicit container width
  * @param containerHeight - Optional explicit container height
- * @param onEditImage - Callback when edit button is clicked (if applicable in grid view)
  * @param ImageComponent - Optional custom component to render individual images
  * @param onUploadComplete - Callback when upload is complete
  */
@@ -129,15 +126,13 @@ export function GridViewer({
 
 	// Cell renderer for the virtualized grid
 	const Cell = useCallback(
-		({
-			columnIndex,
-			rowIndex,
-			style,
-		}: {
+		(props: {
 			columnIndex: number;
 			rowIndex: number;
 			style: React.CSSProperties;
 		}) => {
+			const { columnIndex, rowIndex, style } = props;
+
 			const index = rowIndex * columnCount + columnIndex;
 			if (index >= images.length) return null;
 
