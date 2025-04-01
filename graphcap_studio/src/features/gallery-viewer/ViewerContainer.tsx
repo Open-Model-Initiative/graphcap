@@ -7,13 +7,8 @@ import { useViewerContainer } from "./hooks";
 import { GalleryViewerProvider } from "./hooks/useGalleryViewerContext";
 
 interface ViewerContainerProps {
-	readonly images: Image[];
-	readonly isLoading?: boolean;
-	readonly isEmpty?: boolean;
 	readonly className?: string;
 	readonly initialViewMode?: ViewMode;
-	readonly selectedImage?: Image | null;
-	readonly onImageSelected?: (image: Image) => void;
 	readonly onAddToDataset?: (imagePath: string, datasetName: string) => void;
 	readonly showViewModeToggle?: boolean;
 	readonly title?: string;
@@ -26,17 +21,11 @@ interface ViewerContainerProps {
  * A container component for the image viewer that handles responsive layout
  *
  * This component renders the ImageGallery component and handles responsive layout
- * adjustments for different screen sizes and zoom levels. The first image is
- * automatically selected when the component loads or when the images array changes.
- * The default view mode is 'carousel'.
+ * adjustments for different screen sizes and zoom levels. Uses DatasetContext for
+ * image data and selection state.
  *
- * @param images - Array of images to display
- * @param isLoading - Whether the gallery is in loading state
- * @param isEmpty - Whether there are no images to display
  * @param className - Additional CSS classes
  * @param initialViewMode - Initial view mode ('grid' or 'carousel'), defaults to 'carousel'
- * @param selectedImage - Currently selected image
- * @param onImageSelected - Callback when an image is selected
  * @param onAddToDataset - Callback when add to dataset button is clicked
  * @param showViewModeToggle - Whether to show the view mode toggle
  * @param title - Title to display in the header bar
@@ -45,13 +34,7 @@ interface ViewerContainerProps {
  * @param onUploadComplete - Callback when upload is complete
  */
 export function ViewerContainer({
-	images,
-	isLoading = false,
-	isEmpty = false,
 	className = "",
-	initialViewMode = DEFAULT_VIEW_MODE,
-	selectedImage,
-	onImageSelected,
 	onAddToDataset,
 	showViewModeToggle = true,
 	title = "Image Viewer",
@@ -64,10 +47,6 @@ export function ViewerContainer({
 
 	return (
 		<GalleryViewerProvider
-			images={images}
-			initialViewMode={initialViewMode}
-			initialSelectedImage={selectedImage}
-			onImageSelected={onImageSelected}
 			onUploadComplete={onUploadComplete}
 		>
 			<div
@@ -104,9 +83,6 @@ export function ViewerContainer({
 
 				<div className="flex-grow relative">
 					<ImageGalleryContent
-						images={images}
-						isLoading={isLoading}
-						isEmpty={isEmpty}
 						onAddToDataset={onAddToDataset}
 						thumbnailOptions={thumbnailOptions}
 					/>

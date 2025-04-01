@@ -1,39 +1,27 @@
-import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { Route } from "@/routes/gallery/$datasetId/content/$contentId";
+import { useNavigate } from "@tanstack/react-router";
 import {
 	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
-	useEffect,
 	useMemo,
-	useState,
 } from "react";
-import { DEFAULT_VIEW_MODE, type ViewMode } from "../components/ImageGallery";
+import type { ViewMode } from "../components/ImageGallery";
 
 interface GalleryViewerContextType {
-	// View mode state
+	/** The current view mode, either 'grid' or 'carousel' */
 	viewMode: ViewMode;
+	/** Updates the view mode by modifying the URL search parameter */
 	setViewMode: (mode: ViewMode) => void;
-
-	// Selected image state (internal tracking)
-	selectedImage: Image | null;
-	setSelectedImage: (image: Image | null) => void;
-
-	// Derived values
+	/** The index of the currently selected image in the dataset's images array */
 	currentIndex: number;
-	totalImages: number;
-
-	// Callbacks
-	onUploadComplete?: () => void;
 }
 
 interface GalleryViewerProviderProps {
 	readonly children: ReactNode;
-	readonly images: Image[];
-	readonly initialViewMode?: ViewMode;
-	readonly initialSelectedImage?: Image | null;
-	readonly onImageSelected?: (image: Image) => void;
-	readonly onUploadComplete?: () => void;
 }
 
 const GalleryViewerContext = createContext<
@@ -44,71 +32,52 @@ const GalleryViewerContext = createContext<
  * Provider component for the GalleryViewer context
  *
  * This component manages the internal state of the gallery viewer, including:
- * - View mode (grid or carousel)
- * - Selected image
- * - Current index and total images
- * - Upload callbacks
+ * - View mode (derived from URL search param ?view=...)
+ * - Current index (derived from DatasetContext)
  *
  * @param children - Child components
- * @param images - Array of images to display
- * @param initialViewMode - Initial view mode, defaults to DEFAULT_VIEW_MODE
- * @param initialSelectedImage - Initial selected image
- * @param onImageSelected - Callback when an image is selected
- * @param onUploadComplete - Callback when upload is complete
  */
 export function GalleryViewerProvider({
 	children,
-	images,
-	initialViewMode = DEFAULT_VIEW_MODE,
-	initialSelectedImage = null,
-	onImageSelected,
-	onUploadComplete,
 }: Readonly<GalleryViewerProviderProps>) {
-	// Internal state
-	const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-	const [selectedImage, setSelectedImage] = useState<Image | null>(
-		initialSelectedImage,
-	);
+	// Get navigation function and search params from the specific route
+	const navigate = useNavigate({
+		from: Route.id,
+	});
+	const { view } = Route.useSearch();
 
-	// Derived values
-	const totalImages = images.length;
+	// Get data from DatasetContext
+	const { selectedDataset, selectedImage } = useDatasetContext();
+	const images = selectedDataset?.images ?? [];
+
+	// View mode is now directly from the URL search param
+	// The route schema ensures view is always a valid ViewMode
+	const viewMode = view as ViewMode;
+
+	// Derived values from context data
 	const currentIndex = selectedImage
 		? images.findIndex((img) => img.path === selectedImage.path)
 		: -1;
 
-	// Handle image selection with callback
-	const setSelectedImageInternal = (image: Image | null) => {
-		setSelectedImage(image);
-		if (image && onImageSelected) {
-			onImageSelected(image);
-		}
-	};
-
-	// Auto-select the first image when images change or on initial load
-	useEffect(() => {
-		// Only auto-select if there are images, no image is currently selected,
-		// and either no initialSelectedImage was provided or it's not in the current images array
-		if (
-			images.length > 0 &&
-			(selectedImage === null ||
-				images.findIndex((img) => img.path === selectedImage.path) === -1)
-		) {
-			setSelectedImageInternal(images[0]);
-		}
-	}, [images, selectedImage, setSelectedImageInternal]);
+	// Updates the URL search parameter to change view mode
+	const setViewMode = useCallback(
+		(mode: ViewMode) => {
+			navigate({
+				search: (prev) => ({ ...prev, view: mode }),
+				replace: true,
+			});
+		},
+		[navigate],
+	);
 
 	// Memoize the context value to prevent unnecessary re-renders
 	const contextValue = useMemo(
 		() => ({
 			viewMode,
 			setViewMode,
-			selectedImage,
-			setSelectedImage: setSelectedImageInternal,
 			currentIndex,
-			totalImages,
-			onUploadComplete,
 		}),
-		[viewMode, selectedImage, currentIndex, totalImages, onUploadComplete],
+		[viewMode, setViewMode, currentIndex],
 	);
 
 	return (
@@ -121,10 +90,10 @@ export function GalleryViewerProvider({
 /**
  * Hook to access the GalleryViewer context
  *
- * @returns The GalleryViewer context
+ * @returns The GalleryViewer context value containing view mode and navigation state
  * @throws Error if used outside of a GalleryViewerProvider
  */
-export function useGalleryViewerContext() {
+export function useGalleryViewerContext(): GalleryViewerContextType {
 	const context = useContext(GalleryViewerContext);
 
 	if (context === undefined) {

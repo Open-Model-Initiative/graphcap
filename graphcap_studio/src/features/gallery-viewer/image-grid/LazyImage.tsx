@@ -1,5 +1,7 @@
-import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import type { Image } from "@/types";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -16,11 +18,6 @@ interface ImageRendererProps {
 interface LazyImageProps {
 	readonly image: Image;
 	readonly isSelected: boolean;
-	readonly onSelect: (image: Image) => void;
-	/**
-	 * Optional custom component to render the image
-	 * If not provided, a default img element will be used
-	 */
 	readonly ImageComponent?: React.ComponentType<ImageRendererProps>;
 }
 
@@ -36,29 +33,29 @@ interface LazyImageProps {
  *
  * @param image - The image object to display
  * @param isSelected - Whether this image is currently selected
- * @param onSelect - Callback when the image is selected
  * @param ImageComponent - Optional custom component to render the image
  */
 export function LazyImage({
 	image,
 	isSelected,
-	onSelect,
 	ImageComponent,
 }: LazyImageProps) {
+	const navigate = useNavigate();
+	const { selectedDataset } = useDatasetContext();
+
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [isInView, setIsInView] = useState(false);
 	const imageRef = useRef<HTMLButtonElement>(null);
 
-	// Use Intersection Observer to detect when the image is in view
 	useEffect(() => {
 		const observer = new IntersectionObserver(
 			(entries) => {
-				entries.forEach((entry) => {
+				for (const entry of entries) {
 					if (entry.isIntersecting) {
 						setIsInView(true);
 						observer.unobserve(entry.target);
 					}
-				});
+				}
 			},
 			{
 				rootMargin: "100px",
@@ -75,15 +72,32 @@ export function LazyImage({
 		};
 	}, []);
 
+	// Handle click with navigation
+	const handleClick = () => {
+		const datasetId = selectedDataset?.name;
+		const contentId = image?.name; // Using name as contentId
+
+		if (datasetId && contentId) {
+			navigate({
+				to: "/gallery/$datasetId/content/$contentId",
+				params: { datasetId, contentId },
+				// Consider search/hash params if needed
+			});
+		} else {
+			console.warn("Cannot navigate: Missing datasetId or contentId", { datasetId, contentId });
+		}
+	};
+
 	return (
 		<button
 			ref={imageRef}
+			type="button"
 			className={`group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all hover:shadow-lg h-full w-full text-left ${
 				isSelected
 					? "border-blue-500 shadow-md"
 					: "border-transparent hover:border-gray-600"
 			}`}
-			onClick={() => onSelect(image)}
+			onClick={handleClick}
 			aria-label={`Select image ${image.name}`}
 			aria-pressed={isSelected}
 			style={{ display: "flex", flexDirection: "column" }}
@@ -95,7 +109,7 @@ export function LazyImage({
 						{/* Low-quality placeholder or blur while loading */}
 						{!isLoaded && (
 							<div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-								<div className="h-6 w-6 animate-pulse rounded-full bg-gray-700"></div>
+								<div className="h-6 w-6 animate-pulse rounded-full bg-gray-700" />
 							</div>
 						)}
 
@@ -132,7 +146,7 @@ export function LazyImage({
 					</>
 				) : (
 					// Placeholder when not in view
-					<div className="absolute inset-0 bg-gray-800"></div>
+					<div className="absolute inset-0 bg-gray-800" />
 				)}
 
 				{/* Overlay with image name */}

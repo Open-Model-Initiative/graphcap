@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type {
+	ImageDeleteResponse,
 	ImageProcessResponse,
 } from "@/types";
 import {
@@ -7,6 +8,7 @@ import {
 	DatasetCreateResponseSchema,
 	DatasetDeleteResponseSchema,
 	DatasetListResponseSchema,
+	ImageDeleteResponseSchema,
 	ImageProcessResponseSchema,
 } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -346,6 +348,76 @@ export function useUploadImage() {
 		},
 		meta: {
 			errorMessage: "Failed to upload image to dataset",
+		},
+	});
+}
+
+/**
+ * React hook for deleting an image from a dataset using TanStack Query
+ *
+ * @returns Mutation result for deleting an image
+ */
+export function useDeleteImage() {
+	const queryClient = useQueryClient();
+	return useMutation<
+		ImageDeleteResponse,
+		Error,
+		{ datasetName: string; imageName: string }
+	>({
+		mutationFn: async ({ datasetName, imageName }) => {
+			console.log(`Deleting image: ${imageName} from dataset: ${datasetName}`);
+
+			// Construct the URL carefully, ensuring proper encoding if needed
+			// Assuming imageName might contain special characters, though ideally IDs are safer.
+			const encodedImageName = encodeURIComponent(imageName);
+			const url = `${MEDIA_SERVER_URL}/api/datasets/${datasetName}/images/${encodedImageName}`;
+
+			try {
+				const response = await fetch(url, {
+					method: "DELETE",
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Error response deleting image:", errorText);
+					// Handle specific error cases
+					if (response.status === 404) {
+						throw new Error(
+							`Image "${imageName}" not found in dataset "${datasetName}" (404)`,
+						);
+					}
+					throw new Error(
+						`Failed to delete image: ${response.statusText}`,
+					);
+				}
+
+				const data = await response.json();
+				console.log("Image deleted successfully:", data);
+				return ImageDeleteResponseSchema.parse(data);
+			} catch (error) {
+				console.error("Error deleting image:", error);
+				throw error;
+			}
+		},
+		onSuccess: (_, variables) => {
+			// Invalidate relevant queries to refresh data
+			console.log(
+				`Invalidating queries after deleting image from ${variables.datasetName}`,
+			);
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.datasetImages,
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.datasetByName(variables.datasetName),
+			});
+			// Potentially invalidate general image/directory listings if they exist
+			queryClient.invalidateQueries({ queryKey: queryKeys.images });
+			// Assuming image names might relate to directories, invalidate relevant directory keys if used
+			// We need to know the directory structure or have a more specific key if possible.
+			// For now, invalidating the base 'images' key might suffice.
+		},
+		meta: {
+			errorMessage: "Failed to delete image",
 		},
 	});
 }

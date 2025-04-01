@@ -1,9 +1,10 @@
-import { useEditorContext } from "@/features/editor/context/EditorContext";
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import {
 	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
 	useEffect,
 	useMemo,
@@ -14,13 +15,22 @@ import {
 	savePropertiesToStorage,
 } from "../utils/localStorage";
 
+// Define a specific type for metadata
+export interface ImageMetadata {
+	path: string;
+	width?: number; // Optional as they might not always be available
+	height?: number;
+	size?: number;
+	format?: string;
+}
+
 // Define the properties data interface
 export interface ImagePropertiesData {
 	title: string;
 	description: string;
 	tags: string[];
 	rating: number;
-	metadata: Record<string, any>;
+	metadata: ImageMetadata; // Use the specific type
 }
 
 // Define the context type
@@ -36,7 +46,10 @@ interface ImagePropertiesContextType {
 	// Actions
 	setNewTag: (tag: string) => void;
 	setIsEditing: (isEditing: boolean) => void;
-	handlePropertyChange: (key: keyof ImagePropertiesData, value: any) => void;
+	handlePropertyChange: (
+		key: keyof ImagePropertiesData,
+		value: ImagePropertiesData[keyof ImagePropertiesData]
+	) => void;
 	handleAddTag: () => void;
 	handleRemoveTag: (tag: string) => void;
 	handleSave: () => void;
@@ -64,7 +77,7 @@ export function ImagePropertiesProvider({
 	children,
 	image,
 }: ImagePropertiesProviderProps) {
-	const { dataset } = useEditorContext();
+	const { selectedDataset: dataset } = useDatasetContext();
 
 	const [properties, setProperties] = useState<ImagePropertiesData | null>(
 		null,
@@ -118,7 +131,7 @@ export function ImagePropertiesProvider({
 	}, [image, dataset]);
 
 	// Handler for property changes
-	const handlePropertyChange = (key: keyof ImagePropertiesData, value: any) => {
+	const handlePropertyChange = useCallback((key: keyof ImagePropertiesData, value: ImagePropertiesData[keyof ImagePropertiesData]) => {
 		if (!properties) return;
 
 		setProperties((prev) => {
@@ -128,10 +141,10 @@ export function ImagePropertiesProvider({
 				[key]: value,
 			};
 		});
-	};
+	}, [properties]);
 
 	// Handler for adding a tag
-	const handleAddTag = () => {
+	const handleAddTag = useCallback(() => {
 		if (!newTag.trim() || !properties) return;
 
 		// Don't add duplicate tags
@@ -149,10 +162,10 @@ export function ImagePropertiesProvider({
 		});
 
 		setNewTag("");
-	};
+	}, [newTag, properties]);
 
 	// Handler for removing a tag
-	const handleRemoveTag = (tag: string) => {
+	const handleRemoveTag = useCallback((tag: string) => {
 		if (!properties) return;
 
 		setProperties((prev) => {
@@ -162,10 +175,10 @@ export function ImagePropertiesProvider({
 				tags: prev.tags.filter((t) => t !== tag),
 			};
 		});
-	};
+	}, [properties]);
 
 	// Handler for saving properties
-	const handleSave = () => {
+	const handleSave = useCallback(() => {
 		if (!properties || !image || !dataset) return;
 
 		try {
@@ -176,10 +189,10 @@ export function ImagePropertiesProvider({
 			console.error("Error saving image properties:", error);
 			setError("Failed to save image properties");
 		}
-	};
+	}, [properties, image, dataset]);
 
 	// Toggle editing state
-	const toggleEditing = () => setIsEditing(!isEditing);
+	const toggleEditing = useCallback(() => setIsEditing((prev) => !prev), []);
 
 	// Create the context value
 	const contextValue = useMemo(
@@ -212,6 +225,7 @@ export function ImagePropertiesProvider({
 			handleRemoveTag,
 			handlePropertyChange,
 			handleSave,
+			toggleEditing,
 		],
 	);
 

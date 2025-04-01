@@ -25,7 +25,6 @@ interface ImageCarouselContextType {
 	// Images and selection
 	images: Image[];
 	selectedImage: Image | null;
-	selectImage: (image: Image) => void;
 
 	// Navigation
 	currentIndex: number;
@@ -109,7 +108,6 @@ export function ImageCarouselProvider({
 		selectedDataset,
 		isLoadingDataset,
 		datasetError,
-		selectImage: contextSelectImage,
 		selectedImage: contextSelectedImage,
 	} = useDatasetContext();
 
@@ -169,7 +167,6 @@ export function ImageCarouselProvider({
 	} = useCarouselNavigation({
 		images,
 		selectedImage: initialSelectedImage,
-		onSelectImage: contextSelectImage,
 	});
 
 	// Use custom hook for keyboard navigation
@@ -226,20 +223,10 @@ export function ImageCarouselProvider({
 		}
 	}, [initialSelectedImage]);
 
-	// Select image wrapper
-	const selectImage = useCallback(
-		(image: Image) => {
-			setImageLoadError(false);
-			contextSelectImage(image);
-		},
-		[contextSelectImage],
-	);
-
 	const value = useMemo(
 		() => ({
 			images,
 			selectedImage: initialSelectedImage || null,
-			selectImage,
 
 			currentIndex,
 			totalImages,
@@ -270,7 +257,6 @@ export function ImageCarouselProvider({
 		[
 			images,
 			initialSelectedImage,
-			selectImage,
 			currentIndex,
 			totalImages,
 			visibleImages,

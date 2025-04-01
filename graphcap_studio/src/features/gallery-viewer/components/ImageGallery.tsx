@@ -3,16 +3,14 @@ import type { Image } from "@/types";
 import { ImageGalleryContent } from "../ImageGalleryContent";
 import { GalleryViewerProvider } from "../hooks";
 
-export type ViewMode = "grid" | "carousel";
+export type ViewMode = "grid" | "carousel" | "edit";
 export const DEFAULT_VIEW_MODE: ViewMode = "carousel";
 
 interface ImageGalleryProps {
 	readonly images: Image[];
 	readonly isLoading?: boolean;
 	readonly isEmpty?: boolean;
-	readonly initialViewMode?: ViewMode;
 	readonly selectedImage?: Image | null;
-	readonly onImageSelected: (image: Image) => void;
 	readonly onEditImage?: (image: Image) => void;
 	readonly onAddToDataset?: (imagePath: string, datasetName: string) => void;
 	readonly onDownload?: (image: Image) => void;
@@ -36,9 +34,7 @@ interface ImageGalleryProps {
  * @param images - Array of image objects to display
  * @param isLoading - Whether the gallery is in loading state
  * @param isEmpty - Whether there are no images to display
- * @param initialViewMode - Initial view mode ('grid' or 'carousel'), defaults to DEFAULT_VIEW_MODE
  * @param selectedImage - Currently selected image
- * @param onImageSelected - Callback when an image is selected
  * @param onEditImage - Callback when edit button is clicked
  * @param onAddToDataset - Callback when add to dataset button is clicked
  * @param onDownload - Callback when download button is clicked
@@ -49,9 +45,7 @@ export function ImageGallery({
 	images,
 	isLoading,
 	isEmpty,
-	initialViewMode = DEFAULT_VIEW_MODE,
 	selectedImage,
-	onImageSelected,
 	onEditImage,
 	onAddToDataset,
 	onDownload,
@@ -61,9 +55,7 @@ export function ImageGallery({
 	return (
 		<GalleryViewerProvider
 			images={images}
-			initialViewMode={initialViewMode}
 			initialSelectedImage={selectedImage}
-			onImageSelected={onImageSelected}
 		>
 			<ImageGalleryContent
 				images={images}

@@ -33,10 +33,6 @@ interface DatasetContextType {
 
 	// State setters
 	setSelectedImage: (image: Image | null) => void;
-
-	// Action handlers
-	selectImage: (image: Image) => void;
-
 	// Keep subfolder state? Assume yes for now.
 	selectedSubfolder: string | null;
 	setSelectedSubfolder: (subfolder: string | null) => void;
@@ -124,10 +120,6 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 		setIsResolving(false);
 	}, [targetDatasetId, allDatasets, isLoadingList, listError]);
 
-	// Keep existing image selection logic
-	const selectImage = useCallback((image: Image) => {
-		setSelectedImage(image);
-	}, []);
 
 	const isLoadingDataset = isLoadingList || isResolving;
 	const datasetError = listError instanceof Error ? listError : resolveError;
@@ -141,14 +133,12 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 			allDatasets,
 			isLoadingList,
 			selectDatasetById,
-			// Include existing state/setters
 			selectedImage,
-			setSelectedImage,
-			selectImage,
+			setSelectedImage, 
 			selectedSubfolder,
-			setSelectedSubfolder,
+			setSelectedSubfolder, 
 		}),
-		[
+		[ 
 			selectedDataset,
 			isLoadingDataset,
 			datasetError,
@@ -156,7 +146,6 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 			isLoadingList,
 			selectDatasetById,
 			selectedImage,
-			selectImage,
 			selectedSubfolder,
 		],
 	);

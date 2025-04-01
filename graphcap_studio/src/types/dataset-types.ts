@@ -72,4 +72,17 @@ export const DatasetDeleteResponseSchema = z.object({
 /**
  * TypeScript type inferred from the DatasetDeleteResponseSchema.
  */
-export type DatasetDeleteResponse = z.infer<typeof DatasetDeleteResponseSchema>; 
+export type DatasetDeleteResponse = z.infer<typeof DatasetDeleteResponseSchema>;
+
+/**
+ * Zod schema for the API response when deleting an image from a dataset.
+ */
+export const ImageDeleteResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+
+/**
+ * TypeScript type inferred from the ImageDeleteResponseSchema.
+ */
+export type ImageDeleteResponse = z.infer<typeof ImageDeleteResponseSchema>; 

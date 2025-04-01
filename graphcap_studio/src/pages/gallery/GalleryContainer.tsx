@@ -2,7 +2,6 @@
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
 import { useDatasets } from "@/features/datasets/hooks/useDatasets";
 import { EditorContainer } from "@/features/editor/containers/EditorContainer";
-import { EditorContextProvider } from "@/features/editor/context/EditorContext";
 import type { Dataset } from "@/types";
 import { useParams } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -18,11 +17,9 @@ function GalleryContainerInner({ currentDataset, selectedSubfolder, children }: 
 	readonly children: ReactNode;
 }) {
 	return (
-		<EditorContextProvider dataset={currentDataset}>
 			<div className="h-full w-full overflow-hidden">
 				{children}
 			</div>
-		</EditorContextProvider>
 	);
 }
 
