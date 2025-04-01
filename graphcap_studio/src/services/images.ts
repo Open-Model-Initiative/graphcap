@@ -13,6 +13,7 @@ import type {
 } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryClient } from "../utils/queryClient";
+import { secureRandom } from "../utils/rand";
 
 /**
  * Image service for interacting with the Graphcap Media Server
@@ -89,7 +90,7 @@ async function fetchWithRetry(
 			if (!response.ok && retryCount > 0) {
 				// Exponential backoff with jitter
 				const delay =
-					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + Math.random() * 0.2);
+					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + secureRandom() * 0.2);
 				console.warn(
 					`Request failed with status ${response.status}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
 				);
@@ -115,7 +116,7 @@ async function fetchWithRetry(
 			if (retryCount > 0) {
 				// Exponential backoff with jitter
 				const delay =
-					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + Math.random() * 0.2);
+					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + secureRandom() * 0.2);
 				console.warn(
 					`Request failed with error: ${error}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
 				);
