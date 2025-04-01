@@ -5,21 +5,22 @@ import { EditorContainer } from "@/features/editor/containers/EditorContainer";
 import { EditorContextProvider } from "@/features/editor/context/EditorContext";
 import type { Dataset } from "@/types";
 import { useParams } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 
+
+	
 /**
- * Inner component now receives state via props
+ * Inner component now receives state via props and renders children
  */
-function GalleryContainerInner({ currentDataset, selectedSubfolder }: {
-	currentDataset: Dataset | null;
-	selectedSubfolder: string | null;
+function GalleryContainerInner({ currentDataset, selectedSubfolder, children }: {
+	readonly currentDataset: Dataset | null;
+	readonly selectedSubfolder: string | null;
+	readonly children: ReactNode;
 }) {
 	return (
 		<EditorContextProvider dataset={currentDataset}>
 			<div className="h-full w-full overflow-hidden">
-				<EditorContainer
-					dataset={currentDataset}
-					directory={selectedSubfolder ?? undefined}
-				/>
+				{children}
 			</div>
 		</EditorContextProvider>
 	);
@@ -28,8 +29,9 @@ function GalleryContainerInner({ currentDataset, selectedSubfolder }: {
 /**
  * Container component for the gallery page.
  * Directly uses useDatasets hook based on route params.
+ * Accepts children to render content from nested routes.
  */
-export function GalleryContainer() {
+export function GalleryContainer({ children }: { children: ReactNode }) {
 	const { datasetId } = useParams({ from: "/gallery/$datasetId" });
 
 	const {
@@ -59,6 +61,8 @@ export function GalleryContainer() {
 		<GalleryContainerInner
 			currentDataset={selectedDataset}
 			selectedSubfolder={selectedSubfolder}
-		/>
+		>
+			{children}
+		</GalleryContainerInner>
 	);
 }
