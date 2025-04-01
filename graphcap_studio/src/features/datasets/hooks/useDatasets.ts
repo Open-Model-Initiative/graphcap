@@ -8,23 +8,25 @@ import { getQueryClient } from "@/utils/queryClient";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDatasetNavigation } from "../components/dataset-tree/hooks/useDatasetNavigation";
+import { useDatasetContext } from "../context/DatasetContext";
 
 /**
  * Custom hook for managing datasets
  *
  * This hook provides functionality for listing, creating, and managing datasets
  *
- * @returns Dataset management functions and state
+ * It relies on DatasetContext for the current dataset state.
+ *
+ * @returns Dataset management functions and derived state
  */
 export function useDatasets() {
-	const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
-	const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(
-		null,
-	);
+	// Get current dataset state from context
+	const { currentDataset: currentDatasetName, selectedSubfolder } = useDatasetContext();
+	const { navigateToDataset } = useDatasetNavigation();
+
 	// Track the most recently uploaded images to prioritize them in the sort
-	const [recentlyUploadedImages, setRecentlyUploadedImages] = useState<
-		Set<string>
-	>(new Set());
+	const [recentlyUploadedImages, setRecentlyUploadedImages] = useState<Set<string>>(new Set());
 
 	// Fetch datasets with TanStack Query
 	const { data: datasetsData, isLoading, error, refetch } = useListDatasets();
@@ -35,18 +37,17 @@ export function useDatasets() {
 	// Add image to dataset mutation
 	const addImageToDatasetMutation = useAddImageToDatasetMutation();
 
-	// Find the currently selected dataset
-	const currentDataset = datasetsData?.datasets?.find(
-		(d) => d.name === selectedDataset,
-	);
+	// Find the currently selected dataset object based on the name from context
+	const currentDataset = useMemo(() => {
+		return datasetsData?.datasets?.find((d) => d.name === currentDatasetName);
+	}, [datasetsData, currentDatasetName]);
 
 	// Filter images by subfolder if selected, and sort with recently uploaded images at the top
 	const filteredImages = useMemo(() => {
-		const images =
-			currentDataset?.images.filter((image) => {
-				if (!selectedSubfolder) return true;
-				return image.directory.includes(selectedSubfolder);
-			}) || [];
+		const images = currentDataset?.images.filter((image) => {
+			if (!selectedSubfolder) return true;
+			return image.directory.includes(selectedSubfolder);
+		}) || [];
 
 		// Sort images with recently uploaded images at the top
 		return [...images].sort((a, b) => {
@@ -62,39 +63,16 @@ export function useDatasets() {
 		});
 	}, [currentDataset, selectedSubfolder, recentlyUploadedImages]);
 
-	// Set the first dataset as selected by default
-	useEffect(() => {
-		if (
-			datasetsData?.datasets &&
-			datasetsData.datasets.length > 0 &&
-			!selectedDataset
-		) {
-			setSelectedDataset(datasetsData.datasets[0].name);
-		}
-	}, [datasetsData, selectedDataset]);
-
 	/**
-	 * Handle dataset selection
-	 */
-	const handleDatasetChange = useCallback(
-		(datasetName: string, subfolder?: string | null) => {
-			setSelectedDataset(datasetName);
-			setSelectedSubfolder(subfolder ?? null);
-		},
-		[],
-	);
-
-	/**
-	 * Create a new dataset
+	 * Create a new dataset and navigate to it
 	 */
 	const handleCreateDataset = useCallback(
 		async (name: string): Promise<void> => {
 			try {
 				await createDatasetMutation.mutateAsync(name);
 
-				// Set the newly created dataset as the selected dataset
-				setSelectedDataset(name);
-				setSelectedSubfolder(null);
+				// Navigate to the newly created dataset
+				navigateToDataset({ id: name, name: name, iconType: 'dataset' });
 
 				toast.success({ title: `Created dataset ${name}` });
 			} catch (error) {
@@ -103,7 +81,7 @@ export function useDatasets() {
 				throw error;
 			}
 		},
-		[createDatasetMutation],
+		[createDatasetMutation, navigateToDataset],
 	);
 
 	/**
@@ -170,22 +148,19 @@ export function useDatasets() {
 	}, [currentDataset, recentlyUploadedImages]);
 
 	return {
-		// State
-		selectedDataset,
-		selectedSubfolder,
-		datasetsData,
-		currentDataset,
-		filteredImages,
-		isLoading,
-		error,
+		// State derived from context and queries
+		selectedDataset: currentDatasetName, // Export name from context
+		selectedSubfolder, // Export from context
+		datasetsData, // Raw query data
+		currentDataset, // Derived dataset object
+		filteredImages, // Derived images
+		isLoading, // Query loading state
+		error, // Query error state
 
 		// Actions
-		setSelectedDataset,
-		setSelectedSubfolder,
-		handleDatasetChange,
 		handleCreateDataset,
 		handleAddToDataset,
 		handleUploadComplete,
-		refetch,
+		refetch, // Query refetch action
 	};
 }

@@ -4,6 +4,7 @@ import { Box, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { useDatasetContext } from "../context/DatasetContext";
 import { DatasetTree } from "./DatasetTree";
+import { useDatasetNavigation } from "./dataset-tree/hooks/useDatasetNavigation";
 
 /**
  * Dataset panel component for the left action panel
@@ -14,16 +15,10 @@ export function DatasetPanel() {
 		datasets,
 		currentDataset,
 		selectedSubfolder,
-		setCurrentDataset,
-		setSelectedSubfolder,
 	} = useDatasetContext();
 	const [isLoading] = useState(false);
 	const [error] = useState<Error | null>(null);
-
-	const handleSelectNode = (datasetName: string, subfolder?: string) => {
-		setCurrentDataset(datasetName);
-		setSelectedSubfolder(subfolder ?? null);
-	};
+	const { navigateToDataset } = useDatasetNavigation();
 
 	return (
 		<Box p={4} h="100%">
@@ -55,7 +50,9 @@ export function DatasetPanel() {
 						datasets={datasets}
 						selectedDataset={currentDataset}
 						selectedSubfolder={selectedSubfolder}
-						onSelectNode={handleSelectNode}
+						onSelectNode={(datasetId, _subfolder) => {
+							navigateToDataset({ id: datasetId, name: datasetId, iconType: 'dataset' });
+						}}
 					/>
 				)}
 			</VStack>

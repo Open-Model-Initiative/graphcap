@@ -127,14 +127,20 @@ export function ImageCarouselProvider({
 	// Use prop datasetName if provided, otherwise use currentDataset from context
 	const datasetName = propDatasetName ?? currentDataset;
 
-	// Normalize thumbnail options
-	const normalizedThumbnailOptions = {
+	// Memoize normalized thumbnail options
+	const normalizedThumbnailOptions = useMemo(() => ({
 		minWidth: thumbnailOptions.minWidth ?? 64,
 		maxWidth: thumbnailOptions.maxWidth ?? 120,
 		gap: thumbnailOptions.gap ?? 8,
 		aspectRatio: thumbnailOptions.aspectRatio ?? 1,
 		maxHeight: thumbnailOptions.maxHeight ?? 70,
-	};
+	}), [
+		thumbnailOptions.aspectRatio,
+		thumbnailOptions.gap,
+		thumbnailOptions.maxHeight,
+		thumbnailOptions.maxWidth,
+		thumbnailOptions.minWidth,
+	]);
 
 	// Normalize preload options
 	const normalizedPreloadOptions = {

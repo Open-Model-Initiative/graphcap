@@ -30,10 +30,10 @@ export function CarouselEmptyState({
 					description="Upload new images or select a different dataset."
 					icon={<Upload className="h-12 w-12 text-gray-400" />}
 				/>
-				<div className="mt-6">
+				<div className="flex flex-col items-center gap-4 mt-6">
+					<p className="text-gray-400">Or drag and drop images here</p>
 					<UploadDropzone
-						datasetName={datasetName}
-						className="w-64 h-12 mx-auto"
+						className="w-full h-32"
 						onUploadComplete={onUploadComplete}
 					/>
 				</div>

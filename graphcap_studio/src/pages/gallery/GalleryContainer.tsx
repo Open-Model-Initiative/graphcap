@@ -16,18 +16,10 @@ function GalleryContainerInner() {
 		currentDataset,
 		handleAddToDataset,
 		handleCreateDataset,
-		handleSelectDataset,
 	} = useGalleryContext();
 
 	return (
-		<DatasetProvider
-			initialDatasets={datasets}
-			initialCurrentDataset={selectedDataset ?? ""}
-			initialSelectedSubfolder={selectedSubfolder}
-			onAddToDataset={handleAddToDataset}
-			onCreateDataset={handleCreateDataset}
-			onDatasetSelected={handleSelectDataset}
-		>
+		<>
 			<EditorContextProvider dataset={currentDataset}>
 				<div className="h-full w-full overflow-hidden">
 					<EditorContainer
@@ -36,7 +28,7 @@ function GalleryContainerInner() {
 					/>
 				</div>
 			</EditorContextProvider>
-		</DatasetProvider>
+		</>
 	);
 }
 
@@ -45,14 +37,10 @@ function GalleryContainerInner() {
  *
  * This component provides the GalleryContext and coordinates between
  * the DatasetContext and EditorContext.
- *
- * @param initialDataset - Optional dataset ID to select initially
  */
-export function GalleryContainer({
-	initialDataset,
-}: Readonly<{ initialDataset?: string }>) {
+export function GalleryContainer() {
 	return (
-		<GalleryContextProvider initialDataset={initialDataset}>
+		<GalleryContextProvider>
 			<GalleryContainerInner />
 		</GalleryContextProvider>
 	);

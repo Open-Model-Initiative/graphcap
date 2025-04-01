@@ -2,11 +2,12 @@ import { useUploadImage } from "@/services/dataset";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 // TODO: RESOLVE OLD DATASET NAME SYSTEM
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { useDatasetContext } from "../../context/DatasetContext"; // Import context hook
 
 export interface UseImageUploaderProps {
-	readonly datasetName: string;
+	// readonly datasetName: string; // Remove datasetName prop
 	readonly onUploadComplete: () => void;
 }
 
@@ -16,29 +17,44 @@ export interface UseImageUploaderResult {
 	getRootProps: ReturnType<typeof useDropzone>["getRootProps"];
 	getInputProps: ReturnType<typeof useDropzone>["getInputProps"];
 	isDragActive: boolean;
+	isDisabled: boolean;
 }
 
 /**
  * Custom hook for handling image upload functionality with drag and drop
  *
- * @param datasetName - The name of the dataset to upload images to
+ * Uses the current dataset from DatasetContext for uploads.
  * @param onUploadComplete - Callback function to be called when upload is complete
  * @returns Object containing upload state and dropzone props
  */
 export function useImageUploader({
-	datasetName,
+	// datasetName, // Remove datasetName prop
 	onUploadComplete,
 }: UseImageUploaderProps): UseImageUploaderResult {
 	const [isUploading, setIsUploading] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
 		{},
 	);
-	console.log("Dataset name", datasetName);
+	// Get current dataset from context
+	const { currentDataset } = useDatasetContext(); 
+	if (!currentDataset) {
+		console.log("No dataset selected");
+	} else {
+		console.log("Current dataset", currentDataset);
+	}
+	
 	// Use the upload image mutation	
 	const uploadImageMutation = useUploadImage();
 
+	// Determine if the uploader should be disabled (no valid dataset selected)
+	const isDisabled = !currentDataset;
+
 	const onDrop = useCallback(
 		async (acceptedFiles: File[]) => {
+			if (!currentDataset) {
+				toast.error({ title: "No dataset selected", description: "Please select a dataset before uploading images." });
+				return;
+			}
 			if (!acceptedFiles || acceptedFiles.length === 0) return;
 
 			setIsUploading(true);
@@ -63,7 +79,8 @@ export function useImageUploader({
 					}));
 
 					// Upload the file to the specified dataset
-					await uploadImageMutation.mutateAsync({ file, datasetName });
+					// Use currentDataset from context
+					await uploadImageMutation.mutateAsync({ file, datasetName: currentDataset }); 
 
 					// Update progress and count
 					uploadedCount++;
@@ -103,7 +120,8 @@ export function useImageUploader({
 			setIsUploading(false);
 			onUploadComplete();
 		},
-		[datasetName, onUploadComplete, uploadImageMutation.mutateAsync],
+		// Add currentDataset to dependencies
+		[currentDataset, onUploadComplete, uploadImageMutation.mutateAsync],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -111,7 +129,7 @@ export function useImageUploader({
 		accept: {
 			"image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
 		},
-		disabled: isUploading,
+		disabled: isUploading || isDisabled, // Disable if uploading OR no dataset selected
 		maxSize: 50 * 1024 * 1024, // 50MB
 	});
 
@@ -121,5 +139,6 @@ export function useImageUploader({
 		getRootProps,
 		getInputProps,
 		isDragActive,
+		isDisabled,
 	};
 }

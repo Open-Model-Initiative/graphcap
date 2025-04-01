@@ -4,9 +4,9 @@ import { Plus, Upload } from "lucide-react";
 import { useImageUploader } from "./useImageUploader";
 
 interface UploadDropzoneProps {
-	readonly datasetName: string;
 	readonly className?: string;
 	readonly compact?: boolean;
+	readonly isDisabled?: boolean;
 	readonly onUploadComplete?: () => void;
 }
 
@@ -15,14 +15,13 @@ interface UploadDropzoneProps {
  * like thumbnail strips. Provides drag and drop functionality for image uploads.
  */
 export function UploadDropzone({
-	datasetName,
 	className = "",
 	compact = false,
+	isDisabled = false,
 	onUploadComplete = () => {},
 }: UploadDropzoneProps) {
 	const { isUploading, getRootProps, getInputProps, isDragActive } =
 		useImageUploader({
-			datasetName,
 			onUploadComplete,
 		});
 
@@ -38,9 +37,15 @@ export function UploadDropzone({
 						? "border-blue-500 bg-blue-500/10"
 						: "border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50"
 				}
-        ${isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+        ${isUploading || isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
       `}
-			title="Upload images"
+			title={
+				isDisabled
+					? "Please select a dataset first"
+					: isUploading
+						? "Uploading..."
+						: "Upload images"
+			}
 			aria-label="Upload images"
 		>
 			<input {...getInputProps()} />

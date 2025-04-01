@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useAddImageToDataset, useCreateDataset } from "@/services/dataset";
+import { useAddImageToDataset, useCreateDataset, useListDatasets } from "@/services/dataset";
 import type { Dataset, Image } from "@/types";
 import { toast } from "@/utils/toast";
 import {
@@ -18,6 +18,7 @@ import {
 type DatasetContextType = {
 	// Dataset state
 	datasets: Dataset[];
+	isLoadingDatasets: boolean;
 	currentDataset: string;
 	selectedSubfolder: string | null;
 
@@ -25,7 +26,6 @@ type DatasetContextType = {
 	selectedImage: Image | null;
 
 	// State setters
-	setDatasets: (datasets: Dataset[]) => void;
 	setCurrentDataset: (dataset: string) => void;
 	setSelectedSubfolder: (subfolder: string | null) => void;
 	setSelectedImage: (image: Image | null) => void;
@@ -41,18 +41,6 @@ type DatasetContextType = {
  */
 type DatasetProviderProps = {
 	readonly children: ReactNode;
-	readonly initialDatasets?: Dataset[];
-	readonly initialCurrentDataset?: string;
-	readonly initialSelectedSubfolder?: string | null;
-	readonly onAddToDataset?: (
-		imagePath: string,
-		targetDataset: string,
-	) => Promise<void>;
-	readonly onCreateDataset?: (name: string) => Promise<void>;
-	readonly onDatasetSelected?: (
-		datasetId: string,
-		subfolder?: string | null,
-	) => void;
 };
 
 /**
@@ -64,24 +52,16 @@ export const DatasetContext = createContext<DatasetContextType | undefined>(
 
 /**
  * Provider component for the DatasetContext
+ * Manages dataset state, including fetching the list internally.
  */
-export function DatasetProvider({
-	children,
-	initialDatasets = [],
-	initialCurrentDataset = "",
-	initialSelectedSubfolder = null,
-	onAddToDataset,
-	onCreateDataset,
-	onDatasetSelected,
-}: DatasetProviderProps) {
-	// Dataset state
-	const [datasets, setDatasets] = useState<Dataset[]>(initialDatasets);
-	const [currentDataset, setCurrentDataset] = useState<string>(
-		initialCurrentDataset,
-	);
-	const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(
-		initialSelectedSubfolder,
-	);
+export function DatasetProvider({ children }: DatasetProviderProps) {
+	// Fetch datasets internally
+	const { data: datasetsData, isLoading: isLoadingDatasets } = useListDatasets();
+
+	// Dataset state (managed internally or derived from query)
+	const datasets = useMemo(() => datasetsData?.datasets || [], [datasetsData]);
+	const [currentDataset, setCurrentDataset] = useState<string>(""); // Initial empty, set by route
+	const [selectedSubfolder, setSelectedSubfolder] = useState<string | null>(null);
 
 	// Image selection state
 	const [selectedImage, setSelectedImage] = useState<Image | null>(null);
@@ -89,13 +69,6 @@ export function DatasetProvider({
 	// Get mutations from dataset service
 	const createDatasetMutation = useCreateDataset();
 	const addImageToDatasetMutation = useAddImageToDataset();
-
-	// Notify parent when dataset or subfolder changes
-	useEffect(() => {
-		if (onDatasetSelected && currentDataset) {
-			onDatasetSelected(currentDataset, selectedSubfolder);
-		}
-	}, [currentDataset, selectedSubfolder, onDatasetSelected]);
 
 	// Action handlers
 	const selectImage = useCallback((image: Image) => {
@@ -107,13 +80,7 @@ export function DatasetProvider({
 			if (!imagePath || !targetDataset) return;
 
 			try {
-				// Use the provided handler if available
-				if (onAddToDataset) {
-					await onAddToDataset(imagePath, targetDataset);
-					return;
-				}
-
-				// Otherwise use the mutation from dataset service
+				// Use the mutation directly
 				const result = await addImageToDatasetMutation.mutateAsync({
 					imagePath,
 					datasetName: targetDataset,
@@ -134,20 +101,15 @@ export function DatasetProvider({
 				console.error("Error adding image to dataset:", error);
 			}
 		},
-		[onAddToDataset, addImageToDatasetMutation],
+		[addImageToDatasetMutation],
 	);
 
 	const createDataset = useCallback(
 		async (name: string): Promise<void> => {
 			try {
-				// Use the provided handler if available
-				if (onCreateDataset) {
-					await onCreateDataset(name);
-					return;
-				}
-
-				// Otherwise use the mutation from dataset service
+				// Use the mutation directly
 				await createDatasetMutation.mutateAsync(name);
+				// Note: Navigation to the new dataset is handled elsewhere (useDatasets hook)
 				toast.success({ title: `Created dataset ${name}` });
 			} catch (error) {
 				console.error("Failed to create dataset:", error);
@@ -155,19 +117,19 @@ export function DatasetProvider({
 				throw error;
 			}
 		},
-		[onCreateDataset, createDatasetMutation],
+		[createDatasetMutation],
 	);
 
 	const value = useMemo(
 		() => ({
 			// Dataset state
 			datasets,
+			isLoadingDatasets,
 			currentDataset,
 			selectedSubfolder,
 			selectedImage,
 
 			// State setters
-			setDatasets,
 			setCurrentDataset,
 			setSelectedSubfolder,
 			setSelectedImage,
@@ -179,6 +141,7 @@ export function DatasetProvider({
 		}),
 		[
 			datasets,
+			isLoadingDatasets,
 			currentDataset,
 			selectedSubfolder,
 			selectedImage,
