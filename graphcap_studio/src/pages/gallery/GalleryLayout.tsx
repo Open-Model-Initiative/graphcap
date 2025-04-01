@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Resizer, useResizer } from "./resizer";
 
-interface EditorLayoutProps {
+interface GalleryLayoutProps {
 	readonly viewer: React.ReactNode;
 	readonly properties: React.ReactNode;
 	readonly defaultPropertiesWidth?: number;
@@ -12,19 +12,19 @@ interface EditorLayoutProps {
 }
 
 /**
- * A two-column responsive layout component for the editor with resizable panels
+ * A two-column responsive layout component for the gallery with resizable panels
  *
  * This component provides a two-panel layout with resizable viewer and properties panels.
  * The panels can be resized by dragging the divider between them.
  */
-export function EditorLayout({
+export function GalleryLayout({
 	viewer,
 	properties,
 	defaultPropertiesWidth = 500,
 	minViewerWidth = 500,
 	minPropertiesWidth = 500,
 	className = "",
-}: EditorLayoutProps) {
+}: GalleryLayoutProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	// Use the resizer hook for properties panel

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 // Image Viewer Components
 
-// Main components
-export { ImageViewer } from "./ImageViewer";
-export { GridViewer } from "@/features/gallery-viewer/image-grid/GridViewer";
-export { ImageGallery, type ViewMode } from "./components/ImageGallery";
-export { ImageGalleryContent } from "./ImageGalleryContent";
-export { CompactActionBar } from "./components/CompactActionBar";
-export { ViewModeToggle } from "./components";
-export { ViewerContainer } from "./ViewerContainer";
+// Main container and content components
+export * from "./ImageGalleryContent";
+export * from "./ImageViewer";
+export * from "./ViewerContainer";
+
+// Sub-components (actions, toggles, etc.)
+export * from "./components/CompactActionBar";
+export * from "./components/ViewModeToggle";
 
 // Context and hooks
-export {
-	GalleryViewerProvider,
-	useGalleryViewerContext,
-} from "./hooks/useGalleryViewerContext";
-export { useImageViewerSize } from "./hooks";
+export * from "./hooks/useGalleryViewerContext";
+export * from "./hooks/useImageViewerSize";
+export * from "./hooks/useViewerContainer";
 
-// Carousel components
-export { CarouselViewer } from "@/features/gallery-viewer/image-carousel";
+// Specific view implementations (Grid, Carousel)
+export * from "./image-carousel";
+export * from "./image-grid/GridViewer";
+

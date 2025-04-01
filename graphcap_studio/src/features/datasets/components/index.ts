@@ -2,7 +2,6 @@
 
 export * from "./CreateDatasetModal";
 export * from "./DatasetContainer";
-export * from "./DatasetInitializer";
 export * from "./DatasetLink";
 export * from "./DatasetPanel";
 export * from "./DatasetTree";

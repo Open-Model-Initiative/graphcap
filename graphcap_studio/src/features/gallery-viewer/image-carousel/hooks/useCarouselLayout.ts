@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { RefObject, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface UseCarouselLayoutProps {
 	thumbnailHeight?: number;

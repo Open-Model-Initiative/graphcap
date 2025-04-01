@@ -7,8 +7,8 @@
  * @module services/dataset-service
  */
 
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 const { glob } = require('glob');
 const { logInfo, logError } = require('../utils/logger');
 const { 
@@ -17,7 +17,7 @@ const {
   getBasename, 
   getDirname, 
 } = require('../utils/path-utils');
-const { WORKSPACE_PATH } = require('../config');
+const { WORKSPACE_PATH, DATASETS_BASE } = require('../config');
 
 /**
  * Maps image files to structured image objects
@@ -383,9 +383,70 @@ async function deleteDataset(name) {
   }
 }
 
+/**
+ * Deletes a specific image file from a dataset directory.
+ *
+ * @param {string} datasetName - The name of the dataset.
+ * @param {string} imageName - The name of the image file to delete.
+ * @returns {Promise<Object>} A promise resolving to an object indicating success or failure.
+ * @throws {Error} If the dataset or image doesn't exist, or if deletion fails.
+ */
+async function deleteDatasetImage(datasetName, imageName) {
+  logInfo('Attempting to delete image from dataset', { datasetName, imageName });
+
+  // 1. Construct and validate the dataset directory path
+  const datasetDirPathString = `datasets/local/${datasetName}`;
+  const datasetDirResult = securePath(datasetDirPathString, WORKSPACE_PATH);
+
+  if (!datasetDirResult.isValid || typeof datasetDirResult.path !== 'string' || datasetDirResult.path.length === 0) {
+    logError('Invalid dataset directory path for deletion', { datasetName, error: datasetDirResult.error });
+    throw new Error(`Dataset directory path could not be resolved for: ${datasetName}`);
+  }
+  const datasetDirPath = datasetDirResult.path;
+
+  // Verify the dataset directory exists
+  try {
+    await fs.promises.access(datasetDirPath, fs.constants.F_OK);
+  } catch (dirError) {
+    logError('Dataset directory access error during image deletion', { datasetDirPath, error: dirError.message });
+    throw new Error(`Dataset not found or inaccessible: ${datasetName}`);
+  }
+
+  // 2. Construct and validate the image file path
+  const imagePathResult = securePath(imageName, datasetDirPath);
+
+  if (!imagePathResult.isValid || typeof imagePathResult.path !== 'string' || imagePathResult.path.length === 0) {
+    logError('Invalid image path for deletion', { datasetName, imageName, error: imagePathResult.error });
+    throw new Error(`Image path could not be resolved for: ${imageName}`);
+  }
+  const imagePath = imagePathResult.path;
+
+  // 3. Check file existence and delete
+  try {
+    await fs.promises.access(imagePath, fs.constants.F_OK); // Check if file exists first
+    logInfo('Found image file, proceeding with deletion', { imagePath });
+    await fs.promises.unlink(imagePath);
+    logInfo('Successfully deleted image file', { imagePath });
+    return { success: true, message: `Image "${imageName}" deleted successfully from dataset "${datasetName}".` };
+  } catch (deleteError) {
+    // Handle specific errors
+    if (deleteError.code === 'ENOENT') {
+      logError('Image file not found during deletion attempt', { imagePath, error: deleteError.message });
+      throw new Error(`Image not found: ${imageName}`);
+    }
+    if (deleteError.code === 'EPERM' || deleteError.code === 'EACCES') {
+      logError('Permission error during image deletion', { imagePath, error: deleteError.message });
+      throw new Error(`Permission denied to delete image: ${imageName}`);
+    }
+    logError('Failed to delete image file due to unexpected error', { imagePath, error: deleteError.message });
+    throw new Error(`Failed to delete image "${imageName}": ${deleteError.message}`);
+  }
+}
+
 module.exports = {
   listDatasetImages,
   createDataset,
   addImageToDataset,
-  deleteDataset
+  deleteDataset,
+  deleteDatasetImage
 }; 

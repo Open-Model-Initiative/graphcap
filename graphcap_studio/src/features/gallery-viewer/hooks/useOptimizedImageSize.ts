@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface UseOptimizedImageSizeProps {
 	containerRef: RefObject<HTMLElement | null>;

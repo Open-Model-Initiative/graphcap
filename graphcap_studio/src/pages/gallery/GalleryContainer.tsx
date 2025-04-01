@@ -1,40 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
-import { EditorContainer } from "@/features/editor/containers/EditorContainer";
-import { EditorContextProvider } from "@/features/editor/context/EditorContext";
-import { GalleryContextProvider, useGalleryContext } from "./GalleryContext";
+import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
+import { useDatasets } from "@/features/datasets/hooks/useDatasets";
+
+import { useParams } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+
 
 /**
- * Inner component that uses the GalleryContext to coordinate between
- * the DatasetContext and EditorContext
+ * Container component for the gallery page.
+ * Directly uses useDatasets hook based on route params.
+ * Accepts children to render content from nested routes.
  */
-function GalleryContainerInner() {
+export function GalleryContainer({ children }: { children: ReactNode }) {
+	const { datasetId } = useParams({ from: "/gallery/$datasetId" });
+
 	const {
-		selectedSubfolder,
-		currentDataset,
-	} = useGalleryContext();
+		isLoading,
+		error,
+	} = useDatasets(datasetId);
+
+	if (isLoading) {
+		return (
+			<div className="flex h-full w-full items-center justify-center">
+				<LoadingSpinner size="lg" />
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex h-full w-full items-center justify-center text-destructive">
+				Error loading dataset: {error.message}
+			</div>
+		);
+	}
 
 	return (
-			<EditorContextProvider dataset={currentDataset}>
-				<div className="h-full w-full overflow-hidden">
-					<EditorContainer
-						dataset={currentDataset}
-						directory={selectedSubfolder ?? undefined}
-					/>
-				</div>
-			</EditorContextProvider>
-	);
-}
-
-/**
- * Container component for the gallery page
- *
- * This component provides the GalleryContext and coordinates between
- * the DatasetContext and EditorContext.
- */
-export function GalleryContainer() {
-	return (
-		<GalleryContextProvider>
-			<GalleryContainerInner />
-		</GalleryContextProvider>
+		<>
+			{children}
+		</>
 	);
 }

@@ -5,7 +5,6 @@ import { useImageUploader } from "./useImageUploader";
 interface UploadDropzoneProps {
 	readonly className?: string;
 	readonly compact?: boolean;
-	readonly isDisabled?: boolean;
 	readonly onUploadComplete?: () => void;
 }
 
@@ -16,10 +15,9 @@ interface UploadDropzoneProps {
 export function UploadDropzone({
 	className = "",
 	compact = false,
-	isDisabled = false,
 	onUploadComplete = () => {},
 }: UploadDropzoneProps) {
-	const { isUploading, getRootProps, getInputProps, isDragActive } =
+	const { isUploading, getRootProps, getInputProps, isDragActive, isDisabled } =
 		useImageUploader({
 			onUploadComplete,
 		});

@@ -1,17 +1,14 @@
 import { ThumbnailImage } from "@/components/responsive-image";
 import { UploadDropzone } from "@/features/datasets/components/image-uploader";
-import { useImageUploader } from "@/features/datasets/components/image-uploader/useImageUploader";
-import type { Image } from "@/types";
-import { Upload } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
-import { memo } from "react";
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { Upload } from "lucide-react";
+import { memo, useEffect, useLayoutEffect, useRef } from "react";
 import { ErrorBoundary } from "../ErrorBoundary";
-import { useImageCarousel } from "../ImageCarouselContext";
 import { useDynamicThumbnails } from "../hooks";
 import styles from "./ThumbnailStrip.module.css";
 
 interface ThumbnailStripProps {
-	readonly images: Image[];
 	readonly selectedIndex: number;
 	readonly onSelect: (index: number) => void;
 	readonly className?: string;
@@ -20,6 +17,7 @@ interface ThumbnailStripProps {
 	readonly gap?: number;
 	readonly aspectRatio?: number;
 	readonly maxHeight?: number;
+	readonly visibleImages?: { path: string; name: string }[];
 }
 
 /**
@@ -34,7 +32,6 @@ interface ThumbnailStripProps {
  * and keyboard navigation support.
  */
 function ThumbnailStripBase({
-	images,
 	selectedIndex,
 	onSelect,
 	className = "",
@@ -43,21 +40,24 @@ function ThumbnailStripBase({
 	gap = 4,
 	aspectRatio = 1,
 	maxHeight = 70,
+	visibleImages,
 }: Readonly<ThumbnailStripProps>) {
-	// Get dataset name from context
-	const { onUploadComplete } = useImageCarousel();
+	// Get dataset and images from context
+	const { selectedDataset, isLoadingDataset, datasetError } =
+		useDatasetContext();
+	// Use provided visibleImages if available, otherwise fallback to context
+	const images = visibleImages ?? selectedDataset?.images ?? [];
 
-	// Setup uploader hook
-	const {
-		isDisabled: uploaderIsDisabled,
-	} = useImageUploader({ onUploadComplete: onUploadComplete ?? (() => {}) });
+	// Ref for the main scrollable container (for keyboard focus check)
+	const containerRef = useRef<HTMLDivElement>(null);
+	// Ref array to hold references to each thumbnail div
+	const thumbnailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
 	// Use custom hook for dynamic thumbnail sizing
 	const {
-		containerRef,
+		containerRef: sizeCalcContainerRef,
 		thumbnailWidth,
 		thumbnailHeight,
-		gap: calculatedGap,
 	} = useDynamicThumbnails({
 		totalCount: images.length + 1, // Always add 1 for the upload button
 		minThumbnailWidth,
@@ -67,8 +67,41 @@ function ThumbnailStripBase({
 		maxHeight,
 	});
 
+	// Ensure the refs array is the correct size
+	useEffect(() => {
+		thumbnailRefs.current = thumbnailRefs.current.slice(0, images.length);
+	}, [images.length]);
+
+	// Scroll the selected thumbnail into view using useLayoutEffect for timing
+	// We use useLayoutEffect because scrolling needs to happen after the DOM
+	// mutations (potentially including size changes) are complete but before paint.
+	// NOTE: Linter might warn about thumbnailWidth/Height dependencies, but they are
+	// needed here to ensure the effect re-runs if dimensions change, as scroll
+	// calculation depends on the element having the correct size applied.
+	useLayoutEffect(() => {
+		const selectedThumbnail = thumbnailRefs.current[selectedIndex];
+		if (selectedThumbnail) {
+			selectedThumbnail.scrollIntoView({
+				behavior: "auto",
+				block: "nearest",
+				inline: "center",
+			});
+		}
+	}, [selectedIndex]);
+
 	// Handle keyboard navigation
-	const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, index: number) => {
+		const activeElement = document.activeElement;
+		// Check focus using the containerRef
+		const isThumbnailFocused =
+			activeElement &&
+			thumbnailRefs.current.includes(activeElement as HTMLDivElement) &&
+			containerRef.current?.contains(activeElement);
+
+		if (!isThumbnailFocused && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+			return;
+		}
+
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
 			onSelect(index);
@@ -76,28 +109,44 @@ function ThumbnailStripBase({
 			e.preventDefault();
 			const nextIndex = (index + 1) % images.length;
 			onSelect(nextIndex);
-			// Focus the next thumbnail
-			const nextThumbnail = document.getElementById(`thumbnail-${nextIndex}`);
-			if (nextThumbnail) {
-				nextThumbnail.focus();
-			}
+			// Focus the next thumbnail using refs
+			thumbnailRefs.current[nextIndex]?.focus();
 		} else if (e.key === "ArrowLeft") {
 			e.preventDefault();
 			const prevIndex = (index - 1 + images.length) % images.length;
 			onSelect(prevIndex);
-			// Focus the previous thumbnail
-			const prevThumbnail = document.getElementById(`thumbnail-${prevIndex}`);
-			if (prevThumbnail) {
-				prevThumbnail.focus();
-			}
+			// Focus the previous thumbnail using refs
+			thumbnailRefs.current[prevIndex]?.focus();
 		}
 	};
 
+	// Loading State
+	if (isLoadingDataset) {
+		return (
+			<div className={`${styles.container} ${className} ${styles.loading}`}>
+				Loading thumbnails...
+			</div>
+		);
+	}
+
+	// Error State
+	if (datasetError) {
+		return (
+			<div className={`${styles.container} ${className} ${styles.error}`}>
+				Error loading thumbnails: {datasetError.message}
+			</div>
+		);
+	}
+
 	return (
 		<div
-			ref={containerRef}
+			ref={(el) => {
+				containerRef.current = el;
+				if (sizeCalcContainerRef && 'current' in sizeCalcContainerRef) {
+					(sizeCalcContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+				}
+			}}
 			className={`${styles.container} ${className}`}
-			style={{ gap: `${calculatedGap}px` }}
 			data-testid="thumbnail-strip"
 			role="tablist"
 			aria-label="Image thumbnails"
@@ -122,8 +171,6 @@ function ThumbnailStripBase({
 						<UploadDropzone
 							className="h-full w-full"
 							compact={true}
-							onUploadComplete={onUploadComplete}
-							isDisabled={uploaderIsDisabled}
 						/>
 					</ErrorBoundary>
 				</div>
@@ -132,7 +179,9 @@ function ThumbnailStripBase({
 			{images.map((image, index) => (
 				<div
 					key={image.path}
-					id={`thumbnail-${index}`}
+					ref={(el: HTMLDivElement | null) => {
+						thumbnailRefs.current[index] = el;
+					}}
 					style={{
 						width: `${thumbnailWidth}px`,
 						height: `${thumbnailHeight}px`,

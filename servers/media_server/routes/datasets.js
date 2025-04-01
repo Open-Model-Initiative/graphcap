@@ -12,7 +12,7 @@ const router = express.Router();
 const fs = require('node:fs');
 const path = require('node:path');
 const { logInfo, logError } = require('../utils/logger');
-const { listDatasetImages, createDataset, addImageToDataset, deleteDataset } = require('../services/dataset-service');
+const { listDatasetImages, createDataset, addImageToDataset, deleteDataset, deleteDatasetImage } = require('../services/dataset-service');
 const { upload, handleMulterErrors } = require('../middleware/upload');
 const { 
   securePath, 
@@ -237,6 +237,52 @@ router.delete('/:name', async (req, res) => {
     }
     
     res.status(500).json({ error: 'Failed to delete dataset' });
+  }
+});
+
+/**
+ * Delete an image from a specific dataset
+ * 
+ * @param {string} req.params.datasetName - Name of the dataset
+ * @param {string} req.params.imageName - Name of the image to delete (URL encoded)
+ * @returns {Object} Success status and message
+ */
+router.delete('/:datasetName/images/:imageName', async (req, res) => {
+  try {
+    const { datasetName, imageName: encodedImageName } = req.params;
+    
+    // Decode the image name as the frontend encodes it
+    const imageName = decodeURIComponent(encodedImageName);
+
+    if (!datasetName || !imageName) {
+      return res.status(400).json({ error: 'Dataset name and image name are required' });
+    }
+
+    // Call the service function to handle deletion
+    const result = await deleteDatasetImage(datasetName, imageName); 
+
+    res.json(result); // Send the result from the service function
+
+  } catch (error) {
+    logError('Error deleting image from dataset route', { 
+        dataset: req.params.datasetName, 
+        image: req.params.imageName, // Log encoded name
+        error: error.message // Log error message
+    });
+    
+    // Handle specific errors from the service
+    if (error.message.includes('Dataset not found') || error.message.includes('Image not found') || error.code === 'ENOENT') {
+      // Treat file not found (ENOENT) also as 404
+      return res.status(404).json({ error: 'Image or dataset not found' });
+    }
+    
+    // Handle permission errors specifically if needed
+    if (error.code === 'EPERM' || error.code === 'EACCES') {
+        return res.status(403).json({ error: 'Permission denied to delete image' });
+    }
+
+    // Generic server error for other issues
+    res.status(500).json({ error: 'Failed to delete image from dataset' });
   }
 });
 

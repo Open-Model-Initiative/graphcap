@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/select";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 // SPDX-License-Identifier: Apache-2.0
+import type { SelectValueChangeDetails } from "@chakra-ui/react";
 import {
 	Box,
 	Button,
@@ -18,38 +19,32 @@ import {
 	Textarea,
 	createListCollection,
 } from "@chakra-ui/react";
-import type { SelectValueChangeDetails } from "@chakra-ui/react";
-import { ImagePropertiesData } from "../hooks/useImageProperties";
-
-interface BasicInformationProps {
-	readonly properties: ImagePropertiesData;
-	readonly isEditing: boolean;
-	readonly newTag: string;
-	readonly onPropertyChange: (
-		key: keyof ImagePropertiesData,
-		value: any,
-	) => void;
-	readonly onNewTagChange: (value: string) => void;
-	readonly onAddTag: () => void;
-	readonly onRemoveTag: (tag: string) => void;
-	readonly onSave: () => void;
-	readonly onToggleEdit: () => void;
-}
+import { useImagePropertiesContext } from "../context/ImagePropertiesContext";
 
 /**
  * Component for displaying and editing basic image information
+ *
+ * Uses the ImagePropertiesContext to manage state and actions.
  */
-export function BasicInformation({
-	properties,
-	isEditing,
-	newTag,
-	onPropertyChange,
-	onNewTagChange,
-	onAddTag,
-	onRemoveTag,
-	onSave,
-	onToggleEdit,
-}: BasicInformationProps) {
+export function BasicInformation() {
+	// Get state and actions from context
+	const {
+		properties,
+		isEditing,
+		newTag,
+		setNewTag,
+		handleAddTag,
+		handleRemoveTag,
+		handlePropertyChange,
+		handleSave,
+		toggleEditing,
+	} = useImagePropertiesContext();
+
+	// Early return if properties are not loaded (context handles loading state)
+	if (!properties) {
+		return null;
+	}
+
 	const bgColor = useColorModeValue("gray.50", "gray.800");
 	const borderColor = useColorModeValue("gray.200", "gray.700");
 	const labelColor = useColorModeValue("gray.600", "gray.400");
@@ -68,10 +63,13 @@ export function BasicInformation({
 		items: ratingItems,
 	});
 
+	// Use context action for property change
 	const handleRatingChange = (
 		details: SelectValueChangeDetails<(typeof ratingItems)[0]>,
 	) => {
-		onPropertyChange("rating", Number(details.value[0]));
+		// Convert string value back to number for the context handler
+		const ratingValue = Number.parseInt(details.value[0], 10);
+		handlePropertyChange("rating", Number.isNaN(ratingValue) ? 0 : ratingValue);
 	};
 
 	return (
@@ -91,7 +89,7 @@ export function BasicInformation({
 					variant="ghost"
 					size="sm"
 					colorScheme="blue"
-					onClick={onToggleEdit}
+					onClick={toggleEditing}
 				>
 					{isEditing ? "Cancel" : "Edit"}
 				</Button>
@@ -102,7 +100,7 @@ export function BasicInformation({
 					<Field label="Title">
 						<Input
 							value={properties.title}
-							onChange={(e) => onPropertyChange("title", e.target.value)}
+							onChange={(e) => handlePropertyChange("title", e.target.value)}
 							size="sm"
 						/>
 					</Field>
@@ -110,7 +108,9 @@ export function BasicInformation({
 					<Field label="Description" mt={3}>
 						<Textarea
 							value={properties.description}
-							onChange={(e) => onPropertyChange("description", e.target.value)}
+							onChange={(e) =>
+								handlePropertyChange("description", e.target.value)
+							}
 							size="sm"
 							rows={3}
 						/>
@@ -141,14 +141,14 @@ export function BasicInformation({
 						<Flex>
 							<Input
 								value={newTag}
-								onChange={(e) => onNewTagChange(e.target.value)}
+								onChange={(e) => setNewTag(e.target.value)}
 								placeholder="Add a tag"
 								size="sm"
-								onKeyDown={(e) => e.key === "Enter" && onAddTag()}
+								onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
 								borderEndRadius={0}
 							/>
 							<Button
-								onClick={onAddTag}
+								onClick={handleAddTag}
 								size="sm"
 								colorScheme="blue"
 								borderStartRadius={0}
@@ -166,7 +166,9 @@ export function BasicInformation({
 								>
 									<ChakraTag.Label>{tag}</ChakraTag.Label>
 									<ChakraTag.EndElement>
-										<ChakraTag.CloseTrigger onClick={() => onRemoveTag(tag)} />
+										<ChakraTag.CloseTrigger
+											onClick={() => handleRemoveTag(tag)}
+										/>
 									</ChakraTag.EndElement>
 								</ChakraTag.Root>
 							))}
@@ -174,7 +176,7 @@ export function BasicInformation({
 					</Field>
 
 					<Button
-						onClick={onSave}
+						onClick={handleSave}
 						colorScheme="blue"
 						width="full"
 						mt={4}

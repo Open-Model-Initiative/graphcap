@@ -1,9 +1,9 @@
 import { EmptyState } from "@/components/ui/status/EmptyState";
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
 import { UploadDropzone } from "@/features/datasets/components/image-uploader";
-import { LazyImage } from "@/features/gallery-viewer/image-grid/LazyImage";
-import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { LazyImage } from "@/features/gallery-viewer/image-grid/LazyImage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FixedSizeGrid } from "react-window";
 
@@ -19,15 +19,9 @@ interface ImageRendererProps {
 }
 
 interface GridViewerProps {
-	readonly images: Image[];
-	readonly isLoading?: boolean;
-	readonly isEmpty?: boolean;
 	readonly className?: string;
 	readonly containerWidth?: number;
 	readonly containerHeight?: number;
-	readonly selectedImage?: Image | null;
-	readonly onSelectImage: (image: Image) => void;
-	readonly onEditImage?: (image: Image) => void;
 	/**
 	 * Optional custom component to render individual images
 	 * If not provided, a default img element will be used
@@ -39,36 +33,28 @@ interface GridViewerProps {
 /**
  * A grid-based image viewer component with virtualization
  *
+ * Relies on DatasetContext for image data and selection.
+ *
  * Features:
  * - Virtualized grid for efficient rendering of large image collections
  * - Responsive layout that adapts to container dimensions
  * - Loading and empty states
- * - Selection handling
+ * - Selection highlighting (derived from context)
  * - Automatic resizing with ResizeObserver
  * - Customizable image rendering via ImageComponent prop
+ * - Optional upload dropzone integration
  *
- * @param images - Array of image objects to display
- * @param isLoading - Whether the grid is in loading state
- * @param isEmpty - Whether there are no images to display
  * @param className - Additional CSS classes
  * @param containerWidth - Optional explicit container width
  * @param containerHeight - Optional explicit container height
- * @param selectedImage - Currently selected image
- * @param onSelectImage - Callback when an image is selected
- * @param onEditImage - Callback when edit button is clicked
  * @param ImageComponent - Optional custom component to render individual images
+ * @param onUploadComplete - Callback when upload is complete
  */
 export function GridViewer({
-	images,
-	isLoading = false,
-	isEmpty = false,
-	selectedImage,
-	onSelectImage,
-	onEditImage,
-	ImageComponent,
 	className = "",
 	containerWidth: externalWidth,
 	containerHeight: externalHeight,
+	ImageComponent,
 	onUploadComplete,
 }: GridViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -76,6 +62,17 @@ export function GridViewer({
 	const [itemSize, setItemSize] = useState(180); // Default item size
 	const [columnCount, setColumnCount] = useState(1);
 
+	// Get data from context
+	const {
+		selectedDataset,
+		isLoadingDataset,
+		selectedImage,
+	} = useDatasetContext();
+
+	// Derive state from context
+	const isLoading = isLoadingDataset;
+	const images = selectedDataset?.images ?? [];
+	const isEmpty = !isLoading && images.length === 0;
 
 	// Update dimensions when container size changes
 	useEffect(() => {
@@ -129,7 +126,13 @@ export function GridViewer({
 
 	// Cell renderer for the virtualized grid
 	const Cell = useCallback(
-		({ columnIndex, rowIndex, style }: any) => {
+		(props: {
+			columnIndex: number;
+			rowIndex: number;
+			style: React.CSSProperties;
+		}) => {
+			const { columnIndex, rowIndex, style } = props;
+
 			const index = rowIndex * columnCount + columnIndex;
 			if (index >= images.length) return null;
 
@@ -141,7 +144,6 @@ export function GridViewer({
 					<LazyImage
 						image={image}
 						isSelected={isSelected}
-						onSelect={onSelectImage}
 						ImageComponent={ImageComponent}
 					/>
 				</div>
@@ -151,8 +153,6 @@ export function GridViewer({
 			images,
 			columnCount,
 			selectedImage,
-			onSelectImage,
-			onEditImage,
 			ImageComponent,
 		],
 	);
@@ -169,7 +169,7 @@ export function GridViewer({
 	}
 
 	// Show empty state
-	if (isEmpty || images.length === 0) {
+	if (isEmpty) {
 		return (
 			<div
 				className={`flex h-full w-full items-center justify-center ${className}`}
@@ -179,7 +179,6 @@ export function GridViewer({
 					description="Try selecting a different dataset or uploading new images."
 				/>
 				<UploadDropzone
-
 					onUploadComplete={onUploadComplete}
 				/>
 			</div>

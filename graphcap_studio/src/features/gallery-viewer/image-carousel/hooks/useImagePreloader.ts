@@ -1,4 +1,5 @@
-import { Image, preloadImage } from "@/services/images";
+import { preloadImage } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useRef } from "react";
 
@@ -57,49 +58,60 @@ export function useImagePreloader({
 
 		// Function to preload the next image in the queue
 		const preloadNext = () => {
+			// Check if queue is empty or max concurrent preloads reached
 			if (
 				preloadQueue.length === 0 ||
 				activePreloadsRef.current >= maxConcurrentPreloads
-			)
+			) {
 				return;
+			}
 
-			const { index, priority } = preloadQueue.shift()!;
+			// Safely get the next item from the queue
+			const item = preloadQueue.shift();
+			// If the queue was empty (e.g., due to concurrent access), stop
+			if (!item) {
+				return;
+			}
+
+			const { index, priority } = item;
+
+			// Check if index is valid
 			if (index >= 0 && index < images.length) {
 				const imagePath = images[index].path;
+
+				// Check if already preloaded or being preloaded
 				if (!preloadedImagesRef.current.has(imagePath)) {
+					// Mark as preloading and increment active count
+					preloadedImagesRef.current.add(imagePath);
 					activePreloadsRef.current += 1;
 
-					// For high priority images (next/prev), preload both thumbnail and full
+					// Simulate completion callback to decrement count and trigger next
+					// We assume preloadImage initiates the request; browser handles concurrency.
+					// We decrement immediately to allow the next preload to start sooner.
+					const onPreloadInitiated = () => {
+						activePreloadsRef.current -= 1;
+						// Immediately try to preload the next image
+						preloadNext();
+					};
+
+					// High priority: preload thumbnail then full
 					if (priority === "high") {
-						// Preload thumbnail first for quick display
 						preloadImage(imagePath, "thumbnail");
-
-						// Then preload the full image with a slight delay
-						setTimeout(() => {
-							preloadImage(imagePath, "full");
-
-							// Mark as complete and try next image
-							preloadedImagesRef.current.add(imagePath);
-							activePreloadsRef.current -= 1;
-							preloadNext();
-						}, 100);
+						preloadImage(imagePath, "full");
+						// Call completion handler *after* initiating both
+						onPreloadInitiated();
 					} else {
-						// For low priority images, just preload thumbnails
+						// Low priority: preload only thumbnail
 						preloadImage(imagePath, "thumbnail");
-
-						// Mark as complete and try next image
-						setTimeout(() => {
-							preloadedImagesRef.current.add(imagePath);
-							activePreloadsRef.current -= 1;
-							preloadNext();
-						}, 50);
+						// Call completion handler *after* initiating the preload
+						onPreloadInitiated();
 					}
 				} else {
-					// Already preloaded, try the next one
+					// Already preloaded/preloading, try the next one immediately
 					preloadNext();
 				}
 			} else {
-				// Invalid index, try the next one
+				// Invalid index, try the next one immediately
 				preloadNext();
 			}
 		};

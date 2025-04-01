@@ -7,7 +7,6 @@ import { useDropzone } from "react-dropzone";
 import { useDatasetContext } from "../../context/DatasetContext"; // Import context hook
 
 export interface UseImageUploaderProps {
-	// readonly datasetName: string; // Remove datasetName prop
 	readonly onUploadComplete: () => void;
 }
 
@@ -35,24 +34,30 @@ export function useImageUploader({
 	const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
 		{},
 	);
-	// Get current dataset from context
-	const { currentDataset } = useDatasetContext(); 
-	if (!currentDataset) {
-		console.log("No dataset selected");
-	} else {
-		console.log("Current dataset", currentDataset);
-	}
-	
+	// Get current dataset state from context
+	const {
+		selectedDataset,
+		isLoadingDataset,
+		datasetError,
+	} = useDatasetContext();
+
 	// Use the upload image mutation	
 	const uploadImageMutation = useUploadImage();
 
-	// Determine if the uploader should be disabled (no valid dataset selected)
-	const isDisabled = !currentDataset;
+	// Determine if the uploader should be disabled (no valid dataset, loading, or error)
+	const isDisabled = !selectedDataset || isLoadingDataset || !!datasetError;
 
 	const onDrop = useCallback(
 		async (acceptedFiles: File[]) => {
-			if (!currentDataset) {
-				toast.error({ title: "No dataset selected", description: "Please select a dataset before uploading images." });
+			// Ensure a dataset is selected and not loading/erroring before uploading
+			if (!selectedDataset || isLoadingDataset || datasetError) {
+				toast.error({
+					title: "Cannot Upload",
+					description:
+						!selectedDataset && !isLoadingDataset
+							? "Please select a dataset first."
+							: "Dataset is currently loading or has an error.",
+				});
 				return;
 			}
 			if (!acceptedFiles || acceptedFiles.length === 0) return;
@@ -78,9 +83,11 @@ export function useImageUploader({
 						[file.name]: 10, // Start at 10%
 					}));
 
-					// Upload the file to the specified dataset
-					// Use currentDataset from context
-					await uploadImageMutation.mutateAsync({ file, datasetName: currentDataset }); 
+					// Upload the file to the selected dataset
+					await uploadImageMutation.mutateAsync({
+						file,
+						datasetName: selectedDataset.name, // Use name from selectedDataset
+					});
 
 					// Update progress and count
 					uploadedCount++;
@@ -120,8 +127,14 @@ export function useImageUploader({
 			setIsUploading(false);
 			onUploadComplete();
 		},
-		// Add currentDataset to dependencies
-		[currentDataset, onUploadComplete, uploadImageMutation.mutateAsync],
+		// Update dependencies
+		[
+			selectedDataset,
+			isLoadingDataset,
+			datasetError,
+			onUploadComplete,
+			uploadImageMutation.mutateAsync,
+		],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({

@@ -1,22 +1,27 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { GalleryContainer } from "@/pages/gallery/GalleryContainer";
-import { createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 // The route path is automatically derived from the file path
 export const Route = createFileRoute("/gallery/$datasetId")({
-	component: GalleryWithDataset,
+	component: DatasetLayoutComponent,
 });
 
-function GalleryWithDataset() {
+function DatasetLayoutComponent() {
 	const { datasetId } = Route.useParams();
-	const { setCurrentDataset } = useDatasetContext();
+	const { selectDatasetById } = useDatasetContext();
 
 	useEffect(() => {
 		console.log(`Setting current dataset from route: ${datasetId}`);
-		setCurrentDataset(datasetId);
-	}, [datasetId, setCurrentDataset]);
+		selectDatasetById(datasetId);
+	}, [datasetId, selectDatasetById]);
 
-	return <GalleryContainer />;
+	// Render the GalleryContainer as layout, and Outlet for nested content route
+	return (
+		<GalleryContainer>
+			<Outlet />
+		</GalleryContainer>
+	);
 }

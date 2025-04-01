@@ -16,7 +16,9 @@ import { Route as IndexImport } from './routes/index'
 import { Route as PerspectivesIndexImport } from './routes/perspectives/index'
 import { Route as GalleryIndexImport } from './routes/gallery/index'
 import { Route as GalleryDatasetIdImport } from './routes/gallery/$datasetId'
+import { Route as GalleryDatasetIdIndexImport } from './routes/gallery/$datasetId/index'
 import { Route as PerspectivesModuleModuleNameImport } from './routes/perspectives/module/$moduleName'
+import { Route as GalleryDatasetIdContentContentIdImport } from './routes/gallery/$datasetId/content/$contentId'
 import { Route as PerspectivesModuleModuleNamePerspectivePerspectiveNameImport } from './routes/perspectives/module/$moduleName/perspective/$perspectiveName'
 
 // Create/Update Routes
@@ -51,11 +53,24 @@ const GalleryDatasetIdRoute = GalleryDatasetIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const GalleryDatasetIdIndexRoute = GalleryDatasetIdIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GalleryDatasetIdRoute,
+} as any)
+
 const PerspectivesModuleModuleNameRoute =
   PerspectivesModuleModuleNameImport.update({
     id: '/perspectives/module/$moduleName',
     path: '/perspectives/module/$moduleName',
     getParentRoute: () => rootRoute,
+  } as any)
+
+const GalleryDatasetIdContentContentIdRoute =
+  GalleryDatasetIdContentContentIdImport.update({
+    id: '/content/$contentId',
+    path: '/content/$contentId',
+    getParentRoute: () => GalleryDatasetIdRoute,
   } as any)
 
 const PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute =
@@ -111,6 +126,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerspectivesModuleModuleNameImport
       parentRoute: typeof rootRoute
     }
+    '/gallery/$datasetId/': {
+      id: '/gallery/$datasetId/'
+      path: '/'
+      fullPath: '/gallery/$datasetId/'
+      preLoaderRoute: typeof GalleryDatasetIdIndexImport
+      parentRoute: typeof GalleryDatasetIdImport
+    }
+    '/gallery/$datasetId/content/$contentId': {
+      id: '/gallery/$datasetId/content/$contentId'
+      path: '/content/$contentId'
+      fullPath: '/gallery/$datasetId/content/$contentId'
+      preLoaderRoute: typeof GalleryDatasetIdContentContentIdImport
+      parentRoute: typeof GalleryDatasetIdImport
+    }
     '/perspectives/module/$moduleName/perspective/$perspectiveName': {
       id: '/perspectives/module/$moduleName/perspective/$perspectiveName'
       path: '/perspective/$perspectiveName'
@@ -122,6 +151,19 @@ declare module '@tanstack/react-router' {
 }
 
 // Create and export the route tree
+
+interface GalleryDatasetIdRouteChildren {
+  GalleryDatasetIdIndexRoute: typeof GalleryDatasetIdIndexRoute
+  GalleryDatasetIdContentContentIdRoute: typeof GalleryDatasetIdContentContentIdRoute
+}
+
+const GalleryDatasetIdRouteChildren: GalleryDatasetIdRouteChildren = {
+  GalleryDatasetIdIndexRoute: GalleryDatasetIdIndexRoute,
+  GalleryDatasetIdContentContentIdRoute: GalleryDatasetIdContentContentIdRoute,
+}
+
+const GalleryDatasetIdRouteWithChildren =
+  GalleryDatasetIdRoute._addFileChildren(GalleryDatasetIdRouteChildren)
 
 interface PerspectivesModuleModuleNameRouteChildren {
   PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute: typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
@@ -141,20 +183,23 @@ const PerspectivesModuleModuleNameRouteWithChildren =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
+  '/gallery/$datasetId': typeof GalleryDatasetIdRouteWithChildren
   '/gallery': typeof GalleryIndexRoute
   '/perspectives': typeof PerspectivesIndexRoute
   '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/gallery/$datasetId/': typeof GalleryDatasetIdIndexRoute
+  '/gallery/$datasetId/content/$contentId': typeof GalleryDatasetIdContentContentIdRoute
   '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
   '/gallery': typeof GalleryIndexRoute
   '/perspectives': typeof PerspectivesIndexRoute
   '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/gallery/$datasetId': typeof GalleryDatasetIdIndexRoute
+  '/gallery/$datasetId/content/$contentId': typeof GalleryDatasetIdContentContentIdRoute
   '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
@@ -162,10 +207,12 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/gallery/$datasetId': typeof GalleryDatasetIdRoute
+  '/gallery/$datasetId': typeof GalleryDatasetIdRouteWithChildren
   '/gallery/': typeof GalleryIndexRoute
   '/perspectives/': typeof PerspectivesIndexRoute
   '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
+  '/gallery/$datasetId/': typeof GalleryDatasetIdIndexRoute
+  '/gallery/$datasetId/content/$contentId': typeof GalleryDatasetIdContentContentIdRoute
   '/perspectives/module/$moduleName/perspective/$perspectiveName': typeof PerspectivesModuleModuleNamePerspectivePerspectiveNameRoute
 }
 
@@ -178,15 +225,18 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/perspectives'
     | '/perspectives/module/$moduleName'
+    | '/gallery/$datasetId/'
+    | '/gallery/$datasetId/content/$contentId'
     | '/perspectives/module/$moduleName/perspective/$perspectiveName'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/gallery/$datasetId'
     | '/gallery'
     | '/perspectives'
     | '/perspectives/module/$moduleName'
+    | '/gallery/$datasetId'
+    | '/gallery/$datasetId/content/$contentId'
     | '/perspectives/module/$moduleName/perspective/$perspectiveName'
   id:
     | '__root__'
@@ -196,6 +246,8 @@ export interface FileRouteTypes {
     | '/gallery/'
     | '/perspectives/'
     | '/perspectives/module/$moduleName'
+    | '/gallery/$datasetId/'
+    | '/gallery/$datasetId/content/$contentId'
     | '/perspectives/module/$moduleName/perspective/$perspectiveName'
   fileRoutesById: FileRoutesById
 }
@@ -203,7 +255,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  GalleryDatasetIdRoute: typeof GalleryDatasetIdRoute
+  GalleryDatasetIdRoute: typeof GalleryDatasetIdRouteWithChildren
   GalleryIndexRoute: typeof GalleryIndexRoute
   PerspectivesIndexRoute: typeof PerspectivesIndexRoute
   PerspectivesModuleModuleNameRoute: typeof PerspectivesModuleModuleNameRouteWithChildren
@@ -212,7 +264,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  GalleryDatasetIdRoute: GalleryDatasetIdRoute,
+  GalleryDatasetIdRoute: GalleryDatasetIdRouteWithChildren,
   GalleryIndexRoute: GalleryIndexRoute,
   PerspectivesIndexRoute: PerspectivesIndexRoute,
   PerspectivesModuleModuleNameRoute:
@@ -244,7 +296,11 @@ export const routeTree = rootRoute
       "filePath": "about.tsx"
     },
     "/gallery/$datasetId": {
-      "filePath": "gallery/$datasetId.tsx"
+      "filePath": "gallery/$datasetId.tsx",
+      "children": [
+        "/gallery/$datasetId/",
+        "/gallery/$datasetId/content/$contentId"
+      ]
     },
     "/gallery/": {
       "filePath": "gallery/index.tsx"
@@ -257,6 +313,14 @@ export const routeTree = rootRoute
       "children": [
         "/perspectives/module/$moduleName/perspective/$perspectiveName"
       ]
+    },
+    "/gallery/$datasetId/": {
+      "filePath": "gallery/$datasetId/index.tsx",
+      "parent": "/gallery/$datasetId"
+    },
+    "/gallery/$datasetId/content/$contentId": {
+      "filePath": "gallery/$datasetId/content/$contentId.tsx",
+      "parent": "/gallery/$datasetId"
     },
     "/perspectives/module/$moduleName/perspective/$perspectiveName": {
       "filePath": "perspectives/module/$moduleName/perspective/$perspectiveName.tsx",
