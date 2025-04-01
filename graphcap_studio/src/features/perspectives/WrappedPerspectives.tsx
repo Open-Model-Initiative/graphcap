@@ -7,8 +7,8 @@
  */
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Image } from "@/services/images";
-import React, { ReactNode } from "react";
+import type { Image } from "@/types";
+import React, { type ReactNode } from "react";
 import { Perspectives } from "./Perspectives";
 import { PerspectivesProvider } from "./context";
 

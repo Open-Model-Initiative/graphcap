@@ -6,7 +6,7 @@
  * to simplify usage in component trees.
  */
 
-import type { Image } from "@/services/images";
+import type { Image } from "@/types";
 import type { Provider } from "@/types/provider-config-types";
 import type { ReactNode } from "react";
 import { PerspectiveUIProvider } from "./PerspectiveUIContext";

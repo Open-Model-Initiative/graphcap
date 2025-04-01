@@ -1,14 +1,14 @@
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useContext,
 	useEffect,
 	useMemo,
 	useState,
 } from "react";
-import { DEFAULT_VIEW_MODE, ViewMode } from "../components/ImageGallery";
+import { DEFAULT_VIEW_MODE, type ViewMode } from "../components/ImageGallery";
 
 interface GalleryViewerContextType {
 	// View mode state

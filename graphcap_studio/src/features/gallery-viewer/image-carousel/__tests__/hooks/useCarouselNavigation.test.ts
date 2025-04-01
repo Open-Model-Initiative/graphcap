@@ -1,4 +1,4 @@
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { useCarouselNavigation } from "../../hooks/useCarouselNavigation";

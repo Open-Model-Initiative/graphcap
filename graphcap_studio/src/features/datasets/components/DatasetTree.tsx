@@ -1,9 +1,9 @@
 import {
 	Tree,
-	TreeContextMenuAction,
-	TreeItemData,
+	type TreeContextMenuAction,
+	type TreeItemData,
 } from "@/features/datasets/components/dataset-tree";
-import { Dataset, Image } from "@/services/images";
+import type { Dataset, Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from "react";
 import { DeleteDatasetModal } from "./DeleteDatasetModal";

@@ -5,9 +5,9 @@
  * This component displays and manages image perspectives from GraphCap.
  */
 
-import type { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { Box, Flex } from "@chakra-ui/react";
-import React, { useCallback, useMemo, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import {
 	DEFAULT_OPTIONS,
 	GenerationOptionForm,

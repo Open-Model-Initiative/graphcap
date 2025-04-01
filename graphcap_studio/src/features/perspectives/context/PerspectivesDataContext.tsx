@@ -13,9 +13,8 @@ import { useServerConnectionsContext } from "@/context";
 import { useGenerationOptions } from "@/features/inference/generation-options/context";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useProviders } from "@/features/server-connections/services/providers";
-import type { Image } from "@/services/images";
 import type {
-	Perspective,
+	Image, Perspective,
 	PerspectiveData,
 	PerspectiveSchema
 } from "@/types";

@@ -1,5 +1,5 @@
 import { AddButton } from "@/components/ui/buttons";
-import { Dataset, Image } from "@/services/images";
+import type { Dataset, Image } from "@/types";
 import {
 	Box,
 	Button,

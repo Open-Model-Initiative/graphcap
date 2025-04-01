@@ -1,4 +1,4 @@
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import React from "react";
 import { ErrorBoundary } from "./ErrorBoundary";

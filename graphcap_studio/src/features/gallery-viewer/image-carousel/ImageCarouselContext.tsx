@@ -1,13 +1,15 @@
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
-import { Image, preloadImage } from "@/services/images";
+import { preloadImage } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
-import React, {
+import type React from "react";
+import {
+	type ReactNode,
 	createContext,
-	useContext,
-	useState,
 	useCallback,
-	ReactNode,
+	useContext,
 	useMemo,
+	useState,
 } from "react";
 import {
 	useCarouselControls,

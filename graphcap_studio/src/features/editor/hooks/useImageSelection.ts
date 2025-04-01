@@ -1,4 +1,5 @@
-import { Image, preloadImage } from "@/services/images";
+import { preloadImage } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useState } from "react";
 

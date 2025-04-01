@@ -1,6 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // SPDX-License-Identifier: Apache-2.0
-import { z } from "zod";
+import {
+	DatasetListResponseSchema,
+	GenericApiResponseSchema,
+	ImageListResponseSchema,
+	ImageProcessResponseSchema,
+} from "@/types";
+// Type Imports
+import type {
+	GenericApiResponse,
+	ImageProcessRequest,
+	ImageProcessResponse,
+} from "@/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getQueryClient } from "../utils/queryClient";
 
 /**
@@ -25,77 +36,6 @@ const DATASETS_PATH =
 // Log the media server URL for debugging
 console.log("Media Server URL:", MEDIA_SERVER_URL);
 console.log("Datasets Path:", DATASETS_PATH);
-
-// Define the image schema
-export const ImageSchema = z.object({
-	path: z.string(),
-	name: z.string(),
-	directory: z.string(),
-	url: z.string(),
-});
-
-export type Image = z.infer<typeof ImageSchema>;
-
-// Define the image list response schema
-export const ImageListResponseSchema = z.object({
-	images: z.array(ImageSchema),
-});
-
-export type ImageListResponse = z.infer<typeof ImageListResponseSchema>;
-
-// Define the dataset schema
-export const DatasetSchema = z.object({
-	name: z.string(),
-	images: z.array(ImageSchema),
-});
-
-export type Dataset = z.infer<typeof DatasetSchema>;
-
-// Define the dataset list response schema
-export const DatasetListResponseSchema = z.object({
-	datasets: z.array(DatasetSchema),
-});
-
-export type DatasetListResponse = z.infer<typeof DatasetListResponseSchema>;
-
-// Define the image process request schema
-export const ImageProcessRequestSchema = z.object({
-	imagePath: z.string(),
-	operations: z
-		.object({
-			crop: z
-				.object({
-					left: z.number(),
-					top: z.number(),
-					width: z.number(),
-					height: z.number(),
-				})
-				.optional(),
-			rotate: z.number().optional(),
-			resize: z
-				.object({
-					width: z.number(),
-					height: z.number(),
-				})
-				.optional(),
-			flip: z.boolean().optional(),
-			flop: z.boolean().optional(),
-		})
-		.optional(),
-	outputName: z.string().optional(),
-	overwrite: z.boolean().optional(),
-});
-
-export type ImageProcessRequest = z.infer<typeof ImageProcessRequestSchema>;
-
-// Define the image process response schema
-export const ImageProcessResponseSchema = z.object({
-	success: z.boolean(),
-	path: z.string(),
-	url: z.string(),
-});
-
-export type ImageProcessResponse = z.infer<typeof ImageProcessResponseSchema>;
 
 // Cache for image URLs to avoid redundant requests
 const imageUrlCache = new Map<string, string>();
@@ -149,9 +89,7 @@ async function fetchWithRetry(
 			if (!response.ok && retryCount > 0) {
 				// Exponential backoff with jitter
 				const delay =
-					retryDelay *
-					Math.pow(1.5, 3 - retryCount) *
-					(0.9 + Math.random() * 0.2);
+					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + Math.random() * 0.2);
 				console.warn(
 					`Request failed with status ${response.status}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
 				);
@@ -177,9 +115,7 @@ async function fetchWithRetry(
 			if (retryCount > 0) {
 				// Exponential backoff with jitter
 				const delay =
-					retryDelay *
-					Math.pow(1.5, 3 - retryCount) *
-					(0.9 + Math.random() * 0.2);
+					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + Math.random() * 0.2);
 				console.warn(
 					`Request failed with error: ${error}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
 				);
@@ -267,8 +203,9 @@ export function useListDatasetImages() {
  */
 export function getImageUrl(imagePath: string): string {
 	// Check if URL is in cache
-	if (imageUrlCache.has(imagePath)) {
-		return imageUrlCache.get(imagePath)!;
+	const cachedUrl = imageUrlCache.get(imagePath);
+	if (cachedUrl) {
+		return cachedUrl;
 	}
 
 	// Ensure the path starts with a slash and doesn't have duplicate slashes
@@ -321,8 +258,9 @@ export function getThumbnailUrl(
 	const fmt = format ?? "webp";
 	const cacheKey = `${imagePath}_${width}x${height}_${fmt}`;
 
-	if (thumbnailCache.has(cacheKey)) {
-		return thumbnailCache.get(cacheKey)!;
+	const cachedUrl = thumbnailCache.get(cacheKey);
+	if (cachedUrl) {
+		return cachedUrl;
 	}
 
 	let normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
@@ -387,9 +325,9 @@ export function preloadImage(
 export function useProcessImage() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
-		mutationFn: async (request: ImageProcessRequest) => {
-			console.log("Processing image:", request);
+	return useMutation<ImageProcessResponse, Error, ImageProcessRequest>({
+		mutationFn: async (variables: ImageProcessRequest) => {
+			console.log("Processing image:", variables.imagePath);
 
 			const response = await fetchWithRetry(
 				`${MEDIA_SERVER_URL}/api/images/process`,
@@ -398,7 +336,7 @@ export function useProcessImage() {
 					headers: {
 						"Content-Type": "application/json",
 					},
-					body: JSON.stringify(request),
+					body: JSON.stringify(variables),
 				},
 			);
 
@@ -406,12 +344,12 @@ export function useProcessImage() {
 			console.log("Processed image result:", data);
 
 			// Clear caches for this image path to ensure fresh data
-			const imagePath = request.imagePath;
+			const imagePath = variables.imagePath;
 			imageUrlCache.delete(imagePath);
 
 			// Clear all thumbnail cache entries for this image
 			for (const key of thumbnailCache.keys()) {
-				if (key.startsWith(imagePath + "_")) {
+				if (key.startsWith(`${imagePath}_`)) {
 					thumbnailCache.delete(key);
 				}
 			}
@@ -483,7 +421,11 @@ export function useCreateDataset() {
 export function useUploadImage() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
+	return useMutation<
+		ImageProcessResponse,
+		Error,
+		{ file: File; datasetName?: string }
+	>({
 		mutationFn: async ({
 			file,
 			datasetName,
@@ -545,17 +487,16 @@ export function useUploadImage() {
 export function useAddImageToDataset() {
 	const queryClient = useQueryClient();
 
-	return useMutation({
+	return useMutation<
+		GenericApiResponse,
+		Error,
+		{ imagePath: string; datasetName: string }
+	>({
 		mutationFn: async ({
 			imagePath,
 			datasetName,
 		}: { imagePath: string; datasetName: string }) => {
-			console.log(
-				"Adding image to dataset:",
-				imagePath,
-				"to dataset:",
-				datasetName,
-			);
+			console.log(`Adding image ${imagePath} to dataset ${datasetName}`);
 
 			try {
 				// Ensure we're using the correct datasets path
@@ -579,10 +520,7 @@ export function useAddImageToDataset() {
 				const data = await response.json();
 				console.log("Add image to dataset result:", data);
 
-				return {
-					success: true,
-					message: `Image added to dataset ${datasetName} successfully`,
-				};
+				return GenericApiResponseSchema.parse(data);
 			} catch (error) {
 				console.error("Error adding image to dataset:", error);
 				return {

@@ -1,7 +1,7 @@
-import { Dataset, Image } from "@/services/images";
+import type { Dataset, Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import {
-	ReactNode,
+	type ReactNode,
 	createContext,
 	useCallback,
 	useContext,

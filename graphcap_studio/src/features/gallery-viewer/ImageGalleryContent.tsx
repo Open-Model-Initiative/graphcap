@@ -1,7 +1,7 @@
 import { CarouselViewer } from "@/features/gallery-viewer/image-carousel";
 import { GridViewer } from "@/features/gallery-viewer/image-grid/GridViewer";
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { ImageViewer } from "./ImageViewer";
 import { CompactActionBar } from "./components/CompactActionBar";
 import { useGalleryViewerContext } from "./hooks";

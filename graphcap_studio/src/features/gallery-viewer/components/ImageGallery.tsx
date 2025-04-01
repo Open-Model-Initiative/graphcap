@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 import { ImageGalleryContent } from "../ImageGalleryContent";
 import { GalleryViewerProvider } from "../hooks";
 

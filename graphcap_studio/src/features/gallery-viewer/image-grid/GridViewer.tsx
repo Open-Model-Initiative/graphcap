@@ -1,9 +1,9 @@
 import { EmptyState } from "@/components/ui/status/EmptyState";
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
+import { UploadDropzone } from "@/features/datasets/components/image-uploader";
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { LazyImage } from "@/features/gallery-viewer/image-grid/LazyImage";
-import { UploadDropzone } from "@/features/gallery-viewer/image-uploader";
-import { Image } from "@/services/images";
+import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FixedSizeGrid } from "react-window";

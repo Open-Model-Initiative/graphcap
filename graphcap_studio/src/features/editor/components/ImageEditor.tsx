@@ -1,7 +1,7 @@
 import {
-	type ImageProcessResponse,
-	getImageUrl,
-	useProcessImage,
+    type ImageProcessResponse,
+    getImageUrl,
+    useProcessImage,
 } from "@/services/images";
 import { toast } from "@/utils/toast";
 import { useCallback, useState } from "react";
