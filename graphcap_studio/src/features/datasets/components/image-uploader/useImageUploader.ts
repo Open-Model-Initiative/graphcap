@@ -1,4 +1,4 @@
-import { useUploadImage } from "@/services/images";
+import { useUploadImage } from "@/services/dataset";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 // TODO: RESOLVE OLD DATASET NAME SYSTEM

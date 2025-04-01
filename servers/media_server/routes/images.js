@@ -9,8 +9,8 @@
 
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { logInfo, logError } = require('../utils/logger');
 const { upload, handleMulterErrors } = require('../middleware/upload');
 const { listImages, processImage, serveImage } = require('../services/image-service');
@@ -128,88 +128,6 @@ router.post('/process', async (req, res) => {
   } catch (error) {
     logError('Error processing image', error);
     res.status(500).json({ error: 'Failed to process image' });
-  }
-});
-
-/**
- * Upload an image
- * 
- * @param {File} req.file - The image file to upload
- * @param {string} req.body.dataset - Optional dataset name to upload to
- * @returns {Object} Uploaded image information
- */
-router.post('/upload', handleMulterErrors, upload.single('image'), (req, res) => {
-  try {
-    if (!req.file) {
-      logError('No image file provided', { body: req.body });
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-    
-    // Check if a dataset was specified
-    const { dataset } = req.body;
-    let targetPath = req.file.path;
-    let relativePath = req.file.path.replace(process.env.WORKSPACE_PATH || '/workspace', '');
-    
-    // If dataset is specified, move the file to the dataset directory
-    if (dataset) {
-      // Validate dataset name
-      if (!/^[a-zA-Z0-9_-]+$/.test(dataset)) {
-        return res.status(400).json({ 
-          error: 'Invalid dataset name. Use only letters, numbers, underscores, and hyphens.' 
-        });
-      }
-      
-      // Securely create dataset path
-      const datasetPathResult = securePath(`datasets/local/${dataset}`, WORKSPACE_PATH, { createIfNotExist: true });
-      
-      if (!datasetPathResult.isValid) {
-        logError('Invalid dataset path', { dataset, error: datasetPathResult.error });
-        return res.status(400).json({ error: 'Invalid dataset path' });
-      }
-      
-      // Get the filename from the uploaded file and validate it
-      const fileName = getBasename(req.file.path);
-      const fileNameResult = validateFilename(fileName);
-      
-      if (!fileNameResult.isValid) {
-        logError('Invalid filename', { fileName, error: fileNameResult.error });
-        return res.status(400).json({ error: 'Invalid filename' });
-      }
-      
-      // Create the new path securely
-      const newPathResult = securePath(`datasets/local/${dataset}/${fileNameResult.sanitized}`, WORKSPACE_PATH);
-      
-      if (!newPathResult.isValid) {
-        logError('Invalid new path', { path: newPathResult.path, error: newPathResult.error });
-        return res.status(400).json({ error: 'Invalid path for file' });
-      }
-      
-      // Ensure the target directory exists
-      ensureDir(datasetPathResult.path);
-      
-      // Move the file
-      fs.renameSync(req.file.path, newPathResult.path);
-      
-      // Update paths
-      targetPath = newPathResult.path;
-      relativePath = newPathResult.relativePath;
-      
-      logInfo(`Image moved to dataset: ${dataset}`, { 
-        originalPath: req.file.path,
-        newPath: targetPath
-      });
-    }
-    
-    logInfo(`Image uploaded: ${targetPath}`);
-    
-    res.json({
-      success: true,
-      path: relativePath,
-      url: `/api/images/view${relativePath}`
-    });
-  } catch (error) {
-    logError('Error uploading image', error);
-    res.status(500).json({ error: 'Failed to process uploaded image' });
   }
 });
 
