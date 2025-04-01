@@ -1,7 +1,7 @@
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
 import { useState } from "react";
-import { useDatasetContext } from "../context/DatasetContext";
+import { useDatasets } from "../hooks/useDatasets";
 
 type CreateDatasetModalProps = {
 	readonly isOpen: boolean;
@@ -20,8 +20,8 @@ export function CreateDatasetModal({
 	const [datasetName, setDatasetName] = useState("");
 	const [error, setError] = useState<string | null>(null);
 
-	// Use the dataset context
-	const { createDataset } = useDatasetContext();
+	// Use the datasets hook
+	const { handleCreateDataset } = useDatasets();
 
 	// Track loading state
 	const [isCreating, setIsCreating] = useState(false);
@@ -49,8 +49,7 @@ export function CreateDatasetModal({
 		setIsCreating(true);
 
 		try {
-			await createDataset(datasetName);
-			toast.success({ title: `Dataset "${datasetName}" created successfully` });
+			await handleCreateDataset(datasetName);
 			onDatasetCreated(datasetName);
 			onClose();
 		} catch (error) {

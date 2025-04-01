@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { useAddImageToDataset, useCreateDataset, useListDatasets } from "@/services/dataset";
+import { useListDatasets } from "@/services/dataset";
 import type { Dataset, Image } from "@/types";
 import { toast } from "@/utils/toast";
 import {
@@ -32,8 +32,6 @@ type DatasetContextType = {
 
 	// Action handlers
 	selectImage: (image: Image) => void;
-	addToDataset: (imagePath: string, targetDataset: string) => Promise<void>;
-	createDataset: (name: string) => Promise<void>;
 };
 
 /**
@@ -66,59 +64,10 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 	// Image selection state
 	const [selectedImage, setSelectedImage] = useState<Image | null>(null);
 
-	// Get mutations from dataset service
-	const createDatasetMutation = useCreateDataset();
-	const addImageToDatasetMutation = useAddImageToDataset();
-
 	// Action handlers
 	const selectImage = useCallback((image: Image) => {
 		setSelectedImage(image);
 	}, []);
-
-	const addToDataset = useCallback(
-		async (imagePath: string, targetDataset: string): Promise<void> => {
-			if (!imagePath || !targetDataset) return;
-
-			try {
-				// Use the mutation directly
-				const result = await addImageToDatasetMutation.mutateAsync({
-					imagePath,
-					datasetName: targetDataset,
-				});
-
-				if (result.success) {
-					toast.success({
-						title: result.message ??
-							`Image added to dataset ${targetDataset} successfully`
-					});
-				} else {
-					toast.error({ title: result.message ?? "Failed to add image to dataset" });
-				}
-			} catch (error) {
-				toast.error({
-					title: `Failed to add image to dataset: ${(error as Error).message}`
-				});
-				console.error("Error adding image to dataset:", error);
-			}
-		},
-		[addImageToDatasetMutation],
-	);
-
-	const createDataset = useCallback(
-		async (name: string): Promise<void> => {
-			try {
-				// Use the mutation directly
-				await createDatasetMutation.mutateAsync(name);
-				// Note: Navigation to the new dataset is handled elsewhere (useDatasets hook)
-				toast.success({ title: `Created dataset ${name}` });
-			} catch (error) {
-				console.error("Failed to create dataset:", error);
-				toast.error({ title: `Failed to create dataset: ${(error as Error).message}` });
-				throw error;
-			}
-		},
-		[createDatasetMutation],
-	);
 
 	const value = useMemo(
 		() => ({
@@ -136,8 +85,6 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 
 			// Action handlers
 			selectImage,
-			addToDataset,
-			createDataset,
 		}),
 		[
 			datasets,
@@ -146,8 +93,6 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 			selectedSubfolder,
 			selectedImage,
 			selectImage,
-			addToDataset,
-			createDataset,
 		],
 	);
 

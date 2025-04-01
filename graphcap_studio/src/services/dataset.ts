@@ -10,8 +10,8 @@ import {
 	ImageProcessResponseSchema,
 } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchWithRetry } from "../utils/fetchUtils";
 import { getQueryClient } from "../utils/queryClient";
-import { secureRandom } from "../utils/rand";
 
 /**
  * Dataset service for interacting with the Graphcap Media Server
@@ -49,6 +49,33 @@ export const queryKeys = {
 const getClient = () => getQueryClient();
 
 /**
+ * Fetches the list of all datasets and their associated images from the API.
+ *
+ * @returns A promise that resolves with the parsed dataset list response.
+ * @throws An error if the fetch request fails or the response is not ok.
+ */
+async function fetchDatasetList() {
+	console.log("Fetching dataset list with images");
+	try {
+		const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error("Error response fetching dataset list:", errorText);
+			throw new Error(
+				`Failed to list datasets and images: ${response.statusText}`,
+			);
+		}
+
+		const data = await response.json();
+		console.log("Received datasets list data:", data);
+		return DatasetListResponseSchema.parse(data);
+	} catch (error) {
+		console.error("Error in fetchDatasetList:", error);
+		throw error; // Re-throw the error to be handled by the caller (useQuery/prefetchQuery)
+	}
+}
+
+/**
  * React hook for listing all datasets and their images using TanStack Query
  *
  * @returns Query result with the list of datasets and their images
@@ -56,25 +83,7 @@ const getClient = () => getQueryClient();
 export function useListDatasets() {
 	return useQuery({
 		queryKey: queryKeys.datasetImages,
-		queryFn: async () => {
-			console.log("Listing datasets and their images");
-
-			try {
-				const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
-				if (!response.ok) {
-					const errorText = await response.text();
-					console.error("Error response:", errorText);
-					throw new Error(`Failed to list datasets: ${response.statusText}`);
-				}
-
-				const data = await response.json();
-				console.log("Received datasets data:", data);
-				return DatasetListResponseSchema.parse(data);
-			} catch (error) {
-				console.error("Error fetching datasets:", error);
-				throw error;
-			}
-		},
+		queryFn: fetchDatasetList,
 		meta: {
 			errorMessage: "Failed to load datasets",
 		},
@@ -228,15 +237,7 @@ export async function prefetchDatasets(): Promise<void> {
 	const queryClient = getClient();
 	await queryClient.prefetchQuery({
 		queryKey: queryKeys.datasetImages,
-		queryFn: async () => {
-			const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
-			if (!response.ok) {
-				throw new Error(`Failed to list datasets: ${response.statusText}`);
-			}
-
-			const data = await response.json();
-			return DatasetListResponseSchema.parse(data);
-		},
+		queryFn: fetchDatasetList,
 	});
 }
 
@@ -288,84 +289,6 @@ export function useDeleteDataset() {
 			errorMessage: "Failed to delete dataset",
 		},
 	});
-}
-
-/**
- * Enhanced fetch function with retry logic and timeout handling
- *
- * @param url - URL to fetch
- * @param options - Fetch options
- * @param retryCount - Number of retry attempts (default: 3)
- * @param retryDelay - Base delay between retries in ms (default: 1000)
- * @param timeout - Timeout in ms (default: 30000)
- * @returns Promise with the fetch response
- */
-async function fetchWithRetry(
-	url: string | URL,
-	options?: RequestInit,
-	retryCount = 3,
-	retryDelay = 1000,
-	timeout = 30000,
-): Promise<Response> {
-	const controller = new AbortController();
-	const id = setTimeout(() => controller.abort(), timeout);
-
-	try {
-		const fetchOptions = {
-			...options,
-			signal: controller.signal,
-		};
-
-		try {
-			const response = await fetch(url, fetchOptions);
-			if (!response.ok && retryCount > 0) {
-				// Exponential backoff with jitter
-				const delay =
-					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + secureRandom() * 0.2);
-				console.warn(
-					`Request failed with status ${response.status}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
-				);
-
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				return fetchWithRetry(
-					url,
-					options,
-					retryCount - 1,
-					retryDelay,
-					timeout,
-				);
-			}
-			return response;
-		} catch (error) {
-			if (error instanceof Error && error.name === "AbortError") {
-				console.error(`Request timed out after ${timeout}ms:`, url);
-				throw new Error(
-					`Request timed out after ${timeout}ms: ${url.toString()}`,
-				);
-			}
-
-			if (retryCount > 0) {
-				// Exponential backoff with jitter
-				const delay =
-					retryDelay * 1.5 ** (3 - retryCount) * (0.9 + secureRandom() * 0.2);
-				console.warn(
-					`Request failed with error: ${error}. Retrying in ${Math.round(delay)}ms. Attempts left: ${retryCount}`,
-				);
-
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				return fetchWithRetry(
-					url,
-					options,
-					retryCount - 1,
-					retryDelay,
-					timeout,
-				);
-			}
-			throw error;
-		}
-	} finally {
-		clearTimeout(id);
-	}
 }
 
 /**
