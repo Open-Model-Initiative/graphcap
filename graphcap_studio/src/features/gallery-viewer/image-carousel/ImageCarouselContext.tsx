@@ -8,6 +8,7 @@ import {
 	createContext,
 	useCallback,
 	useContext,
+	useEffect,
 	useMemo,
 	useState,
 } from "react";
@@ -73,11 +74,6 @@ const ImageCarouselContext = createContext<
 
 interface ImageCarouselProviderProps {
 	readonly children: ReactNode;
-	readonly images: Image[];
-	readonly isLoading?: boolean;
-	readonly isEmpty?: boolean;
-	readonly selectedImage?: Image | null;
-	readonly onSelectImage: (image: Image) => void;
 	readonly onUploadComplete?: () => void;
 	readonly thumbnailOptions?: {
 		readonly minWidth?: number;
@@ -98,31 +94,33 @@ interface ImageCarouselProviderProps {
  * Makes the dataset name and other shared properties available to all child components
  *
  * @param children - Child components
- * @param images - Array of images
- * @param isLoading - Whether the carousel is loading
- * @param isEmpty - Whether the carousel is empty
- * @param selectedImage - Initial selected image
- * @param onSelectImage - Callback to select an image
  * @param onUploadComplete - Callback when upload is complete
  * @param thumbnailOptions - Thumbnail options
  * @param preloadOptions - Preload options
  */
 export function ImageCarouselProvider({
 	children,
-	images,
-	isLoading = false,
-	isEmpty = false,
-	selectedImage: initialSelectedImage = null,
-	onSelectImage,
 	onUploadComplete,
 	thumbnailOptions = {},
 	preloadOptions = {},
 }: ImageCarouselProviderProps) {
 	// Get dataset context
-	const { currentDataset } = useDatasetContext();
+	const {
+		selectedDataset,
+		isLoadingDataset,
+		datasetError,
+		selectImage: contextSelectImage,
+		selectedImage: contextSelectedImage,
+	} = useDatasetContext();
 
-	// Use currentDataset directly from context
-	const datasetName = currentDataset;
+	// Derive state from DatasetContext
+	const images = useMemo(() => selectedDataset?.images ?? [], [selectedDataset]);
+	const isLoading = isLoadingDataset;
+	const isEmpty = !isLoadingDataset && !datasetError && images.length === 0;
+	const datasetName = selectedDataset?.name ?? "";
+
+	// Use selectedImage from context directly
+	const initialSelectedImage = contextSelectedImage;
 
 	// Memoize normalized thumbnail options
 	const normalizedThumbnailOptions = useMemo(() => ({
@@ -171,7 +169,7 @@ export function ImageCarouselProvider({
 	} = useCarouselNavigation({
 		images,
 		selectedImage: initialSelectedImage,
-		onSelectImage,
+		onSelectImage: contextSelectImage,
 	});
 
 	// Use custom hook for keyboard navigation
@@ -190,7 +188,18 @@ export function ImageCarouselProvider({
 	// Use custom hook for thumbnail scrolling
 	const thumbnailsRef = useThumbnailScroll({
 		selectedIndex: initialSelectedImage
-			? Math.max(0, currentIndex - visibleStartIndex)
+			? Math.max(
+					0,
+					currentIndex -
+						visibleStartIndex +
+						(currentIndex >= visibleStartIndex &&
+						currentIndex < visibleStartIndex + visibleImages.length
+							? 0
+							:
+								currentIndex < visibleStartIndex
+								? 1
+								: -1),
+				)
 			: 0,
 		totalCount: visibleImages.length,
 	});
@@ -221,9 +230,9 @@ export function ImageCarouselProvider({
 	const selectImage = useCallback(
 		(image: Image) => {
 			setImageLoadError(false);
-			onSelectImage(image);
+			contextSelectImage(image);
 		},
-		[onSelectImage],
+		[contextSelectImage],
 	);
 
 	const value = useMemo(

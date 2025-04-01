@@ -11,12 +11,12 @@ export const Route = createFileRoute("/gallery/$datasetId")({
 
 function GalleryWithDataset() {
 	const { datasetId } = Route.useParams();
-	const { setCurrentDataset } = useDatasetContext();
+	const { selectDatasetById } = useDatasetContext();
 
 	useEffect(() => {
 		console.log(`Setting current dataset from route: ${datasetId}`);
-		setCurrentDataset(datasetId);
-	}, [datasetId, setCurrentDataset]);
+		selectDatasetById(datasetId);
+	}, [datasetId, selectDatasetById]);
 
 	return <GalleryContainer />;
 }
