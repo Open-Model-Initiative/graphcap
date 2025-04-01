@@ -7,7 +7,7 @@ import {
 import { getQueryClient } from "@/utils/queryClient";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDatasetNavigation } from "../components/dataset-tree/hooks/useDatasetNavigation";
 import { useDatasetContext } from "../context/DatasetContext";
 
