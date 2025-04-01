@@ -1,4 +1,4 @@
-import { DatasetInitializer } from "@/features/datasets";
+import { DatasetProvider } from "@/features/datasets";
 import { GenerationOptionsProvider } from "@/features/inference/generation-options";
 import { InferenceProviderProvider } from "@/features/inference/providers/context";
 import { PerspectivesProvider } from "@/features/perspectives/context";
@@ -29,13 +29,13 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
 	return (
 		<FeatureFlagProvider>
 			<ServerConnectionsProvider>
-				<DatasetInitializer>
+				<DatasetProvider>
 					<GenerationOptionsProvider>
 						<InferenceProviderProvider>
 							<PerspectivesProvider image={null}>{children}</PerspectivesProvider>
 						</InferenceProviderProvider>
 					</GenerationOptionsProvider>
-				</DatasetInitializer>
+				</DatasetProvider>
 			</ServerConnectionsProvider>
 		</FeatureFlagProvider>
 	);

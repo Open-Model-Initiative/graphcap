@@ -1,7 +1,6 @@
 import { EmptyState } from "@/components/ui/status/EmptyState";
 import { LoadingSpinner } from "@/components/ui/status/LoadingSpinner";
 import { UploadDropzone } from "@/features/datasets/components/image-uploader";
-import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { LazyImage } from "@/features/gallery-viewer/image-grid/LazyImage";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
@@ -29,7 +28,6 @@ interface GridViewerProps {
 	readonly selectedImage?: Image | null;
 	readonly onSelectImage: (image: Image) => void;
 	readonly onEditImage?: (image: Image) => void;
-	readonly datasetName?: string;
 	/**
 	 * Optional custom component to render individual images
 	 * If not provided, a default img element will be used
@@ -59,7 +57,6 @@ interface GridViewerProps {
  * @param onSelectImage - Callback when an image is selected
  * @param onEditImage - Callback when edit button is clicked
  * @param ImageComponent - Optional custom component to render individual images
- * @param datasetName - Name of the dataset to upload images to
  */
 export function GridViewer({
 	images,
@@ -72,7 +69,6 @@ export function GridViewer({
 	className = "",
 	containerWidth: externalWidth,
 	containerHeight: externalHeight,
-	datasetName: propDatasetName,
 	onUploadComplete,
 }: GridViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -80,11 +76,6 @@ export function GridViewer({
 	const [itemSize, setItemSize] = useState(180); // Default item size
 	const [columnCount, setColumnCount] = useState(1);
 
-	// Get dataset context
-	const { currentDataset } = useDatasetContext();
-
-	// Use prop datasetName if provided, otherwise use currentDataset from context
-	const datasetName = propDatasetName || currentDataset;
 
 	// Update dimensions when container size changes
 	useEffect(() => {
@@ -188,7 +179,7 @@ export function GridViewer({
 					description="Try selecting a different dataset or uploading new images."
 				/>
 				<UploadDropzone
-					datasetName={datasetName}
+
 					onUploadComplete={onUploadComplete}
 				/>
 			</div>

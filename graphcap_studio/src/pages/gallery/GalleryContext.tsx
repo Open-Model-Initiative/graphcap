@@ -1,4 +1,3 @@
-import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { useDatasets } from "@/features/datasets/hooks/useDatasets";
 import type { Dataset, Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
@@ -22,8 +21,6 @@ type GalleryContextType = {
 	filteredImages: Image[];
 	isLoading: boolean;
 
-	// Action handlers
-	handleSelectDataset: (datasetId: string, subfolder?: string | null) => void;
 	handleAddToDataset: (
 		imagePath: string,
 		targetDataset: string,
@@ -37,7 +34,6 @@ type GalleryContextType = {
  */
 type GalleryProviderProps = {
 	readonly children: ReactNode;
-	readonly initialDataset?: string;
 };
 
 /**
@@ -53,7 +49,6 @@ const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
  */
 export function GalleryContextProvider({
 	children,
-	initialDataset,
 }: GalleryProviderProps) {
 	// Use the datasets hook to manage dataset state
 	const {
@@ -63,19 +58,10 @@ export function GalleryContextProvider({
 		currentDataset: hookCurrentDataset,
 		filteredImages,
 		isLoading,
-		handleDatasetChange,
 		handleAddToDataset,
 		handleCreateDataset,
 		handleUploadComplete,
 	} = useDatasets();
-
-	// Set the initial dataset if provided
-	useEffect(() => {
-		if (initialDataset && initialDataset !== selectedDataset) {
-			// Use handleDatasetChange instead of setSelectedDataset to ensure proper state updates
-			handleDatasetChange(initialDataset, null);
-		}
-	}, [initialDataset, selectedDataset, handleDatasetChange]);
 
 	// Create a memoized value for the context
 	const value = useMemo(
@@ -89,7 +75,7 @@ export function GalleryContextProvider({
 			isLoading,
 
 			// Action handlers
-			handleSelectDataset: handleDatasetChange,
+			// REMOVED: handleSelectDataset
 			handleAddToDataset,
 			handleCreateDataset,
 			handleUploadComplete,
@@ -101,7 +87,7 @@ export function GalleryContextProvider({
 			hookCurrentDataset,
 			filteredImages,
 			isLoading,
-			handleDatasetChange,
+			// Ensure handleDatasetChange is fully removed from dependencies
 			handleAddToDataset,
 			handleCreateDataset,
 			handleUploadComplete,
@@ -130,48 +116,4 @@ export function useGalleryContext() {
 	}
 
 	return context;
-}
-
-/**
- * Hook for synchronizing the DatasetContext with the GalleryContext
- *
- * @deprecated This hook is being deprecated in favor of the onDatasetSelected prop
- * on the DatasetProvider. Use that instead for new code.
- */
-export function useSyncDatasetWithGallery() {
-	const galleryContext = useGalleryContext();
-	const datasetContext = useDatasetContext();
-
-	// Sync from Gallery to Dataset context
-	useEffect(() => {
-		if (
-			galleryContext.selectedDataset &&
-			galleryContext.selectedDataset !== datasetContext.currentDataset
-		) {
-			datasetContext.setCurrentDataset(galleryContext.selectedDataset);
-			datasetContext.setSelectedSubfolder(galleryContext.selectedSubfolder);
-		}
-	}, [
-		galleryContext.selectedDataset,
-		galleryContext.selectedSubfolder,
-		galleryContext.datasets,
-		datasetContext,
-	]);
-
-	// Sync from Dataset to Gallery context
-	useEffect(() => {
-		if (
-			datasetContext.currentDataset &&
-			datasetContext.currentDataset !== galleryContext.selectedDataset
-		) {
-			galleryContext.handleSelectDataset(
-				datasetContext.currentDataset,
-				datasetContext.selectedSubfolder,
-			);
-		}
-	}, [
-		datasetContext.currentDataset,
-		datasetContext.selectedSubfolder,
-		galleryContext,
-	]);
 }

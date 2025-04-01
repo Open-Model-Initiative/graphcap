@@ -9,8 +9,18 @@
 
 const express = require('express');
 const router = express.Router();
+const fs = require('node:fs');
+const path = require('node:path');
 const { logInfo, logError } = require('../utils/logger');
 const { listDatasetImages, createDataset, addImageToDataset, deleteDataset } = require('../services/dataset-service');
+const { upload, handleMulterErrors } = require('../middleware/upload');
+const { 
+  securePath, 
+  validateFilename, 
+  getBasename,
+  ensureDir 
+} = require('../utils/path-utils');
+const { WORKSPACE_PATH } = require('../config');
 
 /**
  * List all images in the datasets directory recursively
@@ -78,13 +88,127 @@ router.post('/add-image', async (req, res) => {
     // Handle specific errors with appropriate status codes
     if (error.message === 'Dataset not found') {
       return res.status(404).json({ error: error.message });
-    } else if (error.message === 'Image not found') {
+    }
+    if (error.message === 'Image not found') {
       return res.status(404).json({ error: error.message });
-    } else if (error.message === 'Image already exists in the dataset') {
+    }
+    if (error.message === 'Image already exists in the dataset') {
       return res.status(409).json({ error: error.message });
     }
     
     res.status(500).json({ error: 'Failed to add image to dataset' });
+  }
+});
+
+/**
+ * Upload an image directly to a specified dataset
+ * 
+ * @param {File} req.file - The image file to upload
+ * @param {string} req.body.dataset - Dataset name to upload to (mandatory)
+ * @returns {Object} Uploaded image information (path, url)
+ */
+router.post('/upload', handleMulterErrors, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      logError('No image file provided for dataset upload', { body: req.body });
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Dataset is mandatory
+    const { dataset } = req.body;
+    if (!dataset) {
+      logError('Dataset name is required for upload', { body: req.body });
+      // Clean up the uploaded file if dataset is missing
+      fs.unlink(req.file.path, (err) => {
+        if (err) logError('Failed to clean up orphaned upload file', { path: req.file.path, error: err });
+      });
+      return res.status(400).json({ error: 'Dataset name is required' });
+    }
+
+    // Initialize paths
+    let targetPath = ''; 
+    let relativePath = ''; 
+
+    // Validate dataset name
+    if (!/^[a-zA-Z0-9_-]+$/.test(dataset)) {
+      logError('Invalid dataset name provided for upload', { dataset });
+      // Clean up the uploaded file
+      fs.unlink(req.file.path, (err) => {
+          if (err) logError('Failed to clean up orphaned upload file', { path: req.file.path, error: err });
+      });
+      return res.status(400).json({ 
+        error: 'Invalid dataset name. Use only letters, numbers, underscores, and hyphens.' 
+      });
+    }
+    
+    // Securely create dataset path (ensures it's within the datasets/local directory)
+    const datasetPathResult = securePath(`datasets/local/${dataset}`, WORKSPACE_PATH, { createIfNotExist: true });
+    
+    if (!datasetPathResult.isValid || !datasetPathResult.path.startsWith(path.join(WORKSPACE_PATH, 'datasets', 'local'))) {
+       logError('Invalid or insecure dataset path for upload', { dataset, path: datasetPathResult.path, error: datasetPathResult.error });
+      // Clean up the uploaded file
+      fs.unlink(req.file.path, (err) => {
+        if (err) logError('Failed to clean up orphaned upload file', { path: req.file.path, error: err });
+      });
+      return res.status(400).json({ error: 'Invalid dataset path' });
+    }
+    
+    // Get the filename from the uploaded file and validate it
+    const fileName = getBasename(req.file.path);
+    const fileNameResult = validateFilename(fileName);
+    
+    if (!fileNameResult.isValid) {
+      logError('Invalid filename for upload', { fileName, error: fileNameResult.error });
+       // Clean up the uploaded file
+      fs.unlink(req.file.path, (err) => {
+        if (err) logError('Failed to clean up orphaned upload file', { path: req.file.path, error: err });
+      });
+      return res.status(400).json({ error: 'Invalid filename' });
+    }
+    
+    // Create the final destination path securely
+    const newPathResult = securePath(`datasets/local/${dataset}/${fileNameResult.sanitized}`, WORKSPACE_PATH);
+    
+    if (!newPathResult.isValid || !newPathResult.path.startsWith(datasetPathResult.path)) {
+      logError('Invalid or insecure final path for upload', { path: newPathResult.path, error: newPathResult.error });
+       // Clean up the uploaded file
+      fs.unlink(req.file.path, (err) => {
+        if (err) logError('Failed to clean up orphaned upload file', { path: req.file.path, error: err });
+      });
+      return res.status(400).json({ error: 'Invalid path for file' });
+    }
+    
+    // Ensure the target directory exists (redundant check, but safe)
+    ensureDir(datasetPathResult.path);
+    
+    // Move the file from temporary upload location to the final dataset location
+    fs.renameSync(req.file.path, newPathResult.path);
+    
+    // Update paths for response
+    targetPath = newPathResult.path;
+    relativePath = newPathResult.relativePath;
+    
+    logInfo(`Image uploaded directly to dataset: ${dataset}`, { 
+      newPath: targetPath
+    });
+    
+    // Respond with success and the relative path/URL
+    res.json({
+      success: true,
+      path: relativePath,
+      // Note: The view URL still uses the /api/images/view endpoint
+      url: `/api/images/view${relativePath}` 
+    });
+
+  } catch (error) {
+    logError('Error uploading image to dataset', error);
+    // Ensure temp file is cleaned up on unexpected errors
+    if (req.file?.path) { 
+       fs.unlink(req.file.path, (err) => {
+        if (err) logError('Failed to clean up upload file after error', { path: req.file.path, error: err });
+      });
+    }
+    res.status(500).json({ error: 'Failed to process uploaded image for dataset' });
   }
 });
 

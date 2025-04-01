@@ -1,5 +1,6 @@
 import { ThumbnailImage } from "@/components/responsive-image";
 import { UploadDropzone } from "@/features/datasets/components/image-uploader";
+import { useImageUploader } from "@/features/datasets/components/image-uploader/useImageUploader";
 import type { Image } from "@/types";
 import { Upload } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
@@ -44,7 +45,12 @@ function ThumbnailStripBase({
 	maxHeight = 70,
 }: Readonly<ThumbnailStripProps>) {
 	// Get dataset name from context
-	const { datasetName, onUploadComplete } = useImageCarousel();
+	const { onUploadComplete } = useImageCarousel();
+
+	// Setup uploader hook
+	const {
+		isDisabled: uploaderIsDisabled,
+	} = useImageUploader({ onUploadComplete: onUploadComplete ?? (() => {}) });
 
 	// Use custom hook for dynamic thumbnail sizing
 	const {
@@ -114,10 +120,10 @@ function ThumbnailStripBase({
 						fallback={<Upload className="text-gray-400" size={16} />}
 					>
 						<UploadDropzone
-							datasetName={datasetName}
 							className="h-full w-full"
 							compact={true}
 							onUploadComplete={onUploadComplete}
+							isDisabled={uploaderIsDisabled}
 						/>
 					</ErrorBoundary>
 				</div>

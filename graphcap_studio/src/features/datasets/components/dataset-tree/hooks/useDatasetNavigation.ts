@@ -15,7 +15,7 @@ export function useDatasetNavigation() {
 
 	/**
 	 * Navigate to a dataset in the gallery view.
-	 * The route will determine the selection state.
+	 * Sets the current dataset in context and then navigates.
 	 *
 	 * @param {TreeItemData} item - The dataset item to navigate to.
 	 */
@@ -25,8 +25,7 @@ export function useDatasetNavigation() {
 			const isDataset = item.iconType === "dataset";
 
 			if (isDataset && item.id) {
-				// Navigate to the gallery view with the dataset ID
-				// The route will determine the selection state
+
 				const path = `/gallery/${item.id}`;
 				navigate({ to: path });
 			}

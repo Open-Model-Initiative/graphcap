@@ -1,7 +1,17 @@
 import { useDeleteDataset } from "@/services/dataset";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from "react";
+import {
+	AlertDescription,
+	Button,
+	CloseButton,
+	Dialog,
+	Icon,
+	Portal,
+	Text,
+} from "@chakra-ui/react";
+import { useCallback, useRef, useState } from "react";
+import { LuTrash2 } from "react-icons/lu";
 
 type DeleteDatasetModalProps = {
 	readonly isOpen: boolean;
@@ -11,7 +21,7 @@ type DeleteDatasetModalProps = {
 };
 
 /**
- * A modal component for confirming dataset deletion
+ * A modal dialog for confirming dataset deletion, using Chakra UI Dialog primitives.
  */
 export function DeleteDatasetModal({
 	isOpen,
@@ -20,64 +30,90 @@ export function DeleteDatasetModal({
 	onDatasetDeleted,
 }: DeleteDatasetModalProps) {
 	const [error, setError] = useState<string | null>(null);
-
-	// Use the dataset deletion mutation
 	const deleteDatasetMutation = useDeleteDataset();
 	const isDeleting = deleteDatasetMutation.isPending;
 
-	if (!isOpen) return null;
+	// Ref for the button that should receive initial focus (the Cancel button is safer)
+	const cancelRef = useRef<HTMLButtonElement>(null);
 
+	/**
+	 * Resets error state and calls the onClose prop.
+	 */
+	const handleCloseAndReset = useCallback(() => {
+		setError(null);
+		onClose();
+	}, [onClose]);
+
+	/**
+	 * Calls the delete mutation and handles success/error states.
+	 */
 	const handleConfirmDelete = async () => {
 		setError(null);
-
 		try {
 			await deleteDatasetMutation.mutateAsync(datasetName);
 			toast.success({ title: `Dataset "${datasetName}" deleted successfully` });
 			onDatasetDeleted();
-			onClose();
-		} catch (error) {
-			console.error("Error deleting dataset:", error);
-			setError(
-				error instanceof Error ? error.message : "Failed to delete dataset",
-			);
+			handleCloseAndReset(); // Close and reset on success
+		} catch (err) {
+			console.error("Error deleting dataset:", err);
+			setError(err instanceof Error ? err.message : "Failed to delete dataset");
 		}
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-			<div className="w-full max-w-md rounded-lg bg-gray-800 p-6 shadow-xl">
-				<h2 className="mb-4 text-xl font-semibold text-white">
-					Delete Dataset
-				</h2>
+		<Dialog.Root
+			open={isOpen}
+			// Use onOpenChange to handle closing and state reset
+			onOpenChange={(e) => { if (!e.open) handleCloseAndReset(); }}
+			initialFocusEl={() => cancelRef.current}
+			placement="center"
+		>
+			<Portal>
+				<Dialog.Backdrop />
+				<Dialog.Positioner>
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>Delete Dataset</Dialog.Title>
+							<Dialog.CloseTrigger asChild>
+								<CloseButton size="sm" disabled={isDeleting} />
+							</Dialog.CloseTrigger>
+						</Dialog.Header>
+						<Dialog.Body pb={6}>
+							<Text mb={6}>
+								Are you sure you want to delete the dataset{" "}
+								<Text as="span" fontWeight="semibold">
+									{datasetName}
+								</Text>
+								? This action cannot be undone and all images in this dataset
+								will be permanently deleted.
+							</Text>
 
-				<p className="mb-6 text-gray-300">
-					Are you sure you want to delete the dataset{" "}
-					<span className="font-semibold text-white">{datasetName}</span>? This
-					action cannot be undone and all images in this dataset will be
-					permanently deleted.
-				</p>
+							{error && (
+									<AlertDescription>{error}</AlertDescription>
+							)}
+						</Dialog.Body>
 
-				{error && <p className="mb-4 text-sm text-red-400">{error}</p>}
-
-				<div className="flex justify-end space-x-2">
-					<button
-						type="button"
-						className="rounded-md bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-600"
-						onClick={onClose}
-						disabled={isDeleting}
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500 disabled:opacity-50"
-						onClick={handleConfirmDelete}
-						disabled={isDeleting}
-					>
-						{isDeleting ? "Deleting..." : "Delete Dataset"}
-					</button>
-				</div>
-			</div>
-		</div>
+						<Dialog.Footer>
+							<Dialog.CloseTrigger asChild>
+								<Button ref={cancelRef} mr={3} variant="ghost" disabled={isDeleting}>
+									Cancel
+								</Button>
+							</Dialog.CloseTrigger>
+							<Button
+								aria-label="Confirm delete dataset"
+								bg="red.900"
+								color="white"
+								onClick={handleConfirmDelete}
+								loading={isDeleting}
+								disabled={isDeleting}
+							>
+								Delete Dataset
+								<Icon as={LuTrash2} />
+							</Button>
+						</Dialog.Footer>
+					</Dialog.Content>
+				</Dialog.Positioner>
+			</Portal>
+		</Dialog.Root>
 	);
 }
