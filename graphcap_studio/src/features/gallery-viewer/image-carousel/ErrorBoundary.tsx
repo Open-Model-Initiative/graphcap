@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface ErrorBoundaryProps {
 	children: ReactNode;
@@ -64,9 +64,10 @@ export class ErrorBoundary extends Component<
 						Something went wrong
 					</h2>
 					<p className="text-sm text-red-600 dark:text-red-300 mb-4">
-						{this.state.error?.message || "An unexpected error occurred"}
+						{this.state.error?.message ?? "An unexpected error occurred"}
 					</p>
 					<button
+						type="button"
 						className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium"
 						onClick={() => this.setState({ hasError: false, error: null })}
 					>

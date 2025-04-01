@@ -1,7 +1,6 @@
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
-import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
-import React from "react";
+
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ImageCarouselProvider } from "./ImageCarouselContext";
 import { CarouselEmptyState } from "./components/CarouselEmptyState";
@@ -46,14 +45,12 @@ export function CarouselViewer({
 	const {
 		selectedDataset,
 		isLoadingDataset,
-		selectedImage,
 	} = useDatasetContext();
 
 	// Derive state from context
 	const isLoading = isLoadingDataset;
 	const images = selectedDataset?.images ?? [];
 	const isEmpty = !isLoading && images.length === 0;
-	const datasetName = selectedDataset?.name;
 
 	// Show loading state
 	if (isLoading) {

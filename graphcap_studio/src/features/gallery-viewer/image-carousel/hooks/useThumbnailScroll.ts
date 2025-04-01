@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 interface UseThumbnailScrollProps {
 	selectedIndex: number;
 	totalCount: number;
-	containerWidth?: number;
 	thumbnailWidth?: number;
 }
 
@@ -20,7 +19,6 @@ interface UseThumbnailScrollProps {
 export function useThumbnailScroll({
 	selectedIndex,
 	totalCount,
-	containerWidth = 0,
 	thumbnailWidth = 80,
 }: UseThumbnailScrollProps) {
 	// Reference for the thumbnails container

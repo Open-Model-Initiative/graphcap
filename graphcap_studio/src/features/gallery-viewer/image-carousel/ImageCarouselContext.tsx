@@ -8,7 +8,6 @@ import {
 	createContext,
 	useCallback,
 	useContext,
-	useEffect,
 	useMemo,
 	useState,
 } from "react";
@@ -182,22 +181,27 @@ export function ImageCarouselProvider({
 		enabled: !isLoading && !isEmpty && images.length > 0,
 	});
 
+	// Calculate the adjusted index for thumbnail scrolling
+	const calculateThumbnailScrollIndex = () => {
+		if (!initialSelectedImage) {
+			return 0;
+		}
+
+		const isVisible = currentIndex >= visibleStartIndex && currentIndex < visibleStartIndex + visibleImages.length;
+		let adjustment = 0;
+		if (!isVisible) {
+			adjustment = currentIndex < visibleStartIndex ? 1 : -1;
+		}
+
+		const baseIndex = Math.max(0, currentIndex - visibleStartIndex);
+		return baseIndex + adjustment;
+	};
+
+	const thumbnailScrollIndex = calculateThumbnailScrollIndex();
+
 	// Use custom hook for thumbnail scrolling
 	const thumbnailsRef = useThumbnailScroll({
-		selectedIndex: initialSelectedImage
-			? Math.max(
-					0,
-					currentIndex -
-						visibleStartIndex +
-						(currentIndex >= visibleStartIndex &&
-						currentIndex < visibleStartIndex + visibleImages.length
-							? 0
-							:
-								currentIndex < visibleStartIndex
-								? 1
-								: -1),
-				)
-			: 0,
+		selectedIndex: thumbnailScrollIndex,
 		totalCount: visibleImages.length,
 	});
 
