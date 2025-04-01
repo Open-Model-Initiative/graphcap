@@ -62,11 +62,8 @@ export function useCarouselNavigation({
 			if (index !== -1 && index !== currentIndex) {
 				setCurrentIndex(index);
 			}
-
-		} else if (!selectedImage && images.length > 0) {
-
 		}
-	}, [selectedImage, images, currentIndex]); 
+	}, [selectedImage, images, currentIndex]);
 
 	// Adjust the visible window when the current index changes
 	useEffect(() => {

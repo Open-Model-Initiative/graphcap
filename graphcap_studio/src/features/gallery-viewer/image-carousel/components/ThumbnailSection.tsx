@@ -5,7 +5,7 @@ import { useImageCarousel } from "../ImageCarouselContext";
 import { ThumbnailStrip } from "../ThumbnailStrip";
 
 interface ThumbnailSectionProps {
-	className?: string;
+	readonly className?: string;
 }
 
 /**

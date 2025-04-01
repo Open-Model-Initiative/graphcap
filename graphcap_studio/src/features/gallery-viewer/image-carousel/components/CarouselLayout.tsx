@@ -43,6 +43,7 @@ export function CarouselLayout({ className = "" }: CarouselLayoutProps) {
 
 					{/* Skip navigation link for keyboard users */}
 					<button
+						type="button"
 						className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:p-2 focus:bg-white focus:text-black"
 						onClick={() => {
 							// Find and focus the first interactive element after the carousel

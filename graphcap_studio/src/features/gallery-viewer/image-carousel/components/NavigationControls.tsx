@@ -1,10 +1,9 @@
 import { NavigationButton } from "@/components/ui/buttons/NavigationButton";
 // SPDX-License-Identifier: Apache-2.0
-import React from "react";
 import { useImageCarousel } from "../ImageCarouselContext";
 
 interface NavigationControlsProps {
-	className?: string;
+	readonly className?: string;
 }
 
 /**
