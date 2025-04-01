@@ -39,7 +39,7 @@ export function ThumbnailSection({ className = "" }: ThumbnailSectionProps) {
 				{/* Thumbnails with counter */}
 				<div ref={thumbnailsRef} className="w-full relative">
 					<ThumbnailStrip
-						images={visibleImages}
+						visibleImages={visibleImages}
 						selectedIndex={
 							selectedImage ? Math.max(0, currentIndex - visibleStartIndex) : 0
 						}

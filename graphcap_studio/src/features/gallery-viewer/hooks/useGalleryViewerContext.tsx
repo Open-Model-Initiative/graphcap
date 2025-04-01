@@ -9,10 +9,12 @@ import {
 	useContext,
 	useMemo,
 } from "react";
-import type { ViewMode } from "../components/ImageGallery";
+
+// Define the possible view modes based on the route's search schema
+export type ViewMode = "grid" | "carousel" | "edit";
 
 interface GalleryViewerContextType {
-	/** The current view mode, either 'grid' or 'carousel' */
+	/** The current view mode, one of 'grid', 'carousel', or 'edit' */
 	viewMode: ViewMode;
 	/** Updates the view mode by modifying the URL search parameter */
 	setViewMode: (mode: ViewMode) => void;

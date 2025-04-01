@@ -7,7 +7,6 @@ export * from "./ImageViewer";
 export * from "./ViewerContainer";
 
 // Sub-components (actions, toggles, etc.)
-// export * from "./components/ImageGallery"; // Removed
 export * from "./components/CompactActionBar";
 export * from "./components/ViewModeToggle";
 
@@ -17,6 +16,6 @@ export * from "./hooks/useImageViewerSize";
 export * from "./hooks/useViewerContainer";
 
 // Specific view implementations (Grid, Carousel)
-export * from "./image-carousel"; // Assuming index.ts exports CarouselViewer etc.
+export * from "./image-carousel";
 export * from "./image-grid/GridViewer";
 

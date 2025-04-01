@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import { RefObject, useEffect } from "react";
+import type { RefObject } from "react";
+import { useEffect } from "react";
 
 interface UseWheelNavigationProps {
 	containerRef: RefObject<HTMLDivElement | null>;
