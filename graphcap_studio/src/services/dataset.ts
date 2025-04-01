@@ -1,11 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import type {
-	AddImageToDatasetResponse,
-	Dataset,
-	DatasetCreateResponse,
-	DatasetDeleteResponse,
-	DatasetListResponse,
-} from "@/types";
 import {
 	AddImageToDatasetResponseSchema,
 	DatasetCreateResponseSchema,
@@ -13,7 +6,6 @@ import {
 	DatasetListResponseSchema,
 } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
 import { getQueryClient } from "../utils/queryClient";
 
 /**
