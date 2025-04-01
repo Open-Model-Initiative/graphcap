@@ -13,11 +13,8 @@ interface ViewerContainerProps {
 	readonly className?: string;
 	readonly initialViewMode?: ViewMode;
 	readonly selectedImage?: Image | null;
-	readonly onImageSelected: (image: Image) => void;
-	readonly onEditImage?: (image: Image) => void;
+	readonly onImageSelected?: (image: Image) => void;
 	readonly onAddToDataset?: (imagePath: string, datasetName: string) => void;
-	readonly onDownload?: (image: Image) => void;
-	readonly onDelete?: (image: Image) => void;
 	readonly showViewModeToggle?: boolean;
 	readonly title?: string;
 	readonly onUpload?: () => void;
@@ -40,10 +37,7 @@ interface ViewerContainerProps {
  * @param initialViewMode - Initial view mode ('grid' or 'carousel'), defaults to 'carousel'
  * @param selectedImage - Currently selected image
  * @param onImageSelected - Callback when an image is selected
- * @param onEditImage - Callback when edit button is clicked
  * @param onAddToDataset - Callback when add to dataset button is clicked
- * @param onDownload - Callback when download button is clicked
- * @param onDelete - Callback when delete button is clicked
  * @param showViewModeToggle - Whether to show the view mode toggle
  * @param title - Title to display in the header bar
  * @param onUpload - Callback when upload button is clicked
@@ -58,10 +52,7 @@ export function ViewerContainer({
 	initialViewMode = DEFAULT_VIEW_MODE,
 	selectedImage,
 	onImageSelected,
-	onEditImage,
 	onAddToDataset,
-	onDownload,
-	onDelete,
 	showViewModeToggle = true,
 	title = "Image Viewer",
 	onUpload,
@@ -92,6 +83,7 @@ export function ViewerContainer({
 						{showViewModeToggle && <ViewModeToggle />}
 						{onUpload && (
 							<button
+								type="button"
 								onClick={onUpload}
 								className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
 							>
@@ -100,6 +92,7 @@ export function ViewerContainer({
 						)}
 						{onClose && (
 							<button
+								type="button"
 								onClick={onClose}
 								className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
 							>
@@ -114,10 +107,7 @@ export function ViewerContainer({
 						images={images}
 						isLoading={isLoading}
 						isEmpty={isEmpty}
-						onEditImage={onEditImage}
 						onAddToDataset={onAddToDataset}
-						onDownload={onDownload}
-						onDelete={onDelete}
 						thumbnailOptions={thumbnailOptions}
 					/>
 				</div>

@@ -1,16 +1,16 @@
-import { useEditorContext } from "@/features/editor/context/EditorContext";
+// SPDX-License-Identifier: Apache-2.0
+// import { useEditorContext } from "@/features/editor/context/EditorContext"; // Removed import
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { ViewerContainer } from "@/features/gallery-viewer";
 import { PropertiesContainer } from "@/features/image-properties";
 import { EditorLayout } from "@/pages/gallery/GalleryLayout";
-// SPDX-License-Identifier: Apache-2.0
-import type { Dataset } from "@/types";
+import { Center, Spinner, Text } from "@chakra-ui/react"; // Added for loading/error states
 import { ImageEditor } from "../components/ImageEditor";
-import { useImageActions, useImageEditor } from "../hooks";
+import { useImageEditor } from "../hooks"; // Keep hooks for now
 
 interface EditorContainerProps {
 	readonly directory?: string;
 	readonly onClose?: () => void;
-	readonly dataset: Dataset | null;
 }
 
 /**
@@ -19,36 +19,54 @@ interface EditorContainerProps {
 export function EditorContainer({
 	directory,
 	onClose,
-	dataset,
 }: EditorContainerProps) {
-	// Get context from EditorContext
-	const { selectedImage, setSelectedImage } = useEditorContext();
+	// Get necessary state from DatasetContext
+	const { selectedDataset, selectedImage, isLoadingDataset, datasetError } =
+		useDatasetContext();
 
-	// Get images from the dataset
-	const images = dataset?.images || [];
+	// Use custom hook for image editing state
+	const { isEditing, handleSave, handleCancel } = useImageEditor({
+		selectedDataset: selectedDataset?.name ?? null,
+	});
+
+	// Handle Loading State
+	if (isLoadingDataset) {
+		return (
+			<Center h="full" w="full">
+				<Spinner size="xl" />
+			</Center>
+		);
+	}
+
+	// Handle Error State
+	if (datasetError) {
+		return (
+			<Center h="full" w="full">
+				<Text color="red.500">
+					Error loading dataset: {datasetError.message}
+				</Text>
+			</Center>
+		);
+	}
+
+	// Handle Dataset Not Found (selectedDataset is null after loading and no error)
+	if (!selectedDataset) {
+		return (
+			<Center h="full" w="full">
+				<Text color="gray.500">Dataset not found or no dataset selected.</Text>
+			</Center>
+		);
+	}
+
+	// Get images from the selected dataset
+	const images = selectedDataset.images || []; // selectedDataset guaranteed non-null here
 
 	// Filter images by directory if provided
 	const filteredImages = directory
 		? images.filter((img) => img.directory === directory)
 		: images;
 
-	// Use custom hooks for image editing and actions
-	const {
-		isEditing,
-		handleSave,
-		handleCancel,
-		handleEditImage: startEditing,
-	} = useImageEditor({
-		selectedDataset: dataset?.name ?? null,
-	});
-
-	const { handleEditImage, handleDownload, handleDelete } = useImageActions({
-		selectedImage,
-		startEditing,
-	});
-
-	// Determine if the gallery is empty or loading
-	const isLoading = false; // Replace with actual loading state if needed
+	// Determine if the gallery is empty (within the selected dataset/directory)
 	const isEmpty = filteredImages.length === 0;
 
 	return (
@@ -69,17 +87,9 @@ export function EditorContainer({
 									{/* Image gallery */}
 									<ViewerContainer
 										images={filteredImages}
-										isLoading={isLoading}
+										isLoading={false} // Pass false, as EditorContainer handles overall loading
 										isEmpty={isEmpty}
 										selectedImage={selectedImage}
-										onImageSelected={setSelectedImage}
-										onEditImage={handleEditImage}
-										onAddToDataset={(imagePath, datasetName) => {
-											// Implement add to dataset functionality
-											console.log(`Add ${imagePath} to ${datasetName}`);
-										}}
-										onDownload={handleDownload}
-										onDelete={handleDelete}
 										title="Image Editor"
 										onClose={onClose}
 									/>

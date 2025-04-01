@@ -5,18 +5,18 @@ import {
 } from "@/components/ui/buttons";
 // SPDX-License-Identifier: Apache-2.0
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { useImageEditor } from "@/features/editor/hooks";
+import { useAddImageToDataset } from "@/services/dataset"; // Corrected import
+// import { useDeleteImage } from "@/services/images"; // Commented out
 import type { Image } from "@/types";
 import { Flex, Text } from "@chakra-ui/react";
+import { useCallback } from "react";
 import { AddToDatasetMenu } from "./AddToDatasetMenu";
 
 interface CompactActionBarProps {
 	readonly totalImages: number;
 	readonly currentIndex: number;
-	readonly selectedImage?: Image | null;
 	readonly className?: string;
-	readonly onEditImage?: (image: Image) => void;
-	readonly onAddToDataset?: (imagePath: string, datasetName: string) => void;
-	readonly onDelete?: (image: Image) => void;
 }
 
 /**
@@ -24,55 +24,50 @@ interface CompactActionBarProps {
  *
  * @param totalImages - Total number of images
  * @param currentIndex - Current image index
- * @param selectedImage - Currently selected image
  * @param className - Additional CSS classes
- * @param onEditImage - Callback when edit button is clicked
- * @param onAddToDataset - Callback when add to dataset button is clicked
- * @param onDelete - Callback when delete button is clicked
  */
 export function CompactActionBar({
 	totalImages,
 	currentIndex,
-	selectedImage: image,
 	className = "",
-	onEditImage,
-	onAddToDataset,
-	onDelete,
 }: CompactActionBarProps) {
 	// Get dataset context
 	const {
-		datasets,
-		currentDataset,
-		addToDataset: addImageToDataset,
+		selectedDataset,
+		selectedImage,
+		allDatasets,
 	} = useDatasetContext();
 
-	// Handle delete button click
-	const onDeleteClick = () => {
-		if (image && onDelete) {
-			onDelete(image);
+	// Get mutation hooks/services
+	const { mutate: addImageToDataset } = useAddImageToDataset(); // Correct hook usage
+	const { handleEditImage: startEditing } = useImageEditor({
+		selectedDataset: selectedDataset?.name ?? null,
+	});
+
+	// Handle delete button click (Commented out implementation)
+	const onDeleteClick = useCallback(() => {
+		if (selectedImage && selectedDataset) {
+			console.warn("Delete functionality not implemented yet.");
 		}
-	};
+	}, [selectedImage, selectedDataset]);
 
 	// Handle edit button click
-	const onEditClick = () => {
-		if (image && onEditImage) {
-			onEditImage(image);
+	const onEditClick = useCallback(() => {
+		if (selectedImage) {
+			startEditing(selectedImage);
 		}
-	};
+	}, [selectedImage, startEditing]);
 
-	// Handle add to dataset
-	const handleAddToDataset = (imagePath: string, datasetName: string) => {
-		// Try to use the prop callback first (for backward compatibility)
-		if (onAddToDataset) {
-			onAddToDataset(imagePath, datasetName);
-		} else {
-			// Otherwise use the context function
-			addImageToDataset(imagePath, datasetName);
-		}
-	};
+	// Handle add to dataset from the menu component
+	const handleAddToDataset = useCallback(
+		(imagePath: string, datasetName: string) => {
+			addImageToDataset({ imagePath, datasetName }); // Use the mutation hook
+		},
+		[addImageToDataset],
+	);
 
 	// If no image is selected, show minimal info
-	if (!image) {
+	if (!selectedImage) {
 		return (
 			<Flex
 				h="8"
@@ -104,7 +99,7 @@ export function CompactActionBar({
 			<Flex alignItems="center" gap="1">
 				<Text fontSize="xs" color="gray.300" truncate maxW="200px">
 					<Text as="span" fontWeight="medium">
-						{image.name}
+						{selectedImage.name}
 					</Text>
 					<Text as="span" mx="1" color="gray.500">
 						•
@@ -118,31 +113,28 @@ export function CompactActionBar({
 			{/* Right side - Actions */}
 			<Flex alignItems="center" gap="0.5">
 				{/* Edit button */}
-				{onEditImage && (
-					<EditButton onClick={onEditClick} size="xs" title="Edit image" />
-				)}
+				<EditButton onClick={onEditClick} size="xs" title="Edit image" />
 
 				{/* Add to dataset button with dropdown */}
-				{datasets && datasets.length > 0 && (
+				{allDatasets && allDatasets.length > 1 && selectedDataset && (
 					<AddToDatasetMenu
-						image={image}
-						datasets={datasets}
-						currentDataset={currentDataset}
+						image={selectedImage}
+						datasets={allDatasets}
+						currentDataset={selectedDataset.name} // Correct prop name and ensure value
 						onAddToDataset={handleAddToDataset}
 					/>
 				)}
 
 				{/* Download button with built-in functionality */}
-				<DownloadButton image={image} size="xs" title="Download image" />
+				<DownloadButton image={selectedImage} size="xs" title="Download image" />
 
 				{/* Delete button */}
-				{onDelete && (
-					<DeleteButton
-						onClick={onDeleteClick}
-						size="xs"
-						title="Delete image"
-					/>
-				)}
+				<DeleteButton
+					onClick={onDeleteClick} // Still calls the handler, which logs a warning
+					size="xs"
+					title="Delete image (Not Implemented)"
+					disabled // Disable button until implemented
+				/>
 			</Flex>
 		</Flex>
 	);
