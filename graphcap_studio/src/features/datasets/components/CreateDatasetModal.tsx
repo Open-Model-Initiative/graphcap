@@ -60,7 +60,7 @@ export function CreateDatasetModal() {
 		} catch (error) {
 			console.error("Error creating dataset:", error);
 			if (error instanceof Error && error.message.includes("409")) {
-				toast.info({ title: `Dataset \"${datasetName}\" already exists. Switching to it.` });
+				toast.info({ title: `Dataset "${datasetName}" already exists. Switching to it.` });
 				setIsOpen(false); // Explicitly close if dataset already exists
 			} else {
 				setError(

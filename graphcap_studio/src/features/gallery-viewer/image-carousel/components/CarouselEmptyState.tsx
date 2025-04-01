@@ -2,11 +2,10 @@ import { EmptyState } from "@/components/ui/status/EmptyState";
 import { UploadDropzone } from "@/features/datasets/components/image-uploader";
 import { Upload } from "lucide-react";
 // SPDX-License-Identifier: Apache-2.0
-import React from "react";
 import { useImageCarousel } from "../ImageCarouselContext";
 
 interface CarouselEmptyStateProps {
-	className?: string;
+	readonly className?: string;
 }
 
 /**
@@ -18,7 +17,7 @@ interface CarouselEmptyStateProps {
 export function CarouselEmptyState({
 	className = "",
 }: CarouselEmptyStateProps) {
-	const { datasetName, onUploadComplete } = useImageCarousel();
+	const { onUploadComplete } = useImageCarousel();
 
 	return (
 		<div

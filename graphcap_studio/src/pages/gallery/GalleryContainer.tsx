@@ -1,4 +1,3 @@
-import { DatasetProvider } from "@/features/datasets/context/DatasetContext";
 // SPDX-License-Identifier: Apache-2.0
 import { EditorContainer } from "@/features/editor/containers/EditorContainer";
 import { EditorContextProvider } from "@/features/editor/context/EditorContext";
@@ -10,16 +9,11 @@ import { GalleryContextProvider, useGalleryContext } from "./GalleryContext";
  */
 function GalleryContainerInner() {
 	const {
-		selectedDataset,
 		selectedSubfolder,
-		datasets,
 		currentDataset,
-		handleAddToDataset,
-		handleCreateDataset,
 	} = useGalleryContext();
 
 	return (
-		<>
 			<EditorContextProvider dataset={currentDataset}>
 				<div className="h-full w-full overflow-hidden">
 					<EditorContainer
@@ -28,7 +22,6 @@ function GalleryContainerInner() {
 					/>
 				</div>
 			</EditorContextProvider>
-		</>
 	);
 }
 
