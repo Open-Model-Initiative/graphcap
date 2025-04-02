@@ -5,10 +5,17 @@
  * Base component for rendering schema fields.
  */
 
-import { ClipboardButton } from "@/components/ui/buttons";
+import { ClipboardButton } from "@/features/clipboard";
+// Import common formatters from the clipboard feature
+import {
+	formatArrayAsList,
+	formatEdge,
+	formatNodeLabel,
+	isEdge,
+	isNode,
+} from "@/features/clipboard/clipboardFormatters";
 import { Badge, Box, Flex, Text } from "@chakra-ui/react";
 import React from "react";
-import { formatValueForClipboard } from "./formatters";
 import { BaseFieldProps } from "./types";
 
 export const BaseField: React.FC<BaseFieldProps> = ({
@@ -16,49 +23,65 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 	value,
 	className = "",
 	children,
+	hideHeader = true,
 }) => {
-	// Format the value for clipboard copying
-	const clipboardValue = formatValueForClipboard(value);
+	// Determine the specific formatter to use, if any
+	let specificFormatter: ((data: any) => string) | undefined = undefined;
+
+	if (field.is_list || Array.isArray(value)) {
+		// Use formatArrayAsList for all arrays now, it handles subtypes internally
+		specificFormatter = formatArrayAsList;
+	} else if (isNode(value)) {
+		specificFormatter = formatNodeLabel;
+	} else if (isEdge(value)) {
+		specificFormatter = formatEdge;
+	}
 
 	return (
-		<Box className={className} mb="4">
-			<Flex alignItems="center" justifyContent="space-between" mb="1">
-				<Flex alignItems="center" gap="2">
-					<Text fontSize="sm" fontWeight="medium" color="gray.300">
-						{field.name
-							.split("_")
-							.map(
-								(word: string) => word.charAt(0).toUpperCase() + word.slice(1),
-							)
-							.join(" ")}
-					</Text>
-					<ClipboardButton
-						content={clipboardValue}
-						label="Copy field value"
-						size="xs"
-						variant="ghost"
-						p="1"
-						iconOnly
-					/>
-				</Flex>
-				{field.type && (
-					<Badge
-						variant="subtle"
-						colorScheme="gray"
-						borderRadius="full"
-						px="2"
-						py="0.5"
-						fontSize="xs"
-					>
-						{field.type}
-						{field.is_list && " []"}
-					</Badge>
-				)}
-			</Flex>
-			{field.description && (
-				<Text fontSize="xs" color="gray.400" mb="2">
-					{field.description}
-				</Text>
+		<Box className={className} mb={hideHeader ? "0" : "4"}>
+			<ClipboardButton
+								content={value} 
+								formatValue={specificFormatter}
+								label="Copy field value"
+								size="xs"
+								variant="ghost"
+								p="1"
+								iconOnly
+							/>
+			{!hideHeader && (
+				<>
+					<Flex alignItems="center" justifyContent="space-between" mb="1">
+						<Flex alignItems="center" gap="2">
+							<Text fontSize="sm" fontWeight="medium" color="gray.300">
+								{field.name
+									.split("_")
+									.map(
+										(word: string) => word.charAt(0).toUpperCase() + word.slice(1),
+									)
+									.join(" ")}
+							</Text>
+							
+						</Flex>
+						{field.type && (
+							<Badge
+								variant="subtle"
+								colorScheme="gray"
+								borderRadius="full"
+								px="2"
+								py="0.5"
+								fontSize="xs"
+							>
+								{field.type as React.ReactNode}
+								{field.is_list && " []"}
+							</Badge>
+						)}
+					</Flex>
+					{field.description && (
+						<Text fontSize="xs" color="gray.400" mb="2">
+							{field.description}
+						</Text>
+					)}
+				</>
 			)}
 			<Box>{children}</Box>
 		</Box>

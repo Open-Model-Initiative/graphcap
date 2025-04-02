@@ -13,6 +13,8 @@ export interface BaseFieldProps {
 	value: any;
 	className?: string;
 	children?: ReactNode;
+	/** If true, hides the default header (name, type, description) */
+	hideHeader?: boolean;
 }
 
 export interface TagFieldProps extends BaseFieldProps {

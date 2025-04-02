@@ -8,7 +8,8 @@ import ReactDOM from "react-dom/client";
 // Import styles
 import "./index.css";
 
-import { AppContextProvider, useFeatureFlag } from "@/context";
+import { AppContextProvider } from "@/context";
+import { useFeatureFlag } from "@/features/app-settings/feature-flags";
 import { getQueryClient } from "@/utils/queryClient";
 // Import the generated route tree
 import { routeTree } from "../routeTree.gen";

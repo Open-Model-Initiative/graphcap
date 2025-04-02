@@ -5,7 +5,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 // Define the index route for a dataset, handles redirection to first content item
-export const Route = createFileRoute("/gallery/$datasetId")({
+export const Route = createFileRoute("/gallery/$datasetId/")({
 	component: DatasetIndexComponent,
 });
 

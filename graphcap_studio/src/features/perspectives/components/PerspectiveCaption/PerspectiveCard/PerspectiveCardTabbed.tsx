@@ -1,5 +1,5 @@
-import { ClipboardButton } from "@/components/ui/buttons";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { ClipboardButton } from "@/features/clipboard";
 import type { PerspectiveSchema } from "@/types/perspective-types";
 // SPDX-License-Identifier: Apache-2.0
 /**
@@ -9,9 +9,38 @@ import type { PerspectiveSchema } from "@/types/perspective-types";
  * This component uses Chakra UI tabs for the tabbed interface.
  */
 import { Box, Card, Stack, Tabs, Text } from "@chakra-ui/react";
+import { CaptionTabContent } from "./CaptionTabContent";
 import { PerspectiveDebug } from "./PerspectiveDebug";
 import { SchemaView } from "./SchemaView";
-import { CaptionRenderer } from "./schema-fields";
+
+// --- Add formatter unction here ---
+const formatCaptionForClipboard = (
+	data: Record<string, any> | null,
+	schema: PerspectiveSchema | null,
+): string => {
+	if (!data?.content || !schema?.schema_fields) {
+		return data?.content ? JSON.stringify(data.content, null, 2) : "";
+	}
+	const { content } = data;
+	const schemaFields = schema.schema_fields;
+	const parts: string[] = [];
+	for (const field of schemaFields) {
+		const key = field.name;
+		const label = key;
+		if (content.hasOwnProperty(key) && content[key] !== null && content[key] !== undefined) {
+			const value = content[key];
+			if (field.is_list && Array.isArray(value)) {
+				parts.push(`${label}:\n- ${value.join("\n- ")}`);
+			} else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+				parts.push(`${label}: ${value}`);
+			} else if (typeof value === 'object') {
+				parts.push(`${label}: ${JSON.stringify(value, null, 2)}`);
+			}
+		}
+	}
+	return parts.join("\n");
+};
+// -----------------------------------
 
 export interface PerspectiveCardTabbedProps {
 	readonly schema: PerspectiveSchema;
@@ -60,9 +89,9 @@ export function PerspectiveCardTabbed({
 		>
 			<Box flexShrink={0}>
 				<Tabs.Root
-					defaultValue={isGenerated ? "caption" : "prompt"}
+					defaultValue={"caption"}
 					variant="enclosed"
-					colorPalette="blue"
+					colorScheme="blue"
 					onClick={(e) => e.stopPropagation()}
 				>
 					<Tabs.List
@@ -85,28 +114,12 @@ export function PerspectiveCardTabbed({
 						minHeight="150px"
 						maxHeight="415px"
 					>
+						{/* Caption Tab */}
 						<Tabs.Content value="caption">
-							{data ? (
-								<Box position="relative">
-									<Box position="absolute" top="0" right="0" zIndex="1">
-										<ClipboardButton
-											content={data}
-											label="Copy caption to clipboard"
-											size="xs"
-											iconOnly
-										/>
-									</Box>
-									<CaptionRenderer data={data} schema={schema} />
-								</Box>
-							) : (
-								<Box textAlign="center" py={4}>
-									<Text fontSize="sm" color={mutedTextColor} fontStyle="italic">
-										Generate this perspective to see caption
-									</Text>
-								</Box>
-							)}
+							<CaptionTabContent data={data} schema={schema} />
 						</Tabs.Content>
 
+						{/* Prompt Tab */}
 						<Tabs.Content value="prompt">
 							<Box position="relative">
 								<Box position="absolute" top="0" right="0" zIndex="1">
@@ -129,6 +142,7 @@ export function PerspectiveCardTabbed({
 							</Box>
 						</Tabs.Content>
 
+						{/* Schema Tab */}
 						<Tabs.Content value="schema">
 							<Box position="relative">
 								<Box position="absolute" top="0" right="0" zIndex="1">
@@ -143,6 +157,7 @@ export function PerspectiveCardTabbed({
 							</Box>
 						</Tabs.Content>
 
+						{/* Debug Tab */}
 						<Tabs.Content value="debug">
 							<PerspectiveDebug data={data} schema={schema} />
 						</Tabs.Content>
@@ -161,7 +176,8 @@ export function PerspectiveCardTabbed({
 				onClick={(e) => e.stopPropagation()}
 				flexShrink={0}
 			>
-				<Stack direction="row" gap={2}>
+				{/* Left side: Generation status */}
+				<Stack direction="row" gap={2} align="center">
 					{isGenerated ? (
 						<Text fontSize="xs" color={mutedTextColor}>
 							Generated from {schema.name}
@@ -173,12 +189,24 @@ export function PerspectiveCardTabbed({
 					)}
 				</Stack>
 
-				{/* Metadata - e.g., timestamps or version info */}
-				<Text fontSize="xs" color={mutedTextColor}>
-					{data?.metadata?.generatedAt || data?.metadata?.timestamp ? 
-						new Date(data?.metadata?.generatedAt || data?.metadata?.timestamp || '').toLocaleString() : 
-						''}
-				</Text>
+				{/* Right side: Timestamp and Copy Button */}
+				<Stack direction="row" gap={2} align="center">
+					<Text fontSize="xs" color={mutedTextColor}>
+						{data?.metadata?.generatedAt || data?.metadata?.timestamp ?
+							new Date(data?.metadata?.generatedAt || data?.metadata?.timestamp || '').toLocaleString() :
+							''}
+					</Text>
+					{/* Add Copy Button here, only if data exists */}
+					{data && (
+						<ClipboardButton
+							content={data}
+							formatValue={(d) => formatCaptionForClipboard(d, schema)}
+							label="Copy formatted caption to clipboard"
+							buttonText="Copy Fields"
+							size="xs"
+						/>
+					)}
+				</Stack>
 			</Card.Footer>
 		</Card.Root>
 	);

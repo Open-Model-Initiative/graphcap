@@ -1,4 +1,5 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { useFeatureFlag } from "@/features/app-settings/feature-flags";
 import { Box, Button, Flex, Link, Stack, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "@tanstack/react-router";
 
@@ -8,11 +9,12 @@ export function Header() {
 	const textColor = useColorModeValue("gray.900", "white");
 	const navTextColor = useColorModeValue("gray.700", "gray.200");
 	const navHoverBg = useColorModeValue("gray.100", "gray.800");
+	const enableDebugRoute = useFeatureFlag("enableDebugRoute");
 
 	return (
 		<Box
 			as="header"
-			h="10"
+			h="6"
 			bg={bgColor}
 			borderBottom="1px"
 			borderColor={borderColor}
@@ -71,18 +73,20 @@ export function Header() {
 							Pipelines
 						</Button>
 					</Link>
-					<RouterLink to="/debug">
-						<Button
-							variant="ghost"
-							size="xs"
-							px="2"
-							py="1"
-							color={navTextColor}
-							_hover={{ bg: navHoverBg }}
-						>
-							Debug
-						</Button>
-					</RouterLink>
+					{enableDebugRoute && (
+						<RouterLink to="/debug">
+							<Button
+								variant="ghost"
+								size="xs"
+								px="2"
+								py="1"
+								color={navTextColor}
+								_hover={{ bg: navHoverBg }}
+							>
+								Debug
+							</Button>
+						</RouterLink>
+					)}
 				</Stack>
 			</Flex>
 		</Box>
