@@ -1,8 +1,8 @@
 import { Switch } from "@/components/ui/buttons/Switch";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 // SPDX-License-Identifier: Apache-2.0
-import { useFeatureFlags } from "@/context";
 import { Box, Heading, Stack, Text } from "@chakra-ui/react";
+import { useFeatureFlags } from "./FeatureFlagProvider";
 
 /**
  * Feature Flags Panel component

@@ -7,6 +7,7 @@ import { ReactNode, createContext, useContext, useMemo, useState } from "react";
 interface FeatureFlags {
 	enableReactQueryDevTools: boolean;
 	enableRouterDevTools: boolean;
+	enableDebugRoute: boolean;
 }
 
 /**
@@ -15,6 +16,7 @@ interface FeatureFlags {
 const defaultFeatureFlags: FeatureFlags = {
 	enableReactQueryDevTools: false,
 	enableRouterDevTools: false,
+	enableDebugRoute: false,
 };
 
 /**
