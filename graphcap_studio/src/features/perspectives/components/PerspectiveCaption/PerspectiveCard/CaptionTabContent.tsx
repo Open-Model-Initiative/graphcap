@@ -6,13 +6,6 @@
  * including a custom clipboard formatter and collapsible sections for each field.
  */
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import {
-    formatArrayAsList,
-    formatEdge,
-    formatNodeLabel,
-    isEdge,
-    isNode
-} from "@/features/clipboard";
 import type { PerspectiveSchema } from "@/types/perspective-types";
 import { Badge, Box, Collapsible, Flex, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
