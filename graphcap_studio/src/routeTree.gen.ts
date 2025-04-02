@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as DebugImport } from './routes/debug'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as PerspectivesIndexImport } from './routes/perspectives/index'
@@ -22,6 +23,12 @@ import { Route as GalleryDatasetIdContentContentIdImport } from './routes/galler
 import { Route as PerspectivesModuleModuleNamePerspectivePerspectiveNameImport } from './routes/perspectives/module/$moduleName/perspective/$perspectiveName'
 
 // Create/Update Routes
+
+const DebugRoute = DebugImport.update({
+  id: '/debug',
+  path: '/debug',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AboutRoute = AboutImport.update({
   id: '/about',
@@ -96,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutImport
+      parentRoute: typeof rootRoute
+    }
+    '/debug': {
+      id: '/debug'
+      path: '/debug'
+      fullPath: '/debug'
+      preLoaderRoute: typeof DebugImport
       parentRoute: typeof rootRoute
     }
     '/gallery/$datasetId': {
@@ -183,6 +197,7 @@ const PerspectivesModuleModuleNameRouteWithChildren =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/debug': typeof DebugRoute
   '/gallery/$datasetId': typeof GalleryDatasetIdRouteWithChildren
   '/gallery': typeof GalleryIndexRoute
   '/perspectives': typeof PerspectivesIndexRoute
@@ -195,6 +210,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/debug': typeof DebugRoute
   '/gallery': typeof GalleryIndexRoute
   '/perspectives': typeof PerspectivesIndexRoute
   '/perspectives/module/$moduleName': typeof PerspectivesModuleModuleNameRouteWithChildren
@@ -207,6 +223,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/debug': typeof DebugRoute
   '/gallery/$datasetId': typeof GalleryDatasetIdRouteWithChildren
   '/gallery/': typeof GalleryIndexRoute
   '/perspectives/': typeof PerspectivesIndexRoute
@@ -221,6 +238,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/debug'
     | '/gallery/$datasetId'
     | '/gallery'
     | '/perspectives'
@@ -232,6 +250,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/debug'
     | '/gallery'
     | '/perspectives'
     | '/perspectives/module/$moduleName'
@@ -242,6 +261,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/debug'
     | '/gallery/$datasetId'
     | '/gallery/'
     | '/perspectives/'
@@ -255,6 +275,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  DebugRoute: typeof DebugRoute
   GalleryDatasetIdRoute: typeof GalleryDatasetIdRouteWithChildren
   GalleryIndexRoute: typeof GalleryIndexRoute
   PerspectivesIndexRoute: typeof PerspectivesIndexRoute
@@ -264,6 +285,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  DebugRoute: DebugRoute,
   GalleryDatasetIdRoute: GalleryDatasetIdRouteWithChildren,
   GalleryIndexRoute: GalleryIndexRoute,
   PerspectivesIndexRoute: PerspectivesIndexRoute,
@@ -283,6 +305,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/about",
+        "/debug",
         "/gallery/$datasetId",
         "/gallery/",
         "/perspectives/",
@@ -294,6 +317,9 @@ export const routeTree = rootRoute
     },
     "/about": {
       "filePath": "about.tsx"
+    },
+    "/debug": {
+      "filePath": "debug.tsx"
     },
     "/gallery/$datasetId": {
       "filePath": "gallery/$datasetId.tsx",

@@ -5,7 +5,7 @@
  * Base component for rendering schema fields.
  */
 
-import { ClipboardButton } from "@/components/ui/buttons";
+import { ClipboardButton } from "@/features/clipboard";
 import { Badge, Box, Flex, Text } from "@chakra-ui/react";
 import React from "react";
 import { formatValueForClipboard } from "./formatters";
@@ -50,7 +50,7 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 						py="0.5"
 						fontSize="xs"
 					>
-						{field.type}
+						{field.type as React.ReactNode}
 						{field.is_list && " []"}
 					</Badge>
 				)}

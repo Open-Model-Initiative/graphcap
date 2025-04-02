@@ -1,5 +1,5 @@
-import { ClipboardButton } from "@/components/ui/buttons";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { ClipboardButton } from "@/features/clipboard";
 import type { PerspectiveSchema } from "@/types/perspective-types";
 // SPDX-License-Identifier: Apache-2.0
 /**
@@ -62,7 +62,7 @@ export function PerspectiveCardTabbed({
 				<Tabs.Root
 					defaultValue={isGenerated ? "caption" : "prompt"}
 					variant="enclosed"
-					colorPalette="blue"
+					colorScheme="blue"
 					onClick={(e) => e.stopPropagation()}
 				>
 					<Tabs.List

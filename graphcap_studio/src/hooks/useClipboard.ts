@@ -152,7 +152,7 @@ const attemptUserInteractionCopy = (
  */
 const debugLog = (
 	message: string,
-	data?: any,
+	data?: unknown,
 	isError = false,
 	debug = false,
 ): void => {
@@ -231,43 +231,85 @@ export function useClipboard(
 	const copyToClipboard = useCallback(
 		async (text: string) => {
 			debugLog("Starting copy operation", undefined, false, debug);
+
+			// Check if the context is insecure (HTTP and not localhost)
+			const isSecureContext = window.isSecureContext;
+			const isLocalhost = [
+				"localhost",
+				"127.0.0.1",
+				"::1",
+			].includes(window.location.hostname);
+			const isPotentiallyInsecureRemote = !isSecureContext && !isLocalhost;
+
 			debugLog(
-				"Clipboard API available:",
-				isClipboardAPIAvailable(),
+				`Context details: isSecureContext=${isSecureContext}, isLocalhost=${isLocalhost}, isPotentiallyInsecureRemote=${isPotentiallyInsecureRemote}`,
+				undefined,
 				false,
 				debug,
 			);
 
 			try {
-				// First try the modern Clipboard API
-				const clipboardApiSuccess = await copyWithClipboardAPI(text);
+				let success = false;
 
-				// If that fails or isn't available, try the legacy fallback
-				if (!clipboardApiSuccess) {
+				// If in an insecure remote context, try the legacy method first
+				if (isPotentiallyInsecureRemote) {
 					debugLog(
-						"Falling back to selection-based copy",
+						"Insecure remote context detected, trying selection-based copy first",
 						undefined,
 						false,
 						debug,
 					);
-					const legacySuccess = copyUsingSelection(text);
-
-					if (!legacySuccess) {
-						throw new Error("Selection-based copy failed");
+					success = copyUsingSelection(text);
+					if (success) {
+						debugLog(
+							"Selection-based copy successful (tried first)",
+							undefined,
+							false,
+							debug,
+						);
 					}
+				}
+
+				// If not successful yet, try the standard flow (API first, then fallback)
+				if (!success) {
+					debugLog(
+						"Trying standard flow (Clipboard API first)",
+						undefined,
+						false,
+						debug,
+					);
+					if (isClipboardAPIAvailable()) {
+						success = await copyWithClipboardAPI(text);
+					}
+
+					// If API failed or wasn't available, try legacy method (if not already tried first)
+					if (!success && !isPotentiallyInsecureRemote) {
+						debugLog(
+							"Clipboard API failed or unavailable, falling back to selection-based copy",
+							undefined,
+							false,
+							debug,
+						);
+						success = copyUsingSelection(text);
+					}
+				}
+
+				// If still not successful after all attempts, throw error
+				if (!success) {
+					throw new Error("All copy methods failed");
 				}
 
 				handleCopySuccess();
 			} catch (err) {
 				handleCopyError(err);
 
-				// Try one last fallback method using user interaction
-				attemptUserInteractionCopy(
-					text,
-					handleCopySuccess,
-					handleCopyError,
-					debug,
-				);
+				// Optional: Final fallback with user interaction (often blocked)
+				// attemptUserInteractionCopy(
+				// 	text,
+				// 	handleCopySuccess,
+				// 	handleCopyError,
+				// 	debug,
+				// );
 			}
 		},
 		[copyWithClipboardAPI, handleCopySuccess, handleCopyError, debug],
