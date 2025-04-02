@@ -12,6 +12,8 @@ export interface ClipboardButtonProps extends Omit<ButtonProps, "children"> {
 	/** Optional function to format the content before copying */
 	formatValue?: (data: any) => string;
 	label?: string;
+	/** Custom text for the button when not iconOnly */
+	buttonText?: string;
 	size?: "xs" | "sm" | "md" | "lg";
 	variant?: "ghost" | "outline" | "solid";
 	colorPalette?: string;
@@ -32,6 +34,7 @@ export const ClipboardButton = React.forwardRef<
 		content,
 		formatValue,
 		label = "Copy to clipboard",
+		buttonText = "Copy",
 		size = "sm",
 		variant = "ghost",
 		colorScheme = "gray",
@@ -111,7 +114,7 @@ export const ClipboardButton = React.forwardRef<
 			<Button {...sharedButtonProps}>
 				{isCopied ? checkIcon : copyIcon}
 				<span style={{ marginLeft: "8px" }}>
-					{isCopied ? "Copied" : "Copy"}
+					{isCopied ? "Copied" : buttonText}
 				</span>
 			</Button>
 		</Tooltip>

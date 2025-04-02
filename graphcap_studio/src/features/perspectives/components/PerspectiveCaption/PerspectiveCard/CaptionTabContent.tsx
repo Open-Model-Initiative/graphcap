@@ -70,13 +70,13 @@ export function CaptionTabContent({ schema, data }: CaptionTabContentProps) {
 
 	return data ? (
 		<Box position="relative">
-			<Box position="absolute" top="0" right="0" zIndex="1">
+			<Box display="flex" justifyContent="flex-end" mb={2} >
 				<ClipboardButton
 					content={data} // Pass the full data object
 					formatValue={(d) => formatCaptionForClipboard(d, schema)} // Pass schema to formatter
 					label="Copy formatted caption to clipboard"
+					buttonText="Copy all fields" // Pass custom button text
 					size="xs"
-					iconOnly
 				/>
 			</Box>
 			<CaptionRenderer data={data} schema={schema} />
