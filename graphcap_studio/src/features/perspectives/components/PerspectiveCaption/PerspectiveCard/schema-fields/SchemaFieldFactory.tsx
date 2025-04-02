@@ -5,6 +5,7 @@
  * Factory component for rendering different types of schema fields.
  */
 
+import { isEdge, isNode, isTagArray } from "@/features/clipboard/clipboardFormatters";
 import { SchemaField } from "@/features/perspectives/types";
 import { Stack, Text } from "@chakra-ui/react";
 import React from "react";
@@ -12,7 +13,6 @@ import { BaseField } from "./BaseField";
 import { EdgeField } from "./EdgeField";
 import { NodeField } from "./NodeField";
 import { TagField } from "./TagField";
-import { isEdge, isNode, isTagArray } from "./formatters";
 
 interface SchemaFieldFactoryProps {
 	readonly field: SchemaField;

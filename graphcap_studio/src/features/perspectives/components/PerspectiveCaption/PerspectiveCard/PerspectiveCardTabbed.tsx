@@ -9,9 +9,9 @@ import type { PerspectiveSchema } from "@/types/perspective-types";
  * This component uses Chakra UI tabs for the tabbed interface.
  */
 import { Box, Card, Stack, Tabs, Text } from "@chakra-ui/react";
+import { CaptionTabContent } from "./CaptionTabContent";
 import { PerspectiveDebug } from "./PerspectiveDebug";
 import { SchemaView } from "./SchemaView";
-import { CaptionRenderer } from "./schema-fields";
 
 export interface PerspectiveCardTabbedProps {
 	readonly schema: PerspectiveSchema;
@@ -87,25 +87,7 @@ export function PerspectiveCardTabbed({
 					>
 						{/* Caption Tab */}
 						<Tabs.Content value="caption">
-							{data ? (
-								<Box position="relative">
-									<Box position="absolute" top="0" right="0" zIndex="1">
-										<ClipboardButton
-											content={data}
-											label="Copy caption to clipboard"
-											size="xs"
-											iconOnly
-										/>
-									</Box>
-									<CaptionRenderer data={data} schema={schema} />
-								</Box>
-							) : (
-								<Box textAlign="center" py={4}>
-									<Text fontSize="sm" color={mutedTextColor} fontStyle="italic">
-										Generate this perspective to see caption
-									</Text>
-								</Box>
-							)}
+							<CaptionTabContent data={data} schema={schema} />
 						</Tabs.Content>
 
 						{/* Prompt Tab */}

@@ -19,6 +19,13 @@ export const isEdge = (val: any): val is { source: any; target: any } => {
 		"target" in val
 	);
 };
+/**
+ * Determines if a value is an array of string tags
+ */
+export const isTagArray = (val: any): boolean => {
+	return Array.isArray(val) && val.every((item) => typeof item === "string");
+};
+
 
 /**
  * Formats an array into a comma-separated string.
