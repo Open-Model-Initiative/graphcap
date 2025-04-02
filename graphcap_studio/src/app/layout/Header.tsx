@@ -14,7 +14,7 @@ export function Header() {
 	return (
 		<Box
 			as="header"
-			h="10"
+			h="6"
 			bg={bgColor}
 			borderBottom="1px"
 			borderColor={borderColor}

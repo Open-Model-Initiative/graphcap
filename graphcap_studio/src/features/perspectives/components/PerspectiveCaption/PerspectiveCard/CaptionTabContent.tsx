@@ -3,13 +3,48 @@
  * CaptionTabContent Component
  *
  * Renders the content for the "Caption" tab within PerspectiveCardTabbed,
- * including a custom clipboard formatter for the caption data.
+ * including a custom clipboard formatter and collapsible sections for each field.
  */
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { ClipboardButton } from "@/features/clipboard";
+import {
+    formatArrayAsList,
+    formatEdge,
+    formatNodeLabel,
+    isEdge,
+    isNode
+} from "@/features/clipboard";
 import type { PerspectiveSchema } from "@/types/perspective-types";
-import { Box, Text } from "@chakra-ui/react";
-import { CaptionRenderer } from "./schema-fields";
+import { Badge, Box, Collapsible, Flex, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useMemo, useState } from "react";
+import { SchemaFieldFactory } from "./schema-fields/SchemaFieldFactory";
+
+// --- Local Storage Utilities (Integrated here for demonstration) ---
+
+const getStorageKey = (schemaId: string): string => `perspective-collapse-state-${schemaId}`;
+
+const getPerspectiveCollapseStates = (schemaId: string): Record<string, boolean> => {
+	if (typeof window === 'undefined') return {}; // Guard against SSR
+	try {
+		const storedState = localStorage.getItem(getStorageKey(schemaId));
+		return storedState ? JSON.parse(storedState) : {};
+	} catch (error) {
+		console.error("Error reading collapse state from localStorage:", error);
+		return {};
+	}
+};
+
+const setPerspectiveCollapseState = (schemaId: string, fieldName: string, isExpanded: boolean): void => {
+	if (typeof window === 'undefined') return; // Guard against SSR
+	try {
+		const currentState = getPerspectiveCollapseStates(schemaId);
+		const newState = { ...currentState, [fieldName]: isExpanded };
+		localStorage.setItem(getStorageKey(schemaId), JSON.stringify(newState));
+	} catch (error) {
+		console.error("Error saving collapse state to localStorage:", error);
+	}
+};
+
+// --- Component Interfaces and Implementation ---
 
 export interface CaptionTabContentProps {
 	readonly schema: PerspectiveSchema;
@@ -17,75 +52,103 @@ export interface CaptionTabContentProps {
 }
 
 /**
- * Dynamically formats the caption data into a readable string based on the perspective's schema.
- * Iterates through schema properties and extracts corresponding values from data.content.
- */
-const formatCaptionForClipboard = (
-	data: Record<string, any> | null,
-	schema: PerspectiveSchema | null,
-): string => {
-	// Check for data.content and the schema_fields definition
-	if (!data?.content || !schema?.schema_fields) {
-		return data?.content ? JSON.stringify(data.content, null, 2) : "";
-	}
-
-	const { content } = data;
-	// Iterate through the fields defined in schema_fields
-	const schemaFields = schema.schema_fields;
-	const parts: string[] = [];
-
-	// Iterate through the fields defined in the schema
-	for (const field of schemaFields) {
-		const key = field.name; // The name of the field acts as the key in data.content
-		// Use the concise field name (key) as the label
-		const label = key; 
-
-		// Check if the data actually contains this key
-		if (content.hasOwnProperty(key) && content[key] !== null && content[key] !== undefined) {
-			const value = content[key];
-
-			// Use field.is_list to determine if it's an array
-			if (field.is_list && Array.isArray(value)) {
-				// Format arrays based on is_list flag
-				parts.push(`${label}:\n- ${value.join("\n- ")}`);
-			} else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-				parts.push(`${label}: ${value}`);
-			} else if (typeof value === 'object') {
-				// For nested objects, stringify them (could be refined if complex types need specific formatting)
-				parts.push(`${label}: ${JSON.stringify(value, null, 2)}`);
-			}
-		}
-	}
-
-	// Join parts with a single newline for less noise
-	return parts.join("\n");
-};
-
-
-/**
  * Renders the content for the "Caption" tab within PerspectiveCardTabbed.
  */
 export function CaptionTabContent({ schema, data }: CaptionTabContentProps) {
 	const mutedTextColor = useColorModeValue("gray.600", "gray.400");
+	const borderColor = useColorModeValue("gray.200", "gray.700");
+	const triggerBg = useColorModeValue("gray.100", "gray.700");
+	const triggerHoverBg = useColorModeValue("gray.200", "gray.600");
 
-	return data ? (
-		<Box position="relative">
-			<Box display="flex" justifyContent="flex-end" mb={2} >
-				<ClipboardButton
-					content={data} // Pass the full data object
-					formatValue={(d) => formatCaptionForClipboard(d, schema)} // Pass schema to formatter
-					label="Copy formatted caption to clipboard"
-					buttonText="Copy all fields" // Pass custom button text
-					size="xs"
-				/>
-			</Box>
-			<CaptionRenderer data={data} schema={schema} />
-		</Box>
-	) : (
-		<Box textAlign="center" py={4}>
-			<Text fontSize="sm" color={mutedTextColor} fontStyle="italic">
-				Generate this perspective to see caption
-			</Text>
+	// State to manage collapse states, initialized from localStorage
+	const [collapseStates, setCollapseStates] = useState<Record<string, boolean>>({});
+	const schemaId = useMemo(() => `${schema.name}-${schema.version}`, [schema]);
+
+	// Load initial state from localStorage on mount
+	useEffect(() => {
+		setCollapseStates(getPerspectiveCollapseStates(schemaId));
+	}, [schemaId]);
+
+	// Handler to toggle collapse state for a field
+	const handleToggleCollapse = (fieldName: string, isOpen: boolean) => {
+		setCollapseStates(prev => ({ ...prev, [fieldName]: isOpen }));
+		setPerspectiveCollapseState(schemaId, fieldName, isOpen);
+	};
+
+	// Use content safely, it might be null/undefined if data is null
+	const content = data?.content;
+
+	return (
+		<Box>
+			{/* Iterate and render each field in a collapsible section */}
+			<Stack gap={1}>
+				{schema.schema_fields
+					.map((field) => {
+						const fieldName = field.name;
+						// fieldValue might be undefined if content is null
+						const fieldValue = content?.[fieldName]; 
+						const isInitiallyOpen = collapseStates[fieldName] ?? true;
+						return (
+							<Collapsible.Root
+								key={fieldName}
+								defaultOpen={isInitiallyOpen}
+								onOpenChange={(detail) => handleToggleCollapse(fieldName, detail.open)}
+								style={{ width: '100%' }} // Ensure it takes full width
+							>
+								<Collapsible.Trigger asChild>
+									<Box
+										as="button"
+										w="full"
+										p={2}
+										bg={triggerBg}
+										_hover={{ bg: triggerHoverBg }}
+										textAlign="left"
+										fontSize="sm"
+										borderBottom="1px"
+										borderColor={borderColor}
+										cursor="pointer"
+										display="flex"
+										justifyContent="space-between"
+										alignItems="center"
+									>
+										<Box flexGrow={1} mr={2}>
+											<Text fontWeight="medium">{fieldName}</Text>
+											{field.description && (
+												<Text fontSize="xs" color={mutedTextColor} fontWeight="normal">
+													{field.description}
+												</Text>
+											)}
+										</Box>
+										<Flex alignItems="center" gap={1} flexShrink={0}>
+											{field.type && (
+												<Badge
+													variant="subtle"
+													colorScheme="gray"
+													borderRadius="full"
+													px="2"
+													py="0.5"
+													fontSize="xs"
+												>
+													{String(field.type)}
+													{field.is_list && " []"}
+												</Badge>
+											)}
+										</Flex>
+									</Box>
+								</Collapsible.Trigger>
+								<Collapsible.Content>
+									<Box p={2} borderBottom="1px" borderColor={borderColor}>
+										<SchemaFieldFactory
+											field={field}
+											value={fieldValue}
+											hideHeader={true}
+										/>
+									</Box>
+								</Collapsible.Content>
+							</Collapsible.Root>
+						);
+					})}
+			</Stack>
 		</Box>
 	);
 } 

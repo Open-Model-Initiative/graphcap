@@ -23,6 +23,7 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 	value,
 	className = "",
 	children,
+	hideHeader = true,
 }) => {
 	// Determine the specific formatter to use, if any
 	let specificFormatter: ((data: any) => string) | undefined = undefined;
@@ -37,45 +38,50 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 	}
 
 	return (
-		<Box className={className} mb="4">
-			<Flex alignItems="center" justifyContent="space-between" mb="1">
-				<Flex alignItems="center" gap="2">
-					<Text fontSize="sm" fontWeight="medium" color="gray.300">
-						{field.name
-							.split("_")
-							.map(
-								(word: string) => word.charAt(0).toUpperCase() + word.slice(1),
-							)
-							.join(" ")}
-					</Text>
-					<ClipboardButton
-						content={value} 
-						formatValue={specificFormatter}
-						label="Copy field value"
-						size="xs"
-						variant="ghost"
-						p="1"
-						iconOnly
-					/>
-				</Flex>
-				{field.type && (
-					<Badge
-						variant="subtle"
-						colorScheme="gray"
-						borderRadius="full"
-						px="2"
-						py="0.5"
-						fontSize="xs"
-					>
-						{field.type as React.ReactNode}
-						{field.is_list && " []"}
-					</Badge>
-				)}
-			</Flex>
-			{field.description && (
-				<Text fontSize="xs" color="gray.400" mb="2">
-					{field.description}
-				</Text>
+		<Box className={className} mb={hideHeader ? "0" : "4"}>
+			<ClipboardButton
+								content={value} 
+								formatValue={specificFormatter}
+								label="Copy field value"
+								size="xs"
+								variant="ghost"
+								p="1"
+								iconOnly
+							/>
+			{!hideHeader && (
+				<>
+					<Flex alignItems="center" justifyContent="space-between" mb="1">
+						<Flex alignItems="center" gap="2">
+							<Text fontSize="sm" fontWeight="medium" color="gray.300">
+								{field.name
+									.split("_")
+									.map(
+										(word: string) => word.charAt(0).toUpperCase() + word.slice(1),
+									)
+									.join(" ")}
+							</Text>
+							
+						</Flex>
+						{field.type && (
+							<Badge
+								variant="subtle"
+								colorScheme="gray"
+								borderRadius="full"
+								px="2"
+								py="0.5"
+								fontSize="xs"
+							>
+								{field.type as React.ReactNode}
+								{field.is_list && " []"}
+							</Badge>
+						)}
+					</Flex>
+					{field.description && (
+						<Text fontSize="xs" color="gray.400" mb="2">
+							{field.description}
+						</Text>
+					)}
+				</>
 			)}
 			<Box>{children}</Box>
 		</Box>

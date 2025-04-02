@@ -35,7 +35,7 @@ export const ClipboardButton = React.forwardRef<
 		formatValue,
 		label = "Copy to clipboard",
 		buttonText = "Copy",
-		size = "sm",
+		size = "xs",
 		variant = "ghost",
 		colorScheme = "gray",
 		iconOnly = false,
@@ -48,29 +48,34 @@ export const ClipboardButton = React.forwardRef<
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	const handleCopy = useCallback(() => {
-		if (timeoutRef.current) {
-			clearTimeout(timeoutRef.current);
-			timeoutRef.current = null;
-		}
-
-		const textToCopy = formatValue
-			? formatValue(content)
-			: defaultFormatter(content);
-
-		const success = copyUsingExecCommand(textToCopy);
-
-		if (success) {
-			setIsCopied(true);
-			timeoutRef.current = setTimeout(() => {
-				setIsCopied(false);
+		// Use setTimeout to defer the copy operation slightly
+		setTimeout(() => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
 				timeoutRef.current = null;
-			}, 2000);
-		} else {
-			console.error("ClipboardButton: Failed to copy using execCommand.");
-			alert(
-				"Copy failed. Browser may not support this action or requires user interaction.",
-			);
-		}
+			}
+
+			const textToCopy = formatValue
+				? formatValue(content)
+				: defaultFormatter(content);
+
+			const success = copyUsingExecCommand(textToCopy);
+
+			if (success) {
+				setIsCopied(true);
+				timeoutRef.current = setTimeout(() => {
+					setIsCopied(false);
+					timeoutRef.current = null;
+				}, 2000); // Success indicator duration
+			} else {
+				console.error("ClipboardButton: Failed to copy using execCommand.");
+				// Consider a less intrusive way to show errors, e.g., tooltip change
+				// alert(
+				// 	"Copy failed. Browser may not support this action or requires user interaction.",
+				// );
+			}
+		}, 0); // Minimal delay
+
 	}, [content, formatValue]);
 
 	useEffect(() => {
@@ -98,6 +103,8 @@ export const ClipboardButton = React.forwardRef<
 		"aria-label": label,
 		ref,
 		isDisabled: effectiveDisabled,
+		px: "1",
+		py: "0",
 		...props,
 	};
 
@@ -113,7 +120,7 @@ export const ClipboardButton = React.forwardRef<
 		<Tooltip content={tooltipContent} showArrow>
 			<Button {...sharedButtonProps}>
 				{isCopied ? checkIcon : copyIcon}
-				<span style={{ marginLeft: "8px" }}>
+				<span style={{ marginLeft: "4px" }}>
 					{isCopied ? "Copied" : buttonText}
 				</span>
 			</Button>
@@ -128,8 +135,8 @@ const SvgIcon = ({ type }: { type: "copy" | "check" }) => {
 		return (
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
+				width="12"
+				height="12"
 				viewBox="0 0 24 24"
 				fill="none"
 				stroke="currentColor"
@@ -144,8 +151,8 @@ const SvgIcon = ({ type }: { type: "copy" | "check" }) => {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			width="16"
-			height="16"
+			width="12"
+			height="12"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
