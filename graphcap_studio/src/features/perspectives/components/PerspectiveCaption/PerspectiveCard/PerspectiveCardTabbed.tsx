@@ -85,6 +85,7 @@ export function PerspectiveCardTabbed({
 						minHeight="150px"
 						maxHeight="415px"
 					>
+						{/* Caption Tab */}
 						<Tabs.Content value="caption">
 							{data ? (
 								<Box position="relative">
@@ -107,6 +108,7 @@ export function PerspectiveCardTabbed({
 							)}
 						</Tabs.Content>
 
+						{/* Prompt Tab */}
 						<Tabs.Content value="prompt">
 							<Box position="relative">
 								<Box position="absolute" top="0" right="0" zIndex="1">
@@ -129,6 +131,7 @@ export function PerspectiveCardTabbed({
 							</Box>
 						</Tabs.Content>
 
+						{/* Schema Tab */}
 						<Tabs.Content value="schema">
 							<Box position="relative">
 								<Box position="absolute" top="0" right="0" zIndex="1">
@@ -143,6 +146,7 @@ export function PerspectiveCardTabbed({
 							</Box>
 						</Tabs.Content>
 
+						{/* Debug Tab */}
 						<Tabs.Content value="debug">
 							<PerspectiveDebug data={data} schema={schema} />
 						</Tabs.Content>

@@ -1,29 +1,28 @@
 // graphcap_studio/src/features/clipboard/ClipboardButton.tsx
 // SPDX-License-Identifier: Apache-2.0
-import { Tooltip } from "@/components/ui/tooltip"; // Assuming this path is correct
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ButtonProps } from "@chakra-ui/react";
 import { Button, IconButton } from "@chakra-ui/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { defaultFormatter } from "./clipboardFormatters";
 import { copyUsingExecCommand } from "./clipboardUtils";
 
-// Re-using the props interface from the original component
 export interface ClipboardButtonProps extends Omit<ButtonProps, "children"> {
-	content: string | Record<string, any>;
+	content: any;
+	/** Optional function to format the content before copying */
+	formatValue?: (data: any) => string;
 	label?: string;
-	// className prop is handled by spread props
 	size?: "xs" | "sm" | "md" | "lg";
 	variant?: "ghost" | "outline" | "solid";
-	colorPalette?: string; // Note: Chakra uses colorScheme
+	colorPalette?: string;
 	iconOnly?: boolean;
-	// Removed debug prop as copyUsingExecCommand handles its own debug logging
 }
 
 /**
- * ClipboardButton component (Adapted)
+ * ClipboardButton component
  *
- * A button that copies text to clipboard when clicked using legacy methods,
- * suitable for environments where navigator.clipboard might not be available (e.g., non-HTTPS).
- * Shows feedback on success.
+ * Button that copies potentially complex data to the clipboard,
+ * using a fallback method (execCommand) and allowing custom formatting.
  */
 export const ClipboardButton = React.forwardRef<
 	HTMLButtonElement,
@@ -31,13 +30,14 @@ export const ClipboardButton = React.forwardRef<
 >(function ClipboardButton(
 	{
 		content,
+		formatValue,
 		label = "Copy to clipboard",
 		size = "sm",
 		variant = "ghost",
-		colorScheme = "gray", // Use colorScheme for Chakra
+		colorScheme = "gray",
 		iconOnly = false,
-		disabled, // Ensure disabled prop is passed through
-		...props // Spread the rest of the props (includes className, etc.)
+		disabled,
+		...props
 	},
 	ref,
 ) {
@@ -45,37 +45,31 @@ export const ClipboardButton = React.forwardRef<
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	const handleCopy = useCallback(() => {
-		// Clear any existing timeout
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
 			timeoutRef.current = null;
 		}
 
-		// Prepare text
-		const textToCopy =
-			typeof content === "string" ? content : JSON.stringify(content, null, 2);
+		const textToCopy = formatValue
+			? formatValue(content)
+			: defaultFormatter(content);
 
-		// Attempt copy using legacy method
 		const success = copyUsingExecCommand(textToCopy);
 
 		if (success) {
 			setIsCopied(true);
-			// Set a timeout to revert the copied state
 			timeoutRef.current = setTimeout(() => {
 				setIsCopied(false);
 				timeoutRef.current = null;
-			}, 2000); // Use a fixed duration like before
+			}, 2000);
 		} else {
-			// Basic error feedback for legacy method
 			console.error("ClipboardButton: Failed to copy using execCommand.");
-			// Provide user feedback that copy failed (e.g., alert or notification)
 			alert(
 				"Copy failed. Browser may not support this action or requires user interaction.",
 			);
 		}
-	}, [content]);
+	}, [content, formatValue]);
 
-	// Clear timeout on unmount
 	useEffect(() => {
 		return () => {
 			if (timeoutRef.current) {
@@ -84,27 +78,24 @@ export const ClipboardButton = React.forwardRef<
 		};
 	}, []);
 
-	// Set tooltip content based on state
 	const tooltipContent = isCopied ? "Copied!" : label;
-
-	// Determine button color based on state (optional, could simplify)
 	const currentColorScheme = isCopied ? "green" : colorScheme;
 
-	// Icon elements (same as before)
 	const copyIcon = <SvgIcon type="copy" />;
 	const checkIcon = <SvgIcon type="check" />;
 
-	const effectiveDisabled = disabled || !content; // Disable if prop says so or content is empty
+	const effectiveDisabled =
+		disabled || !(formatValue ? formatValue(content) : defaultFormatter(content));
 
 	const sharedButtonProps = {
 		size,
 		variant,
-		colorScheme: currentColorScheme, // Use updated color scheme
+		colorScheme: currentColorScheme,
 		onClick: handleCopy,
 		"aria-label": label,
 		ref,
-		isDisabled: effectiveDisabled, // Use isDisabled for Chakra
-		...props, // Spread remaining props
+		isDisabled: effectiveDisabled,
+		...props,
 	};
 
 	const renderIconButton = () => (
@@ -129,7 +120,6 @@ export const ClipboardButton = React.forwardRef<
 	return iconOnly ? renderIconButton() : renderButton();
 });
 
-// Helper to minimize SVG code duplication in the main component
 const SvgIcon = ({ type }: { type: "copy" | "check" }) => {
 	if (type === "check") {
 		return (
@@ -148,7 +138,6 @@ const SvgIcon = ({ type }: { type: "copy" | "check" }) => {
 			</svg>
 		);
 	}
-	// Default to copy icon
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"

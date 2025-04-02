@@ -6,9 +6,16 @@
  */
 
 import { ClipboardButton } from "@/features/clipboard";
+// Import common formatters from the clipboard feature
+import {
+	formatArrayAsList,
+	formatEdge,
+	formatNodeLabel,
+	isEdge,
+	isNode,
+} from "@/features/clipboard/clipboardFormatters";
 import { Badge, Box, Flex, Text } from "@chakra-ui/react";
 import React from "react";
-import { formatValueForClipboard } from "./formatters";
 import { BaseFieldProps } from "./types";
 
 export const BaseField: React.FC<BaseFieldProps> = ({
@@ -17,8 +24,17 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 	className = "",
 	children,
 }) => {
-	// Format the value for clipboard copying
-	const clipboardValue = formatValueForClipboard(value);
+	// Determine the specific formatter to use, if any
+	let specificFormatter: ((data: any) => string) | undefined = undefined;
+
+	if (field.is_list || Array.isArray(value)) {
+		// Use formatArrayAsList for all arrays now, it handles subtypes internally
+		specificFormatter = formatArrayAsList;
+	} else if (isNode(value)) {
+		specificFormatter = formatNodeLabel;
+	} else if (isEdge(value)) {
+		specificFormatter = formatEdge;
+	}
 
 	return (
 		<Box className={className} mb="4">
@@ -33,7 +49,8 @@ export const BaseField: React.FC<BaseFieldProps> = ({
 							.join(" ")}
 					</Text>
 					<ClipboardButton
-						content={clipboardValue}
+						content={value} 
+						formatValue={specificFormatter}
 						label="Copy field value"
 						size="xs"
 						variant="ghost"
