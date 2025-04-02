@@ -1,5 +1,5 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { useFeatureFlag } from "@/features/app-settings/feature-flags/FeatureFlagProvider";
+import { useFeatureFlag } from "@/features/app-settings/feature-flags";
 import { Box, Button, Flex, Link, Stack, Text } from "@chakra-ui/react";
 import { Link as RouterLink } from "@tanstack/react-router";
 

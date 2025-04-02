@@ -22,9 +22,8 @@ const debugLog = (message: string, data?: unknown, isError = false) => {
  * @param debug Optional debug logging flag (currently uses NODE_ENV).
  * @returns True if the command was executed successfully, false otherwise.
  */
-export const copyUsingExecCommand = (text: string, debug = false): boolean => {
+export const copyUsingExecCommand = (text: string): boolean => {
 	// Use debug flag passed in or default based on environment
-	const enableDebug = debug || process.env.NODE_ENV === "development";
 
 	debugLog("Attempting copy via document.execCommand", undefined, false);
 	let success = false;
@@ -45,7 +44,8 @@ export const copyUsingExecCommand = (text: string, debug = false): boolean => {
 
 	try {
 		// Attempt the copy command.
-		success = document.execCommand("copy");
+        /* This is a legacy fallback to support remote deployment without trusted authority - FW  */
+		success = document.execCommand("copy"); // NOSONAR
 		debugLog(
 			`document.execCommand('copy') executed: ${success}`,
 			undefined,

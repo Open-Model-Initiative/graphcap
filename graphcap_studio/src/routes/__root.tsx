@@ -3,7 +3,7 @@ import {
 	RootLeftActionPanel,
 	RootRightActionPanel,
 } from "@/app/layout";
-import { useFeatureFlag } from "@/context";
+import { useFeatureFlag } from "@/features/app-settings/feature-flags";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 
