@@ -1,0 +1,173 @@
+version: '3'
+
+vars:
+  HOST_PORT: 12434
+  SCRIPT_DIR: ./servers/model_runners
+  UNIFIED_SCRIPT: '{{.SCRIPT_DIR}}/_run_vllm_model.sh'
+  IMAGE_NAME: vllm/vllm-openai:latest
+  SERVED_MODEL_NAME: vision-worker
+  MAX_MODEL_LEN: '{{.MAX_MODEL_LEN | default 16384}}'
+
+env:
+  HUGGING_FACE_HUB_TOKEN: '{{.HUGGING_FACE_HUB_TOKEN}}'
+  HOST_PORT: '{{.HOST_PORT}}'
+  IMAGE_NAME: '{{.IMAGE_NAME}}'
+  SERVED_MODEL_NAME: '{{.SERVED_MODEL_NAME}}'
+  MAX_MODEL_LEN: '{{.MAX_MODEL_LEN | default 16384}}'
+
+tasks:
+  _check-token:
+    internal: true
+    desc: Checks if HUGGING_FACE_HUB_TOKEN environment variable is set.
+    preconditions:
+      - sh: test -n "$HUGGING_FACE_HUB_TOKEN"
+        msg: "HUGGING_FACE_HUB_TOKEN environment variable is not set. Please set it to your Hugging Face API token."
+
+  # --- Qwen2.5-VL-32B-AWQ --- #
+  run:qwen32b:48gb:
+    aliases: [r32:48]
+    desc: Runs Qwen2.5-VL-32B-AWQ on a single 48GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-32B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl32b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 48
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 128
+      MAX_MODEL_LEN: 16384
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  run:qwen32b:2x24gb:
+    aliases: [r32:2x24]
+    desc: Runs Qwen2.5-VL-32B-AWQ on two 24GB GPUs (TP=2).
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-32B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl32b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 24
+      TENSOR_PARALLEL: 2
+      GPU_MEM_UTIL: 0.85
+      MAX_SEQS: 32
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+
+  # --- Qwen2.5-VL-7B-AWQ --- # 
+  run:qwen7b:48gb:
+    aliases: [r7:48]
+    desc: Runs Qwen2.5-VL-7B-AWQ on a single 48GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-7B-Instruct-AWQ 
+      MODEL_NAME_SUFFIX: qwen25vl7b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 48
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 1024
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  run:qwen7b:24gb:
+    aliases: [r7:24]
+    desc: Runs Qwen2.5-VL-7B-AWQ on a single 24GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-7B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl7b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 24
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 512
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  run:qwen7b:16gb:
+    aliases: [r7:16]
+    desc: Runs Qwen2.5-VL-7B-AWQ on a single 16GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-7B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl7b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 16
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.9
+      MAX_SEQS: 256
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  # --- Qwen2.5-VL-3B-AWQ --- # 
+  run:qwen3b:24gb:
+    aliases: [r3:24]
+    desc: Runs Qwen2.5-VL-3B-AWQ on a single 24GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-3B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl3b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 24
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 2048
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  run:qwen3b:16gb:
+    aliases: [r3:16]
+    desc: Runs Qwen2.5-VL-3B-AWQ on a single 16GB GPU.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-3B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl3b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 16
+      TENSOR_PARALLEL: 1
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 1024
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
+
+  # --- Utility Tasks --- #
+  stop:
+    desc: Stops vLLM server container(s)
+    vars:
+      FILTER: '{{if .CLI_ARGS.all}}--filter "label=vllm-server=true"{{else if .CLI_ARGS.label}}--filter "label={{.CLI_ARGS.label}}"{{else if .CLI_ARGS.name}}--filter "name={{.CLI_ARGS.name}}"{{else}}--filter "label=vllm-server=true"{{end}}'
+    cmds:
+      - |
+        CONTAINERS=$(docker ps -q {{.FILTER}})
+        if [ -z "$CONTAINERS" ]; then
+          echo "No matching running vLLM server containers found for filter '{{.FILTER}}'."
+        else
+          echo "Stopping container(s): $(docker ps --format '{{.Names}} ({{.ID}})' {{.FILTER}})"
+          docker stop $CONTAINERS
+        fi
+
+  logs:
+    desc: Follows logs of a specific vLLM container
+    vars:
+      FILTER: '{{if .CLI_ARGS.label}}{{if .CLI_ARGS.name}}INVALID{{else}}--filter "label={{.CLI_ARGS.label}}"{{end}}{{else if .CLI_ARGS.name}}--filter "name={{.CLI_ARGS.name}}"{{else}}INVALID{{end}}'
+    preconditions:
+      - sh: test "{{.FILTER}}" != "INVALID"
+        msg: "Please specify exactly one of --label OR --name."
+    cmds:
+      - |
+        CONTAINERS=$(docker ps -q {{.FILTER}})
+        NUM_CONTAINERS=$(echo "$CONTAINERS" | grep -c .) || NUM_CONTAINERS=0
+        if [ "$NUM_CONTAINERS" -eq 0 ]; then
+          echo "No matching running vLLM server container found for filter '{{.FILTER}}'."
+          exit 1
+        elif [ "$NUM_CONTAINERS" -ne 1 ]; then
+           echo "Error: Found $NUM_CONTAINERS matching containers. Please refine --label or use --name for a unique container."
+           docker ps --format '{{.Names}} ({{.ID}})' {{.FILTER}}
+           exit 1
+        else
+           CONTAINER_NAME=$(docker ps --format '{{.Names}}' {{.FILTER}})
+           echo "Following logs for container ${CONTAINER_NAME}..."
+           docker logs -f $CONTAINERS
+        fi
