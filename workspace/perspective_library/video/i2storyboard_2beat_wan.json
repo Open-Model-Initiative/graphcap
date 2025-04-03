@@ -1,0 +1,28 @@
+{
+    "name": "i2storyboard_2beat_wan",
+    "display_name": "Image-to-Storyboard (2-Beat, WAN)",
+    "version": "1",
+    "prompt": "Analyze the image and generate a two-beat storyboard prompt, capturing a compelling narrative progression. Each beat should:\n\n1. Identify a distinct moment within the image that can transition into another.\n2. Describe the key subject(s) and their action or state in a visually engaging way.\n3. Establish the setting, mood, and atmosphere to enhance storytelling.\n4. Define a clear transition between the two beats, ensuring narrative flow.\n5. Use cinematic framing to guide visual composition.\n\nAdditionally, refine the storyboard into an optimized WAN prompt following these requirements:\n\n- For overly brief inputs, infer details without changing the original meaning to enhance completeness and visual appeal.\n- Improve characteristics of the main subject(s) (appearance, expression, quantity, ethnicity, posture), rendering style, spatial relationships, and camera angles.\n- Retain original quotes, book titles, and essential user-provided information unchanged.\n- Precisely match the user's intent and style; if unspecified, analyze the photo for style reference.\n- Emphasize classical Chinese elements for ancient poetry prompts, avoiding foreign or modern references.\n- Highlight movement information and natural actions using simple, direct verbs.\n- Emphasize details such as actions, clothing, and backgrounds in the photo.\n- Maintain the rewritten prompt within 80-100 words and always output in English.",
+    "schema_fields": [
+      {"name": "beat_1", "type": "str", "description": "Initial state, action, or tension.", "is_list": false},
+      {"name": "beat_2", "type": "str", "description": "Transformation, reaction, or escalation from Beat 1.", "is_list": false},
+      {"name": "key_subjects", "type": "str", "description": "Primary characters or objects driving the scene.", "is_list": false},
+      {"name": "setting_and_mood", "type": "str", "description": "Environment and emotional tone reinforcing storytelling.", "is_list": false},
+      {"name": "transition", "type": "str", "description": "Visual or thematic transition from Beat 1 to Beat 2.", "is_list": false},
+      {"name": "cinematic_framing", "type": "str", "description": "Camera angles, movement, or framing enhancing visual storytelling.", "is_list": false},
+      {"name": "final_storyboard_prompt", "type": "str", "description": "Integrated prompt with smooth transitions between beats.", "is_list": false},
+      {"name": "optimized_wan_prompt", "type": "str", "description": "Final prompt optimized per WAN specifications, refined with detailed descriptions, enhanced natural movement, and stylistic precision.", "is_list": false}
+    ],
+    "table_columns": [
+      {"name": "Component", "style": "cyan"},
+      {"name": "Description", "style": "green"}
+    ],
+    "context_template": "<Storyboard2BeatWAN>\n{optimized_wan_prompt}\n</Storyboard2BeatWAN>",
+    "module": "creative",
+    "type": "perspective",
+    "tags": ["storyboard", "video", "narrative", "wan", "optimized"],
+    "description": "Generates a two-beat storyboard with an optimized WAN-style detailed image prompt for precise visual storytelling and style refinement.",
+    "deprecated": false,
+    "priority": 55
+  }
+  
