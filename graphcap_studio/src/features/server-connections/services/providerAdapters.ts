@@ -8,6 +8,7 @@
 
 import type { Provider, ProviderModel, ProviderModelInfo } from "@/types/provider-config-types";
 import { normalizeProviderId } from "@/types/provider-config-types";
+import { generateUUID } from "@/utils/rand";
 
 // Type for raw API provider data
 interface ApiProvider {
@@ -119,7 +120,7 @@ export function createProviderModel(
 	id?: string,
 ): ProviderModel {
 	return {
-		id: id ?? crypto.randomUUID(), // Generate UUID if no ID provided
+		id: id ?? generateUUID(), 
 		providerId,
 		name,
 		isEnabled: true,

@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import {
 	queryKeys,
 	useAddImageToDataset as useAddImageToDatasetMutation,
@@ -32,6 +34,12 @@ export function useDatasets(datasetId: string | undefined) {
 
 	const { navigateToDataset } = useDatasetNavigation();
 
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	// Track the most recently uploaded images to prioritize them in the sort
 	const [recentlyUploadedImages, setRecentlyUploadedImages] = useState<Set<string>>(new Set());
 
@@ -40,9 +48,8 @@ export function useDatasets(datasetId: string | undefined) {
 		selectDatasetById(datasetId);
 	}, [datasetId, selectDatasetById]);
 
-	// Mutations remain the same
-	const createDatasetMutation = useCreateDatasetMutation();
-	const addImageToDatasetMutation = useAddImageToDatasetMutation();
+	const createDatasetMutation = useCreateDatasetMutation(mediaServerUrl);
+	const addImageToDatasetMutation = useAddImageToDatasetMutation(mediaServerUrl);
 
 	// Filter images based on the selectedDataset from context and the subfolder
 	const filteredImages = useMemo(() => {
@@ -116,11 +123,14 @@ export function useDatasets(datasetId: string | undefined) {
 	 */
 	const handleUploadComplete = useCallback(() => {
 		const sharedQueryClient = getQueryClient();
-		// Invalidate the query that DatasetProvider uses internally
-		sharedQueryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+
+		if (mediaServerUrl) {
+			sharedQueryClient.invalidateQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+		} else {
+			console.warn("Cannot invalidate dataset images: Media Server URL not available.");
+		}
 
 		// Optionally, manage recent images state locally as before
-		// This part might need refinement depending on how quickly context state updates
 		if (selectedDataset?.images) {
 			const newRecentImages = new Set(recentlyUploadedImages);
 			for (const image of selectedDataset.images) {
@@ -132,13 +142,17 @@ export function useDatasets(datasetId: string | undefined) {
 			}, 5 * 60 * 1000);
 		}
 
-	}, [selectedDataset, recentlyUploadedImages]); // Added queryKeys
+	}, [selectedDataset, recentlyUploadedImages, mediaServerUrl]); // Added mediaServerUrl
 
 	// Function to refetch datasets (might not be needed if context invalidates properly)
 	const refetch = useCallback(() => {
 		const sharedQueryClient = getQueryClient();
-		sharedQueryClient.refetchQueries({ queryKey: queryKeys.datasetImages });
-	}, []); // Added queryKeys
+		if (mediaServerUrl) {
+			sharedQueryClient.refetchQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+		} else {
+			console.warn("Cannot refetch dataset images: Media Server URL not available.");
+		}
+	}, [mediaServerUrl]); 
 
 	return {
 		// State derived directly from the refactored context

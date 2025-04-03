@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { preloadImage } from "@/services/images";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
@@ -24,6 +26,13 @@ export function useImageSelection(
 	const [carouselIndex, setCarouselIndex] = useState(0);
 	const [showProperties, setShowProperties] = useState(false);
 
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	// Sync with context if provided
 	const setSelectedImageInternal = useCallback(
 		(image: Image | null) => {
@@ -40,15 +49,17 @@ export function useImageSelection(
 		(imagesToPreload: Image[], count = 10) => {
 			// Preload the first N images as thumbnails
 			imagesToPreload.slice(0, count).forEach((image) => {
-				preloadImage(image.path, "thumbnail");
+				if (mediaServerUrl) {
+					preloadImage(mediaServerUrl, image.path, "thumbnail");
+				}
 			});
 
 			// If we have a selected image, preload it at full resolution
-			if (selectedImage) {
-				preloadImage(selectedImage.path, "full");
+			if (selectedImage && mediaServerUrl) {
+				preloadImage(mediaServerUrl, selectedImage.path, "full");
 			}
 		},
-		[selectedImage],
+		[selectedImage, mediaServerUrl],
 	);
 
 	// Preload images when the image list changes
@@ -89,12 +100,14 @@ export function useImageSelection(
 			}
 
 			// Preload the full-size image
-			preloadImage(image.path, "full");
+			if (mediaServerUrl) {
+				preloadImage(mediaServerUrl, image.path, "full");
+			}
 
 			// Show properties panel when an image is selected
 			setShowProperties(true);
 		},
-		[images, setSelectedImageInternal],
+		[images, setSelectedImageInternal, mediaServerUrl],
 	);
 
 	/**

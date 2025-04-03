@@ -1,8 +1,10 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import {
-    type ImageProcessResponse,
-    getImageUrl,
-    useProcessImage,
+	getImageUrl,
+	useProcessImage,
 } from "@/services/images";
+import type { ImageProcessResponse } from "@/types";
 import { toast } from "@/utils/toast";
 import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
@@ -25,7 +27,14 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 
-	const processImageMutation = useProcessImage();
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+	const processImageMutation = useProcessImage(mediaServerUrl);
 
 	const onCropComplete = useCallback(
 		(croppedArea: Area, croppedAreaPixels: Area) => {
@@ -119,7 +128,7 @@ export function ImageEditor({ imagePath, onSave, onCancel }: ImageEditorProps) {
 				{isEditing ? (
 					<>
 						<Cropper
-							image={getImageUrl(imagePath)}
+							image={getImageUrl(mediaServerUrl, imagePath)}
 							crop={crop}
 							zoom={zoom}
 							rotation={rotation}

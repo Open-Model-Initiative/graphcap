@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { queryKeys } from "@/services/dataset";
 import type { Image } from "@/types";
 import { toast } from "@/utils/toast";
@@ -21,6 +23,12 @@ export function useImageEditor({ selectedDataset }: UseImageEditorProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const queryClient = useQueryClient();
 
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	/**
 	 * Start editing an image
 	 */
@@ -40,13 +48,16 @@ export function useImageEditor({ selectedDataset }: UseImageEditorProps) {
 		setIsEditing(false);
 
 		// Invalidate cache for this dataset to refresh the images
-		if (selectedDataset) {
+		if (selectedDataset && mediaServerUrl) {
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.datasetByName(selectedDataset),
 			});
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+
+			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+		} else {
+			console.warn("Cannot invalidate queries: Dataset name or Media Server URL missing.");
 		}
-	}, [queryClient, selectedDataset]);
+	}, [queryClient, selectedDataset, mediaServerUrl]);
 
 	/**
 	 * Cancel editing

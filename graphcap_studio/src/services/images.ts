@@ -24,18 +24,9 @@ import { getQueryClient } from "../utils/queryClient";
  * @module ImageService
  */
 
-// Define the base URL for the media server API
-// Use localhost instead of container name for browser access
-const MEDIA_SERVER_URL =
-	import.meta.env.VITE_MEDIA_SERVER_URL?.replace(
-		"graphcap_media_server",
-		"localhost",
-	) ?? "http://localhost:32400";
 const DATASETS_PATH =
 	import.meta.env.VITE_DATASETS_PATH ?? "/workspace/datasets";
 
-// Log the media server URL for debugging
-console.log("Media Server URL:", MEDIA_SERVER_URL);
 console.log("Datasets Path:", DATASETS_PATH);
 
 // Cache for image URLs to avoid redundant requests
@@ -50,38 +41,47 @@ const CACHE_EXPIRATION = 30 * 60 * 1000;
 // Query keys for TanStack Query
 export const queryKeys = {
 	images: ["images"] as const,
-	imagesByDirectory: (directory?: string) =>
-		[...queryKeys.images, directory] as const,
+	imagesByDirectory: (mediaServerUrl: string, directory?: string) =>
+		[...queryKeys.images, directory, { mediaServerUrl }] as const,
 	datasets: ["datasets"] as const,
-	datasetImages: ["datasets", "images"] as const,
+	datasetImages: (mediaServerUrl: string) =>
+		[...queryKeys.datasets, "images", { mediaServerUrl }] as const,
 };
 
 // Helper function to create a query client
 const getClient = () => getQueryClient();
 
 /**
+ * Fetch images from a directory.
+ */
+async function fetchImagesByDirectory(mediaServerUrl: string, directory?: string) {
+	console.log("Listing images from directory:", directory);
+	if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
+
+	const url = new URL(`${mediaServerUrl}/api/images`);
+	if (directory) {
+		url.searchParams.append("directory", directory);
+	}
+
+	const response = await fetchWithRetry(url.toString());
+
+	const data = await response.json();
+	console.log("Received data:", data);
+	return ImageListResponseSchema.parse(data);
+}
+
+/**
  * React hook for listing images using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @param directory - Optional directory path
  * @returns Query result with the list of images
  */
-export function useListImages(directory?: string) {
+export function useListImages(mediaServerUrl: string, directory?: string) {
 	return useQuery({
-		queryKey: queryKeys.imagesByDirectory(directory),
-		queryFn: async () => {
-			console.log("Listing images from directory:", directory);
-
-			const url = new URL(`${MEDIA_SERVER_URL}/api/images`);
-			if (directory) {
-				url.searchParams.append("directory", directory);
-			}
-
-			const response = await fetchWithRetry(url.toString());
-
-			const data = await response.json();
-			console.log("Received data:", data);
-			return ImageListResponseSchema.parse(data);
-		},
+		queryKey: queryKeys.imagesByDirectory(mediaServerUrl, directory),
+		queryFn: () => fetchImagesByDirectory(mediaServerUrl, directory),
+		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
 		meta: {
 			errorMessage: "Failed to load images",
 		},
@@ -89,29 +89,36 @@ export function useListImages(directory?: string) {
 }
 
 /**
+ * Fetch dataset images list.
+ */
+async function fetchDatasetImages(mediaServerUrl: string) {
+	console.log("Listing dataset images");
+	if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
+	try {
+		const response = await fetchWithRetry(
+			`${mediaServerUrl}/api/datasets/images`,
+		);
+
+		const data = await response.json();
+		console.log("Received datasets data:", data);
+		return DatasetListResponseSchema.parse(data);
+	} catch (error) {
+		console.error("Error fetching dataset images:", error);
+		throw error;
+	}
+}
+
+/**
  * React hook for listing dataset images using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Query result with the list of datasets and their images
  */
-export function useListDatasetImages() {
+export function useListDatasetImages(mediaServerUrl: string) {
 	return useQuery({
-		queryKey: queryKeys.datasetImages,
-		queryFn: async () => {
-			console.log("Listing dataset images");
-
-			try {
-				const response = await fetchWithRetry(
-					`${MEDIA_SERVER_URL}/api/datasets/images`,
-				);
-
-				const data = await response.json();
-				console.log("Received datasets data:", data);
-				return DatasetListResponseSchema.parse(data);
-			} catch (error) {
-				console.error("Error fetching dataset images:", error);
-				throw error;
-			}
-		},
+		queryKey: queryKeys.datasetImages(mediaServerUrl),
+		queryFn: () => fetchDatasetImages(mediaServerUrl),
+		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
 		meta: {
 			errorMessage: "Failed to load dataset images",
 		},
@@ -121,11 +128,16 @@ export function useListDatasetImages() {
 /**
  * Get the URL for viewing an image
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @param imagePath - Path to the image
  * @returns URL for viewing the image
  */
-export function getImageUrl(imagePath: string): string {
-	// Check if URL is in cache
+export function getImageUrl(mediaServerUrl: string, imagePath: string): string {
+	if (!mediaServerUrl) {
+		console.warn("Cannot get image URL: Media Server URL not available.");
+		return ""; // Or return a placeholder image URL
+	}
+	// Check if URL is in cache (Note: Cache key should ideally include mediaServerUrl if multiple servers are possible)
 	const cachedUrl = imageUrlCache.get(imagePath);
 	if (cachedUrl) {
 		return cachedUrl;
@@ -149,7 +161,7 @@ export function getImageUrl(imagePath: string): string {
 	const cacheBuster = `_cb=${Date.now()}`;
 
 	// Construct the URL with the media server URL and normalized path
-	const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?${cacheBuster}`;
+	const url = `${mediaServerUrl}/api/images/view${normalizedPath}?${cacheBuster}`;
 
 	console.debug("Generated image URL:", url, "from path:", imagePath);
 
@@ -167,19 +179,25 @@ export function getImageUrl(imagePath: string): string {
 /**
  * Get the URL for a thumbnail version of an image
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @param imagePath - Path to the image
  * @param width - Desired width of the thumbnail
  * @param height - Desired height of the thumbnail
  * @returns URL for the thumbnail
  */
 export function getThumbnailUrl(
+	mediaServerUrl: string,
 	imagePath: string,
 	width = 200,
 	height = 200,
 	format?: string,
 ): string {
+	if (!mediaServerUrl) {
+		console.warn("Cannot get thumbnail URL: Media Server URL not available.");
+		return ""; // Or return a placeholder image URL
+	}
 	const fmt = format ?? "webp";
-	const cacheKey = `${imagePath}_${width}x${height}_${fmt}`;
+	const cacheKey = `${imagePath}_${width}x${height}_${fmt}`; // Note: Cache key should ideally include mediaServerUrl
 
 	const cachedUrl = thumbnailCache.get(cacheKey);
 	if (cachedUrl) {
@@ -197,7 +215,7 @@ export function getThumbnailUrl(
 	}
 
 	const cacheBuster = `_cb=${Date.now()}`;
-	const url = `${MEDIA_SERVER_URL}/api/images/view${normalizedPath}?width=${width}&height=${height}&format=${fmt}&${cacheBuster}`;
+	const url = `${mediaServerUrl}/api/images/view${normalizedPath}?width=${width}&height=${height}&format=${fmt}&${cacheBuster}`;
 
 	thumbnailCache.set(cacheKey, url);
 	setTimeout(() => {
@@ -210,15 +228,21 @@ export function getThumbnailUrl(
 /**
  * Preload an image to cache it in the browser
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @param imagePath - Path to the image
  * @param size - Size of the image to preload ('thumbnail' or 'full')
  */
 export function preloadImage(
+	mediaServerUrl: string,
 	imagePath: string,
 	size: "thumbnail" | "full" = "thumbnail",
 ): void {
+	if (!mediaServerUrl) {
+		console.warn("Cannot preload image: Media Server URL not available.");
+		return;
+	}
 	const url =
-		size === "thumbnail" ? getThumbnailUrl(imagePath) : getImageUrl(imagePath);
+		size === "thumbnail" ? getThumbnailUrl(mediaServerUrl, imagePath) : getImageUrl(mediaServerUrl, imagePath);
 
 	const img = new Image();
 	img.src = url;
@@ -232,7 +256,7 @@ export function preloadImage(
 		console.warn(`Failed to preload image (${size}): ${imagePath}`);
 		// Remove from cache if loading failed
 		if (size === "thumbnail") {
-			const cacheKey = `${imagePath}_200x200_webp`;
+			const cacheKey = `${imagePath}_200x200_webp`; // Note: Needs refinement if width/height vary
 			thumbnailCache.delete(cacheKey);
 		} else {
 			imageUrlCache.delete(imagePath);
@@ -243,17 +267,19 @@ export function preloadImage(
 /**
  * React hook for processing an image using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for processing an image
  */
-export function useProcessImage() {
+export function useProcessImage(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation<ImageProcessResponse, Error, ImageProcessRequest>({
 		mutationFn: async (variables: ImageProcessRequest) => {
 			console.log("Processing image:", variables.imagePath);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			const response = await fetchWithRetry(
-				`${MEDIA_SERVER_URL}/api/images/process`,
+				`${mediaServerUrl}/api/images/process`,
 				{
 					method: "POST",
 					headers: {
@@ -281,8 +307,13 @@ export function useProcessImage() {
 		},
 		onSuccess: () => {
 			// Invalidate relevant queries to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.images });
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			// Use the passed URL for invalidation
+			if (mediaServerUrl) {
+				queryClient.invalidateQueries({ queryKey: [...queryKeys.images, { mediaServerUrl }] }); // Base images key with URL
+				queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+			} else {
+				console.warn("Cannot invalidate queries: Media Server URL not available.");
+			}
 		},
 		meta: {
 			errorMessage: "Failed to process image",
@@ -293,18 +324,20 @@ export function useProcessImage() {
 /**
  * React hook for creating a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for creating a dataset
  */
-export function useCreateDataset() {
+export function useCreateDataset(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (name: string) => {
 			console.log("Creating dataset:", name);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			try {
 				const response = await fetchWithRetry(
-					`${MEDIA_SERVER_URL}/api/datasets/create`,
+					`${mediaServerUrl}/api/datasets/create`,
 					{
 						method: "POST",
 						headers: {
@@ -318,8 +351,9 @@ export function useCreateDataset() {
 				if (response.status === 409) {
 					throw new Error(`Dataset "${name}" already exists (409)`);
 				}
-
+				// Assuming success if no error thrown by fetchWithRetry or status check
 				console.log("Dataset created successfully:", name);
+				// Return something indicating success if needed, or void
 			} catch (error) {
 				console.error("Error creating dataset:", error);
 				throw error;
@@ -327,8 +361,12 @@ export function useCreateDataset() {
 		},
 		onSuccess: () => {
 			// Invalidate datasets query to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasets });
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			if (mediaServerUrl) {
+				queryClient.invalidateQueries({ queryKey: queryKeys.datasets }); // This key doesn't include URL yet, might need update
+				queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+			} else {
+				console.warn("Cannot invalidate queries: Media Server URL not available.");
+			}
 		},
 		meta: {
 			errorMessage: "Failed to create dataset",
@@ -339,9 +377,10 @@ export function useCreateDataset() {
 /**
  * React hook for adding an image to a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for adding an image to a dataset
  */
-export function useAddImageToDataset() {
+export function useAddImageToDataset(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation<
@@ -354,13 +393,14 @@ export function useAddImageToDataset() {
 			datasetName,
 		}: { imagePath: string; datasetName: string }) => {
 			console.log(`Adding image ${imagePath} to dataset ${datasetName}`);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			try {
 				// Ensure we're using the correct datasets path
 				const targetDatasetPath = `${DATASETS_PATH}/${datasetName}`;
 
 				const response = await fetchWithRetry(
-					`${MEDIA_SERVER_URL}/api/datasets/add-image`,
+					`${mediaServerUrl}/api/datasets/add-image`,
 					{
 						method: "POST",
 						headers: {
@@ -380,16 +420,19 @@ export function useAddImageToDataset() {
 				return GenericApiResponseSchema.parse(data);
 			} catch (error) {
 				console.error("Error adding image to dataset:", error);
-				return {
-					success: false,
-					message:
-						error instanceof Error ? error.message : "Unknown error occurred",
-				};
+				// Ensure a consistent return type on error matching the mutation definition
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error occurred";
+				throw new Error(errorMessage); // Re-throw for react-query to handle
 			}
 		},
 		onSuccess: () => {
 			// Invalidate dataset queries to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			if (mediaServerUrl) {
+				queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages(mediaServerUrl) });
+			} else {
+				console.warn("Cannot invalidate queries: Media Server URL not available.");
+			}
 		},
 		meta: {
 			errorMessage: "Failed to add image to dataset",
@@ -400,38 +443,33 @@ export function useAddImageToDataset() {
 /**
  * Prefetch images data to populate the query cache
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @param directory - Optional directory to prefetch images from
  */
-export async function prefetchImages(directory?: string): Promise<void> {
+export async function prefetchImages(mediaServerUrl: string, directory?: string): Promise<void> {
+	if (!mediaServerUrl) {
+		console.warn("Cannot prefetch images: Media Server URL not available.");
+		return;
+	}
 	const queryClient = getClient();
 	await queryClient.prefetchQuery({
-		queryKey: queryKeys.imagesByDirectory(directory),
-		queryFn: async () => {
-			const url = new URL(`${MEDIA_SERVER_URL}/api/images`);
-			if (directory) {
-				url.searchParams.append("directory", directory);
-			}
-
-			const response = await fetchWithRetry(url.toString());
-			const data = await response.json();
-			return ImageListResponseSchema.parse(data);
-		},
+		queryKey: queryKeys.imagesByDirectory(mediaServerUrl, directory),
+		queryFn: () => fetchImagesByDirectory(mediaServerUrl, directory),
 	});
 }
 
 /**
  * Prefetch dataset images data to populate the query cache
+ * @param mediaServerUrl The base URL of the media server.
  */
-export async function prefetchDatasetImages(): Promise<void> {
+export async function prefetchDatasetImages(mediaServerUrl: string): Promise<void> {
+	if (!mediaServerUrl) {
+		console.warn("Cannot prefetch dataset images: Media Server URL not available.");
+		return;
+	}
 	const queryClient = getClient();
 	await queryClient.prefetchQuery({
-		queryKey: queryKeys.datasetImages,
-		queryFn: async () => {
-			const response = await fetchWithRetry(
-				`${MEDIA_SERVER_URL}/api/datasets/images`,
-			);
-			const data = await response.json();
-			return DatasetListResponseSchema.parse(data);
-		},
+		queryKey: queryKeys.datasetImages(mediaServerUrl),
+		queryFn: () => fetchDatasetImages(mediaServerUrl),
 	});
 }

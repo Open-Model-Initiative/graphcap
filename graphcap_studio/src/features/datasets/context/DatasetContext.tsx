@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useListDatasets } from "@/services/dataset";
 import type { Dataset, Image } from "@/types";
 import {
@@ -55,12 +57,17 @@ const DatasetContext = createContext<DatasetContextType | undefined>(undefined);
  * Manages dataset state, including fetching the list internally.
  */
 export function DatasetProvider({ children }: DatasetProviderProps) {
-	// Fetch datasets internally
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	const {
 		data: datasetListResponse,
 		isLoading: isLoadingList,
 		error: listError,
-	} = useListDatasets();
+	} = useListDatasets(mediaServerUrl);
 
 	// State for the *target* ID that we want to select
 	const [targetDatasetId, setTargetDatasetId] = useState<string | undefined>(

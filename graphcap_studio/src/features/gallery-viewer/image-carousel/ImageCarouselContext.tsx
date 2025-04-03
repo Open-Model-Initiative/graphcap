@@ -1,4 +1,6 @@
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { preloadImage } from "@/services/images";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
@@ -110,6 +112,9 @@ export function ImageCarouselProvider({
 		selectedImage: contextSelectedImage,
 	} = useDatasetContext();
 
+	// Get connections state for media server URL needed in handleRetry
+	const { connections } = useServerConnections();
+
 	// Derive state from DatasetContext
 	const images = useMemo(() => selectedDataset?.images ?? [], [selectedDataset]);
 	const isLoading = isLoadingDataset;
@@ -218,14 +223,21 @@ export function ImageCarouselProvider({
 		maxConcurrentPreloads: normalizedPreloadOptions.maxConcurrentPreloads,
 	});
 
-	// Handle retry when image fails to load
+	// Function to handle retry on error
 	const handleRetry = useCallback(() => {
-		if (initialSelectedImage) {
-			setImageLoadError(false);
-			// Attempt to reload the image
-			preloadImage(initialSelectedImage.path, "full");
+		setImageLoadError(false); // Reset error state
+
+		// Get connections state and find media server URL
+		const mediaServerConnection = connections.find(
+			(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+		);
+		const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+		if (initialSelectedImage && mediaServerUrl) {
+			// Preload the selected image again
+			preloadImage(mediaServerUrl, initialSelectedImage.path, "full");
 		}
-	}, [initialSelectedImage]);
+	}, [initialSelectedImage, connections]);
 
 	const value = useMemo(
 		() => ({
