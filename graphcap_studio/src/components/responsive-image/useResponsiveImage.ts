@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { getThumbnailUrl } from "@/services/images";
 import { generateSrcSet } from "@/utils/imageSrcSet";
 // SPDX-License-Identifier: Apache-2.0
@@ -49,6 +51,13 @@ export function useResponsiveImage({
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<Error | null>(null);
 	const [retryCount, setRetryCount] = useState(0);
+
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
 
 	// Use refs to track timeout and abort controller
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -164,8 +173,12 @@ export function useResponsiveImage({
 
 	// Memoize the srcset string (default format, e.g., JPEG)
 	const srcSet = useMemo(() => {
-		return generateSrcSet(imagePath, getThumbnailUrl, undefined, aspectRatio);
-	}, [imagePath, aspectRatio]);
+		// Partially apply getThumbnailUrl with the mediaServerUrl
+		const getThumbnailWithUrl = (path: string, width: number, height: number, format?: string) => 
+			getThumbnailUrl(mediaServerUrl, path, width, height, format);
+
+		return generateSrcSet(imagePath, getThumbnailWithUrl, undefined, aspectRatio);
+	}, [imagePath, aspectRatio, mediaServerUrl]);
 
 	return {
 		loading,

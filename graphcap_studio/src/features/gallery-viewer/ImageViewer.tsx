@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { getImageUrl } from "@/services/images";
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useRef, useState } from "react";
@@ -43,7 +45,16 @@ export function ImageViewer({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<Error | null>(null);
-	const imageUrl = getImageUrl(imagePath);
+	
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+	// Get the image URL using the hook and the media server URL
+	const imageUrl = getImageUrl(mediaServerUrl, imagePath);
 
 	const { width, height, isCalculating } = useImageViewerSize({
 		containerRef,

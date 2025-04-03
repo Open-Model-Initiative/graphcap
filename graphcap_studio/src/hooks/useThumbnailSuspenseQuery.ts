@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { getThumbnailUrl } from "@/services/images";
 // SPDX-License-Identifier: Apache-2.0
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -30,16 +32,23 @@ export function useThumbnailSuspenseQuery(
 		aspectRatio,
 	} = options || {};
 
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	const heightParam = aspectRatio ? Math.round(width / aspectRatio) : height;
 
 	return useSuspenseQuery({
-		queryKey: ["thumbnail", imagePath, width, heightParam, format],
+		queryKey: ["thumbnail", imagePath, width, heightParam, format, mediaServerUrl],
 		queryFn: async () => {
 			// Create a new Image object to preload the thumbnail
 			const img = new Image();
 
-			// Get the thumbnail URL
-			const src = getThumbnailUrl(imagePath, width, heightParam, format);
+			// Get the thumbnail URL, passing the mediaServerUrl
+			const src = getThumbnailUrl(mediaServerUrl, imagePath, width, heightParam, format);
 
 			// Return a promise that resolves when the thumbnail loads
 			return new Promise<string>((resolve, reject) => {

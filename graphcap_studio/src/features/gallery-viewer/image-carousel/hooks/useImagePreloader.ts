@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { preloadImage } from "@/services/images";
 import type { Image } from "@/types";
 // SPDX-License-Identifier: Apache-2.0
@@ -37,8 +39,15 @@ export function useImagePreloader({
 	// Use a ref to track active preloads
 	const activePreloadsRef = useRef<number>(0);
 
+	// Get connections state and find media server URL
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
 	useEffect(() => {
-		if (!enabled || images.length === 0) return;
+		if (!enabled || images.length === 0 || !mediaServerUrl) return;
 
 		// Create a queue of images to preload in order of priority
 		const preloadQueue: Array<{ index: number; priority: "high" | "low" }> = [];
@@ -96,13 +105,13 @@ export function useImagePreloader({
 
 					// High priority: preload thumbnail then full
 					if (priority === "high") {
-						preloadImage(imagePath, "thumbnail");
-						preloadImage(imagePath, "full");
+						preloadImage(mediaServerUrl, imagePath, "thumbnail");
+						preloadImage(mediaServerUrl, imagePath, "full");
 						// Call completion handler *after* initiating both
 						onPreloadInitiated();
 					} else {
 						// Low priority: preload only thumbnail
-						preloadImage(imagePath, "thumbnail");
+						preloadImage(mediaServerUrl, imagePath, "thumbnail");
 						// Call completion handler *after* initiating the preload
 						onPreloadInitiated();
 					}
@@ -126,5 +135,5 @@ export function useImagePreloader({
 			preloadedImagesRef.current.clear();
 			activePreloadsRef.current = 0;
 		};
-	}, [images, currentIndex, preloadCount, enabled, maxConcurrentPreloads]);
+	}, [images, currentIndex, preloadCount, enabled, maxConcurrentPreloads, mediaServerUrl]);
 }
