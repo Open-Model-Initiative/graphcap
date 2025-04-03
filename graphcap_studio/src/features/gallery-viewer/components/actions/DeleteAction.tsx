@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Tooltip } from "@/components/ui/tooltip";
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useDeleteImage } from "@/services/dataset";
 import type { Image } from "@/types/image-types";
 import { toast } from "@/utils/toast";
@@ -16,12 +18,18 @@ interface DeleteActionProps {
 }
 
 export function DeleteAction({ selectedImage }: DeleteActionProps) {
-	const { selectedDataset } = useDatasetContext(); // Get dataset context
+	const { selectedDataset } = useDatasetContext(); 
 	const navigate = useNavigate();
+	const { connections } = useServerConnections(); 
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? ""; 
+
 	const {
 		mutate: deleteImageMutate,
 		isPending: isDeleting, // Internal deletion state
-	} = useDeleteImage();
+	} = useDeleteImage(mediaServerUrl); 
 	const {
 		open: isDeleteDialogOpen,
 		onOpen: onDeleteOpen,

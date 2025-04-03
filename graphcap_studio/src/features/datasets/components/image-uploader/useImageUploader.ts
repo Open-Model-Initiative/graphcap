@@ -1,7 +1,7 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useUploadImage } from "@/services/dataset";
 import { toast } from "@/utils/toast";
-// SPDX-License-Identifier: Apache-2.0
-// TODO: RESOLVE OLD DATASET NAME SYSTEM
 import { useCallback, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useDatasetContext } from "../../context/DatasetContext"; // Import context hook
@@ -41,11 +41,17 @@ export function useImageUploader({
 		datasetError,
 	} = useDatasetContext();
 
-	// Use the upload image mutation	
-	const uploadImageMutation = useUploadImage();
+
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+	const uploadImageMutation = useUploadImage(mediaServerUrl); // Pass URL to hook
 
 	// Determine if the uploader should be disabled (no valid dataset, loading, or error)
-	const isDisabled = !selectedDataset || isLoadingDataset || !!datasetError;
+	const isDisabled = !selectedDataset || isLoadingDataset || !!datasetError || !mediaServerUrl;
 
 	const onDrop = useCallback(
 		async (acceptedFiles: File[]) => {

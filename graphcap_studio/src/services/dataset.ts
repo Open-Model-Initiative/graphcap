@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 import type {
 	ImageDeleteResponse,
 	ImageProcessResponse,
@@ -23,26 +24,17 @@ import { getQueryClient } from "../utils/queryClient";
  *
  * @module DatasetService
  */
-
-// Define the base URL for the media server API
-// Use localhost instead of container name for browser access
-const MEDIA_SERVER_URL =
-	import.meta.env.VITE_MEDIA_SERVER_URL?.replace(
-		"graphcap_media_server",
-		"localhost",
-	) ?? "http://localhost:32400";
 const DATASETS_PATH =
 	import.meta.env.VITE_DATASETS_PATH ?? "/workspace/datasets";
 
-// Log the media server URL for debugging
-console.log("Media Server URL:", MEDIA_SERVER_URL);
 console.log("Datasets Path:", DATASETS_PATH);
 
-// Query keys for TanStack Query
+// Update query keys to potentially include dynamic parts like URL if needed
 export const queryKeys = {
 	datasets: ["datasets"] as const,
 	datasetByName: (name: string) => [...queryKeys.datasets, name] as const,
-	datasetImages: ["datasets", "images"] as const,
+	datasetImages: (mediaServerUrl: string) =>
+		[...queryKeys.datasets, "images", { mediaServerUrl }] as const,
 	images: ["images"] as const,
 	imagesByDirectory: (directory?: string) => ["images", directory] as const,
 };
@@ -56,10 +48,11 @@ const getClient = () => getQueryClient();
  * @returns A promise that resolves with the parsed dataset list response.
  * @throws An error if the fetch request fails or the response is not ok.
  */
-async function fetchDatasetList() {
-	console.log("Fetching dataset list with images");
+async function fetchDatasetList(mediaServerUrl: string) {
+	console.log(`Fetching dataset list with images from ${mediaServerUrl}`);
 	try {
-		const response = await fetch(`${MEDIA_SERVER_URL}/api/datasets/images`);
+		// Use the passed mediaServerUrl
+		const response = await fetch(`${mediaServerUrl}/api/datasets/images`);
 		if (!response.ok) {
 			const errorText = await response.text();
 			console.error("Error response fetching dataset list:", errorText);
@@ -82,10 +75,13 @@ async function fetchDatasetList() {
  *
  * @returns Query result with the list of datasets and their images
  */
-export function useListDatasets() {
+export function useListDatasets(mediaServerUrl: string) {
 	return useQuery({
-		queryKey: queryKeys.datasetImages,
-		queryFn: fetchDatasetList,
+		// Use the dynamic query key
+		queryKey: queryKeys.datasetImages(mediaServerUrl),
+		// Pass the URL to the query function
+		queryFn: () => fetchDatasetList(mediaServerUrl),
+		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
 		meta: {
 			errorMessage: "Failed to load datasets",
 		},
@@ -95,18 +91,21 @@ export function useListDatasets() {
 /**
  * React hook for creating a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for creating a dataset
  */
-export function useCreateDataset() {
+export function useCreateDataset(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (name: string) => {
-			console.log("Creating dataset:", name);
+			console.log(`Creating dataset: ${name} on ${mediaServerUrl}`);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			try {
+				// Use the passed mediaServerUrl
 				const response = await fetch(
-					`${MEDIA_SERVER_URL}/api/datasets/create`,
+					`${mediaServerUrl}/api/datasets/create`,
 					{
 						method: "POST",
 						headers: {
@@ -136,9 +135,8 @@ export function useCreateDataset() {
 			}
 		},
 		onSuccess: () => {
-			// Invalidate datasets query to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasets });
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+
+			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] }); 
 		},
 		meta: {
 			errorMessage: "Failed to create dataset",
@@ -149,9 +147,10 @@ export function useCreateDataset() {
 /**
  * React hook for adding an image to a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for adding an image to a dataset
  */
-export function useAddImageToDataset() {
+export function useAddImageToDataset(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -160,18 +159,17 @@ export function useAddImageToDataset() {
 			datasetName,
 		}: { imagePath: string; datasetName: string }) => {
 			console.log(
-				"Adding image to dataset:",
-				imagePath,
-				"to dataset:",
-				datasetName,
+				`Adding image ${imagePath} to dataset ${datasetName} on ${mediaServerUrl}`,
 			);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			try {
 				// Ensure we're using the correct datasets path
 				const targetDatasetPath = `${DATASETS_PATH}/${datasetName}`;
 
+				// Use the passed mediaServerUrl
 				const response = await fetch(
-					`${MEDIA_SERVER_URL}/api/datasets/add-image`,
+					`${mediaServerUrl}/api/datasets/add-image`,
 					{
 						method: "POST",
 						headers: {
@@ -220,8 +218,10 @@ export function useAddImageToDataset() {
 			}
 		},
 		onSuccess: (_, variables) => {
-			// Invalidate dataset queries to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			console.log(
+				`Invalidating queries after adding image to ${variables.datasetName}`,
+			);
+			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] });
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.datasetByName(variables.datasetName),
 			});
@@ -234,30 +234,41 @@ export function useAddImageToDataset() {
 
 /**
  * Prefetch datasets data to populate the query cache
+ * @param mediaServerUrl The base URL of the media server.
  */
-export async function prefetchDatasets(): Promise<void> {
+export async function prefetchDatasets(mediaServerUrl: string): Promise<void> {
 	const queryClient = getClient();
+	// Ensure URL is provided before prefetching
+	if (!mediaServerUrl) {
+		console.warn("Cannot prefetch datasets without Media Server URL.");
+		return;
+	}
 	await queryClient.prefetchQuery({
-		queryKey: queryKeys.datasetImages,
-		queryFn: fetchDatasetList,
+		// Use the dynamic query key
+		queryKey: queryKeys.datasetImages(mediaServerUrl),
+		// Pass the URL to the query function
+		queryFn: () => fetchDatasetList(mediaServerUrl),
 	});
 }
 
 /**
  * React hook for deleting a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for deleting a dataset
  */
-export function useDeleteDataset() {
+export function useDeleteDataset(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (name: string) => {
-			console.log("Deleting dataset:", name);
+			console.log(`Deleting dataset: ${name} on ${mediaServerUrl}`);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			try {
+				// Use the passed mediaServerUrl
 				const response = await fetch(
-					`${MEDIA_SERVER_URL}/api/datasets/${name}`,
+					`${mediaServerUrl}/api/datasets/${name}`,
 					{
 						method: "DELETE",
 					},
@@ -283,9 +294,10 @@ export function useDeleteDataset() {
 			}
 		},
 		onSuccess: () => {
-			// Invalidate datasets query to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasets });
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			// Invalidate datasets query to refresh data (similar challenge with URL in onSuccess)
+			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] });
+			// Also potentially invalidate the specific dataset name if relevant keys exist elsewhere
+			// queryClient.invalidateQueries({ queryKey: queryKeys.datasets }); // Base dataset key if used
 		},
 		meta: {
 			errorMessage: "Failed to delete dataset",
@@ -296,9 +308,10 @@ export function useDeleteDataset() {
 /**
  * React hook for uploading an image directly to a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for uploading an image to a dataset
  */
-export function useUploadImage() {
+export function useUploadImage(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 
 	return useMutation<
@@ -311,17 +324,17 @@ export function useUploadImage() {
 			datasetName,
 		}: { file: File; datasetName: string }) => {
 			console.log(
-				"Uploading image:",
-				file.name,
-				`to dataset: ${datasetName}`
+				`Uploading image ${file.name} to dataset ${datasetName} on ${mediaServerUrl}`,
 			);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			const formData = new FormData();
 			formData.append("image", file);
 			formData.append("dataset", datasetName);
 
+			// Use the passed mediaServerUrl
 			const response = await fetchWithRetry(
-				`${MEDIA_SERVER_URL}/api/datasets/upload`,
+				`${mediaServerUrl}/api/datasets/upload`,
 				{
 					method: "POST",
 					body: formData,
@@ -337,12 +350,15 @@ export function useUploadImage() {
 			return ImageProcessResponseSchema.parse(data);
 		},
 		onSuccess: (_, variables) => {
-			// Invalidate dataset queries to refresh data
-			queryClient.invalidateQueries({ queryKey: queryKeys.datasetImages });
+			// Invalidate dataset queries to refresh data (similar challenge with URL in onSuccess)
+			console.log(
+				`Invalidating queries after uploading image to ${variables.datasetName}`,
+			);
+			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] });
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.datasetByName(variables.datasetName),
 			});
-			
+
 			// Also invalidate general image queries that might show the new image
 			queryClient.invalidateQueries({ queryKey: queryKeys.images });
 		},
@@ -355,9 +371,10 @@ export function useUploadImage() {
 /**
  * React hook for deleting an image from a dataset using TanStack Query
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Mutation result for deleting an image
  */
-export function useDeleteImage() {
+export function useDeleteImage(mediaServerUrl: string) {
 	const queryClient = useQueryClient();
 	return useMutation<
 		ImageDeleteResponse,
@@ -365,12 +382,16 @@ export function useDeleteImage() {
 		{ datasetName: string; imageName: string }
 	>({
 		mutationFn: async ({ datasetName, imageName }) => {
-			console.log(`Deleting image: ${imageName} from dataset: ${datasetName}`);
+			console.log(
+				`Deleting image ${imageName} from dataset ${datasetName} on ${mediaServerUrl}`,
+			);
+			if (!mediaServerUrl) throw new Error("Media Server URL is not configured.");
 
 			// Construct the URL carefully, ensuring proper encoding if needed
 			// Assuming imageName might contain special characters, though ideally IDs are safer.
 			const encodedImageName = encodeURIComponent(imageName);
-			const url = `${MEDIA_SERVER_URL}/api/datasets/${datasetName}/images/${encodedImageName}`;
+			// Use the passed mediaServerUrl
+			const url = `${mediaServerUrl}/api/datasets/${datasetName}/images/${encodedImageName}`;
 
 			try {
 				const response = await fetch(url, {
@@ -400,13 +421,11 @@ export function useDeleteImage() {
 			}
 		},
 		onSuccess: (_, variables) => {
-			// Invalidate relevant queries to refresh data
+			// Invalidate relevant queries to refresh data (similar challenge with URL in onSuccess)
 			console.log(
 				`Invalidating queries after deleting image from ${variables.datasetName}`,
 			);
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.datasetImages,
-			});
+			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] });
 			queryClient.invalidateQueries({
 				queryKey: queryKeys.datasetByName(variables.datasetName),
 			});

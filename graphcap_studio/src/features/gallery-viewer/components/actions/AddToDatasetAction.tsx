@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useAddImageToDataset } from "@/services/dataset"; // Import hook
 import type { Dataset } from "@/types/dataset-types"; // Import Dataset type
 import type { Image } from "@/types/image-types";
@@ -17,7 +19,13 @@ export function AddToDatasetAction({
 	allDatasets,
 	currentDatasetName,
 }: AddToDatasetActionProps) {
-	const { mutate: addImageToDataset } = useAddImageToDataset(); // Get mutation hook
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+	const { mutate: addImageToDataset } = useAddImageToDataset(mediaServerUrl); // Pass URL to hook
 
 	// Handle add to dataset internally
 	const handleAddToDataset = useCallback(

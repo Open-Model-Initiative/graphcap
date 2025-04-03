@@ -1,3 +1,5 @@
+import { SERVER_IDS } from "@/features/server-connections/constants";
+import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useDeleteDataset } from "@/services/dataset";
 import { toast } from "@/utils/toast";
 // SPDX-License-Identifier: Apache-2.0
@@ -30,7 +32,14 @@ export function DeleteDatasetModal({
 	onDatasetDeleted,
 }: DeleteDatasetModalProps) {
 	const [error, setError] = useState<string | null>(null);
-	const deleteDatasetMutation = useDeleteDataset();
+	
+	const { connections } = useServerConnections();
+	const mediaServerConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
+	);
+	const mediaServerUrl = mediaServerConnection?.url ?? "";
+
+	const deleteDatasetMutation = useDeleteDataset(mediaServerUrl);
 	const isDeleting = deleteDatasetMutation.isPending;
 
 	// Ref for the button that should receive initial focus (the Cancel button is safer)
