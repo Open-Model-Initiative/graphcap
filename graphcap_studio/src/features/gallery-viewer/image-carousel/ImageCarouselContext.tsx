@@ -112,6 +112,9 @@ export function ImageCarouselProvider({
 		selectedImage: contextSelectedImage,
 	} = useDatasetContext();
 
+	// Get connections state for media server URL needed in handleRetry
+	const { connections } = useServerConnections();
+
 	// Derive state from DatasetContext
 	const images = useMemo(() => selectedDataset?.images ?? [], [selectedDataset]);
 	const isLoading = isLoadingDataset;
@@ -225,7 +228,6 @@ export function ImageCarouselProvider({
 		setImageLoadError(false); // Reset error state
 
 		// Get connections state and find media server URL
-		const { connections } = useServerConnections();
 		const mediaServerConnection = connections.find(
 			(conn) => conn.id === SERVER_IDS.MEDIA_SERVER,
 		);
@@ -235,7 +237,7 @@ export function ImageCarouselProvider({
 			// Preload the selected image again
 			preloadImage(mediaServerUrl, initialSelectedImage.path, "full");
 		}
-	}, [initialSelectedImage]);
+	}, [initialSelectedImage, connections]);
 
 	const value = useMemo(
 		() => ({

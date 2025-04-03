@@ -95,7 +95,7 @@ export function ImageViewer({
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
-						role="img" aria-label="Error Icon"
+						aria-label="Error Icon"
 					>
 						<title>Error loading image</title>
 						<path

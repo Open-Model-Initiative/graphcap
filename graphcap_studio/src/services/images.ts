@@ -24,15 +24,9 @@ import { getQueryClient } from "../utils/queryClient";
  * @module ImageService
  */
 
-// const MEDIA_SERVER_URL =
-// 	import.meta.env.VITE_MEDIA_SERVER_URL?.replace(
-// 		"graphcap_media_server",
-// 		"localhost",
-// 	) ?? "http://localhost:32400";
 const DATASETS_PATH =
 	import.meta.env.VITE_DATASETS_PATH ?? "/workspace/datasets";
 
-// console.log("Media Server URL:", MEDIA_SERVER_URL);
 console.log("Datasets Path:", DATASETS_PATH);
 
 // Cache for image URLs to avoid redundant requests
