@@ -2,7 +2,7 @@
 /**
  * Perspectives Service
  *
- * This module provides functions for interacting with the GraphCap Server's
+ * This module provides functions for interacting with the graphcap Server's
  * perspectives API using TanStack Query.
  */
 

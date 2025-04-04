@@ -7,13 +7,17 @@
 
 import { FileBrowserPanel } from "@/common/components/file-browser";
 import { FolderIcon, ServerIcon } from "@/components/icons";
-import { ServerConnectionsPanel } from "@/features/server-connections/components";
+import { ServerConnectionsPanel, ServerWarningIndicator } from "@/features/server-connections/components";
+import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
 import { ActionPanel } from "./ActionPanel";
+import { Box } from "@chakra-ui/react";
 
 /**
  * Right action panel with multiple sections for the root layout
  */
 export function RootRightActionPanel() {
+	const { hasWarnings } = useServerConnectionsContext();
+
 	return (
 		<ActionPanel
 			side="right"
@@ -23,7 +27,12 @@ export function RootRightActionPanel() {
 				{
 					id: "server-connections",
 					title: "Server Connections",
-					icon: <ServerIcon />,
+					icon: (
+						<Box position="relative">
+							<ServerIcon />
+							<ServerWarningIndicator show={hasWarnings} />
+						</Box>
+					),
 					content: <ServerConnectionsPanel />,
 				},
 				{

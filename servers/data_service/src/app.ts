@@ -74,6 +74,16 @@ app.openapi(healthCheckRoute, (c) => {
   });
 });
 
+// Add alias for API v1 health endpoint
+app.get(`${env.API_PREFIX}/v1/health`, (c) => {
+  return c.json({
+    status: 'ok',
+    service: 'graphcap-data-service',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Database health check endpoint
 const dbHealthCheckRoute = createRoute({
   method: 'get',

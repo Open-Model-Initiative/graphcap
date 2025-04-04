@@ -77,7 +77,7 @@ export function ProviderConnectionErrorDialog({
 								<Box display="flex" alignItems="center" gap={3}>
 									<Icon as={LuTriangleAlert} boxSize={6} color="red.500" />
 									<Text fontWeight="medium">
-										{errorObj?.message || 'An unknown error occurred'}
+										{errorObj?.message ?? 'An unknown error occurred'}
 									</Text>
 								</Box>
 

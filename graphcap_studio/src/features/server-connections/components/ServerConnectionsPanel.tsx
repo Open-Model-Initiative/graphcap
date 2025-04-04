@@ -11,7 +11,7 @@ import { ServerConnectionItem } from "./ServerConnectionItem";
  * Server Connections Panel component
  *
  * This component displays server connection statuses and controls
- * for the Media Server and GraphCap Server.
+ * for the Media Server and graphcap Server.
  */
 export const ServerConnectionsPanel = memo(function ServerConnectionsPanel({
 	className = "",

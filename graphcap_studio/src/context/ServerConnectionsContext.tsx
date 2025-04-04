@@ -13,6 +13,7 @@ interface ServerConnectionsContextValue {
 	handleUrlChange: (id: string, url: string) => void;
 	autoConnect: () => Promise<void>;
 	isAutoConnecting: boolean;
+	hasWarnings: boolean;
 }
 
 // Create the context with a default value

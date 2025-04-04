@@ -11,7 +11,7 @@ import { SERVER_IDS } from "@/features/server-connections/constants";
 /**
  * Get the Inference Bridge URL from server connections context
  */
-export function getGraphCapServerUrl(connections: ServerConnection[]): string {
+export function getgraphcapServerUrl(connections: ServerConnection[]): string {
 	const serverConnection = connections.find(
 		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
@@ -30,7 +30,7 @@ export function getGraphCapServerUrl(connections: ServerConnection[]): string {
  * Get the full Inference Bridge API URL (including /api/v1)
  */
 export function getInferenceBridgeApiUrl(connections: ServerConnection[]): string {
-	const baseUrl = getGraphCapServerUrl(connections);
+	const baseUrl = getgraphcapServerUrl(connections);
 	// Ensure the URL doesn't already have /api/v1
 	return baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
 }

@@ -159,12 +159,12 @@ export type ProviderCreate = z.infer<typeof ProviderCreateSchema>;
 export type ProviderUpdate = z.infer<typeof ProviderUpdateSchema>;
 
 /**
- * Provider model info from GraphCap server
+ * Provider model info from graphcap server
  */
 export type ProviderModelInfo = z.infer<typeof ProviderModelInfoSchema>;
 
 /**
- * Provider models response from GraphCap server
+ * Provider models response from graphcap server
  */
 export type ProviderModelsResponse = z.infer<
 	typeof ProviderModelsResponseSchema

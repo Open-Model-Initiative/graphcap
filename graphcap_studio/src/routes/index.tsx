@@ -1,16 +1,14 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
+import { SetupGuide } from "@/components/setup-guide";
 import {
 	Box,
 	Card,
 	Container,
 	Heading,
-	Icon,
-	List,
 	Text,
 	VStack,
 } from "@chakra-ui/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { MdCircle } from "react-icons/md";
 
 export const Route = createFileRoute("/")({
 	component: Index,
@@ -31,9 +29,9 @@ function Index() {
 					</Heading>
 
 					<Text mb={4}>
-						Dashboard currently under construction. Please go to the Gallery to
-						view the available datasets.
+						Get started with graphcap by following the steps below.
 					</Text>
+
 					<Card.Root bg={cardBgColor} mb={6} shadow="md">
 						<Card.Header pb={0}>
 							<Heading size="md" color={headingColor}>
@@ -41,23 +39,7 @@ function Index() {
 							</Heading>
 						</Card.Header>
 						<Card.Body>
-							<Text mb={2}>
-								Use the side panels to access various tools and settings:
-							</Text>
-							<List.Root gap={1} mb={2}>
-								<List.Item display="flex" alignItems="center">
-									<Icon as={MdCircle} color="blue.500" fontSize="xs" mr={2} />
-									Left panel: Feature flags and application settings
-								</List.Item>
-								<List.Item display="flex" alignItems="center">
-									<Icon as={MdCircle} color="blue.500" fontSize="xs" mr={2} />
-									Right panel: Server connections and file browser
-								</List.Item>
-							</List.Root>
-							<Text>
-								Click the toggle buttons on the edges of the screen to expand or
-								collapse the panels.
-							</Text>
+							<SetupGuide />
 						</Card.Body>
 					</Card.Root>
 				</VStack>
