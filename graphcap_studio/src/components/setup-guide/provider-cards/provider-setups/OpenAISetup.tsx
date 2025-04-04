@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Heading, Text, Code, Button, Flex, Link as ChakraLink, Image, Grid, GridItem } from "@chakra-ui/react";
+import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Grid, GridItem } from "@chakra-ui/react";
 import { SetupSection } from "./SetupSection";
 import { FiExternalLink } from "react-icons/fi";
 

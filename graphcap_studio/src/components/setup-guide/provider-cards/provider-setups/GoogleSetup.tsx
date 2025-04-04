@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Image, Grid, GridItem } from "@chakra-ui/react";
+import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Grid, GridItem } from "@chakra-ui/react";
 import { SetupSection } from "./SetupSection";
 import { FiExternalLink } from "react-icons/fi";
 
@@ -8,7 +8,6 @@ export function GoogleSetup() {
     <Box>
       <Heading size="md" mb={4} display="flex" alignItems="center">
         <Text mr={2}>Google AI Platform Setup</Text>
-        {/* We would normally add the Google logo here */}
       </Heading>
       
       <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
@@ -66,7 +65,6 @@ export function GoogleSetup() {
               </Text>
               <Text mb={3}>
                 c. Check that the Base URL is set to: <Code>https://generativelanguage.googleapis.com/v1beta
-
 </Code>
               </Text>
               <Text mb={3}>

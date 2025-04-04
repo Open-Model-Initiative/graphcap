@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import {
-  Box,
   Card,
   Heading,
   Text,
 } from "@chakra-ui/react";
 
 interface ProviderCardProps {
-  name: string;
-  description: string;
-  onClick: () => void;
+  readonly name: string;
+  readonly description: string;
+  readonly onClick: () => void;
 }
 
 export function ProviderCard({ name, description, onClick }: ProviderCardProps) {

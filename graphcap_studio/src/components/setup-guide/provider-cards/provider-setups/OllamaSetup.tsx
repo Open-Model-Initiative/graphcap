@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Image, Grid, GridItem } from "@chakra-ui/react";
+import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Grid, GridItem } from "@chakra-ui/react";
 import { SetupSection } from "./SetupSection";
-import { FiExternalLink, FiDownload } from "react-icons/fi";
+import { FiExternalLink} from "react-icons/fi";
 
 export function OllamaSetup() {
   return (

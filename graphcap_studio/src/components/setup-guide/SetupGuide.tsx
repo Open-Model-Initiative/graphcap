@@ -4,18 +4,17 @@ import { ServerTutorialDialog, ServerTutorialInfo } from "@/features/server-conn
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import {
   Box,
-  Button,
   Card,
   Flex,
   Grid,
   GridItem,
   Heading,
-  Icon,
   Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { FiCheck, FiServer, FiSettings, FiImage } from "react-icons/fi";
 import { ProviderTutorialDialog } from "./ProviderTutorialDialog";
+import { useNavigate } from "@tanstack/react-router";
 
 interface StepProps {
   readonly number: number;
@@ -94,8 +93,8 @@ const galleryInfo: ServerTutorialInfo = {
   description: "The Gallery contains various datasets and perspectives that showcase graphcap's capabilities.",
   setupSteps: [
     "Navigate to the Gallery page by clicking 'Gallery' in the main navigation.",
-    "Browse available datasets and click on one to view details.",
-    "Select a perspective to see how graphcap processes  the data.",
+    "Browse the 'os_img' dataset to see sample images.",
+    "Select a perspective to see how graphcap processes the data.",
   ],
   additionalInfo: "Perspectives are different ways of viewing and analyzing data. Each perspective highlights different aspects of the data and uses different AI capabilities."
 };
@@ -104,6 +103,7 @@ export function SetupGuide() {
   const { connections, hasWarnings } = useServerConnectionsContext();
   const [activeDialog, setActiveDialog] = useState<"server" | "provider" | "gallery" | null>(null);
   const [activeProvider, setActiveProvider] = useState<"google" | "openai" | "vllm" | "ollama" | null>(null);
+  const navigate = useNavigate();
 
   // Check if servers are connected
   const hasConnectedServers = connections.some(conn => conn.status === "connected");
@@ -117,8 +117,17 @@ export function SetupGuide() {
     setActiveProvider(null);
   };
 
-  const openProviderDialog = (provider: "google" | "openai" | "vllm" | "ollama") => {
+  const openProviderDialog = (provider: "google" | "openai" | "vllm" | "ollama" | null) => {
     setActiveProvider(provider);
+  };
+
+  const handleGalleryClick = () => {
+    // Update to route to the os_img dataset gallery
+    navigate({ 
+      to: "/gallery/$datasetId",
+      params: { datasetId: "os_img" }
+    });
+    setActiveDialog("gallery");
   };
 
   return (
@@ -146,7 +155,7 @@ export function SetupGuide() {
             number={3}
             title="Explore the Gallery"
             icon={<FiImage />}
-            onClick={() => setActiveDialog("gallery")}
+            onClick={handleGalleryClick}
           />
         </GridItem>
       </Grid>

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
 	Box,
-	Button,
 	Heading,
 	Icon,
 	Text,
@@ -50,7 +49,7 @@ export function ServerTutorialDialog({
 						{serverInfo.setupSteps.map((step, index) => (
 							<Box 
 								as="li" 
-								key={index} 
+								key={`step-${index}-${step.substring(0, 10).replace(/\s/g, '-')}`}
 								display="flex" 
 								gap={2}
 								mb={2}

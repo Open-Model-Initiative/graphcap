@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Image, Grid, GridItem } from "@chakra-ui/react";
+import { Box, Heading, Text, Code, Flex, Link as ChakraLink, Grid, GridItem } from "@chakra-ui/react";
 import { SetupSection } from "./SetupSection";
-import { FiExternalLink, FiServer } from "react-icons/fi";
+import { FiExternalLink } from "react-icons/fi";
 
 export function VllmSetup() {
   return (
     <Box>
       <Heading size="md" mb={4} display="flex" alignItems="center">
         <Text mr={2}>vLLM Setup</Text>
-        {/* We would normally add the vLLM logo here */}
       </Heading>
       
       <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>

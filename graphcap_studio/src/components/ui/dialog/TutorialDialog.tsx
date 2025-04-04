@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {
-  Box,
   Button,
   Dialog,
-  Flex,
   Portal,
 } from "@chakra-ui/react";
 import { useEffect, useRef, ReactNode } from "react";
@@ -83,9 +81,7 @@ export function TutorialDialog({
             </Dialog.Body>
 
             <Dialog.Footer>
-              {footerContent ? (
-                footerContent
-              ) : (
+              {footerContent || (
                 <Button colorScheme="blue" onClick={onClose}>
                   Close
                 </Button>
