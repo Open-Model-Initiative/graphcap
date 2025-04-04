@@ -55,6 +55,20 @@ tasks:
     cmds:
       - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
 
+  run:qwen32b:4x48gb:
+    aliases: [r32:48x4]
+    desc: Runs Qwen2.5-VL-32B-AWQ on four 48GB GPUs without model sharding for increased batch capacity.
+    deps: [_check-token]
+    env:
+      MODEL_ID: Qwen/Qwen2.5-VL-32B-Instruct-AWQ
+      MODEL_NAME_SUFFIX: qwen25vl32b
+      QUANTIZATION: awq_marlin
+      VRAM_TARGET: 48
+      TENSOR_PARALLEL: 4
+      GPU_MEM_UTIL: 0.90
+      MAX_SEQS: 512
+    cmds:
+      - exec bash {{.UNIFIED_SCRIPT}} {{.CLI_ARGS}}
 
   # --- Qwen2.5-VL-7B-AWQ --- # 
   run:qwen7b:48gb:
