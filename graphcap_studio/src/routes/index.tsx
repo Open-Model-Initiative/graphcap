@@ -29,7 +29,7 @@ function Index() {
 					</Heading>
 
 					<Text mb={4}>
-						Get started with GraphCap by following the steps below.
+						Get started with graphcap by following the steps below.
 					</Text>
 
 					<Card.Root bg={cardBgColor} mb={6} shadow="md">

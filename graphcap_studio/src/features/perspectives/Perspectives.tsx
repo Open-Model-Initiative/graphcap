@@ -2,7 +2,7 @@
 /**
  * Perspectives Component
  *
- * This component displays and manages image perspectives from GraphCap.
+ * This component displays and manages image perspectives from graphcap.
  */
 
 import type { Image } from "@/types";
@@ -23,7 +23,7 @@ interface PerspectivesProps {
 }
 
 /**
- * Component for displaying and managing image perspectives from GraphCap
+ * Component for displaying and managing image perspectives from graphcap
  */
 export function Perspectives({ image }: PerspectivesProps) {
 	// Local state for generation options

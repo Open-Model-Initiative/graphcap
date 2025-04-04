@@ -18,11 +18,11 @@ import { FiCheck, FiServer, FiSettings, FiImage } from "react-icons/fi";
 import { ProviderTutorialDialog } from "./ProviderTutorialDialog";
 
 interface StepProps {
-  number: number;
-  title: string;
-  icon: React.ReactNode;
-  isCompleted?: boolean;
-  onClick: () => void;
+  readonly number: number;
+  readonly title: string;
+  readonly icon: React.ReactNode;
+  readonly isCompleted?: boolean;
+  readonly onClick: () => void;
 }
 
 function SetupStep({ number, title, icon, isCompleted, onClick }: StepProps) {
@@ -78,7 +78,7 @@ function SetupStep({ number, title, icon, isCompleted, onClick }: StepProps) {
 // Server connection tutorial info
 const serverInfo: ServerTutorialInfo = {
   title: "Server Connections Setup",
-  description: "GraphCap Studio requires connections to several services to function properly. Each service handles different aspects of the application.",
+  description: "graphcap Studio requires connections to several services to function properly. Each service handles different aspects of the application.",
   setupSteps: [
     "Open the Server Connections panel by clicking the server icon on the right side of the screen.",
     "For each service (Media Server, Inference Bridge, and Data Service), enter the URL where the service is running.",
@@ -91,12 +91,11 @@ const serverInfo: ServerTutorialInfo = {
 // Gallery tutorial info
 const galleryInfo: ServerTutorialInfo = {
   title: "Exploring the Gallery",
-  description: "The Gallery contains various datasets and perspectives that showcase GraphCap's capabilities.",
+  description: "The Gallery contains various datasets and perspectives that showcase graphcap's capabilities.",
   setupSteps: [
     "Navigate to the Gallery page by clicking 'Gallery' in the main navigation.",
     "Browse available datasets and click on one to view details.",
-    "Select a perspective to see how GraphCap processes and visualizes the data.",
-    "Interact with the visualizations to explore the data further.",
+    "Select a perspective to see how graphcap processes  the data.",
   ],
   additionalInfo: "Perspectives are different ways of viewing and analyzing data. Each perspective highlights different aspects of the data and uses different AI capabilities."
 };

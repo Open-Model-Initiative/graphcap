@@ -1,6 +1,6 @@
 # Perspectives Feature
 
-This feature provides functionality for working with different perspectives on images in GraphCap Studio.
+This feature provides functionality for working with different perspectives on images in graphcap Studio.
 
 ## Context Architecture
 
@@ -154,7 +154,7 @@ function YourComponent() {
 
 ## Services
 
-The perspectives feature uses services to interact with the GraphCap server:
+The perspectives feature uses services to interact with the graphcap server:
 
 - **api.ts** - Provides direct API methods for interacting with the perspectives service
 - **utils.ts** - Utility functions for the perspectives service

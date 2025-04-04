@@ -14,7 +14,7 @@ export function SetupSection({ title, description, children }: SetupSectionProps
       <Heading as="h3" size="sm" mb={2}>
         {title}
       </Heading>
-      <Text mb={4} color="gray.600" fontSize="sm">
+      <Text mb={4} color="gray.600" fontSize="sm" _dark={{ color: "gray.300" }}>
         {description}
       </Text>
       <Box pl={2} borderLeftWidth="2px" borderLeftColor="blue.200">

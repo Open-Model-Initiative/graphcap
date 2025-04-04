@@ -50,7 +50,11 @@ export function ProviderTutorialDialog({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content maxW={activeProvider ? "800px" : "900px"} ref={dialogContentRef}>
+          <Dialog.Content 
+            maxW={activeProvider ? "1000px" : "900px"} 
+            ref={dialogContentRef}
+            maxH="90vh"
+          >
             <Dialog.Header>
               <Dialog.Title>
                 {activeProvider ? `${activeProvider.toUpperCase()} Provider Setup` : "Provider Setup"}
@@ -60,7 +64,25 @@ export function ProviderTutorialDialog({
               </Dialog.CloseTrigger>
             </Dialog.Header>
 
-            <Dialog.Body>
+            <Dialog.Body 
+              overflowY="auto" 
+              maxH="calc(90vh - 160px)" 
+              css={{
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0,0,0,0.2)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: 'rgba(0,0,0,0.3)',
+                },
+              }}
+            >
               {activeProvider ? (
                 <ProviderContent provider={activeProvider} />
               ) : (
@@ -68,7 +90,7 @@ export function ProviderTutorialDialog({
                   <Box display="flex" alignItems="flex-start" gap={3} mb={4}>
                     <Icon as={FiSettings} boxSize={6} color="blue.500" mt={1} />
                     <Text>
-                      GraphCap Studio supports multiple AI providers. Configure at least one provider to use inference capabilities.
+                      graphcap Studio supports multiple AI providers. Configure at least one provider to use inference capabilities.
                     </Text>
                   </Box>
 
