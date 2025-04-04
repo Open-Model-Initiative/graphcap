@@ -9,6 +9,7 @@ import { useColorModeValue } from "@/components/ui/theme/color-mode";
 import type { PerspectiveSchema } from "@/types/perspective-types";
 import { Badge, Box, Collapsible, Flex, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
+import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 import { SchemaFieldFactory } from "./schema-fields/SchemaFieldFactory";
 
 // --- Local Storage Utilities (Integrated here for demonstration) ---
@@ -81,6 +82,7 @@ export function CaptionTabContent({ schema, data }: CaptionTabContentProps) {
 						// fieldValue might be undefined if content is null
 						const fieldValue = content?.[fieldName]; 
 						const isInitiallyOpen = collapseStates[fieldName] ?? true;
+						const isOpen = collapseStates[fieldName] ?? isInitiallyOpen;
 						return (
 							<Collapsible.Root
 								key={fieldName}
@@ -104,13 +106,26 @@ export function CaptionTabContent({ schema, data }: CaptionTabContentProps) {
 										justifyContent="space-between"
 										alignItems="center"
 									>
-										<Box flexGrow={1} mr={2}>
-											<Text fontWeight="medium">{fieldName}</Text>
-											{field.description && (
-												<Text fontSize="xs" color={mutedTextColor} fontWeight="normal">
-													{field.description}
-												</Text>
+										<Box flexGrow={1} mr={2} display="flex" alignItems="center">
+											{isOpen ? (
+												<LuChevronDown 
+													aria-hidden="true"
+													style={{ marginRight: '8px', flexShrink: 0 }} 
+												/>
+											) : (
+												<LuChevronRight 
+													aria-hidden="true"
+													style={{ marginRight: '8px', flexShrink: 0 }} 
+												/>
 											)}
+											<Box>
+												<Text fontWeight="medium">{fieldName}</Text>
+												{field.description && (
+													<Text fontSize="xs" color={mutedTextColor} fontWeight="normal">
+														{field.description}
+													</Text>
+												)}
+											</Box>
 										</Box>
 										<Flex alignItems="center" gap={1} flexShrink={0}>
 											{field.type && (
