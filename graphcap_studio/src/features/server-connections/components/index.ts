@@ -5,3 +5,5 @@ export { ConnectionCard } from "./ConnectionCard";
 export { ConnectionUrlInput } from "./ConnectionUrlInput";
 export { ConnectionActionButton } from "./ConnectionActionButton";
 export { ConnectionStatusIndicator } from "./ConnectionStatusIndicator";
+export { ServerWarningIndicator } from "./ServerWarningIndicator";
+export { ServerTutorialDialog, type ServerTutorialInfo } from "./ServerTutorialDialog";

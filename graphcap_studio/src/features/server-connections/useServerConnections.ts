@@ -1,6 +1,6 @@
 import type { ServerConnection } from "@/types/server-connection-types";
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import {
 	CONNECTION_STATUS,
 	DEFAULT_URLS,
@@ -166,6 +166,11 @@ export function useServerConnections() {
 		connectionsRef.current = connections;
 	}, [connections]);
 
+	// Compute whether any server has a warning (error) status
+	const hasWarnings = useMemo(() => {
+		return connections.some(conn => conn.status === CONNECTION_STATUS.ERROR);
+	}, [connections]);
+
 	// Save connections to local storage whenever they change
 	useEffect(() => {
 		saveConnectionsToStorage(connections);
@@ -299,5 +304,6 @@ export function useServerConnections() {
 		handleUrlChange,
 		autoConnect,
 		isAutoConnecting,
+		hasWarnings,
 	};
 }
