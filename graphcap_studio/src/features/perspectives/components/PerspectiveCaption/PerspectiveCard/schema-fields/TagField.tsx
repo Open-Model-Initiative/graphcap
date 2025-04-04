@@ -5,7 +5,7 @@
  * Component for rendering tag fields.
  */
 
-import { Flex, Tag } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import React from "react";
 import { BaseField } from "./BaseField";
 import { TagFieldProps } from "./types";
@@ -23,14 +23,17 @@ export const TagField: React.FC<TagFieldProps> = ({
 		<BaseField field={field} value={value} className={className}>
 			<Flex flexWrap="wrap" gap="2">
 				{value.map((tag, index) => (
-					<Tag.Root
+					<Box
 						key={`${tag}-${index}`}
-						size="sm"
-						variant="subtle"
-						colorPalette="blue"
+						bg="gray.800"
+						borderRadius="lg"
+						p="1"
+						borderWidth="1px"
+						borderColor="gray.700"
+						
 					>
-						<Tag.Label>{tag}</Tag.Label>
-					</Tag.Root>
+						<Text fontSize="xs">{tag}</Text>
+					</Box>
 				))}
 			</Flex>
 		</BaseField>
