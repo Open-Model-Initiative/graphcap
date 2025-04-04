@@ -109,8 +109,7 @@ ollama serve`}
                 For example, if you pulled models using:
               </Text>
               <Code p={2} display="block" borderRadius="md" mb={3}>
-{`ollama pull ollama run gemma3:27b-it-q8_0
-ollama pull mistral`}
+{`ollama pull ollama run gemma3:27b-it-q8_0`}
               </Code>
               <Text mb={3}>
                 Then add these model names to graphcap:
