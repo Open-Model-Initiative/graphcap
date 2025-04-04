@@ -36,8 +36,8 @@ export function OllamaSetup() {
               </Text>
               
               <Code p={3} display="block" borderRadius="md" mb={3} whiteSpace="pre">
-{`# Pull a model (example: llava, a multimodal model)
-ollama pull llava
+{`# Pull a model (example: gemma3:27b-it-q8_0, a multimodal model)
+ollama pull gemma3:27b-it-q8_0
 
 # Run the Ollama server (should run automatically after installation)
 ollama serve`}
@@ -49,9 +49,9 @@ ollama serve`}
               
               <Text fontWeight="medium" mb={2}>Recommended Models:</Text>
               <Flex direction="column" mb={3} pl={4}>
-                <Text>• llava - Multimodal vision-language model</Text>
-                <Text>• gemma - Google's lightweight model</Text>
-                <Text>• mistral - High-quality open model with good performance</Text>
+                <Text>• gemma3:27b-it-q8_0</Text>
+                <Text>• gemma3:27b-it</Text>
+                <Text>• gemma3:12b-it-q8_0</Text>
               </Flex>
               
               <Box p={3} bg="blue.50" color="blue.800" borderRadius="md" mb={4} _dark={{ bg: "blue.900", color: "blue.100" }}>
@@ -109,15 +109,14 @@ ollama serve`}
                 For example, if you pulled models using:
               </Text>
               <Code p={2} display="block" borderRadius="md" mb={3}>
-{`ollama pull llava
+{`ollama pull ollama run gemma3:27b-it-q8_0
 ollama pull mistral`}
               </Code>
               <Text mb={3}>
                 Then add these model names to graphcap:
               </Text>
               <Flex direction="column" mb={3} pl={4}>
-                <Text>• llava</Text>
-                <Text>• mistral</Text>
+                <Text>• gemma3:27b-it-q8_0</Text>
               </Flex>
 
               <Text mb={3} fontWeight="medium">
