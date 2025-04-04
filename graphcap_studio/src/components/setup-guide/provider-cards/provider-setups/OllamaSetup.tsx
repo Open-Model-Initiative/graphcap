@@ -93,7 +93,10 @@ ollama serve`}
                 b. Navigate to the "Connection" tab
               </Text>
               <Text mb={3}>
-                c. Check that the Base URL is set to: <Code>http://localhost:11434</Code> (or your Ollama server's address)
+                c. Check that the Base URL is set to: <Code>http://localhost:11434</Code>, <Code>http://host.docker.internal:11434</Code>, or your Ollama server's address
+              </Text>
+              <Text mb={3}>
+                If you have issues with localhost, try using host.docker.internal.
               </Text>
               <Text mb={3}>
                 d. Click "Save" 
