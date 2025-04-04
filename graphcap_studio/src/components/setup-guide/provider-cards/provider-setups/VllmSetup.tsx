@@ -18,6 +18,20 @@ export function VllmSetup() {
             description="Setup and configure vLLM for high-performance self-hosted inference"
           >
             <Box mb={3}>
+              <Box p={3} bg="yellow.50" color="yellow.800" borderRadius="md" mb={4} _dark={{ bg: "yellow.900", color: "yellow.100" }}>
+                <Flex>
+                  <Box mr={2}>ℹ️</Box>
+                  <Text>
+                    You can use an existing vLLM instance instead of setting up a new one. 
+                    Ensure it's running the v1 engine with at least 16k max tokens (see <Code>MAX_MODEL_LEN</Code> parameter).
+                    The default port is 12434 and the recommended model name is "vision-worker".
+                    <ChakraLink href="https://open-model-initiative.github.io/graphcap/getting_started/providers/vllm.html" color="blue.500" target="_blank" rel="noopener noreferrer" ml={1}>
+                      See documentation <FiExternalLink style={{ display: 'inline' }} />
+                    </ChakraLink>
+                  </Text>
+                </Flex>
+              </Box>
+              
               <Text mb={3}>
                 vLLM is a high-performance inference engine for running LLMs locally. 
                 graphcap provides a streamlined setup using Docker containers managed by Taskfile.
