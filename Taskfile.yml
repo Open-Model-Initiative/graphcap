@@ -25,7 +25,7 @@ tasks:
   setup:
     desc: Setup the project 
     cmds:
-      - echo "TODO Update to current setup workflow"
+      - cp ./workspace/config/.env.template ./workspace/config/.env
 
 
 
