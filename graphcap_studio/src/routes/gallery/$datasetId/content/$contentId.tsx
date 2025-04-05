@@ -36,10 +36,13 @@ function SelectedContentComponent() {
 		datasetError,
 	} = useDatasetContext();
 	const navigate = useNavigate();
-
+	
 	// Sync the selected image with the route parameters
 	useEffect(() => {
+		console.debug("[ContentRoute] Image sync effect running");
+		
 		if (!selectedDataset || !contentId) {
+			console.debug("[ContentRoute] No dataset or contentId, resetting selectedImage");
 			if (selectedImage !== null) {
 				setSelectedImage(null);
 			}
@@ -51,19 +54,24 @@ function SelectedContentComponent() {
 		);
 
 		if (imageToSelect) {
+			console.debug(`[ContentRoute] Found image to select: ${imageToSelect.name}`);
 			if (selectedImage?.name !== imageToSelect.name) {
+				console.debug(`[ContentRoute] Setting selected image to: ${imageToSelect.name}`);
 				setSelectedImage(imageToSelect);
 			}
 		} else if (selectedDataset.images.length > 0) {
 			// Invalid contentId - redirect to first image
+			const firstImage = selectedDataset.images[0].name;
+			console.debug(`[ContentRoute] Invalid contentId, redirecting to first image: ${firstImage}`);
 			navigate({
 				to: "/gallery/$datasetId/content/$contentId",
-				params: { datasetId, contentId: selectedDataset.images[0].name },
+				params: { datasetId, contentId: firstImage },
 				search: { view },
 				replace: true,
 			});
 		} else {
 			// Dataset is empty
+			console.debug("[ContentRoute] Dataset is empty, resetting selectedImage");
 			setSelectedImage(null);
 		}
 	}, [
@@ -77,6 +85,7 @@ function SelectedContentComponent() {
 	]);
 
 	if (isLoadingDataset) {
+		console.debug("[ContentRoute] Rendering loading state");
 		return (
 			<div className="flex items-center justify-center h-full">
 				<div className="animate-pulse text-gray-400">Loading dataset...</div>
@@ -85,6 +94,7 @@ function SelectedContentComponent() {
 	}
 
 	if (datasetError) {
+		console.debug("[ContentRoute] Rendering error state: ${datasetError.message}");
 		return (
 			<div className="flex items-center justify-center h-full">
 				<div className="text-red-400 bg-red-950/50 p-4 rounded-lg">
@@ -96,6 +106,7 @@ function SelectedContentComponent() {
 	}
 
 	if (!selectedDataset) {
+		console.debug("[ContentRoute] Rendering 'Dataset not found' state");
 		return (
 			<div className="flex items-center justify-center h-full">
 				<div className="text-yellow-400 bg-yellow-950/50 p-4 rounded-lg">
@@ -105,6 +116,7 @@ function SelectedContentComponent() {
 		);
 	}
 
+	console.debug("[ContentRoute] Rendering normal gallery state");
 	return (
 		<GalleryLayout
 			viewer={

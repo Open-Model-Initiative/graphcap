@@ -76,7 +76,7 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 	// State for the resolved selected dataset object
 	const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
 	// State specifically for the process of finding the dataset after the list is loaded
-	const [isResolving, setIsResolving] = useState<boolean>(false); // Start as false, trigger on targetId change
+	const [isResolving, setIsResolving] = useState<boolean>(false);
 	// State for errors specific to finding the dataset (e.g., not found)
 	const [resolveError, setResolveError] = useState<Error | null>(null);
 
@@ -91,14 +91,33 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 
 	// Define the setter function that consumers will call
 	const selectDatasetById = useCallback((id: string | undefined) => {
+		console.debug(`[DatasetContext] selectDatasetById called with ID: ${id}`);
+		const currentTarget = targetDatasetId;
+		
+		// Only update if the ID is different and not undefined when we already have a dataset
+		if (currentTarget === id) {
+			console.debug(`[DatasetContext] ID ${id} is already the target, no change needed`);
+			return; // Skip state update if it's the same ID
+		}
+		
+		// Skip setting to undefined if we have a real dataset ID already
+		if (id === undefined && currentTarget) {
+			console.debug(`[DatasetContext] Skipping update from ${currentTarget} to undefined`);
+			return;
+		}
+		
+		console.debug(`[DatasetContext] Target dataset ID updated from ${currentTarget} to: ${id}`);
 		setTargetDatasetId(id); // Update the target ID state
 		setSelectedImage(null); // Also reset selected image when dataset changes
 		setSelectedSubfolder(null); // Reset subfolder when dataset changes
-	}, []);
+	}, [targetDatasetId]);
 
 	// useEffect to find the selected dataset when the TARGET ID or list changes
 	useEffect(() => {
+		console.debug("[DatasetContext] Dataset resolution effect running");
+		
 		if (!targetDatasetId) {
+			console.debug("[DatasetContext] No target ID, resetting selected dataset to null");
 			setSelectedDataset(null);
 			setIsResolving(false);
 			setResolveError(null);
@@ -106,27 +125,32 @@ export function DatasetProvider({ children }: DatasetProviderProps) {
 		}
 
 		if (isLoadingList || listError) {
+			console.debug("[DatasetContext] Loading or error state, marking as resolving");
 			setIsResolving(true);
 			setSelectedDataset(null);
 			setResolveError(null);
 			return;
 		}
 
+		console.debug(`[DatasetContext] Starting dataset resolution for ID: ${targetDatasetId}`);
 		setIsResolving(true);
 		const foundDataset = allDatasets.find((ds) => ds.name === targetDatasetId);
 
 		if (foundDataset) {
+			console.debug(`[DatasetContext] Found dataset: ${foundDataset.name}`);
 			setSelectedDataset(foundDataset);
 			setResolveError(null);
 		} else {
+			console.debug(`[DatasetContext] Dataset not found for ID: ${targetDatasetId}`);
 			setSelectedDataset(null);
 			if (!isLoadingList) {
-				setResolveError(new Error(`Dataset "${targetDatasetId}" not found.`));
+				const errorMsg = `Dataset "${targetDatasetId}" not found.`;
+				console.debug(`[DatasetContext] Setting error: ${errorMsg}`);
+				setResolveError(new Error(errorMsg));
 			}
 		}
 		setIsResolving(false);
 	}, [targetDatasetId, allDatasets, isLoadingList, listError]);
-
 
 	const isLoadingDataset = isLoadingList || isResolving;
 	const datasetError = listError instanceof Error ? listError : resolveError;
