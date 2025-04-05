@@ -88,6 +88,14 @@ export function useListDatasets(mediaServerUrl: string) {
 		queryKey: queryKeys.datasetImages(mediaServerUrl),
 		// Pass the URL to the query function
 		queryFn: () => fetchDatasetList(mediaServerUrl),
+		// Add caching configuration to prevent hammering the server
+		staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+		gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+		// Disable automatic refetching on window focus to reduce API calls
+		refetchOnWindowFocus: false,
+		// Retry configuration
+		retry: 2,
+		retryDelay: 1000, // Wait 1 second between retries
 		meta: {
 			errorMessage: "Failed to load datasets",
 		},
@@ -141,7 +149,6 @@ export function useCreateDataset(mediaServerUrl: string) {
 			}
 		},
 		onSuccess: () => {
-
 			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] }); 
 		},
 		meta: {
@@ -254,6 +261,8 @@ export async function prefetchDatasets(mediaServerUrl: string): Promise<void> {
 		queryKey: queryKeys.datasetImages(mediaServerUrl),
 		// Pass the URL to the query function
 		queryFn: () => fetchDatasetList(mediaServerUrl),
+		// Add caching configuration to prevent hammering the server
+		staleTime: 30 * 1000, // Consider data fresh for 30 seconds
 	});
 }
 
