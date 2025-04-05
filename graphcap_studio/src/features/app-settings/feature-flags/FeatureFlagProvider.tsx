@@ -1,5 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
-import { ReactNode, createContext, useContext, useMemo, useState } from "react";
+import {
+	disableDebugMode,
+	enableDebugMode,
+	getDebugModeStatus,
+} from "@/utils/logger";
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 
 /**
  * Interface defining all available feature flags in the application
@@ -8,6 +21,7 @@ interface FeatureFlags {
 	enableReactQueryDevTools: boolean;
 	enableRouterDevTools: boolean;
 	enableDebugRoute: boolean;
+	enableDebugMode: boolean;
 }
 
 /**
@@ -17,6 +31,7 @@ const defaultFeatureFlags: FeatureFlags = {
 	enableReactQueryDevTools: false,
 	enableRouterDevTools: false,
 	enableDebugRoute: false,
+	enableDebugMode: false,
 };
 
 /**
@@ -48,7 +63,19 @@ const FeatureFlagContext = createContext<FeatureFlagContextType>({
 function loadFeatureFlagsFromStorage(): Partial<FeatureFlags> {
 	try {
 		const savedFlags = localStorage.getItem(FEATURE_FLAGS_STORAGE_KEY);
-		return savedFlags ? JSON.parse(savedFlags) : {};
+		const parsedFlags = savedFlags ? JSON.parse(savedFlags) : {};
+
+		// Special case for debug mode - sync with its own storage
+		const debugModeStatus = getDebugModeStatus();
+		if (
+			parsedFlags.enableDebugMode !== undefined &&
+			parsedFlags.enableDebugMode !== debugModeStatus
+		) {
+			// If there's a mismatch, the logger status takes precedence
+			parsedFlags.enableDebugMode = debugModeStatus;
+		}
+
+		return parsedFlags;
 	} catch (error) {
 		console.error("Failed to load feature flags from localStorage:", error);
 		return {};
@@ -99,12 +126,21 @@ export function FeatureFlagProvider({
 		};
 	});
 
+	// Sync debug mode feature flag with logger settings
+	useEffect(() => {
+		if (featureFlags.enableDebugMode) {
+			enableDebugMode();
+		} else {
+			disableDebugMode();
+		}
+	}, [featureFlags.enableDebugMode]);
+
 	/**
 	 * Toggle a feature flag's value
 	 *
 	 * @param flagName - The name of the flag to toggle
 	 */
-	const toggleFeatureFlag = (flagName: keyof FeatureFlags) => {
+	const toggleFeatureFlag = useCallback((flagName: keyof FeatureFlags) => {
 		setFeatureFlags((prevFlags) => {
 			const newFlags = {
 				...prevFlags,
@@ -116,7 +152,7 @@ export function FeatureFlagProvider({
 
 			return newFlags;
 		});
-	};
+	}, []);
 
 	// Wrap the value in useMemo
 	const value = useMemo(
@@ -124,7 +160,7 @@ export function FeatureFlagProvider({
 			featureFlags,
 			toggleFeatureFlag,
 		}),
-		[featureFlags],
+		[featureFlags, toggleFeatureFlag],
 	);
 
 	return (

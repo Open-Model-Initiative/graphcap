@@ -3,6 +3,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { Box, Link as ChakraLink, Flex, Text } from "@chakra-ui/react";
 import { LuBookOpen, LuGithub } from "react-icons/lu";
 import { version } from "../../../package.json";
+import { FooterModelSelector } from "./FooterModelSelector";
 
 export function Footer() {
 	const bgColor = useColorModeValue("white", "gray.900");
@@ -13,7 +14,7 @@ export function Footer() {
 	return (
 		<Box
 			as="footer"
-			h="8"
+			h="10"
 			bg={bgColor}
 			borderTop="1px"
 			borderColor={borderColor}
@@ -48,10 +49,8 @@ export function Footer() {
 						</ChakraLink>
 					</Tooltip>
 				</Flex>
-				{/* Right side area reserved for future functionality */}
-				<Box>
-					{/* This space intentionally left empty for future components */}
-				</Box>
+				{/* Right side area with model selector */}
+				<FooterModelSelector />
 			</Flex>
 		</Box>
 	);

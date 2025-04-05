@@ -10,7 +10,11 @@ import { useServerConnectionsContext } from "@/context/ServerConnectionsContext"
 import { useProviders } from "@/features/inference/services/providers";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
-import { useMemo } from "react";
+import { debugLog } from "@/utils/logger";
+import { useEffect, useMemo } from "react";
+
+// Component name for logging
+const COMPONENT_NAME = "useProviderModelOptions";
 
 /**
  * Hook for accessing provider and model selection options
@@ -26,42 +30,80 @@ export function useProviderModelOptions(providerName?: string) {
   );
   const isConnected = dataServiceConnection?.status === "connected";
   
+  debugLog(COMPONENT_NAME, "Init:", { providerName, isConnected });
+  
   // Use Suspense query with select to transform data
   const providersResult = useProviders();
   
+  // Debug logging for providers - simplified
+  useEffect(() => {
+    const hasError = providersResult.error !== null;
+    const providerCount = providersResult.data?.length || 0;
+    
+    debugLog(COMPONENT_NAME, "Providers update:", {
+      count: providerCount,
+      status: providersResult.status,
+      fetchStatus: providersResult.fetchStatus,
+      hasError
+    });
+  }, [providersResult.data, providersResult.error, providersResult.status, providersResult.fetchStatus]);
+  
   const selectedProvider = useMemo(() => {
-    if (!providerName || !providersResult.data?.length) return null;
+    if (!providerName || !providersResult.data?.length) {
+      return null;
+    }
     
     // Find provider by name
-    return providersResult.data.find((p: Provider) => p.name === providerName) || null;
+    const provider = providersResult.data.find((p: Provider) => p.name === providerName) || null;
+    if (provider) {
+      debugLog(COMPONENT_NAME, "Provider selected:", { name: provider.name });
+    }
+    return provider;
   }, [providersResult.data, providerName]);
   
   // Process models data directly from the provider
   const models = useMemo<ProviderModelInfo[]>(() => {
-    if (!selectedProvider?.models?.length) return [];
+    if (!selectedProvider?.models?.length) {
+      return [];
+    }
     
     // Map provider models to ProviderModelInfo format
-    return selectedProvider.models.map((model: { id: string; name: string }) => ({
+    const mappedModels = selectedProvider.models.map((model: { id: string; name: string }) => ({
       id: model.id,
       name: model.name,
       is_default: model.name === selectedProvider.defaultModel
     }));
+    
+    debugLog(COMPONENT_NAME, "Models:", { count: mappedModels.length });
+    return mappedModels;
   }, [selectedProvider]);
   
   // Check for default model
   const defaultModel = useMemo(() => {
-    return models.find(model => model.is_default === true) || null;
+    const defModel = models.find(model => model.is_default === true) || null;
+    if (defModel) {
+      debugLog(COMPONENT_NAME, "Default model:", defModel.name);
+    }
+    return defModel;
   }, [models]);
   
-  return {
+  // Check if data is loading
+  const isLoading = providersResult.fetchStatus === 'fetching';
+  
+  const result = {
     // Providers data
     providers: providersResult.data || [],
     selectedProvider,
+    isLoadingProviders: isLoading,
     
     // Models data
     models,
     defaultModel,
+    isLoading,
     
-    hasError: providersResult.error !== null
+    hasError: providersResult.error !== null,
+    providersError: providersResult.error
   };
+  
+  return result;
 } 

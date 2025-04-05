@@ -8,4 +8,9 @@
 export * from "./fields";
 export * from "./GenerationOptionsPanel";
 export * from "./ProviderSelector";
+export {
+    CompactModelSelector,
+    CompactProviderSelector,
+    useModelProviderSelectors
+} from './selectors/ModelProviderSelectors';
 

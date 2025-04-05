@@ -12,6 +12,7 @@ import {
 	GenerationOptionsSchema,
 } from "@/types/generation-option-types";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
+import { debugLog } from "@/utils/logger";
 import type React from "react";
 import {
 	createContext,
@@ -23,6 +24,9 @@ import {
 } from "react";
 import { useProviderModelOptions } from "../../hooks/useProviderModelOptions";
 import { usePersistGenerationOptions } from "../persist-generation-options";
+
+// Component name for logging
+const COMPONENT_NAME = "GenerationOptionsContext";
 
 // Define the context interface
 interface GenerationOptionsContextValue {
@@ -85,15 +89,21 @@ export function GenerationOptionsProvider({
 }: Readonly<GenerationOptionsProviderProps>) {
 	const { loadPersistedOptions, saveOptions } = usePersistGenerationOptions();
 
+	debugLog(COMPONENT_NAME, "Provider initializing with options:", initialOptions);
+
 	// Parse initial options through the schema to ensure valid defaults
 	const defaultOptions = useMemo(() => {
 		// Merge defaults with persisted options and initialOptions (with initialOptions taking precedence)
 		const persistedOptions = loadPersistedOptions();
+		debugLog(COMPONENT_NAME, "Persisted options:", persistedOptions);
+		
 		const mergedOptions = {
 			...DEFAULT_OPTIONS,
 			...persistedOptions,
 			...initialOptions,
 		};
+		debugLog(COMPONENT_NAME, "Merged options:", mergedOptions);
+		
 		return GenerationOptionsSchema.parse(mergedOptions);
 	}, [initialOptions, loadPersistedOptions]);
 
@@ -101,6 +111,8 @@ export function GenerationOptionsProvider({
 	const [options, setOptions] = useState<GenerationOptions>(defaultOptions);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(initialGenerating);
+
+	debugLog(COMPONENT_NAME, "Initial options state:", options);
 
 	// Provider and model data
 	const {
@@ -114,8 +126,17 @@ export function GenerationOptionsProvider({
 		hasError
 	} = useProviderModelOptions(options.provider_name);
 
+	debugLog(COMPONENT_NAME, "Provider model options:", {
+		providerCount: providers.length,
+		selectedProvider,
+		isLoadingProviders,
+		modelCount: models.length,
+		defaultModel
+	});
+
 	// Save options to localStorage when they change
 	useEffect(() => {
+		debugLog(COMPONENT_NAME, "Options changed, saving:", options);
 		saveOptions(options);
 	}, [options, saveOptions]);
 
@@ -126,8 +147,13 @@ export function GenerationOptionsProvider({
 
 	// Initialize provider if available and not already set
 	useEffect(() => {
+		debugLog(COMPONENT_NAME, "Checking for default provider. Providers:", providers.length, 
+			"Current provider:", options.provider_name, 
+			"Loading:", isLoadingProviders);
+		
 		if (providers.length > 0 && !options.provider_name && !isLoadingProviders) {
 			const firstProvider = providers[0];
+			debugLog(COMPONENT_NAME, "Setting default provider:", firstProvider.name);
 			updateOption("provider_name", firstProvider.name);
 		}
 	}, [providers, options.provider_name, isLoadingProviders]);
@@ -135,9 +161,14 @@ export function GenerationOptionsProvider({
 
 	useEffect(() => {
 		// Only set model if we have a provider and no model is selected yet
+		debugLog(COMPONENT_NAME, "Checking for default model. Provider:", options.provider_name, 
+			"Current model:", options.model_name, 
+			"Models:", models.length);
+		
 		if (options.provider_name && !options.model_name && models.length > 0) {
 			// Try to use default model first, otherwise use first available model
 			const modelToUse = defaultModel || models[0];
+			debugLog(COMPONENT_NAME, "Setting default model:", modelToUse.name);
 			updateOption("model_name", modelToUse.name);
 		}
 	}, [options.provider_name, options.model_name, models, defaultModel]);
@@ -148,6 +179,7 @@ export function GenerationOptionsProvider({
 			key: K,
 			value: GenerationOptions[K],
 		) => {
+			debugLog(COMPONENT_NAME, "Updating option:", key, value);
 			setOptions((prev) => {
 				const newOptions = { ...prev, [key]: value };
 				// Notify parent if callback is provided
@@ -162,6 +194,7 @@ export function GenerationOptionsProvider({
 
 	// Reset options to defaults
 	const resetOptions = useCallback(() => {
+		debugLog(COMPONENT_NAME, "Resetting options to defaults");
 		setOptions(defaultOptions);
 		if (onOptionsChange) {
 			onOptionsChange(defaultOptions);
@@ -171,6 +204,7 @@ export function GenerationOptionsProvider({
 	// Set multiple options at once
 	const mergeOptions = useCallback(
 		(newOptions: Partial<GenerationOptions>) => {
+			debugLog(COMPONENT_NAME, "Merging options:", newOptions);
 			setOptions((prev) => {
 				const updatedOptions = { ...prev, ...newOptions };
 				if (onOptionsChange) {
@@ -184,7 +218,9 @@ export function GenerationOptionsProvider({
 
 	// Provider selection
 	const selectProvider = useCallback((providerName: string) => {
+		debugLog(COMPONENT_NAME, "Provider selection requested:", providerName);
 		if (providerName !== options.provider_name) {
+			debugLog(COMPONENT_NAME, "Changing provider from", options.provider_name, "to", providerName);
 			updateOption("provider_name", providerName);
 			updateOption("model_name", "");
 		}
@@ -192,6 +228,7 @@ export function GenerationOptionsProvider({
 
 	// Model selection
 	const selectModel = useCallback((modelName: string) => {
+		debugLog(COMPONENT_NAME, "Model selection requested:", modelName);
 		updateOption("model_name", modelName);
 	}, [updateOption]);
 
@@ -260,6 +297,14 @@ export function GenerationOptionsProvider({
 		]
 	);
 
+	debugLog(COMPONENT_NAME, "Final context value:", {
+		providerItems: value.providers.items.length,
+		modelItems: value.models.items.length,
+		selectedProvider: value.providers.selected?.name,
+		providerName: value.options.provider_name,
+		modelName: value.options.model_name
+	});
+
 	return (
 		<GenerationOptionsContext.Provider value={value}>
 			{children}
@@ -279,8 +324,18 @@ export function useGenerationOptions() {
 			"useGenerationOptions must be used within a GenerationOptionsProvider",
 		);
 	}
+	
+	// Debug logging
+	debugLog("useGenerationOptions", "Context accessed:", {
+		providerCount: context.providers.items.length,
+		modelCount: context.models.items.length,
+		providerName: context.options.provider_name,
+		modelName: context.options.model_name
+	});
+	
 	return context;
 }
 
 // Export a named export for the context
 export { GenerationOptionsContext };
+
