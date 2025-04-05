@@ -48,16 +48,18 @@ export function PerspectiveCardTabbed({
 
 	// Extract and format the timestamp safely
 	const timestamp = (() => {
-		if (!data || !data.metadata) return '';
-		
-		const metadata = data.metadata as PerspectiveMetadata;
-		const dateStr = metadata.generatedAt ?? metadata.timestamp;
-		
-		if (!dateStr) return '';
-		
+		const metadata = data?.metadata as PerspectiveMetadata | undefined;
+		const dateStr = metadata?.generatedAt ?? metadata?.timestamp;
+
+		if (!dateStr) {
+			return '';
+		}
+
 		try {
+			// dateStr is guaranteed to be a string here
 			return new Date(dateStr).toLocaleString();
 		} catch (e) {
+			console.error("Error formatting perspective timestamp:", e); // Log error
 			return '';
 		}
 	})();

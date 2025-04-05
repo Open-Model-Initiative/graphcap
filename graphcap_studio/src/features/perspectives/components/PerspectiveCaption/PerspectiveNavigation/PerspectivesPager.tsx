@@ -25,7 +25,6 @@ export function PerspectivesPager() {
 		schemas,
 		isGenerating,
 		isPerspectiveGenerated,
-		isPerspectiveGenerating,
 		getPerspectiveData,
 		isPerspectiveVisible,
 	} = usePerspectivesData();

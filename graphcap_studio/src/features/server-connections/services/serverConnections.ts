@@ -6,10 +6,8 @@
  * such as the Media Server and Inference Bridge.
  */
 
-import type { ServerConnection } from "@/types/server-connection-types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CONNECTION_STATUS, SERVER_IDS } from "../constants";
-import { createDataServiceClient, createInferenceBridgeClient } from "./apiClients";
+import { useQuery } from "@tanstack/react-query";
+import { SERVER_IDS } from "../constants";
 
 /**
  * Interface for health check response
@@ -41,7 +39,7 @@ export const healthQueryKeys = {
  */
 function shouldThrottleRequest(key: string): boolean {
 	const now = Date.now();
-	const lastCheck = lastHealthCheckTime.get(key) || 0;
+	const lastCheck = lastHealthCheckTime.get(key) ?? 0;
 	
 	// Check if we've checked recently
 	if (now - lastCheck < THROTTLE_DURATION) {
@@ -315,8 +313,6 @@ export function useDataServiceHealth(url: string) {
  * @returns Query result with the server health status
  */
 export function useServerHealthById(id: string, url: string) {
-	const queryClient = useQueryClient();
-	
 	return useQuery({
 		queryKey: healthQueryKeys.serverById(id, url),
 		queryFn: () => checkServerHealthById(id, url),
