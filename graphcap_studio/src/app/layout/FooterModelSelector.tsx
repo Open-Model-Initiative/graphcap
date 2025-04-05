@@ -23,16 +23,43 @@ export function FooterModelSelector() {
 	// State to track refresh operation
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	
-	// Handle refresh button click
+	// Handle refresh button click with retry logic
 	const handleRefreshProviders = async () => {
 		setIsRefreshing(true);
-		try {
-			await queryClient.invalidateQueries({ queryKey: queryKeys.providers });
-			// Wait for refetch to complete
-			await queryClient.refetchQueries({ queryKey: queryKeys.providers });
-		} finally {
-			setIsRefreshing(false);
+		
+		const MAX_RETRIES = 3;
+		const RETRY_DELAY = 500; // ms
+		
+		let success = false;
+		let retryCount = 0;
+		
+		while (!success && retryCount < MAX_RETRIES) {
+			try {
+				await queryClient.invalidateQueries({ queryKey: queryKeys.providers });
+				// Wait for refetch to complete
+				await queryClient.refetchQueries({ queryKey: queryKeys.providers });
+				
+				// Check if we have providers data
+				const providersData = queryClient.getQueryData(queryKeys.providers);
+				if (providersData) {
+					success = true;
+				} else {
+					retryCount++;
+					if (retryCount < MAX_RETRIES) {
+						// Wait before retrying
+						await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+					}
+				}
+			} catch (error) {
+				retryCount++;
+				if (retryCount < MAX_RETRIES) {
+					// Wait before retrying
+					await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+				}
+			}
 		}
+		
+		setIsRefreshing(false);
 	};
 	
 	// Color values for theming

@@ -6,6 +6,9 @@
  * including provider and model selection.
  */
 
+import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
+import { queryKeys } from "@/features/inference/services/providers";
+import { SERVER_IDS } from "@/features/server-connections/constants";
 import {
 	DEFAULT_OPTIONS,
 	type GenerationOptions,
@@ -13,6 +16,7 @@ import {
 } from "@/types/generation-option-types";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
 import { debugLog } from "@/utils/logger";
+import { useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import {
 	createContext,
@@ -88,6 +92,8 @@ export function GenerationOptionsProvider({
 	initialGenerating = false,
 }: Readonly<GenerationOptionsProviderProps>) {
 	const { loadPersistedOptions, saveOptions } = usePersistGenerationOptions();
+	const queryClient = useQueryClient();
+	const { connections } = useServerConnectionsContext();
 
 	debugLog(COMPONENT_NAME, "Provider initializing with options:", initialOptions);
 
@@ -111,8 +117,15 @@ export function GenerationOptionsProvider({
 	const [options, setOptions] = useState<GenerationOptions>(defaultOptions);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(initialGenerating);
+	const [providerInitAttempts, setProviderInitAttempts] = useState(0);
 
 	debugLog(COMPONENT_NAME, "Initial options state:", options);
+
+	// Monitor connection status directly
+	const dataServiceConnection = connections.find(
+		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
+	);
+	const isConnected = dataServiceConnection?.status === "connected";
 
 	// Provider and model data
 	const {
@@ -145,19 +158,72 @@ export function GenerationOptionsProvider({
 		setIsGenerating(initialGenerating);
 	}, [initialGenerating]);
 
-	// Initialize provider if available and not already set
+	// Watch for connection changes to reset provider init attempts
 	useEffect(() => {
-		debugLog(COMPONENT_NAME, "Checking for default provider. Providers:", providers.length, 
-			"Current provider:", options.provider_name, 
-			"Loading:", isLoadingProviders);
-		
-		if (providers.length > 0 && !options.provider_name && !isLoadingProviders) {
-			const firstProvider = providers[0];
-			debugLog(COMPONENT_NAME, "Setting default provider:", firstProvider.name);
-			updateOption("provider_name", firstProvider.name);
+		if (isConnected) {
+			debugLog(COMPONENT_NAME, "Data service connection established");
+			// Reset init attempts when connection is established so we can retry initialization
+			setProviderInitAttempts(0);
 		}
-	}, [providers, options.provider_name, isLoadingProviders]);
+	}, [isConnected]);
 
+	// Initialize provider if available and not already set, with retry logic
+	useEffect(() => {
+		const MAX_RETRY_ATTEMPTS = 3;
+		const RETRY_DELAY = 500; // ms
+
+		// Skip initialization if not connected
+		if (!isConnected) {
+			debugLog(COMPONENT_NAME, "Skipping provider initialization - data service not connected");
+			return;
+		}
+
+		const initializeProvider = async () => {
+			debugLog(COMPONENT_NAME, "Checking for default provider. Providers:", providers.length, 
+				"Current provider:", options.provider_name, 
+				"Loading:", isLoadingProviders,
+				"Attempt:", providerInitAttempts + 1);
+			
+			// If we already have a provider, skip initialization
+			if (options.provider_name || providerInitAttempts >= MAX_RETRY_ATTEMPTS) {
+				return;
+			}
+			
+			// Wait until loading is complete to check
+			if (isLoadingProviders) {
+				return;
+			}
+			
+			// If providers are available, set the first one
+			if (providers.length > 0) {
+				const firstProvider = providers[0];
+				debugLog(COMPONENT_NAME, "Setting default provider:", firstProvider.name);
+				updateOption("provider_name", firstProvider.name);
+				return;
+			}
+			
+			// No providers found, retry if under attempt limit
+			if (providerInitAttempts < MAX_RETRY_ATTEMPTS - 1) {
+				setProviderInitAttempts(prev => prev + 1);
+				debugLog(COMPONENT_NAME, `No providers found, retrying (${providerInitAttempts + 1}/${MAX_RETRY_ATTEMPTS})...`);
+				
+				// Wait before retrying
+				setTimeout(async () => {
+					try {
+						// Trigger a refetch by invalidating the providers query
+						await queryClient.invalidateQueries({ queryKey: queryKeys.providers });
+						await queryClient.refetchQueries({ queryKey: queryKeys.providers });
+					} catch (error) {
+						debugLog(COMPONENT_NAME, "Error refetching providers:", error);
+					}
+				}, RETRY_DELAY);
+			} else {
+				debugLog(COMPONENT_NAME, `Max provider initialization attempts (${MAX_RETRY_ATTEMPTS}) reached.`);
+			}
+		};
+		
+		initializeProvider();
+	}, [providers, options.provider_name, isLoadingProviders, providerInitAttempts, queryClient, isConnected]);
 
 	useEffect(() => {
 		// Only set model if we have a provider and no model is selected yet

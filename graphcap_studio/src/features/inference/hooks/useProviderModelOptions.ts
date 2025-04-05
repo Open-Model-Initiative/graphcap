@@ -7,7 +7,7 @@
  */
 
 import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
-import { useProviders } from "@/features/inference/services/providers";
+import { useDataServiceConnected, useProvidersWhenConnected } from "@/features/inference/services/providers";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
 import { debugLog } from "@/utils/logger";
@@ -32,8 +32,8 @@ export function useProviderModelOptions(providerName?: string) {
   
   debugLog(COMPONENT_NAME, "Init:", { providerName, isConnected });
   
-  // Use Suspense query with select to transform data
-  const providersResult = useProviders();
+  // Use connection-aware provider fetching
+  const providersResult = useProvidersWhenConnected();
   
   // Debug logging for providers - simplified
   useEffect(() => {
@@ -101,6 +101,7 @@ export function useProviderModelOptions(providerName?: string) {
     defaultModel,
     isLoading,
     
+    // Provides error state
     hasError: providersResult.error !== null,
     providersError: providersResult.error
   };
