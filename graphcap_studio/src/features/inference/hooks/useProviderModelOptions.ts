@@ -29,7 +29,6 @@ export function useProviderModelOptions(providerName?: string) {
   // Use Suspense query with select to transform data
   const providersResult = useProviders();
   
-  // Get the selected provider object
   const selectedProvider = useMemo(() => {
     if (!providerName || !providersResult.data?.length) return null;
     

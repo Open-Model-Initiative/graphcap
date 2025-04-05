@@ -79,7 +79,6 @@ async function fetchDatasetList(mediaServerUrl: string) {
  * Note: This requires a valid mediaServerUrl. Wrap the component using this in a Suspense boundary.
  */
 export function useListDatasets(mediaServerUrl: string) {
-	// With suspense, we handle the case where URL is not available differently
 	if (!mediaServerUrl) {
 		return { data: { datasets: [] } };
 	}
