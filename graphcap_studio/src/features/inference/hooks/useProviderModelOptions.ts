@@ -6,7 +6,9 @@
  * It consolidates provider and model data loading in a single hook.
  */
 
-import { useProviders } from "@/features/server-connections/services/providers";
+import { useServerConnectionsContext } from "@/context/ServerConnectionsContext";
+import { useProviders } from "@/features/inference/services/providers";
+import { SERVER_IDS } from "@/features/server-connections/constants";
 import type { Provider, ProviderModelInfo } from "@/types/provider-config-types";
 import { useMemo } from "react";
 
@@ -17,20 +19,23 @@ import { useMemo } from "react";
  * @returns Provider and model data with loading states
  */
 export function useProviderModelOptions(providerName?: string) {
-  // Fetch all providers
-  const { 
-    data: providers = [], 
-    isLoading: isLoadingProviders,
-    error: providersError
-  } = useProviders();
+  // Check connection status outside of the hook call to avoid conditional hooks
+  const { connections } = useServerConnectionsContext();
+  const dataServiceConnection = connections.find(
+    (conn) => conn.id === SERVER_IDS.DATA_SERVICE,
+  );
+  const isConnected = dataServiceConnection?.status === "connected";
   
-  // Find the selected provider object
+  // Use Suspense query with select to transform data
+  const providersResult = useProviders();
+  
+  // Get the selected provider object
   const selectedProvider = useMemo(() => {
-    if (!providerName || !providers.length) return null;
+    if (!providerName || !providersResult.data?.length) return null;
     
     // Find provider by name
-    return providers.find((p: Provider) => p.name === providerName) || null;
-  }, [providers, providerName]);
+    return providersResult.data.find((p: Provider) => p.name === providerName) || null;
+  }, [providersResult.data, providerName]);
   
   // Process models data directly from the provider
   const models = useMemo<ProviderModelInfo[]>(() => {
@@ -51,17 +56,13 @@ export function useProviderModelOptions(providerName?: string) {
   
   return {
     // Providers data
-    providers,
+    providers: providersResult.data || [],
     selectedProvider,
-    isLoadingProviders,
-    providersError,
     
     // Models data
     models,
     defaultModel,
     
-    // Helper for status checking
-    isLoading: isLoadingProviders,
-    hasError: !!providersError
+    hasError: providersResult.error !== null
   };
 } 

@@ -13,8 +13,4 @@ export {
 	createDataServiceClient, createInferenceBridgeClient, createPerspectivesClient, createProviderClient, getDataServiceUrl, getInferenceBridgeUrl
 } from "./apiClients";
 
-// Provider services
-export {
-	queryKeys as providerQueryKeys, useCreateProvider, useDeleteProvider, useProvider, useProviders, useUpdateProvider
-} from "./providers";
 

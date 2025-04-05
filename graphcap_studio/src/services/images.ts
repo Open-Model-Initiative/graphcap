@@ -11,7 +11,7 @@ import type {
 	ImageProcessRequest,
 	ImageProcessResponse,
 } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { fetchWithRetry } from "../utils/fetchUtils";
 import { getQueryClient } from "../utils/queryClient";
 
@@ -71,17 +71,20 @@ async function fetchImagesByDirectory(mediaServerUrl: string, directory?: string
 }
 
 /**
- * React hook for listing images using TanStack Query
+ * React hook for listing images using TanStack Query with Suspense
  *
  * @param mediaServerUrl The base URL of the media server.
  * @param directory - Optional directory path
  * @returns Query result with the list of images
  */
 export function useListImages(mediaServerUrl: string, directory?: string) {
-	return useQuery({
+	if (!mediaServerUrl) {
+		return { data: { images: [] } };
+	}
+
+	return useSuspenseQuery({
 		queryKey: queryKeys.imagesByDirectory(mediaServerUrl, directory),
 		queryFn: () => fetchImagesByDirectory(mediaServerUrl, directory),
-		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
 		meta: {
 			errorMessage: "Failed to load images",
 		},
@@ -109,16 +112,21 @@ async function fetchDatasetImages(mediaServerUrl: string) {
 }
 
 /**
- * React hook for listing dataset images using TanStack Query
+ * React hook for listing dataset images using TanStack Query with Suspense
  *
  * @param mediaServerUrl The base URL of the media server.
  * @returns Query result with the list of datasets and their images
+ * 
+ * Note: This requires a valid mediaServerUrl. Wrap the component using this in a Suspense boundary.
  */
 export function useListDatasetImages(mediaServerUrl: string) {
-	return useQuery({
+	if (!mediaServerUrl) {
+		return { data: { datasets: [] } };
+	}
+
+	return useSuspenseQuery({
 		queryKey: queryKeys.datasetImages(mediaServerUrl),
 		queryFn: () => fetchDatasetImages(mediaServerUrl),
-		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
 		meta: {
 			errorMessage: "Failed to load dataset images",
 		},

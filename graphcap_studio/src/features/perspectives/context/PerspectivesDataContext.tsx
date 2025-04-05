@@ -11,8 +11,8 @@
 
 import { useServerConnectionsContext } from "@/context";
 import { useGenerationOptions } from "@/features/inference/generation-options/context";
+import { queryKeys, useProviders } from "@/features/inference/services/providers";
 import { SERVER_IDS } from "@/features/server-connections/constants";
-import { useProviders } from "@/features/server-connections/services/providers";
 import type {
 	Image, Perspective,
 	PerspectiveData,
@@ -20,6 +20,7 @@ import type {
 } from "@/types";
 import type { GenerationOptions } from "@/types/generation-option-types";
 import type { Provider } from "@/types/provider-config-types";
+import { useQueryClient } from "@tanstack/react-query";
 import React, {
 	createContext,
 	useCallback,
@@ -89,14 +90,11 @@ interface PerspectivesDataContextType {
 
 	// Provider actions
 	setSelectedProvider: (provider: string | undefined) => void;
-	setAvailableProviders: (providers: Provider[]) => void;
 	setIsGeneratingAll: (isGenerating: boolean) => void;
 	handleProviderChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 
 	// Data fetching
 	fetchProviders: () => Promise<void>;
-	isLoadingProviders: boolean;
-	providerError: unknown;
 
 	// Perspectives data
 	perspectives: Perspective[];
@@ -159,8 +157,7 @@ export class PerspectivesDataProviderError extends Error {
 interface PerspectivesDataProviderProps {
 	readonly children: ReactNode;
 	readonly image: Image | null;
-	readonly initialProvider?: string;
-	readonly initialProviders?: Provider[];
+	readonly initialProvider?: string; // TODO: Analyze if this is needed
 }
 
 /**
@@ -171,7 +168,6 @@ export function PerspectivesDataProvider({
 	children,
 	image: initialImage,
 	initialProvider,
-	initialProviders = [],
 }: PerspectivesDataProviderProps) {
 	// Server connection state
 	const { connections } = useServerConnectionsContext();
@@ -179,6 +175,9 @@ export function PerspectivesDataProvider({
 		(conn) => conn.id === SERVER_IDS.INFERENCE_BRIDGE,
 	);
 	const isServerConnected = graphcapServerConnection?.status === "connected";
+	
+	// Get TanStack Query client for cache operations
+	const queryClient = useQueryClient();
 
 	// Get generation options from context
 	const generationOptions = useGenerationOptions();
@@ -190,8 +189,6 @@ export function PerspectivesDataProvider({
 	const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
 		initialProvider ?? loadProviderNameFromStorage(),
 	);
-	const [availableProviders, setAvailableProviders] =
-		useState<Provider[]>(initialProviders);
 	const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
 	// Captions state
@@ -215,13 +212,10 @@ export function PerspectivesDataProvider({
 		refetch: refetchPerspectivesQuery,
 	} = usePerspectives();
 
-	// Data fetching - providers
-	const {
-		data: providersData,
-		isLoading: isLoadingProviders,
-		error: providerError,
-		refetch: refetchProviders,
-	} = useProviders();
+	// Data fetching - providers with Suspense
+	// This will immediately return data or throw to the nearest Suspense boundary
+	const providersResult = useProviders();
+	const availableProviders = providersResult.data || [];
 
 	// Generate caption mutation
 	const generateCaptionMutation = useGeneratePerspectiveCaption();
@@ -250,13 +244,6 @@ export function PerspectivesDataProvider({
 			{} as Record<string, PerspectiveSchema>,
 		);
 	}, [perspectivesData]);
-
-	// Update providers when data is fetched
-	useEffect(() => {
-		if (providersData) {
-			setAvailableProviders(providersData);
-		}
-	}, [providersData]);
 
 	// Update current image when initialImage changes
 	useEffect(() => {
@@ -303,10 +290,11 @@ export function PerspectivesDataProvider({
 		setHiddenPerspectives([]);
 	}, []);
 
-	// Method to fetch providers on demand
+	// Method to fetch providers on demand - just invalidate cache
 	const fetchProviders = useCallback(async () => {
-		await refetchProviders();
-	}, [refetchProviders]);
+		console.log("Invalidating providers cache to trigger refetch");
+		queryClient.invalidateQueries({ queryKey: queryKeys.providers });
+	}, [queryClient]);
 
 	// Refetch perspectives and return the data
 	const refetchPerspectives = useCallback(async (): Promise<Perspective[]> => {
@@ -332,16 +320,13 @@ export function PerspectivesDataProvider({
 			return;
 		}
 
-		// Load all captions for this image from localStorage using the image path
 		const storedPerspectives = getAllPerspectiveCaptions(currentImage.path);
 
-		// Format captions to match expected structure
 		if (Object.keys(storedPerspectives).length > 0) {
 			setCaptions({
 				perspectives: storedPerspectives,
 				metadata: {
 					captioned_at: new Date().toISOString(),
-					// Use metadata from the first perspective as a fallback
 					provider:
 						Object.values(storedPerspectives)[0]?.provider || selectedProvider,
 					model: Object.values(storedPerspectives)[0]?.model || "unknown",
@@ -528,14 +513,11 @@ export function PerspectivesDataProvider({
 
 		// Provider actions
 		setSelectedProvider,
-		setAvailableProviders,
 		setIsGeneratingAll,
 		handleProviderChange,
 
 		// Data fetching - providers
 		fetchProviders,
-		isLoadingProviders,
-		providerError,
 
 		// Perspectives data
 		perspectives: perspectivesData || [],
@@ -578,8 +560,6 @@ export function PerspectivesDataProvider({
 		isGeneratingAll,
 		handleProviderChange,
 		fetchProviders,
-		isLoadingProviders,
-		providerError,
 		perspectivesData,
 		schemas,
 		isLoadingPerspectives,
