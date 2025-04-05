@@ -4,6 +4,7 @@ export * from "./CreateDatasetModal";
 export * from "./DatasetContainer";
 export * from "./DatasetLink";
 export * from "./DatasetPanel";
+export * from "./DatasetSelector";
 export * from "./DatasetTree";
 export * from "./DeleteDatasetModal";
 

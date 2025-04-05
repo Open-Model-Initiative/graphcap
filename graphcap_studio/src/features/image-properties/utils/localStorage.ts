@@ -4,7 +4,7 @@
  *
  * Utility functions for managing image properties data in localStorage
  */
-import { ImagePropertiesData } from "../context/ImagePropertiesContext";
+import type { ImagePropertiesData } from "../context/ImagePropertiesContext";
 
 const IMAGE_PROPERTIES_KEY = "graphcap_image_properties";
 const UI_PREFERENCES_KEY = "graphcap_image_properties_ui";
@@ -31,7 +31,7 @@ const debounceTimeouts: Record<string, NodeJS.Timeout> = {};
  * @param fn - Function to execute
  * @param delay - Delay in milliseconds
  */
-function debounce(key: string, fn: () => void, delay: number = 300): void {
+function debounce(key: string, fn: () => void, delay = 300): void {
 	// Clear existing timeout for this key
 	if (debounceTimeouts[key]) {
 		clearTimeout(debounceTimeouts[key]);
