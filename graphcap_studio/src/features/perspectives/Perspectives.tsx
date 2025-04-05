@@ -6,17 +6,12 @@
  */
 
 import type { Image } from "@/types";
-import { Box, Flex } from "@chakra-ui/react";
-import React, { useCallback, useEffect, useMemo } from "react";
-import {
-	DEFAULT_OPTIONS,
-	GenerationOptionForm,
-} from "../inference/generation-options/components/GenerationOptionForm";
+import { Grid } from "@chakra-ui/react";
+import { useEffect } from "react";
 import { EmptyPerspectives } from "./components/PerspectiveCaption/EmptyPerspectives";
 import { PerspectivesPager } from "./components/PerspectiveCaption/PerspectiveNavigation/PerspectivesPager";
 import { PerspectivesErrorState } from "./components/PerspectivesErrorState";
 import { usePerspectiveUI, usePerspectivesData } from "./context";
-import type { CaptionOptions } from "./types";
 
 interface PerspectivesProps {
 	readonly image: Image | null;
@@ -26,11 +21,6 @@ interface PerspectivesProps {
  * Component for displaying and managing image perspectives from graphcap
  */
 export function Perspectives({ image }: PerspectivesProps) {
-	// Local state for generation options
-	const [showOptions, setShowOptions] = React.useState(false);
-	const [options, setOptions] = React.useState<CaptionOptions>(DEFAULT_OPTIONS);
-	const optionsButtonRef = React.useRef<HTMLButtonElement>(null);
-
 	// Get data from perspectives data context
 	const {
 		isServerConnected,
@@ -76,21 +66,6 @@ export function Perspectives({ image }: PerspectivesProps) {
 		}
 	}, [activeSchemaName, schemas, setActiveSchemaName]);
 
-	const handleOptionsChange = useCallback((newOptions: CaptionOptions) => {
-		setOptions(newOptions);
-	}, []);
-
-	// Options control button - memoized to avoid recreating on every render
-	const optionsControl = useMemo(
-		() => ({
-			isOpen: showOptions,
-			onToggle: () => setShowOptions(!showOptions),
-			buttonRef: optionsButtonRef,
-			options,
-		}),
-		[showOptions, options],
-	);
-
 	// Logging render state for debugging
 	console.debug("[Perspectives] Render state:", {
 		isServerConnected,
@@ -105,18 +80,28 @@ export function Perspectives({ image }: PerspectivesProps) {
 	if (!isServerConnected) {
 		console.debug("[Perspectives] Rendering: Server not connected");
 		return (
-			<Flex direction="column" height="100%" overflow="hidden">
+			<Grid 
+				height="100%" 
+				width="100%"
+				overflow="hidden"
+				templateRows="1fr"
+			>
 				<PerspectivesErrorState type="connection" />
-			</Flex>
+			</Grid>
 		);
 	}
 
 	if (dataError) {
 		console.debug("[Perspectives] Rendering: Data error", dataError);
 		return (
-			<Flex direction="column" height="100%" overflow="hidden">
+			<Grid 
+				height="100%" 
+				width="100%"
+				overflow="hidden"
+				templateRows="1fr"
+			>
 				<PerspectivesErrorState type="general" error={dataError} />
-			</Flex>
+			</Grid>
 		);
 	}
 
@@ -124,12 +109,17 @@ export function Perspectives({ image }: PerspectivesProps) {
 	if (!image) {
 		console.debug("[Perspectives] Rendering: No image selected");
 		return (
-			<Flex direction="column" height="100%" overflow="hidden">
+			<Grid 
+				height="100%" 
+				width="100%"
+				overflow="hidden"
+				templateRows="1fr"
+			>
 				<PerspectivesErrorState
 					type="general"
 					error="No image selected. Please select an image to view perspectives."
 				/>
-			</Flex>
+			</Grid>
 		);
 	}
 
@@ -137,9 +127,14 @@ export function Perspectives({ image }: PerspectivesProps) {
 	if (!schemas || Object.keys(schemas).length === 0) {
 		console.debug("[Perspectives] Rendering: No schemas available", { schemas });
 		return (
-			<Flex direction="column" height="100%" overflow="hidden">
+			<Grid 
+				height="100%" 
+				width="100%"
+				overflow="hidden"
+				templateRows="1fr"
+			>
 				<EmptyPerspectives />
-			</Flex>
+			</Grid>
 		);
 	}
 
@@ -152,53 +147,31 @@ export function Perspectives({ image }: PerspectivesProps) {
 			availableSchemas: Object.keys(schemas)
 		});
 		
+		// This shouldn't typically happen since our useEffect should handle schema selection
+		// But including as a safeguard with more detailed logging
 		return (
-			<Flex
-				direction="column"
+			<Grid
 				height="100%"
+				width="100%"
 				overflow="hidden"
-				justifyContent="center"
-				alignItems="center"
+				templateRows="1fr"
+				placeItems="center"
 			>
 				<EmptyPerspectives />
-			</Flex>
+			</Grid>
 		);
 	}
 
 	console.debug("[Perspectives] Rendering: Normal perspectives view", { activeSchemaName });
 	return (
-		<Flex
-			direction="column"
+		<Grid
 			height="100%"
+			width="100%"
 			overflow="hidden"
-			position="relative"
-			p={0}
+			templateRows="1fr"
 		>
 			{/* Main Content */}
-			<PerspectivesPager optionsControl={optionsControl} />
-
-			{/* Generation Options Dialog */}
-			{showOptions && (
-				<Box
-					position="absolute"
-					top={
-						optionsButtonRef.current
-							? optionsButtonRef.current.offsetHeight + 10
-							: 10
-					}
-					right={4}
-					zIndex={20}
-					width="300px"
-					boxShadow="lg"
-					borderRadius="md"
-				>
-					<GenerationOptionForm
-						options={options}
-						onChange={handleOptionsChange}
-						onClose={() => setShowOptions(false)}
-					/>
-				</Box>
-			)}
-		</Flex>
+			<PerspectivesPager />
+		</Grid>
 	);
 }

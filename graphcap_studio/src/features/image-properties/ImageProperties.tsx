@@ -65,53 +65,6 @@ export function ImageProperties() {
 	}
 
 	return (
-		<Box height="full" display="flex" flexDirection="column" overflow="hidden">
-			<Tabs.Root
-				defaultValue={activeTab}
-				variant="line"
-				colorPalette="blue"
-				size="md"
-				height="100%"
-				onValueChange={(details) => setActiveTab(details.value)}
-			>
-				<Tabs.List borderBottomColor="gray.700" flexShrink={0}>
-					<Tabs.Trigger value="basic">Basic</Tabs.Trigger>
-					<Tabs.Trigger value="file">File</Tabs.Trigger>
-					<Tabs.Trigger value="segments">Segments</Tabs.Trigger>
-					<Tabs.Trigger value="perspectives">Perspectives</Tabs.Trigger>
-					<Tabs.Indicator />
-				</Tabs.List>
-
-				<Box flex="1" overflow="auto" p={1}>
-					<Tabs.Content value="basic">
-						{properties && (
-							<BasicInformation
-								properties={properties}
-								isEditing={isEditing}
-								newTag={newTag}
-								onNewTagChange={setNewTag}
-								onAddTag={handleAddTag}
-								onRemoveTag={handleRemoveTag}
-								onPropertyChange={handlePropertyChange}
-								onSave={handleSave}
-								onToggleEdit={toggleEditing}
-							/>
-						)}
-					</Tabs.Content>
-
-					<Tabs.Content value="file">
-						<FileInformation image={image} />
-					</Tabs.Content>
-
-					<Tabs.Content value="segments">
-						<Segments image={image} />
-					</Tabs.Content>
-
-					<Tabs.Content value="perspectives">
-						<Perspectives image={image} />
-					</Tabs.Content>
-				</Box>
-			</Tabs.Root>
-		</Box>
+		<Perspectives image={image} />
 	);
 }
