@@ -1,16 +1,11 @@
 import { Perspectives } from "@/features/perspectives";
-import { Box, Tabs } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 // SPDX-License-Identifier: Apache-2.0
-import { useEffect, useState } from "react";
 import {
-	BasicInformation,
 	ErrorState,
-	FileInformation,
 	LoadingState,
-	Segments,
 } from "./components";
 import { useImagePropertiesContext } from "./context";
-import { getSelectedTab, saveSelectedTab } from "./utils/localStorage";
 
 /**
  * Component for displaying image properties and metadata
@@ -21,29 +16,12 @@ import { getSelectedTab, saveSelectedTab } from "./utils/localStorage";
 export function ImageProperties() {
 	// Get context data and methods
 	const {
-		properties,
 		isLoading,
 		error,
 		image,
-		newTag,
-		isEditing,
-		setNewTag,
-		handlePropertyChange,
-		handleAddTag,
-		handleRemoveTag,
-		handleSave,
-		toggleEditing,
 	} = useImagePropertiesContext();
 
-	// Get saved tab from localStorage or default to "basic"
-	const [activeTab, setActiveTab] = useState(() => {
-		return getSelectedTab() ?? "basic";
-	});
 
-	// Save tab selection to localStorage when it changes
-	useEffect(() => {
-		saveSelectedTab(activeTab);
-	}, [activeTab]);
 
 	// Render loading state
 	if (isLoading) {

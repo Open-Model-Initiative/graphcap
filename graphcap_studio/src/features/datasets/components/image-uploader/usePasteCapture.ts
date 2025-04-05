@@ -50,7 +50,7 @@ export function usePasteCapture({
     if (isDisabled) return;
     
     try {
-      await handlePaste(e);
+      handlePaste(e);
     } catch (error) {
       console.error("Error handling paste:", error);
       toast.error({ 

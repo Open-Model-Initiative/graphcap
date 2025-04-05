@@ -37,25 +37,35 @@ interface QueryProviderProps {
 	readonly children: ReactNode;
 }
 
+// Define the fallback component outside
+interface QueryErrorFallbackProps {
+	readonly error: Error;
+	readonly resetErrorBoundary: () => void;
+}
+
+function QueryErrorFallback({ error, resetErrorBoundary }: QueryErrorFallbackProps) {
+	return (
+		<div className="p-4 bg-red-50 text-red-700 rounded-md shadow">
+			<h3 className="font-bold text-lg mb-2">Something went wrong!</h3>
+			<p className="mb-2">{error.message}</p>
+			<button
+				onClick={resetErrorBoundary}
+				className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+				type="button"
+			>
+				Try again
+			</button>
+		</div>
+	);
+}
+
 export function QueryProvider({ children }: QueryProviderProps) {
 	return (
 		<QueryErrorResetBoundary>
 			{({ reset }) => (
 				<ErrorBoundary
 					onReset={reset}
-					fallbackRender={({ error, resetErrorBoundary }) => (
-						<div className="p-4 bg-red-50 text-red-700 rounded-md shadow">
-							<h3 className="font-bold text-lg mb-2">Something went wrong!</h3>
-							<p className="mb-2">{error.message}</p>
-							<button 
-								onClick={() => resetErrorBoundary()}
-								className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-								type="button"
-							>
-								Try again
-							</button>
-						</div>
-					)}
+					fallbackRender={QueryErrorFallback}
 				>
 					<QueryClientProvider client={queryClient}>
 						{children}

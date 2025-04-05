@@ -137,11 +137,88 @@ export function useModelProviderSelectors() {
 }
 
 interface SelectorProps {
-  size?: "xs" | "sm" | "md" | "lg";
-  width?: string | number;
-  bg?: string;
-  placeholder?: string;
+  readonly size?: "xs" | "sm" | "md" | "lg";
+  readonly width?: string | number;
+  readonly bg?: string;
+  readonly placeholder?: string;
 }
+
+// ---- Base Selector Component ----
+
+// Interface for individual select items
+interface SelectItem {
+  value: string;
+  label: string;
+  disabled: boolean;
+}
+
+// Simplified collection type for props
+interface SimpleCollection<T> {
+  items: T[];
+}
+
+interface CompactSelectorBaseProps {
+  readonly collection: SimpleCollection<SelectItem> & ReturnType<typeof createListCollection>;
+  readonly value: string | undefined;
+  readonly onValueChange: (details: { value: string[] }) => void;
+  readonly isDisabled: boolean;
+  readonly displayPlaceholder: string;
+  readonly size?: "xs" | "sm" | "md" | "lg";
+  readonly width?: string | number;
+  readonly bg?: string;
+}
+
+/**
+ * Base component for rendering a compact Select input.
+ * Handles the common UI structure and state.
+ */
+function CompactSelectorBase({
+  collection,
+  value,
+  onValueChange,
+  isDisabled,
+  displayPlaceholder,
+  size = "sm",
+  width = "full",
+  bg,
+}: CompactSelectorBaseProps) {
+  return (
+    <Box width={width}>
+      <Select.Root
+        collection={collection}
+        value={value ? [value] : []}
+        onValueChange={onValueChange}
+        disabled={isDisabled}
+        size={size}
+      >
+        <Select.HiddenSelect />
+        <Select.Control>
+          <Select.Trigger bg={bg}>
+            <Select.ValueText placeholder={displayPlaceholder} />
+          </Select.Trigger>
+          <Select.IndicatorGroup>
+            <Select.Indicator />
+          </Select.IndicatorGroup>
+        </Select.Control>
+
+        <Portal>
+          <Select.Positioner>
+            <Select.Content>
+              {collection.items.map((item) => (
+                <Select.Item key={item.value} item={item}>
+                  {item.label}
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
+        </Portal>
+      </Select.Root>
+    </Box>
+  );
+}
+
+// ---- Specific Selector Implementations ----
 
 /**
  * Provider Selector Component using the shared generation options context
@@ -167,12 +244,21 @@ export function CompactProviderSelector({
   );
   const isConnected = dataServiceConnection?.status === "connected";
   
-  // Set placeholder text based on connection state
-  const displayPlaceholder = !isConnected 
-    ? "Connecting..." 
-    : isProvidersLoading 
-      ? "Loading..." 
-      : placeholder;
+  // Determine placeholder text
+  let displayPlaceholder: string;
+  if (!isConnected) {
+    displayPlaceholder = "Connecting...";
+  } else if (isProvidersLoading) {
+    displayPlaceholder = "Loading...";
+  } else if (providerCollection.items.length === 1 && providerCollection.items[0].value === 'none') {
+    // Handle the case where the collection only contains the 'none' item
+    displayPlaceholder = providerCollection.items[0].label;
+  } else {
+    displayPlaceholder = placeholder;
+  }
+
+  // Determine disabled state
+  const isDisabled = isProvidersLoading || isGenerating || !isConnected;
 
   // Debug logging - simplified
   useEffect(() => {
@@ -180,43 +266,22 @@ export function CompactProviderSelector({
       itemCount: providerCollection.items.length,
       selected: options.provider_name,
       isLoading: isProvidersLoading,
-      isConnected
+      isConnected,
+      isDisabled,
     });
-  }, [providerCollection.items.length, options.provider_name, isProvidersLoading, isConnected]);
+  }, [providerCollection.items.length, options.provider_name, isProvidersLoading, isConnected, isDisabled]);
 
   return (
-    <Box width={width}>
-      <Select.Root
-        collection={providerCollection}
-        value={options.provider_name ? [options.provider_name] : []}
-        onValueChange={handleProviderChange}
-        disabled={isProvidersLoading || isGenerating || !isConnected}
-        size={size}
-      >
-        <Select.HiddenSelect />
-        <Select.Control>
-          <Select.Trigger bg={bg}>
-            <Select.ValueText placeholder={displayPlaceholder} />
-          </Select.Trigger>
-          <Select.IndicatorGroup>
-            <Select.Indicator />
-          </Select.IndicatorGroup>
-        </Select.Control>
-
-        <Portal>
-          <Select.Positioner>
-            <Select.Content>
-              {providerCollection.items.map((provider) => (
-                <Select.Item key={provider.value} item={provider}>
-                  {provider.label}
-                  <Select.ItemIndicator />
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Positioner>
-        </Portal>
-      </Select.Root>
-    </Box>
+    <CompactSelectorBase
+      collection={providerCollection}
+      value={options.provider_name}
+      onValueChange={handleProviderChange}
+      isDisabled={isDisabled}
+      displayPlaceholder={displayPlaceholder}
+      size={size}
+      width={width}
+      bg={bg}
+    />
   );
 }
 
@@ -245,14 +310,23 @@ export function CompactModelSelector({
   );
   const isConnected = dataServiceConnection?.status === "connected";
 
-  // Set placeholder text based on connection state
-  const displayPlaceholder = !isConnected 
-    ? "Connecting..." 
-    : !hasProviders
-      ? "No providers" 
-      : isModelsLoading
-        ? "Loading..."
-        : placeholder;
+  // Determine placeholder text
+  let displayPlaceholder: string;
+  if (!isConnected) {
+    displayPlaceholder = "Connecting...";
+  } else if (!hasProviders) {
+    displayPlaceholder = "No providers";
+  } else if (isModelsLoading) {
+    displayPlaceholder = "Loading...";
+  } else if (modelCollection.items.length === 1 && modelCollection.items[0].value === 'none') {
+     // Handle the case where the collection only contains the 'none' item
+    displayPlaceholder = modelCollection.items[0].label;
+  } else {
+    displayPlaceholder = placeholder;
+  }
+
+  // Determine disabled state
+  const isDisabled = isModelsLoading || !hasProviders || isGenerating || !isConnected;
 
   // Debug logging - simplified
   useEffect(() => {
@@ -261,42 +335,21 @@ export function CompactModelSelector({
       selected: options.model_name,
       isLoading: isModelsLoading,
       hasProviders,
-      isConnected
+      isConnected,
+      isDisabled,
     });
-  }, [modelCollection.items.length, options.model_name, isModelsLoading, hasProviders, isConnected]);
+  }, [modelCollection.items.length, options.model_name, isModelsLoading, hasProviders, isConnected, isDisabled]);
 
   return (
-    <Box width={width}>
-      <Select.Root
-        collection={modelCollection}
-        value={options.model_name ? [options.model_name] : []}
-        onValueChange={handleModelChange}
-        disabled={isModelsLoading || !hasProviders || isGenerating || !isConnected}
-        size={size}
-      >
-        <Select.HiddenSelect />
-        <Select.Control>
-          <Select.Trigger bg={bg}>
-            <Select.ValueText placeholder={displayPlaceholder} />
-          </Select.Trigger>
-          <Select.IndicatorGroup>
-            <Select.Indicator />
-          </Select.IndicatorGroup>
-        </Select.Control>
-
-        <Portal>
-          <Select.Positioner>
-            <Select.Content>
-              {modelCollection.items.map((model) => (
-                <Select.Item key={model.value} item={model}>
-                  {model.label}
-                  <Select.ItemIndicator />
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Positioner>
-        </Portal>
-      </Select.Root>
-    </Box>
+    <CompactSelectorBase
+      collection={modelCollection}
+      value={options.model_name}
+      onValueChange={handleModelChange}
+      isDisabled={isDisabled}
+      displayPlaceholder={displayPlaceholder}
+      size={size}
+      width={width}
+      bg={bg}
+    />
   );
 } 
