@@ -1,5 +1,9 @@
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
-import { Box, Link as ChakraLink, Flex, Stack, Text } from "@chakra-ui/react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Box, Link as ChakraLink, Flex, Text } from "@chakra-ui/react";
+import { LuBookOpen, LuGithub } from "react-icons/lu";
+import { version } from "../../../package.json";
+import { FooterModelSelector } from "./FooterModelSelector";
 
 export function Footer() {
 	const bgColor = useColorModeValue("white", "gray.900");
@@ -10,37 +14,43 @@ export function Footer() {
 	return (
 		<Box
 			as="footer"
-			h="8"
+			h="10"
 			bg={bgColor}
 			borderTop="1px"
 			borderColor={borderColor}
 		>
 			<Flex h="full" px="4" align="center" justify="space-between">
-				<Text fontSize="xs" color={textColor}>
-					{new Date().getFullYear()} graphcap Studio - alpha client
-				</Text>
-				<Stack direction="row" gap="3">
-					<ChakraLink
-						href="https://github.com/fearnworks/graphcap"
-						fontSize="xs"
-						color={textColor}
-						_hover={{ color: hoverColor }}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						GitHub
-					</ChakraLink>
-					<ChakraLink
-						href="https://fearnworks.github.io/graphcap/"
-						fontSize="xs"
-						color={textColor}
-						_hover={{ color: hoverColor }}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Documentation
-					</ChakraLink>
-				</Stack>
+				<Flex gap={3} align="center">
+					<Text fontSize="xs" color={textColor}>
+						{new Date().getFullYear()} graphcap Studio v{version}
+					</Text>
+					<Tooltip content="GitHub">
+						<ChakraLink
+							href="https://github.com/Open-Model-Initiative/graphcap"
+							color={textColor}
+							_hover={{ color: hoverColor }}
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="GitHub"
+						>
+							<LuGithub size={16} />
+						</ChakraLink>
+					</Tooltip>
+					<Tooltip content="Documentation">
+						<ChakraLink
+							href="https://open-model-initiative.github.io/graphcap/"
+							color={textColor}
+							_hover={{ color: hoverColor }}
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Documentation"
+						>
+							<LuBookOpen size={16} />
+						</ChakraLink>
+					</Tooltip>
+				</Flex>
+				{/* Right side area with model selector */}
+				<FooterModelSelector />
 			</Flex>
 		</Box>
 	);

@@ -1,8 +1,19 @@
 import { Switch } from "@/components/ui/buttons/Switch";
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
 // SPDX-License-Identifier: Apache-2.0
+import { Tooltip } from "@/components/ui/tooltip";
 import { Box, Heading, Stack, Text } from "@chakra-ui/react";
 import { useFeatureFlags } from "./FeatureFlagProvider";
+
+/**
+ * Flag descriptions to provide more context to users
+ */
+const FLAG_DESCRIPTIONS: Record<string, string> = {
+	enableDebugMode: "Enables detailed logging for troubleshooting. Sensitive information like API keys will be automatically redacted.",
+	enableReactQueryDevTools: "Shows React Query developer tools for inspecting API requests and cache.",
+	enableRouterDevTools: "Shows router developer tools for debugging navigation.",
+	enableDebugRoute: "Enables access to debug routes in the application."
+};
 
 /**
  * Feature Flags Panel component
@@ -19,6 +30,8 @@ export function FeatureFlagsPanel() {
 
 	const textColor = useColorModeValue("gray.800", "gray.200");
 	const helpTextColor = useColorModeValue("gray.500", "gray.400");
+	const tooltipBgColor = useColorModeValue("gray.700", "gray.700");
+	const tooltipTextColor = useColorModeValue("white", "white");
 
 	return (
 		<Box p={4}>
@@ -34,15 +47,25 @@ export function FeatureFlagsPanel() {
 						alignItems="center"
 						justifyContent="space-between"
 					>
-						<Switch
-							checked={isEnabled}
-							onChange={() => toggleFeatureFlag(flagName)}
-							colorScheme="blue"
+						<Tooltip 
+							content={FLAG_DESCRIPTIONS[flagName] || "No description available"} 
+							contentProps={{ 
+								bg: tooltipBgColor, 
+								color: tooltipTextColor 
+							}}
 						>
-							<Text fontSize="sm" color={textColor}>
-								{formatFlagName(flagName)}
-							</Text>
-						</Switch>
+							<Box>
+								<Switch
+									checked={isEnabled}
+									onChange={() => toggleFeatureFlag(flagName)}
+									colorScheme="blue"
+								>
+									<Text fontSize="sm" color={textColor}>
+										{formatFlagName(flagName)}
+									</Text>
+								</Switch>
+							</Box>
+						</Tooltip>
 					</Box>
 				))}
 			</Stack>

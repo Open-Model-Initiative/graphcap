@@ -2,7 +2,7 @@
 /**
  * Perspectives Footer Component
  *
- * This component displays a fixed footer with action controls for perspectives.
+ * This component displays a fixed footer with action controls and navigation for perspectives.
  */
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
@@ -11,29 +11,33 @@ import {
 	usePerspectivesData,
 } from "@/features/perspectives/context";
 import {
-	Box,
 	Button,
 	Flex,
+	HStack,
 	Icon,
+	IconButton,
 	Text,
-	chakra,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo } from "react";
-import { LuRefreshCw } from "react-icons/lu";
+import { useCallback } from "react";
+import { LuChevronLeft, LuChevronRight, LuRefreshCw } from "react-icons/lu";
+
+interface PerspectivesFooterProps {
+	readonly isLoading: boolean;
+	readonly isGenerated: boolean;
+	readonly currentPerspectiveName: string;
+	readonly totalPerspectives: number;
+	readonly currentIndex: number;
+	readonly onNavigate: (index: number) => void;
+}
 
 /**
  * Helper function to determine button title text
  */
 const getButtonTitle = (
-	selectedProvider: string | undefined,
 	activeSchemaName: string | null,
 	isProcessing: boolean,
 	isGenerated: boolean,
 ): string => {
-	if (!selectedProvider) {
-		return "Please select a provider";
-	}
-
 	if (!activeSchemaName) {
 		return "No perspective selected";
 	}
@@ -46,14 +50,19 @@ const getButtonTitle = (
 };
 
 /**
- * Footer component with action controls for generating perspectives
- * Uses contexts instead of props to reduce prop drilling
+ * Footer component with action controls and navigation for generating perspectives
  */
-export function PerspectivesFooter() {
+export function PerspectivesFooter({
+	isLoading,
+	isGenerated,
+	currentPerspectiveName,
+	totalPerspectives,
+	currentIndex,
+	onNavigate,
+}: PerspectivesFooterProps) {
 	// Use data context
 	const {
 		availableProviders,
-		fetchProviders,
 		generatePerspective,
 		isGenerating,
 		currentImage,
@@ -61,7 +70,7 @@ export function PerspectivesFooter() {
 	} = usePerspectivesData();
 
 	// Use UI context
-	const { activeSchemaName, isLoading, isGenerated } = usePerspectiveUI();
+	const { activeSchemaName } = usePerspectiveUI();
 
 	// Use console.log instead of toast
 	const showMessage = useCallback(
@@ -71,28 +80,8 @@ export function PerspectivesFooter() {
 		[],
 	);
 
-	const bgColor = useColorModeValue("white", "gray.800");
-	const borderColor = useColorModeValue("gray.200", "gray.700");
-	const infoTextColor = useColorModeValue("gray.600", "gray.400");
-
-	// Log information for debugging
-	console.log("GenerationOptions:", generationOptions);
-	console.log("Available providers:", availableProviders);
-	
-	// Get provider information safely
-	const { providerName, modelName } = useMemo(() => {
-		return {
-			providerName: generationOptions.provider_name || "Select Provider",
-			modelName: generationOptions.model_name || "Select Model"
-		};
-	}, [generationOptions.provider_name, generationOptions.model_name]);
-
-	// Fetch providers on component mount
-	useEffect(() => {
-		fetchProviders().catch((error) => {
-			console.error("Failed to fetch providers:", error);
-		});
-	}, [fetchProviders]);
+	const textColor = useColorModeValue("gray.800", "gray.200");
+	const mutedColor = useColorModeValue("gray.600", "gray.400");
 
 	// Validation checks for generate button
 	const validateGeneration = useCallback(() => {
@@ -175,6 +164,19 @@ export function PerspectivesFooter() {
 		validateGeneration,
 	]);
 
+	// Navigation handlers
+	const handlePrevious = () => {
+		if (currentIndex > 0) {
+			onNavigate(currentIndex - 1);
+		}
+	};
+
+	const handleNext = () => {
+		if (currentIndex < totalPerspectives - 1) {
+			onNavigate(currentIndex + 1);
+		}
+	};
+
 	// Combine loading states
 	const isProcessing = isLoading || isGenerating;
 
@@ -184,36 +186,79 @@ export function PerspectivesFooter() {
 
 	// Get title for the generate button
 	const buttonTitle = getButtonTitle(
-		generationOptions.provider_name,
 		activeSchemaName,
 		isProcessing,
 		isGenerated,
 	);
 
 	return (
-		<Box
-			position="sticky"
-			bottom={0}
-			left={0}
-			right={0}
+		<Flex 
 			py={2}
 			px={4}
-			bg={bgColor}
-			borderTopWidth="1px"
-			borderColor={borderColor}
-			zIndex={10}
+			justify="space-between"
+			align="center"
 		>
-			<Flex justifyContent="space-between" alignItems="center">
-				{/* Provider and Model Info */}
+			{/* Perspective Name and Navigation */}
+			<Flex alignItems="center">
+
+				{totalPerspectives > 1 && (
+					<HStack ml={3} gap={1}>
+						<Text fontSize="xs" color={mutedColor}>
+							{currentIndex + 1}/{totalPerspectives}
+						</Text>
+
+						<IconButton
+							aria-label="Previous perspective"
+							size="xs"
+							variant="ghost"
+							disabled={isProcessing || currentIndex === 0}
+							onClick={handlePrevious}
+						>
+							<LuChevronLeft />
+						</IconButton>
+
+						<IconButton
+							aria-label="Next perspective"
+							size="xs"
+							variant="ghost"
+							disabled={isProcessing || currentIndex === totalPerspectives - 1}
+							onClick={handleNext}
+						>
+							<LuChevronRight />
+						</IconButton>
+					</HStack>
+				)}
 				<Text 
 					fontSize="sm" 
-					color={infoTextColor}
-					title="Current provider and model from global settings"
+					fontWeight="medium" 
+					color={textColor}
+					maxWidth="150px"
+					overflow="hidden"
+					textOverflow="ellipsis"
+					whiteSpace="nowrap"
+					title={currentPerspectiveName}
 				>
-					Using: <chakra.span fontWeight="bold">{providerName}</chakra.span> / <chakra.span fontStyle="italic">{modelName}</chakra.span>
+					{currentPerspectiveName}
 				</Text>
 				
-				{/* Generate/Regenerate Button */}
+			</Flex>
+			
+			{/* Generate/Regenerate Button */}
+			<Flex alignItems="center">
+				{isGenerating && (
+					<Flex alignItems="center" mr={3}>
+						<Icon
+							as={LuRefreshCw}
+							color={mutedColor}
+							animation="spin 1s linear infinite"
+							mr={1}
+						/>
+						<Text fontSize="xs" color={mutedColor}>
+							Processing...
+						</Text>
+					</Flex>
+				)}
+				
 				<Button
 					size="sm"
 					colorScheme={isGenerated ? "gray" : "blue"}
@@ -222,17 +267,10 @@ export function PerspectivesFooter() {
 					disabled={isGenerateDisabled}
 					title={buttonTitle}
 				>
-					{isGenerating && (
-						<Icon
-							as={LuRefreshCw}
-							mr={2}
-							animation="spin 1s linear infinite"
-						/>
-					)}
-					{isGenerated && !isGenerating && <Icon as={LuRefreshCw} mr={2} />}
+					{isGenerated && <Icon as={LuRefreshCw} mr={2} />}
 					{isGenerated ? "Regenerate" : "Generate"}
 				</Button>
 			</Flex>
-		</Box>
+		</Flex>
 	);
 }

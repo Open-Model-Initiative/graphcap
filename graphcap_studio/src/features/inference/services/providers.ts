@@ -19,7 +19,13 @@ import type {
 	ServerProviderConfig,
 	SuccessResponse
 } from "@/types/provider-config-types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ServerConnection } from "@/types/server-connection-types";
+import { debugError, debugLog } from "@/utils/logger";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+// Component name for logging
+const COMPONENT_NAME = "ProvidersService";
 
 // Query keys for TanStack Query
 export const queryKeys = {
@@ -37,57 +43,180 @@ interface ErrorWithCause extends Error {
 }
 
 /**
- * Hook to get all providers
+ * Custom error for service connection issues
  */
-export function useProviders() {
-	const { connections } = useServerConnectionsContext();
+export class ServiceConnectionError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "ServiceConnectionError";
+	}
+}
+
+/**
+ * Helper function to check if the data service is connected
+ */
+function getDataServiceConnectionStatus(connections: ServerConnection[]) {
 	const dataServiceConnection = connections.find(
 		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
 	);
-	const isConnected = dataServiceConnection?.status === "connected";
+	
+	return {
+		isConnected: dataServiceConnection?.status === "connected",
+		connection: dataServiceConnection
+	};
+}
 
-	return useQuery({
+/**
+ * React Hook to wait for data service connection.
+ * This hook returns true once the data service is connected.
+ */
+export function useDataServiceConnected() {
+	const { connections } = useServerConnectionsContext();
+	const [isConnected, setIsConnected] = useState(false);
+	
+	useEffect(() => {
+		const { isConnected: connected } = getDataServiceConnectionStatus(connections);
+		if (connected && !isConnected) {
+			debugLog(COMPONENT_NAME, "Data service connected");
+			setIsConnected(true);
+		}
+	}, [connections, isConnected]);
+	
+	return isConnected;
+}
+
+/**
+ * Hook to get all providers
+ * 
+ * Note: This uses Suspense, so wrap the component using this in a Suspense boundary.
+ * The query function handles the case where data service is not connected.
+ */
+export function useProviders() {
+	const { connections } = useServerConnectionsContext();
+	const { isConnected } = getDataServiceConnectionStatus(connections);
+	
+	debugLog(COMPONENT_NAME, "useProviders init:", { isConnected });
+	
+	return useSuspenseQuery({
 		queryKey: queryKeys.providers,
 		queryFn: async () => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers.$get();
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch providers: ${response.status}`);
+			// Check connection status directly inside query function
+			// instead of using the value captured from the hook closure
+			const currentConnectionStatus = getDataServiceConnectionStatus(connections);
+			const currentIsConnected = currentConnectionStatus.isConnected;
+			
+			debugLog(COMPONENT_NAME, "Executing providers query:", { isConnected: currentIsConnected });
+			
+			if (!currentIsConnected) {
+				// When data service is not connected, return empty array
+				debugLog(COMPONENT_NAME, "Data service not connected, returning empty array");
+				return [];
 			}
-
-			return response.json() as Promise<Provider[]>;
+			
+			try {
+				const client = createDataServiceClient(connections);
+				const response = await client.providers.$get();
+				
+				if (!response.ok) {
+					debugError(COMPONENT_NAME, "Failed response:", response.status);
+					throw new Error(`Failed to fetch providers: ${response.status}`);
+				}
+	
+				const data = await response.json() as Provider[];
+				debugLog(COMPONENT_NAME, "Received providers:", { count: data.length });
+				return data;
+			} catch (error) {
+				debugError(COMPONENT_NAME, "Error in providers query:", error);
+				throw error;
+			}
 		},
-		enabled: isConnected,
 		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 }
 
 /**
+ * Non-suspense version of the providers hook that respects connection status
+ * This is useful for components that need to wait for a connection before fetching
+ */
+export function useProvidersWhenConnected() {
+	const { connections } = useServerConnectionsContext();
+	const { isConnected } = getDataServiceConnectionStatus(connections);
+	const queryClient = useQueryClient();
+	
+	debugLog(COMPONENT_NAME, "useProvidersWhenConnected init:", { isConnected });
+	
+	// Use standard useQuery which supports the enabled option
+	const result = useQuery({
+		queryKey: queryKeys.providers,
+		queryFn: async () => {
+			try {
+				const client = createDataServiceClient(connections);
+				const response = await client.providers.$get();
+				
+				if (!response.ok) {
+					debugError(COMPONENT_NAME, "Failed response:", response.status);
+					throw new Error(`Failed to fetch providers: ${response.status}`);
+				}
+	
+				const data = await response.json() as Provider[];
+				debugLog(COMPONENT_NAME, "Received providers:", { count: data.length });
+				return data;
+			} catch (error) {
+				debugError(COMPONENT_NAME, "Error in providers query:", error);
+				throw error;
+			}
+		},
+		enabled: isConnected,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
+	
+	// When connection state changes to connected, trigger a providers refetch
+	useEffect(() => {
+		if (isConnected) {
+			debugLog(COMPONENT_NAME, "Data service connected, refreshing providers");
+			queryClient.invalidateQueries({ queryKey: queryKeys.providers });
+		}
+	}, [isConnected, queryClient]);
+	
+	return result;
+}
+
+/**
  * Hook to get a provider by ID
+ * 
+ * Note: This uses Suspense, so wrap the component using this in a Suspense boundary.
+ * The query function handles the case where data service is not connected or ID is invalid.
  */
 export function useProvider(id: number) {
 	const { connections } = useServerConnectionsContext();
-	const dataServiceConnection = connections.find(
-		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
-	);
-	const isConnected = dataServiceConnection?.status === "connected";
-
-	return useQuery({
+	
+	return useSuspenseQuery({
 		queryKey: queryKeys.provider(id),
 		queryFn: async () => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"].$get({
-				param: { id: id.toString() },
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to fetch provider: ${response.status}`);
+			// Check connection status directly inside query function
+			const { isConnected } = getDataServiceConnectionStatus(connections);
+			
+			if (!isConnected || !id) {
+				// Return null when not connected or no valid ID
+				return null;
 			}
-
-			return response.json() as Promise<Provider>;
+			
+			try {
+				const client = createDataServiceClient(connections);
+				const response = await client.providers[":id"].$get({
+					param: { id: id.toString() },
+				});
+	
+				if (!response.ok) {
+					throw new Error(`Failed to fetch provider: ${response.status}`);
+				}
+	
+				return response.json() as Promise<Provider>;
+			} catch (error) {
+				console.error(`Error fetching provider ${id}:`, error);
+				throw error;
+			}
 		},
-		enabled: isConnected && !!id,
 	});
 }
 

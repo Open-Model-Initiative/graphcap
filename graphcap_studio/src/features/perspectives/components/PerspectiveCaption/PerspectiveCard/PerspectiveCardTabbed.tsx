@@ -10,14 +10,20 @@ import type { PerspectiveSchema } from "@/types/perspective-types";
  */
 import { Box, Card, Stack, Tabs, Text } from "@chakra-ui/react";
 import { CaptionTabContent } from "./CaptionTabContent";
-import { CopyFieldsComboButton } from "./copy-fields";
 import { PerspectiveDebug } from "./PerspectiveDebug";
 import { SchemaView } from "./SchemaView";
+import { CopyFieldsComboButton } from "./copy-fields";
 
+// Define a type for perspective data metadata
+interface PerspectiveMetadata {
+	generatedAt?: string;
+	timestamp?: string;
+	[key: string]: unknown;
+}
 
 export interface PerspectiveCardTabbedProps {
 	readonly schema: PerspectiveSchema;
-	readonly data: Record<string, any> | null;
+	readonly data: Record<string, unknown> | null;
 	readonly isActive: boolean;
 	readonly isGenerated: boolean;
 	readonly onSetActive: () => void;
@@ -40,6 +46,24 @@ export function PerspectiveCardTabbed({
 
 	const activeBorderColor = useColorModeValue("blue.500", "blue.400");
 
+	// Extract and format the timestamp safely
+	const timestamp = (() => {
+		const metadata = data?.metadata as PerspectiveMetadata | undefined;
+		const dateStr = metadata?.generatedAt ?? metadata?.timestamp;
+
+		if (!dateStr) {
+			return '';
+		}
+
+		try {
+			// dateStr is guaranteed to be a string here
+			return new Date(dateStr).toLocaleString();
+		} catch (e) {
+			console.error("Error formatting perspective timestamp:", e); // Log error
+			return '';
+		}
+	})();
+
 	return (
 		<Card.Root
 			variant="outline"
@@ -58,18 +82,23 @@ export function PerspectiveCardTabbed({
 			}}
 			display="flex"
 			flexDirection="column"
+			height="100%"
 			maxHeight="100%"
 		>
-			<Box flexShrink={0}>
+			<Box flexShrink={0} flexGrow={1} display="flex" flexDirection="column" height="100%">
 				<Tabs.Root
 					defaultValue={"caption"}
 					variant="enclosed"
 					colorScheme="blue"
 					onClick={(e) => e.stopPropagation()}
+					display="flex"
+					flexDirection="column"
+					height="100%"
 				>
 					<Tabs.List
 						bg={useColorModeValue("gray.100", "gray.700")}
 						width="100%"
+						flexShrink={0}
 					>
 						<Tabs.Trigger value="caption" disabled={!isGenerated}>
 							Caption
@@ -84,8 +113,8 @@ export function PerspectiveCardTabbed({
 						bg={useColorModeValue("white", "gray.900")}
 						p={2}
 						overflow="auto"
-						minHeight="150px"
-						maxHeight="415px"
+						flex="1"
+						minHeight="0"
 					>
 						{/* Caption Tab */}
 						<Tabs.Content value="caption">
@@ -165,9 +194,7 @@ export function PerspectiveCardTabbed({
 				{/* Right side: Timestamp and Copy Button */}
 				<Stack direction="row" gap={2} align="center">
 					<Text fontSize="xs" color={mutedTextColor}>
-						{data?.metadata?.generatedAt || data?.metadata?.timestamp ?
-							new Date(data?.metadata?.generatedAt || data?.metadata?.timestamp || '').toLocaleString() :
-							''}
+						{timestamp}
 					</Text>
 					{/* Replace the ClipboardButton with our new CopyFieldsComboButton */}
 					{data && (

@@ -1,7 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 // SPDX-License-Identifier: Apache-2.0
 import { z } from "zod";
-import { FileItem } from "../common/components/file-browser/types";
+import type { FileItem } from "../common/components/file-browser/types";
 import { getQueryClient } from "../utils/queryClient";
 
 /**
@@ -84,7 +84,7 @@ export async function fetchDirectory(
  * @param path - Directory path to browse
  * @returns Query result with the directory contents
  */
-export function useBrowseDirectory(path: string = "/") {
+export function useBrowseDirectory(path = "/") {
 	return useQuery({
 		queryKey: queryKeys.filesByPath(path),
 		queryFn: () => fetchDirectory(path),

@@ -12,7 +12,7 @@ import {
 	ImageDeleteResponseSchema,
 	ImageProcessResponseSchema,
 } from "@/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { fetchWithRetry } from "../utils/fetchUtils";
 import { getQueryClient } from "../utils/queryClient";
 
@@ -71,17 +71,31 @@ async function fetchDatasetList(mediaServerUrl: string) {
 }
 
 /**
- * React hook for listing all datasets and their images using TanStack Query
+ * React hook for listing all datasets and their images using TanStack Query with Suspense
  *
+ * @param mediaServerUrl The base URL of the media server.
  * @returns Query result with the list of datasets and their images
+ * 
+ * Note: This requires a valid mediaServerUrl. Wrap the component using this in a Suspense boundary.
  */
 export function useListDatasets(mediaServerUrl: string) {
-	return useQuery({
+	if (!mediaServerUrl) {
+		return { data: { datasets: [] } };
+	}
+
+	return useSuspenseQuery({
 		// Use the dynamic query key
 		queryKey: queryKeys.datasetImages(mediaServerUrl),
 		// Pass the URL to the query function
 		queryFn: () => fetchDatasetList(mediaServerUrl),
-		enabled: !!mediaServerUrl, // Only run the query if the URL is provided
+		// Add caching configuration to prevent hammering the server
+		staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+		gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+		// Disable automatic refetching on window focus to reduce API calls
+		refetchOnWindowFocus: false,
+		// Retry configuration
+		retry: 2,
+		retryDelay: 1000, // Wait 1 second between retries
 		meta: {
 			errorMessage: "Failed to load datasets",
 		},
@@ -135,7 +149,6 @@ export function useCreateDataset(mediaServerUrl: string) {
 			}
 		},
 		onSuccess: () => {
-
 			queryClient.invalidateQueries({ queryKey: ["datasets", "images"] }); 
 		},
 		meta: {
@@ -248,6 +261,8 @@ export async function prefetchDatasets(mediaServerUrl: string): Promise<void> {
 		queryKey: queryKeys.datasetImages(mediaServerUrl),
 		// Pass the URL to the query function
 		queryFn: () => fetchDatasetList(mediaServerUrl),
+		// Add caching configuration to prevent hammering the server
+		staleTime: 30 * 1000, // Consider data fresh for 30 seconds
 	});
 }
 

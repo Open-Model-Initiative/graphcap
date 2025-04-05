@@ -4,8 +4,24 @@ import { InferenceProviderProvider } from "@/features/inference/providers/contex
 import { PerspectivesProvider } from "@/features/perspectives/context";
 // SPDX-License-Identifier: Apache-2.0
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { ServerConnectionsProvider } from ".";
 import { FeatureFlagProvider } from "../features/app-settings/feature-flags/FeatureFlagProvider";
+
+/**
+ * Loading fallback component for Suspense
+ * Displays when data is being fetched
+ */
+function AppLoadingFallback() {
+	return (
+		<div className="h-screen w-screen flex items-center justify-center bg-background">
+			<div className="flex flex-col items-center gap-4">
+				<div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+				<p className="text-lg font-medium text-muted-foreground">Loading application...</p>
+			</div>
+		</div>
+	);
+}
 
 interface AppContextProviderProps {
 	readonly children: ReactNode;
@@ -32,7 +48,11 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
 				<DatasetProvider>
 					<GenerationOptionsProvider>
 						<InferenceProviderProvider>
-							<PerspectivesProvider image={null}>{children}</PerspectivesProvider>
+							<PerspectivesProvider image={null}>
+								<Suspense fallback={<AppLoadingFallback />}>
+									{children}
+								</Suspense>
+							</PerspectivesProvider>
 						</InferenceProviderProvider>
 					</GenerationOptionsProvider>
 				</DatasetProvider>

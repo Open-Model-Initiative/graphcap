@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Heading, Spinner, Text, VStack } from "@chakra-ui/react";
+import { useEffect } from "react";
 import { useDatasetContext } from "../context/DatasetContext";
 import { CreateDatasetModal } from "./CreateDatasetModal";
 import { DatasetTree } from "./DatasetTree";
@@ -53,6 +54,14 @@ export function DatasetPanel() {
 						selectedDataset={selectedDataset?.name ?? null}
 						selectedSubfolder={selectedSubfolder}
 						onSelectNode={(datasetId, _subfolder) => {
+							console.debug(`[DatasetPanel] onSelectNode called with datasetId=${datasetId}`);
+							console.debug(`[DatasetPanel] Current selectedDataset=${selectedDataset?.name}`);
+
+							if (selectedDataset?.name === datasetId) {
+								console.log(`[DatasetTree] Already on dataset ${datasetId}, skipping navigation`);
+								return;
+							}
+							console.log(`[DatasetTree] Navigating to dataset ${datasetId}`);
 							navigateToDataset({ id: datasetId, name: datasetId, iconType: 'dataset' });
 						}}
 					/>

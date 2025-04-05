@@ -2,7 +2,7 @@
 /**
  * Perspectives Pager Component
  *
- * This component displays perspectives in a paged layout with fixed header and footer.
+ * This component displays perspectives in a paged layout with a fixed footer that includes navigation controls.
  */
 
 import { useColorModeValue } from "@/components/ui/theme/color-mode";
@@ -10,39 +10,23 @@ import {
 	usePerspectiveUI,
 	usePerspectivesData,
 } from "@/features/perspectives/context";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Grid, GridItem } from "@chakra-ui/react";
 import React, { useMemo } from "react";
 import { EmptyPerspectives } from "../EmptyPerspectives";
 import { PerspectivesFooter } from "../PerspectiveActions/PerspectivesFooter";
 import { PerspectiveCardTabbed } from "../PerspectiveCard/PerspectiveCardTabbed";
-import { PerspectiveHeader } from "./PerspectiveHeader";
-
-interface OptionsControl {
-	readonly isOpen: boolean;
-	readonly onToggle: () => void;
-	readonly buttonRef: React.RefObject<HTMLButtonElement | null>;
-	readonly options: any;
-}
 
 /**
  * Component for displaying perspectives in a paged layout
  */
-export function PerspectivesPager({
-	optionsControl,
-}: {
-	optionsControl: OptionsControl;
-}) {
+export function PerspectivesPager() {
 	// Get data context props
 	const {
 		schemas,
 		isGenerating,
-		generatePerspective,
 		isPerspectiveGenerated,
-		isPerspectiveGenerating,
 		getPerspectiveData,
-		currentImage,
 		isPerspectiveVisible,
-		selectedProvider,
 	} = usePerspectivesData();
 
 	// Get UI-related props from UI context
@@ -61,6 +45,7 @@ export function PerspectivesPager({
 
 	// Colors
 	const bgColor = useColorModeValue("white", "gray.800");
+	const borderColor = useColorModeValue("gray.200", "gray.700");
 
 	// Handle navigation between perspectives
 	const handleNavigate = React.useCallback(
@@ -95,68 +80,68 @@ export function PerspectivesPager({
 	const activeSchema = schemas[activeSchemaName];
 	const captionData = getPerspectiveData(activeSchemaName);
 	const isGenerated = isPerspectiveGenerated(activeSchemaName);
-	const isGeneratingCurrent = isPerspectiveGenerating(activeSchemaName);
 
 	return (
-		<Flex
-			direction="column"
+		// Main container with Grid layout to prevent content shifting
+		<Grid
+			templateRows="1fr auto"
+			templateAreas={`
+				"content"
+				"footer"
+			`}
 			height="100%"
 			width="100%"
 			overflow="hidden"
-			position="relative"
 		>
-			{/* Fixed Header with Selection Controls */}
-			<Box flexShrink={0} height="auto" minHeight="40px">
-				<PerspectiveHeader
-					isLoading={isGenerating}
-					currentPerspectiveName={activeSchema?.display_name || "Loading..."}
-					totalPerspectives={schemaKeys.length}
-					currentIndex={currentIndex}
-					onNavigate={handleNavigate}
-				/>
-			</Box>
-
-			{/* Scrollable Content Area - takes remaining space but reserves room for footer */}
-			<Box flex="1" overflow="auto" px={2} py={2} bg={bgColor} minHeight="0">
-				{/* Active Perspective Card */}
-				{activeSchema && (
-					<PerspectiveCardTabbed
-						key={activeSchemaName}
-						schema={activeSchema}
-						data={captionData}
-						isActive={true}
-						isGenerated={isGenerated}
-						onGenerate={() => {
-							if (currentImage) {
-								generatePerspective(
-									activeSchemaName,
-									currentImage.path,
-									selectedProvider,
-								);
-							}
-						}}
-						onSetActive={() => setActiveSchemaName(activeSchemaName)}
-						isGenerating={isGeneratingCurrent}
-					/>
-				)}
-			</Box>
-
-			{/* Fixed Footer with Action Controls */}
-			<Box
-				flexShrink={0}
-				height="auto"
-				minHeight="40px"
+			{/* Content area - scrollable content with fixed size */}
+			<GridItem 
+				gridArea="content"
+				overflow="auto"
+				width="100%"
+				height="100%"
+				display="flex"
+				flexDirection="column"
+				px={2}
+				py={2}
 				bg={bgColor}
-				zIndex={5}
-				mt="auto"
+			>
+				<Box 
+					width="100%" 
+					height="auto" 
+					overflow="auto"
+					flex="1"
+				>
+					{/* Active Perspective Card */}
+					{activeSchema && (
+						<PerspectiveCardTabbed
+							key={activeSchemaName}
+							schema={activeSchema}
+							data={captionData}
+							isActive={true}
+							isGenerated={isGenerated}
+							onSetActive={() => setActiveSchemaName(activeSchemaName)}
+						/>
+					)}
+				</Box>
+			</GridItem>
+
+			{/* Footer - fixed at bottom */}
+			<GridItem
+				gridArea="footer"
+				bg={bgColor}
+				borderTopWidth="1px"
+				borderColor={borderColor}
+				width="100%"
 			>
 				<PerspectivesFooter
 					isLoading={isGenerating}
 					isGenerated={isGenerated}
-					optionsControl={optionsControl}
-					captionOptions={optionsControl.options}
+					totalPerspectives={schemaKeys.length}
+					currentIndex={currentIndex}
+					currentPerspectiveName={activeSchema?.display_name || "Loading..."}
+					onNavigate={handleNavigate}
 				/>
-			</Box>
-		</Flex>
+			</GridItem>
+		</Grid>
 	);
 }

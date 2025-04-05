@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { DatasetSelector } from "@/features/datasets/components";
 import { ImageGalleryContent } from "./ImageGalleryContent";
 import { ViewModeToggle } from "./components";
 import { useViewerContainer } from "./hooks";
@@ -9,8 +10,6 @@ interface ViewerContainerProps {
 	readonly className?: string;
 	/** Whether to show the view mode toggle button */
 	readonly showViewModeToggle?: boolean;
-	/** Title to display in the header bar */
-	readonly title?: string;
 	/** Callback when the upload button is clicked */
 	readonly onUpload?: () => void;
 	/** Callback when the close button is clicked */
@@ -33,12 +32,12 @@ interface ViewerContainerProps {
 export function ViewerContainer({
 	className = "",
 	showViewModeToggle = true,
-	title = "Image Viewer",
 	onUpload,
 	onClose,
 }: ViewerContainerProps) {
 	// Use our custom hook for container management
 	const { setContainerRef, thumbnailOptions } = useViewerContainer();
+
 
 	return (
 		<GalleryViewerProvider>
@@ -47,17 +46,18 @@ export function ViewerContainer({
 				className={`h-full w-full overflow-hidden flex flex-col ${className}`}
 			>
 				{/* Header bar with title, upload button, close button, and view mode toggle */}
-				<div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-					<div className="flex items-center space-x-4">
-						<h4 className="text-xl font-semibold">{title}</h4>
+				<div className="flex items-center justify-between border-b border-gray-700" style={{ padding: "2px" }}>
+					<div className="flex items-center space-x-6">
+						<span className="text-sm font-medium">Dataset:</span>
+						<DatasetSelector />
 					</div>
-					<div className="flex items-center space-x-2">
+					<div className="flex items-center space-x-4">
 						{showViewModeToggle && <ViewModeToggle />}
 						{onUpload && (
 							<button
 								type="button"
 								onClick={onUpload}
-								className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+								className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-sm"
 							>
 								Upload Images
 							</button>
@@ -66,7 +66,7 @@ export function ViewerContainer({
 							<button
 								type="button"
 								onClick={onClose}
-								className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+								className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-sm"
 							>
 								Close
 							</button>
@@ -74,7 +74,9 @@ export function ViewerContainer({
 					</div>
 				</div>
 
-				<div className="flex-grow relative">
+
+
+				<div className="flex-1 min-h-0 relative overflow-auto">
 					<ImageGalleryContent
 						thumbnailOptions={thumbnailOptions}
 					/>

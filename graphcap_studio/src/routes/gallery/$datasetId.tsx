@@ -2,7 +2,7 @@
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { GalleryContainer } from "@/pages/gallery/GalleryContainer";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // The route path is automatically derived from the file path
 export const Route = createFileRoute("/gallery/$datasetId")({
@@ -12,13 +12,18 @@ export const Route = createFileRoute("/gallery/$datasetId")({
 function DatasetLayoutComponent() {
 	const { datasetId } = Route.useParams();
 	const { selectDatasetById } = useDatasetContext();
+	const initializedRef = useRef(false);
 
 	useEffect(() => {
-		console.log(`Setting current dataset from route: ${datasetId}`);
-		selectDatasetById(datasetId);
+		if (datasetId && !initializedRef.current) {
+			console.debug(`[DatasetRoute] Setting dataset from route param: datasetId=${datasetId}`);
+			selectDatasetById(datasetId);
+			initializedRef.current = true;
+		}
 	}, [datasetId, selectDatasetById]);
 
-	// Render the GalleryContainer as layout, and Outlet for nested content route
+	console.debug('[DatasetRoute] Rendering DatasetLayoutComponent');
+
 	return (
 		<GalleryContainer>
 			<Outlet />
