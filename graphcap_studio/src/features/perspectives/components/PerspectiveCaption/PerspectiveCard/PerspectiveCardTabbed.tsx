@@ -85,7 +85,7 @@ export function PerspectiveCardTabbed({
 			height="100%"
 			maxHeight="100%"
 		>
-			<Box flexShrink={0} flexGrow={1} display="flex" flexDirection="column" height="100%">
+			<Box flexShrink={0} flexGrow={1} display="flex" flexDirection="column" height="90%">
 				<Tabs.Root
 					defaultValue={"caption"}
 					variant="enclosed"
