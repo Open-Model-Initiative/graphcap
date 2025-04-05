@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { PasteImageCapture } from "@/features/datasets/components/image-uploader";
 import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { ImageEditor } from "@/features/editor/components/ImageEditor";
 import { useImageEditor } from "@/features/editor/hooks";
@@ -71,7 +72,8 @@ export function ImageGalleryContent({
 		);
 	}
 
-	return (
+	// Only enable paste capture when not in edit mode
+	const galleryContent = (
 		<div className="h-full w-full flex flex-col bg-gray-900 overflow-hidden">
 			{/* Compact action bar at the top */}
 			{showActionBar && (
@@ -88,5 +90,14 @@ export function ImageGalleryContent({
 				{content}
 			</div>
 		</div>
+	);
+
+	// Wrap with paste capture only when not in edit mode
+	return viewMode === "edit" ? (
+		galleryContent
+	) : (
+		<PasteImageCapture className="h-full w-full">
+			{galleryContent}
+		</PasteImageCapture>
 	);
 }

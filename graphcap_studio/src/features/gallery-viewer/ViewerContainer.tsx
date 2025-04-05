@@ -38,6 +38,7 @@ export function ViewerContainer({
 	// Use our custom hook for container management
 	const { setContainerRef, thumbnailOptions } = useViewerContainer();
 
+
 	return (
 		<GalleryViewerProvider>
 			<div
@@ -72,6 +73,8 @@ export function ViewerContainer({
 						)}
 					</div>
 				</div>
+
+
 
 				<div className="flex-1 min-h-0 relative overflow-auto">
 					<ImageGalleryContent

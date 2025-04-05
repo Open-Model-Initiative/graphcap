@@ -2,7 +2,7 @@ import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useUploadImage } from "@/services/dataset";
 import { toast } from "@/utils/toast";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useDatasetContext } from "../../context/DatasetContext"; // Import context hook
 
@@ -17,6 +17,7 @@ export interface UseImageUploaderResult {
 	getInputProps: ReturnType<typeof useDropzone>["getInputProps"];
 	isDragActive: boolean;
 	isDisabled: boolean;
+	handlePaste: (event: ClipboardEvent) => void;
 }
 
 /**
@@ -53,8 +54,8 @@ export function useImageUploader({
 	// Determine if the uploader should be disabled (no valid dataset, loading, or error)
 	const isDisabled = !selectedDataset || isLoadingDataset || !!datasetError || !mediaServerUrl;
 
-	const onDrop = useCallback(
-		async (acceptedFiles: File[]) => {
+	const processFiles = useCallback(
+		async (files: File[]) => {
 			// Ensure a dataset is selected and not loading/erroring before uploading
 			if (!selectedDataset || isLoadingDataset || datasetError) {
 				toast.error({
@@ -66,22 +67,22 @@ export function useImageUploader({
 				});
 				return;
 			}
-			if (!acceptedFiles || acceptedFiles.length === 0) return;
+			if (!files || files.length === 0) return;
 
 			setIsUploading(true);
-			const totalFiles = acceptedFiles.length;
+			const totalFiles = files.length;
 			let uploadedCount = 0;
 			const failedUploads: string[] = [];
 
 			// Initialize progress for each file
 			const initialProgress: Record<string, number> = {};
-			for (const file of acceptedFiles) {
+			for (const file of files) {
 				initialProgress[file.name] = 0;
 			}
 			setUploadProgress(initialProgress);
 
 			// Process files sequentially to avoid overwhelming the server
-			for (const file of acceptedFiles) {
+			for (const file of files) {
 				try {
 					// Update progress to show we're starting this file
 					setUploadProgress((prev) => ({
@@ -143,6 +144,13 @@ export function useImageUploader({
 		],
 	);
 
+	const onDrop = useCallback(
+		(acceptedFiles: File[]): void => {
+			processFiles(acceptedFiles);
+		},
+		[processFiles]
+	);
+
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
 		accept: {
@@ -152,6 +160,40 @@ export function useImageUploader({
 		maxSize: 50 * 1024 * 1024, // 50MB
 	});
 
+	// Handler for clipboard paste events
+	const handlePaste = useCallback(
+		(event: ClipboardEvent): void => {
+			if (isDisabled || isUploading) return;
+			
+			const items = event.clipboardData?.items;
+			if (!items) return;
+			
+			const imageFiles: File[] = [];
+			
+			for (const item of Array.from(items)) {
+				// Check if the clipboard item is an image
+				if (item.type.indexOf('image') !== -1) {
+					const file = item.getAsFile();
+					if (file) {
+						// Generate a name with timestamp to ensure uniqueness
+						const timestamp = new Date().getTime();
+						const newFile = new File(
+							[file], 
+							`pasted-image-${timestamp}.${file.type.split('/')[1] || 'png'}`,
+							{ type: file.type }
+						);
+						imageFiles.push(newFile);
+					}
+				}
+			}
+			
+			if (imageFiles.length > 0) {
+				processFiles(imageFiles);
+			}
+		},
+		[isDisabled, isUploading, processFiles]
+	);
+
 	return {
 		isUploading,
 		uploadProgress,
@@ -159,5 +201,6 @@ export function useImageUploader({
 		getInputProps,
 		isDragActive,
 		isDisabled,
+		handlePaste,
 	};
 }
