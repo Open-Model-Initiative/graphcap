@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+import { useDatasetContext } from "@/features/datasets/context/DatasetContext";
 import { SERVER_IDS } from "@/features/server-connections/constants";
 import { useServerConnections } from "@/features/server-connections/useServerConnections";
 import { useDeleteDataset } from "@/services/dataset";
 import { toast } from "@/utils/toast";
-// SPDX-License-Identifier: Apache-2.0
 import {
 	AlertDescription,
 	Button,
@@ -12,6 +13,7 @@ import {
 	Portal,
 	Text,
 } from "@chakra-ui/react";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 import { LuTrash2 } from "react-icons/lu";
 
@@ -32,6 +34,8 @@ export function DeleteDatasetModal({
 	onDatasetDeleted,
 }: DeleteDatasetModalProps) {
 	const [error, setError] = useState<string | null>(null);
+	const { selectedDataset } = useDatasetContext();
+	const navigate = useNavigate();
 	
 	const { connections } = useServerConnections();
 	const mediaServerConnection = connections.find(
@@ -62,7 +66,12 @@ export function DeleteDatasetModal({
 			await deleteDatasetMutation.mutateAsync(datasetName);
 			toast.success({ title: `Dataset "${datasetName}" deleted successfully` });
 			onDatasetDeleted();
-			handleCloseAndReset(); // Close and reset on success
+			handleCloseAndReset(); 
+
+			if (selectedDataset && selectedDataset.name === datasetName) {
+				console.debug(`Navigating to /gallery/ because selected dataset (${datasetName}) was deleted.`);
+				navigate({ to: "/gallery", replace: true }); 
+			}
 		} catch (err) {
 			console.error("Error deleting dataset:", err);
 			setError(err instanceof Error ? err.message : "Failed to delete dataset");
@@ -72,7 +81,6 @@ export function DeleteDatasetModal({
 	return (
 		<Dialog.Root
 			open={isOpen}
-			// Use onOpenChange to handle closing and state reset
 			onOpenChange={(e) => { if (!e.open) handleCloseAndReset(); }}
 			initialFocusEl={() => cancelRef.current}
 			placement="center"
