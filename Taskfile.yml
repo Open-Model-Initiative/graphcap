@@ -25,17 +25,10 @@ tasks:
   setup:
     desc: Setup the project 
     cmds:
-      - task: setup:{{OS}}
-
-  setup:default:
-    internal: true
-    cmds:
-      - cp ./workspace/config/.env.template ./workspace/config/.env
-
-  setup:windows:
-    internal: true
-    cmds:
-      - copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
+      - cmd: cp ./workspace/config/.env.template ./workspace/config/.env
+        platforms: [linux, darwin]
+      - cmd: copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
+        platforms: [windows]
 
 
 
