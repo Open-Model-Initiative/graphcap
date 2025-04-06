@@ -8,7 +8,7 @@ This guide will help you manage a dataset in the Graphcap UI.
 Creating a New Dataset
 ----------------------
 
-1. Visit ``localhost:32300`` to access the Graphcap web interface.
+1. Visit ``localhost:32200`` to access the Graphcap web interface.
 
 2. Click on the ``Gallery`` link on the right side. The Gallery defaults to the Carousel View and the ``os_img`` Dataset. 
 
