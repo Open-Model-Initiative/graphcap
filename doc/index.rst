@@ -52,8 +52,6 @@ Getting Started
    getting_started/hello_world
    getting_started/configuration
    getting_started/datasets
-   getting_started/caption_pipeline
-   getting_started/workspaces
    getting_started/docker_override
 
 User Interface
