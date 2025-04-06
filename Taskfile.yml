@@ -25,7 +25,10 @@ tasks:
   setup:
     desc: Setup the project 
     cmds:
-      - cp ./workspace/config/.env.template ./workspace/config/.env
+      - cmd: cp ./workspace/config/.env.template ./workspace/config/.env
+        platforms: [linux, darwin]
+      - cmd: cmd /c copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
+        platforms: [windows]
 
 
 
