@@ -27,7 +27,7 @@ tasks:
     cmds:
       - cmd: cp ./workspace/config/.env.template ./workspace/config/.env
         platforms: [linux, darwin]
-      - cmd: copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
+      - cmd: cmd /c copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
         platforms: [windows]
 
 
