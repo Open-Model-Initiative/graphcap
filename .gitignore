@@ -24,3 +24,6 @@ docker-compose.override.yml
 node_modules/
 graphcap_pg.session.sql
 media_server_v2/
+
+# Doc build files
+doc/_build/*
