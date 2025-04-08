@@ -8,28 +8,30 @@ This guide will help you manage a dataset in the Graphcap UI.
 Creating a New Dataset
 ----------------------
 
-1. Visit ``localhost:32300`` to access the Graphcap web interface.
+1. Visit ``localhost:32200`` to access the Graphcap web interface.
 
-2. Click on the ``Gallery`` link on the right side. The Gallery defaults to the Carousel View and the ``os_img`` Dataset. 
+2. Click on the ``Datasets`` icon on the left side. The left drawer will open and you will see the current Datasets available to you.
 
-3. On the left side of the Gallery screen, next to Datasets, click on the ``New Dataset`` button. A ``Create New Dataset`` window will popup.
+3. Click on the ``Create Dataset`` button. A ``Create New Dataset`` window will popup.
 
-4. Type in the name of the dataset and press the ``Create dataset`` button. Use only letters, numbers, underscores, and hyphens. This will create a folder in the ``workspace/datasets/local`` folder, and this location will be referenced in future steps.
+4. Type in the name of the dataset and press the ``Create Dataset`` button. Use only letters, numbers, underscores, and hyphens. 
 
-If you need to cancel out of creating the dataset, click the ``Cancel`` button in the popup to return to the Gallery screen.
+If you need to cancel out of creating the dataset, click the ``Cancel`` button in the popup to return to the previous screen.
 
 Deleting a Dataset
 ------------------
 
-1. In the Gallery screen, either hover over or select the dataset you wish to delete.
+1. Click on the ``Datasets`` icon on the left side. The left drawer will open and you will see the current Datasets available to you.
 
-2. Click on the "hamburger" menu (the three vertical dots) that appear on the dataset. A small dialogue option will appear with ``Delete Dataset``.
+2. Hover over or select the dataset you wish to delete.
 
-3. Click on ``Delete Dataset``. A separate "Delete Dataset" window will popup, asking for you to confirm deletion of the dataset.
+3. Click on the "hamburger" menu (the three vertical dots) that appear on the dataset. A small dialogue option will appear with ``Delete Dataset``.
 
-4. To confirm deletion, click the ``Delete Dataset`` button in the popup.
+4. Click on ``Delete Dataset``. A separate "Delete Dataset" window will popup, asking for you to confirm deletion of the dataset.
 
-If you need to cancel the deletion, click the ``Cancel`` button in the popup to return to the Gallery screen.
+5. To confirm deletion, click the ``Delete Dataset`` button in the popup.
+
+If you need to cancel the deletion, click the ``Cancel`` button in the popup to return to the previous screen.
 
 Adding Images to a Dataset
 ---------------------------------
@@ -42,12 +44,20 @@ In a blank dataset, "No images found" will be shown, with a button to upload ima
 
 3. Select the image or images to upload, and click ``Open``.
 
+You can also drag-and-drop images to the dataset. Simply drag the image from a file browser and drop it over the ``Upload`` button.
+
 Deleting Images from a Dataset
 ------------------------------
 
 1. In either Carousel View or Grid View, select the image to delete.
 
 2. In the top right of the Image Editor, click the trashcan icon to delete the image.
+
+3. A confirmation modal will open, asking if you are sure you want to delete the image.
+
+4. To confirm deletion, click the ``Delete Image`` button in the modal.
+
+If you need to cancel the deletion, click the ``Cancel`` button in the modal to return to the previous screen.
 
 Editing Images in a Dataset
 ---------------------------
