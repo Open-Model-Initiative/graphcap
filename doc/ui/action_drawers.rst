@@ -13,7 +13,7 @@ Left Action Drawer
 
 The left drawer provides access to common configuration options and feature flags:
 
-* Always present in the interface
+* Optional visibility based on context
 * Contains feature toggles and standard configuration options
 * Designed for frequent access to common settings
 * Collapsible to maximize workspace when needed
