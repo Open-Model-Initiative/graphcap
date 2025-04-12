@@ -1,3 +1,5 @@
+.. _data_service:
+
 =================================
 graphcap Data Service Architecture
 =================================

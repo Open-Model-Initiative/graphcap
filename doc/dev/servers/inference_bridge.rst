@@ -1,3 +1,5 @@
+.. _inference_bridge:
+
 =====================================
 graphcap Inference Bridge Architecture
 =====================================

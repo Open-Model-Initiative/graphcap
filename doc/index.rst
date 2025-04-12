@@ -49,7 +49,6 @@ Getting Started
    :caption: Getting Started Guide
 
    getting_started/index
-   getting_started/hello_world
    getting_started/configuration
    getting_started/datasets
    getting_started/docker_override
@@ -62,6 +61,28 @@ User Interface
    :caption: UI Guide
 
    ui/action_drawers
+
+Concepts
+========
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Concepts
+
+   concepts/perspectives
+
+Development
+===========
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Development Documentation
+
+   dev/architecture
+   dev/servers/data_service
+   dev/servers/inference_bridge
+   dev/servers/media_server
+   dev/caption_pipeline
 
 Indices and tables
 ==================

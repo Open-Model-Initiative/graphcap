@@ -1,3 +1,5 @@
+.. _media_server:
+
 =================================
 graphcap Media Server Architecture
 =================================
