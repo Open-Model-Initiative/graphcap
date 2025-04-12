@@ -40,8 +40,8 @@ Architecture Components
 .. code-block:: text
 
    ┌──────────────────────────────────────────────────────┐
-   │                    Data Service                       │
-   │                                                       │
+   │                    Data Service                      │
+   │                                                      │
    │  ┌─────────────┐      ┌──────────────┐     ┌────────┐│
    │  │             │      │              │     │        ││
    │  │  Hono API   ├──────┤  Repository  ├─────┤ Drizzle││
