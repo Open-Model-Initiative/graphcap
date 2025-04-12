@@ -3,7 +3,7 @@ Action Drawers
 
 graphcap Studio now features collapsible action drawers on both sides of the interface for quick access to configuration and tools.
 
-.. image:: /static/images/action-drawers.png
+.. image:: action_drawers/static/action-drawers.png
    :alt: graphcap Studio action drawers showing left and right panels
    :align: center
    :width: 100%
@@ -13,7 +13,7 @@ Left Action Drawer
 
 The left drawer provides access to common configuration options and feature flags:
 
-* Always present in the interface
+* Optional visibility based on context
 * Contains feature toggles and standard configuration options
 * Designed for frequent access to common settings
 * Collapsible to maximize workspace when needed

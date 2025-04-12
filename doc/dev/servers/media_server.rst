@@ -1,3 +1,5 @@
+.. _media_server:
+
 =================================
 graphcap Media Server Architecture
 =================================
@@ -38,8 +40,8 @@ Architecture Components
 .. code-block:: text
 
    ┌─────────────────────────────────────────────────────┐
-   │                   Media Server                       │
-   │                                                      │
+   │                   Media Server                      │
+   │                                                     │
    │   ┌─────────────┐    ┌───────────────┐              │
    │   │             │    │               │              │
    │   │  Express    ├────┤   Services    │              │

@@ -1,3 +1,5 @@
+.. _architecture:
+
 =================================
 graphcap Architecture Overview
 =================================

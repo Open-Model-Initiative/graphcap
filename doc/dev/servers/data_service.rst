@@ -1,3 +1,5 @@
+.. _data_service:
+
 =================================
 graphcap Data Service Architecture
 =================================
@@ -38,8 +40,8 @@ Architecture Components
 .. code-block:: text
 
    ┌──────────────────────────────────────────────────────┐
-   │                    Data Service                       │
-   │                                                       │
+   │                    Data Service                      │
+   │                                                      │
    │  ┌─────────────┐      ┌──────────────┐     ┌────────┐│
    │  │             │      │              │     │        ││
    │  │  Hono API   ├──────┤  Repository  ├─────┤ Drizzle││

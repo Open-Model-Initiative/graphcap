@@ -1,3 +1,5 @@
+.. _perspectives:
+
 ===========================
 Perspectives in graphcap
 ===========================
