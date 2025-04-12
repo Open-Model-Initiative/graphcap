@@ -1,0 +1,980 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>graphcap Media Server Architecture &#8212; graphcap  0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dev/servers/media_server';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Caption Pipeline" href="../caption_pipeline.html" />
+    <link rel="prev" title="graphcap Inference Bridge Architecture" href="inference_bridge.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">graphcap  0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/datasets.html">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inference_bridge.html">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/datasets.html">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inference_bridge.html">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">graphcap Media Server Architecture</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="graphcap-media-server-architecture">
+<span id="media-server"></span><h1>graphcap Media Server Architecture<a class="headerlink" href="#graphcap-media-server-architecture" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The Media Server is a specialized component of the graphcap system responsible for managing, serving, and processing media assets (primarily images). It provides a REST API for media operations, handles file storage, and manages access to workspace images for other services in the graphcap ecosystem.</p>
+<p>This document details the architecture, components, and interactions of the Media Server within the graphcap ecosystem.</p>
+<section id="purpose">
+<h3>Purpose<a class="headerlink" href="#purpose" title="Link to this heading">#</a></h3>
+<p>The Media Server fulfills several essential responsibilities:</p>
+<ol class="arabic simple">
+<li><p><strong>Media Asset Management</strong>
+- Provides access to images stored in the workspace directory
+- Manages file uploads and downloads
+- Implements file system operations (listing, copying, moving)
+- Serves images to frontend clients and other services</p></li>
+<li><p><strong>Media Processing</strong>
+- Handles image format conversions
+- Provides image metadata extraction
+- Generates thumbnails and previews
+- Supports image validation and sanitization</p></li>
+<li><p><strong>Workspace Navigation</strong>
+- Provides directory listing and traversal
+- Manages datasets and collections of images
+- Supports searching and filtering media assets
+- Enforces access permissions to files and directories</p></li>
+</ol>
+</section>
+</section>
+<section id="architecture-components">
+<h2>Architecture Components<a class="headerlink" href="#architecture-components" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌─────────────────────────────────────────────────────┐
+│                   Media Server                      │
+│                                                     │
+│   ┌─────────────┐    ┌───────────────┐              │
+│   │             │    │               │              │
+│   │  Express    ├────┤   Services    │              │
+│   │  API Layer  │    │   Layer       │              │
+│   │             │    │               │              │
+│   └─────┬───────┘    └───────┬───────┘              │
+│         │                    │                      │
+│   ┌─────┴───────┐     ┌─────┴───────┐  ┌─────────┐  │
+│   │ Middleware  │     │ Filesystem  │  │Workspace│  │
+│   │ Layer       │     │ Utilities   ├──┤Directory│  │
+│   └─────────────┘     └─────────────┘  └─────────┘  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+                          │
+                          ▼
+                ┌───────────────────┐
+                │  Other graphcap   │
+                │    Services       │
+                └───────────────────┘
+</pre></div>
+</div>
+<section id="core-components">
+<h3>Core Components<a class="headerlink" href="#core-components" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Express API Layer</strong>
+- Implements RESTful API endpoints
+- Handles request routing and parameter validation
+- Manages HTTP response formatting and error handling
+- Implements CORS and security headers</p></li>
+<li><p><strong>Services Layer</strong>
+- Implements business logic for media operations
+- Provides abstractions for filesystem operations
+- Handles media metadata extraction and processing
+- Manages caching and performance optimizations</p></li>
+<li><p><strong>Middleware Layer</strong>
+- Handles authentication and authorization
+- Implements request logging and monitoring
+- Provides error handling and request validation
+- Manages CORS and security policies</p></li>
+<li><p><strong>Filesystem Utilities</strong>
+- Abstracts file system operations
+- Handles file paths and directory traversal safely
+- Manages file operations (read, write, delete, copy)
+- Provides stream processing for large files</p></li>
+<li><p><strong>Workspace Directory</strong>
+- Central storage location for all media assets
+- Organized structure for datasets and user content
+- Shared volume mounted into docker containers
+- Accessible to all graphcap services via the Media Server</p></li>
+</ol>
+</section>
+</section>
+<section id="api-endpoints">
+<h2>API Endpoints<a class="headerlink" href="#api-endpoints" title="Link to this heading">#</a></h2>
+<p>The Media Server exposes the following REST API endpoints:</p>
+<section id="media-operations">
+<h3>Media Operations<a class="headerlink" href="#media-operations" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>/api/media/image/:path</p></td>
+<td><p>GET</p></td>
+<td><p>Retrieve an image by path</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/media/upload</p></td>
+<td><p>POST</p></td>
+<td><p>Upload a new image</p></td>
+</tr>
+<tr class="row-even"><td><p>/api/media/thumbnail/:path</p></td>
+<td><p>GET</p></td>
+<td><p>Get thumbnail of an image</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/media/metadata/:path</p></td>
+<td><p>GET</p></td>
+<td><p>Get metadata for an image</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="workspace-management">
+<h3>Workspace Management<a class="headerlink" href="#workspace-management" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>/api/workspace/list/:path</p></td>
+<td><p>GET</p></td>
+<td><p>List directory contents</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/workspace/create</p></td>
+<td><p>POST</p></td>
+<td><p>Create a new directory</p></td>
+</tr>
+<tr class="row-even"><td><p>/api/workspace/move</p></td>
+<td><p>POST</p></td>
+<td><p>Move a file or directory</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/workspace/delete/:path</p></td>
+<td><p>DELETE</p></td>
+<td><p>Delete a file or directory</p></td>
+</tr>
+<tr class="row-even"><td><p>/api/workspace/search</p></td>
+<td><p>GET</p></td>
+<td><p>Search files by criteria</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="dataset-operations">
+<h3>Dataset Operations<a class="headerlink" href="#dataset-operations" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>/api/datasets/list</p></td>
+<td><p>GET</p></td>
+<td><p>List all datasets</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/datasets/:id/images</p></td>
+<td><p>GET</p></td>
+<td><p>Get images in a dataset</p></td>
+</tr>
+<tr class="row-even"><td><p>/api/datasets/create</p></td>
+<td><p>POST</p></td>
+<td><p>Create a new dataset</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/datasets/:id/add</p></td>
+<td><p>POST</p></td>
+<td><p>Add images to a dataset</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="image-processing">
+<h3>Image Processing<a class="headerlink" href="#image-processing" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 54.5%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Endpoint</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>/api/process/resize</p></td>
+<td><p>POST</p></td>
+<td><p>Resize an image</p></td>
+</tr>
+<tr class="row-odd"><td><p>/api/process/convert</p></td>
+<td><p>POST</p></td>
+<td><p>Convert image format</p></td>
+</tr>
+<tr class="row-even"><td><p>/api/process/optimize</p></td>
+<td><p>POST</p></td>
+<td><p>Optimize image size</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Media Serving</strong>
+- Streams large files to minimize memory usage
+- Implements conditional GET with ETag support
+- Supports range requests for partial content
+- Configurable caching headers</p></li>
+<li><p><strong>Secure Access Control</strong>
+- Validates file paths to prevent directory traversal
+- Enforces permissions on workspace directories
+- Sanitizes filenames and content
+- Restricts operations to allowed file types</p></li>
+<li><p><strong>Metadata Management</strong>
+- Extracts EXIF and other embedded metadata
+- Provides image dimensions and format information
+- Supports custom metadata for graphcap features
+- Enables searching by metadata attributes</p></li>
+<li><p><strong>Integration with graphcap Services</strong>
+- Provides media assets to the Inference Bridge for processing
+- Stores and serves caption results from the Data Service
+- Supports the Studio UI with optimized media delivery
+- Enables sharing workspace content between services</p></li>
+</ol>
+</section>
+<section id="implementation-stack">
+<h2>Implementation Stack<a class="headerlink" href="#implementation-stack" title="Link to this heading">#</a></h2>
+<p>The Media Server is built using the following technologies:</p>
+<ul class="simple">
+<li><p><strong>Node.js</strong>: Runtime environment</p></li>
+<li><p><strong>Express</strong>: Web framework for API implementation</p></li>
+<li><p><strong>Sharp</strong>: High-performance image processing library</p></li>
+<li><p><strong>Multer</strong>: Middleware for handling multipart/form-data</p></li>
+<li><p><strong>Morgan</strong>: HTTP request logger middleware</p></li>
+<li><p><strong>Helmet</strong>: Security middleware for HTTP headers</p></li>
+</ul>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<p>The Media Server is configured using environment variables:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.8%" />
+<col style="width: 46.2%" />
+<col style="width: 23.1%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PORT</p></td>
+<td><p>Port to run the service on</p></td>
+<td><p>32553</p></td>
+</tr>
+<tr class="row-odd"><td><p>NODE_ENV</p></td>
+<td><p>Environment (development/production)</p></td>
+<td><p>development</p></td>
+</tr>
+<tr class="row-even"><td><p>WORKSPACE_PATH</p></td>
+<td><p>Path to workspace directory</p></td>
+<td><p>/workspace</p></td>
+</tr>
+<tr class="row-odd"><td><p>MAX_FILE_SIZE</p></td>
+<td><p>Maximum upload file size in MB</p></td>
+<td><p>100</p></td>
+</tr>
+<tr class="row-even"><td><p>ALLOWED_EXTENSIONS</p></td>
+<td><p>Comma-separated list of allowed file extensions</p></td>
+<td><p>jpg,jpeg,png,gif</p></td>
+</tr>
+<tr class="row-odd"><td><p>THUMBNAIL_CACHE_SIZE</p></td>
+<td><p>Number of thumbnails to cache in memory</p></td>
+<td><p>1000</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">#</a></h2>
+<p>The Media Server is containerized using Docker:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">graphcap_media_server</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">graphcap_media_server</span>
+<span class="w">  </span><span class="nt">build</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./servers/media_server</span>
+<span class="w">    </span><span class="nt">dockerfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Dockerfile.media_server.dev</span>
+<span class="w">  </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;32553:32553&quot;</span>
+<span class="w">  </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NODE_ENV=development</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PORT=32553</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WORKSPACE_PATH=/workspace</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAX_FILE_SIZE=100</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ALLOWED_EXTENSIONS=jpg,jpeg,png,gif,tiff</span>
+<span class="w">  </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./workspace:/workspace</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./servers/media_server:/app</span>
+<span class="w">  </span><span class="nt">networks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">graphcap</span>
+<span class="w">  </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;wget&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--spider&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:32553/health&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5m</span>
+<span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<span class="w">    </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+</pre></div>
+</div>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h2>
+<p>The Media Server implements comprehensive error handling:</p>
+<ol class="arabic simple">
+<li><p><strong>File Operation Errors</strong>
+- Graceful handling of missing files
+- Safe error messages that don’t expose system details
+- Appropriate HTTP status codes (404, 403, etc.)
+- Consistent error response format</p></li>
+<li><p><strong>Request Validation</strong>
+- Validates file paths and query parameters
+- Checks file types and sizes before processing
+- Enforces access permissions
+- Prevents dangerous operations</p></li>
+<li><p><strong>Resource Limitations</strong>
+- Implements request timeouts
+- Manages memory usage for large files
+- Limits concurrent uploads and processing operations
+- Provides clear error messages for limit violations</p></li>
+</ol>
+</section>
+<section id="performance-considerations">
+<h2>Performance Considerations<a class="headerlink" href="#performance-considerations" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Streaming</strong>
+- Uses streams for file operations to minimize memory usage
+- Implements chunked transfer encoding
+- Processes large files in chunks</p></li>
+<li><p><strong>Caching</strong>
+- Caches frequently accessed thumbnails
+- Uses ETags and conditional requests
+- Implements appropriate Cache-Control headers
+- Memory-efficient LRU caching strategy</p></li>
+<li><p><strong>Optimization</strong>
+- Asynchronous processing for non-blocking operations
+- Connection pooling for concurrent requests
+- Efficient image processing with Sharp
+- Resource cleanup after operations</p></li>
+</ol>
+</section>
+<section id="monitoring-and-logging">
+<h2>Monitoring and Logging<a class="headerlink" href="#monitoring-and-logging" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Health Check</strong>
+- <code class="docutils literal notranslate"><span class="pre">/health</span></code> endpoint for container orchestration
+- Resource usage monitoring
+- Storage space validation</p></li>
+<li><p><strong>Request Logging</strong>
+- Detailed HTTP request logs
+- Performance metrics for media operations
+- Error tracking and categorization</p></li>
+<li><p><strong>Metrics</strong>
+- File operation counts and timings
+- Storage usage statistics
+- Request latency measurements
+- Cache hit/miss ratios</p></li>
+</ol>
+</section>
+<section id="integration-with-graphcap-ecosystem">
+<h2>Integration with graphcap Ecosystem<a class="headerlink" href="#integration-with-graphcap-ecosystem" title="Link to this heading">#</a></h2>
+<p>The Media Server interacts with other graphcap components:</p>
+<ol class="arabic simple">
+<li><p><strong>Inference Bridge</strong>
+- Provides images for caption generation
+- Receives processed media assets</p></li>
+<li><p><strong>Data Service</strong>
+- Supplies file paths and metadata
+- Receives updated media information</p></li>
+<li><p><strong>Studio Frontend</strong>
+- Serves optimized images for display
+- Handles media uploads from users
+- Provides browsing and search capabilities</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="inference_bridge.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">graphcap Inference Bridge Architecture</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../caption_pipeline.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Caption Pipeline</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#purpose">Purpose</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-components">Architecture Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#core-components">Core Components</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-endpoints">API Endpoints</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#media-operations">Media Operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-management">Workspace Management</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dataset-operations">Dataset Operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#image-processing">Image Processing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-features">Key Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-stack">Implementation Stack</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-considerations">Performance Considerations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#monitoring-and-logging">Monitoring and Logging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-graphcap-ecosystem">Integration with graphcap Ecosystem</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/dev/servers/media_server.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, graphcap Contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

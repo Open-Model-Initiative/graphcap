@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Datasets &#8212; graphcap  0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting_started/datasets';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Action Drawers" href="../ui/action_drawers.html" />
+    <link rel="prev" title="Docker Override" href="docker_override.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">graphcap  0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../dev/architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../dev/servers/data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../dev/servers/inference_bridge.html">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../dev/servers/media_server.html">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../dev/caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../dev/architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../dev/servers/data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../dev/servers/inference_bridge.html">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../dev/servers/media_server.html">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../dev/caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Datasets</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="datasets">
+<span id="id1"></span><h1>Datasets<a class="headerlink" href="#datasets" title="Link to this heading">#</a></h1>
+<p>This guide will help you manage a dataset in the Graphcap UI.</p>
+<section id="creating-a-new-dataset">
+<h2>Creating a New Dataset<a class="headerlink" href="#creating-a-new-dataset" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Visit <code class="docutils literal notranslate"><span class="pre">localhost:32200</span></code> to access the Graphcap web interface.</p></li>
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">Datasets</span></code> icon on the left side. The left drawer will open and you will see the current Datasets available to you.</p></li>
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">Dataset</span></code> button. A <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">New</span> <span class="pre">Dataset</span></code> window will popup.</p></li>
+<li><p>Type in the name of the dataset and press the <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">Dataset</span></code> button. Use only letters, numbers, underscores, and hyphens.</p></li>
+</ol>
+<p>If you need to cancel out of creating the dataset, click the <code class="docutils literal notranslate"><span class="pre">Cancel</span></code> button in the popup to return to the previous screen.</p>
+</section>
+<section id="deleting-a-dataset">
+<h2>Deleting a Dataset<a class="headerlink" href="#deleting-a-dataset" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">Datasets</span></code> icon on the left side. The left drawer will open and you will see the current Datasets available to you.</p></li>
+<li><p>Hover over or select the dataset you wish to delete.</p></li>
+<li><p>Click on the “hamburger” menu (the three vertical dots) that appear on the dataset. A small dialogue option will appear with <code class="docutils literal notranslate"><span class="pre">Delete</span> <span class="pre">Dataset</span></code>.</p></li>
+<li><p>Click on <code class="docutils literal notranslate"><span class="pre">Delete</span> <span class="pre">Dataset</span></code>. A separate “Delete Dataset” window will popup, asking for you to confirm deletion of the dataset.</p></li>
+<li><p>To confirm deletion, click the <code class="docutils literal notranslate"><span class="pre">Delete</span> <span class="pre">Dataset</span></code> button in the popup.</p></li>
+</ol>
+<p>If you need to cancel the deletion, click the <code class="docutils literal notranslate"><span class="pre">Cancel</span></code> button in the popup to return to the previous screen.</p>
+</section>
+<section id="adding-images-to-a-dataset">
+<h2>Adding Images to a Dataset<a class="headerlink" href="#adding-images-to-a-dataset" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Select the dataset where you want to add images. The Image Editor will open in the center of the Gallery window.</p></li>
+</ol>
+<p>In a blank dataset, “No images found” will be shown, with a button to upload images. With a dataset that already contains images, you will see the first image in the dataset in Carousel View, or thumbnails of images in the Grid View.</p>
+<ol class="arabic simple" start="2">
+<li><p>Click on the <code class="docutils literal notranslate"><span class="pre">Upload</span></code> button. A system window will popup, allowing you to select one or multiple images.</p></li>
+<li><p>Select the image or images to upload, and click <code class="docutils literal notranslate"><span class="pre">Open</span></code>.</p></li>
+</ol>
+<p>You can also drag-and-drop images to the dataset. Simply drag the image from a file browser and drop it over the <code class="docutils literal notranslate"><span class="pre">Upload</span></code> button.</p>
+</section>
+<section id="deleting-images-from-a-dataset">
+<h2>Deleting Images from a Dataset<a class="headerlink" href="#deleting-images-from-a-dataset" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>In either Carousel View or Grid View, select the image to delete.</p></li>
+<li><p>In the top right of the Image Editor, click the trashcan icon to delete the image.</p></li>
+<li><p>A confirmation modal will open, asking if you are sure you want to delete the image.</p></li>
+<li><p>To confirm deletion, click the <code class="docutils literal notranslate"><span class="pre">Delete</span> <span class="pre">Image</span></code> button in the modal.</p></li>
+</ol>
+<p>If you need to cancel the deletion, click the <code class="docutils literal notranslate"><span class="pre">Cancel</span></code> button in the modal to return to the previous screen.</p>
+</section>
+<section id="editing-images-in-a-dataset">
+<h2>Editing Images in a Dataset<a class="headerlink" href="#editing-images-in-a-dataset" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>In either Carousel View or Grid View, select the image to edit.</p></li>
+<li><p>In the top right of the Image Editor, click the pencil icon. This will bring the selected image into a dedicated space for editing.</p></li>
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">Edit</span></code> button to edit the image.</p></li>
+</ol>
+<p>This will reveal a cropping tool overlay on the selected image. You can click and drag the image to select what is cropped before saving.</p>
+<p>There are also controls at the bottom of the Image Editor for Zoom and Rotate. Zoom will allow you to zoom in or out on your image. Rotate will rotate your image 90 degrees in either direction.</p>
+<ol class="arabic simple" start="4">
+<li><p>To cancel your changes or save your changes, click the <code class="docutils literal notranslate"><span class="pre">Cancel</span></code> or <code class="docutils literal notranslate"><span class="pre">Save</span></code> buttons, respectively.</p></li>
+<li><p>Click the <code class="docutils literal notranslate"><span class="pre">Close</span></code> button to exit out of the space and return to the Gallery.</p></li>
+</ol>
+</section>
+<section id="adding-to-other-datasets">
+<h2>Adding to Other Datasets<a class="headerlink" href="#adding-to-other-datasets" title="Link to this heading">#</a></h2>
+<p>Follow these steps if you want to save an image from one dataset into another dataset.</p>
+<ol class="arabic simple">
+<li><p>In the dataset with images you want to add, select an image.</p></li>
+<li><p>On the top right of the Image Editor, click the “plus” icon. A small modal will appear with a list of all the other datasets that you have.</p></li>
+<li><p>Click on the dataset you wish to save the image, and click the <code class="docutils literal notranslate"><span class="pre">Add</span></code> button.</p></li>
+</ol>
+</section>
+<section id="downloading-images-from-datasets">
+<h2>Downloading Images from Datasets<a class="headerlink" href="#downloading-images-from-datasets" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>In the dataset with images you want to save, select an image.</p></li>
+<li><p>On the top right of the Image Editor, click the “download” icon.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="docker_override.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Docker Override</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../ui/action_drawers.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Action Drawers</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-new-dataset">Creating a New Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deleting-a-dataset">Deleting a Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-images-to-a-dataset">Adding Images to a Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deleting-images-from-a-dataset">Deleting Images from a Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#editing-images-in-a-dataset">Editing Images in a Dataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-to-other-datasets">Adding to Other Datasets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downloading-images-from-datasets">Downloading Images from Datasets</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/getting_started/datasets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, graphcap Contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,891 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>graphcap Inference Bridge Architecture &#8212; graphcap  0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'dev/servers/inference_bridge';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="graphcap Media Server Architecture" href="media_server.html" />
+    <link rel="prev" title="graphcap Data Service Architecture" href="data_service.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">graphcap  0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/datasets.html">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="media_server.html">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/datasets.html">
+    Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/docker_override.html">
+    Docker Override
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../ui/action_drawers.html">
+    Action Drawers
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../concepts/perspectives.html">
+    Perspectives in graphcap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../architecture.html">
+    graphcap Architecture Overview
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="data_service.html">
+    graphcap Data Service Architecture
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    graphcap Inference Bridge Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="media_server.html">
+    graphcap Media Server Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../caption_pipeline.html">
+    Caption Pipeline
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">graphcap Inference Bridge Architecture</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="graphcap-inference-bridge-architecture">
+<span id="inference-bridge"></span><h1>graphcap Inference Bridge Architecture<a class="headerlink" href="#graphcap-inference-bridge-architecture" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>The graphcap Inference Bridge is a sophisticated system designed to generate captions for images using different “perspectives.”</dt><dd><p>A perspective represents a specific way of analyzing and describing an image, tailored for particular use cases.
+The bridge is built on FastAPI and designed to be extensible, supporting various AI model providers and caption perspectives.</p>
+</dd>
+</dl>
+<p><strong>The Inference Bridge is completely stateless</strong> - it does not maintain information about jobs, caption configurations,
+or persist data to databases. It receives requests, processes them, and returns results without preserving state between requests. It serves as a bridge between the client and AI providers, transforming image caption requests into AI model calls and returning structured results.</p>
+</section>
+<section id="key-components">
+<h2>Key Components<a class="headerlink" href="#key-components" title="Link to this heading">#</a></h2>
+<section id="perspective-system">
+<h3>Perspective System<a class="headerlink" href="#perspective-system" title="Link to this heading">#</a></h3>
+<p>Perspectives are the core feature of graphcap. Each perspective:</p>
+<ul class="simple">
+<li><p>Has a specific schema defining the structure of captions it generates</p></li>
+<li><p>Contains a prompt template used to instruct the AI model</p></li>
+<li><p>Can be grouped into modules for organization</p></li>
+<li><p>Is configured via JSON files or programmatically</p></li>
+</ul>
+<dl class="simple">
+<dt>The perspective system allows users to generate various descriptions of the same image,</dt><dd><p>each focusing on different aspects.</p>
+</dd>
+</dl>
+</section>
+<section id="provider-management">
+<h3>Provider Management<a class="headerlink" href="#provider-management" title="Link to this heading">#</a></h3>
+<p>The provider system abstracts away different AI model providers through:</p>
+<ul class="simple">
+<li><p>A unified interface for vision capabilities</p></li>
+<li><p>Support for structured output generation</p></li>
+<li><p>Automatic API key management and rate limiting</p></li>
+<li><p>Provider-specific formatting and processing</p></li>
+</ul>
+<p>Currently, the system supports providers like Vllm, Ollama, Gemini, and OpenAI with an extensible design to add more.</p>
+</section>
+<section id="processing-pipeline">
+<h3>Processing Pipeline<a class="headerlink" href="#processing-pipeline" title="Link to this heading">#</a></h3>
+<p>The processing flow works as follows:</p>
+<ol class="arabic simple">
+<li><p>The bridge receives a REST request with an image and specified perspective</p></li>
+<li><p>It prepares the image (download/convert as needed)</p></li>
+<li><p>The selected perspective’s prompt is sent with the image to the configured AI provider</p></li>
+<li><p>Response is parsed according to the perspective’s schema</p></li>
+<li><p>Structured data is returned directly to the client via the REST API response</p></li>
+</ol>
+</section>
+</section>
+<section id="architecture-diagram">
+<h2>Architecture Diagram<a class="headerlink" href="#architecture-diagram" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>┌────────────────┐                     ┌─────────────────────────────┐
+│                │      REST API       │                             │
+│  React Client  │────────────────────▶│  Inference Bridge           │
+│ (Orchestrator) │◀────────────────────│  (Stateless)                │
+│                │                     │                             │
+└───────┬────────┘                     └─────────────┬───────────────┘
+        │                                            │
+        │                                            │
+        │                                            ▼
+        │                                  ┌─────────────────────┐
+        │                                  │                     │
+        │                                  │   AI Providers      │
+        ▼                                  │                     │
+┌───────────────┐                          └─────────────────────┘
+│  Data Service │
+│               │
+└───────┬───────┘
+        │
+        ▼
+┌──────────────┐
+│  PostgreSQL  │
+│  Database    │
+└──────────────┘
+
+┌────────────────────────────────────────────┐
+│             Workspace Volume               │
+│ (Accessed by all services independently)   │
+└────────────────────────────────────────────┘
+</pre></div>
+</div>
+<p>Internal Bridge Components:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>┌─────────────────────────────────────┐
+│         HTTP API (FastAPI)          │
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│          Perspective Router         │
+└───────────────┬─────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│       Perspective Service           │
+├─────────────────┬───────────────────┤
+│  ┌─────────────┐│ ┌───────────────┐ │
+│  │ Perspective ││ │ Image         │ │
+│  │ Management  ││ │ Processing    │ │
+│  └─────────────┘│ └───────────────┘ │
+└─────────────────┬───────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│       Provider Management           │
+├─────────────────────────────────────┤
+│  ┌─────────────┐  ┌───────────────┐ │
+│  │  Provider   │  │   Provider    │ │
+│  │  Factory    │  │   Clients     │ │
+│  └─────────────┘  └───────────────┘ │
+└─────────────────┬───────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│          AI Model Providers         │
+├─────────────────────────────────────┤
+│  ┌─────────────┐  ┌───────────────┐ │
+│  │   Gemini    │  │     Other     │ │
+│  │             │  │   Providers   │ │
+│  └─────────────┘  └───────────────┘ │
+└─────────────────────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="stateless-design">
+<h2>Stateless Design<a class="headerlink" href="#stateless-design" title="Link to this heading">#</a></h2>
+<section id="rest-api-design">
+<h3>REST API Design<a class="headerlink" href="#rest-api-design" title="Link to this heading">#</a></h3>
+<p>The Inference Bridge maintains its stateless nature through a well-defined REST API:</p>
+<ol class="arabic simple">
+<li><p><strong>Request-Response Pattern</strong>: Each caption request is a self-contained HTTP transaction.</p></li>
+<li><p><strong>Complete Request Packages</strong>: Each request contains all necessary information to process the caption:
+* Image data or references (file paths, URLs, or base64-encoded data)
+* Perspective specification
+* Provider selection
+* Processing parameters</p></li>
+<li><p><strong>Independent Processing</strong>: Each request is processed independently without knowledge of previous requests.</p></li>
+<li><p><strong>No Session State</strong>: The service doesn’t maintain session state between requests.</p></li>
+</ol>
+</section>
+<section id="maintaining-statelessness">
+<h3>Maintaining Statelessness<a class="headerlink" href="#maintaining-statelessness" title="Link to this heading">#</a></h3>
+<p>The Inference Bridge achieves complete statelessness through:</p>
+<ol class="arabic simple">
+<li><p><strong>No Job History</strong>: The bridge doesn’t track previous requests or maintain any job state.</p></li>
+<li><p><strong>No Configuration Storage</strong>: All perspective and provider configurations are either:
+* Loaded at startup from read-only configuration files
+* Provided in the request payload</p></li>
+<li><p><strong>No User Sessions</strong>: Each request is treated independently, with all authentication and context provided per request.</p></li>
+<li><p><strong>Ephemeral Storage</strong>: Any temporary files created during processing are deleted once the response is sent.</p></li>
+<li><p><strong>No Cross-Request Dependencies</strong>: Each request is processed independently without relying on data from previous requests.</p></li>
+</ol>
+</section>
+<section id="division-of-responsibilities">
+<h3>Division of Responsibilities<a class="headerlink" href="#division-of-responsibilities" title="Link to this heading">#</a></h3>
+<p>The Inference Bridge maintains a clear separation of responsibilities:</p>
+<ol class="arabic simple">
+<li><p><strong>React Client</strong>:
+* Acts as the system orchestrator
+* Sends caption requests to the Inference Bridge
+* Receives and processes caption results
+* Coordinates the overall workflow
+* Manages user interface and interactions</p></li>
+<li><p><strong>Data Service</strong>:
+* Stores caption results in PostgreSQL
+* Maintains relationships between images, captions, and perspectives
+* Provides data access APIs to the React Client
+* Manages job tracking and status in database tables
+* Serves as the system’s single source of truth for caption data</p></li>
+<li><p><strong>Inference Bridge</strong>:
+* Processes individual caption requests
+* Handles only single-image caption generation
+* Returns results directly to the client
+* Maintains no state between requests
+* Accesses the workspace volume for image files when needed</p></li>
+</ol>
+<p>This separation of concerns ensures that the Inference Bridge remains completely stateless while the Data Service handles persistence and the React Client handles orchestration.</p>
+</section>
+<section id="client-bridge-interaction-flow">
+<h3>Client-Bridge Interaction Flow<a class="headerlink" href="#client-bridge-interaction-flow" title="Link to this heading">#</a></h3>
+<p>The typical flow for image processing is:</p>
+<ol class="arabic simple">
+<li><p><strong>Client Request</strong>: The React Client sends a caption request directly to the Inference Bridge.</p></li>
+<li><p><strong>Image Processing</strong>: The bridge processes the image with the specified perspective and AI provider.</p></li>
+<li><p><strong>Result Generation</strong>: Structured caption data is generated by the AI provider.</p></li>
+<li><p><strong>Direct Response</strong>: Results are returned directly to the React Client in the API response.</p></li>
+<li><p><strong>Data Persistence</strong>: The React Client may optionally send the results to the Data Service for storage.</p></li>
+<li><p><strong>Job Tracking</strong>: For batch operations, the React Client coordinates with the Data Service to track progress.</p></li>
+</ol>
+</section>
+<section id="scaling-and-load-balancing">
+<h3>Scaling and Load Balancing<a class="headerlink" href="#scaling-and-load-balancing" title="Link to this heading">#</a></h3>
+<p>This architecture facilitates horizontal scaling:</p>
+<ol class="arabic simple">
+<li><p><strong>Multiple Inference Bridge Instances</strong>: Multiple stateless bridges can be deployed behind a load balancer.</p></li>
+<li><p><strong>Independent Scaling</strong>: Inference bridges can be scaled independently of other system components.</p></li>
+<li><p><strong>Zero Downtime Deployment</strong>: Bridge instances can be added or removed without system disruption.</p></li>
+<li><p><strong>Load Balancer Distribution</strong>: A standard HTTP load balancer can distribute requests among instances.</p></li>
+</ol>
+</section>
+</section>
+<section id="implementation-details">
+<h2>Implementation Details<a class="headerlink" href="#implementation-details" title="Link to this heading">#</a></h2>
+<section id="perspective-definition">
+<h3>Perspective Definition<a class="headerlink" href="#perspective-definition" title="Link to this heading">#</a></h3>
+<p>Perspectives are defined with:</p>
+<ol class="arabic simple">
+<li><p>A schema specifying the structure of the output (fields and types)</p></li>
+<li><p>A prompt template that guides the AI model</p></li>
+<li><p>Configuration for display and output formatting</p></li>
+</ol>
+<p>Example perspective fields could include:</p>
+<ul class="simple">
+<li><p>General description</p></li>
+<li><p>Key elements</p></li>
+<li><p>Aesthetic qualities</p></li>
+<li><p>Technical details</p></li>
+<li><p>Contextual information</p></li>
+</ul>
+<p>Perspectives are organized into modules for better management, and each module can be enabled or disabled as needed.</p>
+</section>
+<section id="provider-integration">
+<h3>Provider Integration<a class="headerlink" href="#provider-integration" title="Link to this heading">#</a></h3>
+<p>The system uses an abstraction layer through the <code class="docutils literal notranslate"><span class="pre">BaseClient</span></code> class that:</p>
+<ol class="arabic simple">
+<li><p>Provides a consistent interface over different AI providers</p></li>
+<li><p>Handles authentication and API communication</p></li>
+<li><p>Formats prompts and images according to provider requirements</p></li>
+<li><p>Processes and validates responses</p></li>
+</ol>
+<p>The provider management system supports dynamic loading of provider configurations and handles rate limiting and error recovery.</p>
+</section>
+<section id="image-processing">
+<h3>Image Processing<a class="headerlink" href="#image-processing" title="Link to this heading">#</a></h3>
+<p>The bridge includes utilities for:</p>
+<ul class="simple">
+<li><p>Accessing images from the workspace volume</p></li>
+<li><p>Downloading images from URLs</p></li>
+<li><p>Processing base64-encoded images</p></li>
+<li><p>Creating temporary files for processing</p></li>
+<li><p>Converting between image formats as needed</p></li>
+</ul>
+<p>These utilities ensure that images can be processed regardless of how they’re provided in the request.</p>
+</section>
+<section id="structured-output">
+<h3>Structured Output<a class="headerlink" href="#structured-output" title="Link to this heading">#</a></h3>
+<p>A key feature of the system is the ability to generate structured output via:</p>
+<ol class="arabic simple">
+<li><p>Dynamic creation of structured outputs based on perspective schemas</p></li>
+<li><p>Parsing and validation of AI model responses</p></li>
+<li><p>Conversion to standardized JSON format</p></li>
+<li><p>Error handling for malformed responses</p></li>
+</ol>
+</section>
+</section>
+<section id="api-structure">
+<h2>API Structure<a class="headerlink" href="#api-structure" title="Link to this heading">#</a></h2>
+<section id="rest-api">
+<h3>REST API<a class="headerlink" href="#rest-api" title="Link to this heading">#</a></h3>
+<p>The Inference Bridge exposes several key API endpoints:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/perspectives/list</span></code>: Get available perspectives</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/perspectives/{name}/caption</span></code>: Generate a caption using a specific perspective</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/perspectives/analyze</span></code>: Analyze an image with multiple perspectives</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/providers/list</span></code>: Get available AI providers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/providers/{name}/models</span></code>: Get models available for a specific provider</p></li>
+</ul>
+<p>These endpoints form an API for image captioning and analysis that the React Client uses directly.</p>
+</section>
+<section id="websocket-support">
+<h3>WebSocket Support<a class="headerlink" href="#websocket-support" title="Link to this heading">#</a></h3>
+<p>The bridge also supports WebSocket connections for:</p>
+<ul class="simple">
+<li><p>Real-time updates during processing</p></li>
+<li><p>Streaming responses from AI models that support it</p></li>
+</ul>
+</section>
+</section>
+<section id="data-flow">
+<h2>Data Flow<a class="headerlink" href="#data-flow" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Request Reception</strong>: The bridge receives an HTTP request containing a complete caption payload.</p></li>
+<li><p><strong>Image Acquisition</strong>: The image is retrieved based on the information in the request (workspace path, URL, or base64 data).</p></li>
+<li><p><strong>Perspective Loading</strong>: The specified perspective is loaded from the configuration files or the request payload.</p></li>
+<li><p><strong>Provider Selection</strong>: The appropriate AI provider is selected based on the request.</p></li>
+<li><p><strong>Caption Generation</strong>: The perspective prompt and image are sent to the AI provider.</p></li>
+<li><p><strong>Response Processing</strong>: The response is parsed according to the perspective schema.</p></li>
+<li><p><strong>Result Delivery</strong>: The structured caption data is returned in the HTTP response.</p></li>
+<li><p><strong>Resource Cleanup</strong>: All temporary resources are released after processing.</p></li>
+</ol>
+</section>
+<section id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">#</a></h2>
+<p>The Inference Bridge is containerized using Docker, with the following key components:</p>
+<ul class="simple">
+<li><p>Base image: <code class="docutils literal notranslate"><span class="pre">python:3.12-slim</span></code></p></li>
+<li><p>Package management: <code class="docutils literal notranslate"><span class="pre">uv</span></code> tool</p></li>
+<li><p>Core dependencies: <code class="docutils literal notranslate"><span class="pre">fastapi</span></code>, <code class="docutils literal notranslate"><span class="pre">uvicorn</span></code>, <code class="docutils literal notranslate"><span class="pre">pydantic</span></code></p></li>
+<li><p>Model-specific dependencies configured per provider</p></li>
+</ul>
+<p>Multiple instances can be deployed behind a load balancer for horizontal scaling.</p>
+</section>
+<section id="security-considerations">
+<h2>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Input Validation</strong>: All input payloads are validated before processing</p></li>
+<li><p><strong>No Persistent Secrets</strong>: API keys and credentials are provided at runtime and not stored</p></li>
+<li><p><strong>Isolated Processing</strong>: Each request is processed in isolation</p></li>
+<li><p><strong>Path Validation</strong>: Workspace file paths are validated to prevent directory traversal</p></li>
+</ul>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">#</a></h2>
+<p>The graphcap Inference Bridge provides a powerful, flexible, and completely stateless system for generating structured captions from images using various AI providers. By maintaining a stateless REST API design, it achieves high scalability and resilience while eliminating the need for state management or database interactions. The clear separation of responsibilities between the client (orchestration), the Inference Bridge (stateless caption generation), and the Data Service (persistence) creates a robust architecture that allows for easy horizontal scaling and seamless deployment in various environments.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data_service.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">graphcap Data Service Architecture</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="media_server.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">graphcap Media Server Architecture</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-components">Key Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#perspective-system">Perspective System</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#provider-management">Provider Management</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#processing-pipeline">Processing Pipeline</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture-diagram">Architecture Diagram</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stateless-design">Stateless Design</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rest-api-design">REST API Design</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintaining-statelessness">Maintaining Statelessness</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#division-of-responsibilities">Division of Responsibilities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#client-bridge-interaction-flow">Client-Bridge Interaction Flow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-and-load-balancing">Scaling and Load Balancing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementation-details">Implementation Details</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#perspective-definition">Perspective Definition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#provider-integration">Provider Integration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#image-processing">Image Processing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#structured-output">Structured Output</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-structure">API Structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rest-api">REST API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#websocket-support">WebSocket Support</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-flow">Data Flow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/dev/servers/inference_bridge.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, graphcap Contributors.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
