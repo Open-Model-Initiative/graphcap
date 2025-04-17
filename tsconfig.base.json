@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext", 
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true, // Set to false in individual packages if they emit JS
+    "composite": true, // Important for project references
+    "incremental": true,
+    "jsx": "react-jsx" // Assuming React usage, adjust if needed
+  },
+  "exclude": ["node_modules", "**/dist", "**/build"]
+} 

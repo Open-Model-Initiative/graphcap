@@ -1,0 +1,22 @@
+FROM node:20-slim AS base
+
+# Set up pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# Set working directory
+WORKDIR /app
+
+# Copy lockfile and fetch dependencies (optimized for caching)
+COPY pnpm-lock.yaml .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
+
+# Copy the rest of the workspace
+COPY . .
+
+# Optional: Install all dependencies (including dev) if needed for a common build step
+# RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Base image is ready for subsequent stages to build specific apps/packages
+
