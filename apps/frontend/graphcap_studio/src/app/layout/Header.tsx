@@ -56,23 +56,6 @@ export function Header() {
 							Gallery
 						</Button>
 					</RouterLink>
-					<Link
-						href="http://localhost:32300"
-						target="_blank"
-						rel="noopener noreferrer"
-						_hover={{ textDecoration: "none" }}
-					>
-						<Button
-							variant="ghost"
-							size="xs"
-							px="2"
-							py="1"
-							color={navTextColor}
-							_hover={{ bg: navHoverBg }}
-						>
-							Pipelines
-						</Button>
-					</Link>
 					{enableDebugRoute && (
 						<RouterLink to="/debug">
 							<Button
