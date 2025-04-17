@@ -27,3 +27,5 @@ media_server_v2/
 
 # Doc build files
 doc/_build/*
+
+.cursor/mcp.json

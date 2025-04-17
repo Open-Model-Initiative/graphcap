@@ -5,7 +5,7 @@ includes:
   data:      ./apps/servers/data_service/Taskfile.data.yml
   inference: ./apps/servers/inference_bridge/server/Taskfile.inference.yml
   studio:    ./apps/frontend/graphcap_studio/Taskfile.studio.yml
-  models:    ./packages/model_runners/Task.models.yml
+  build:     ./deploy/Taskfile.build.yml
 tasks:
   dev:
     desc: Start the Docker Compose services in watch mode

@@ -1,0 +1,23 @@
+services:
+  inference_bridge:
+    container_name: inference_bridge
+    build:
+      context: ../../..
+      dockerfile: ./apps/servers/inference_bridge/server/Dockerfile.server.dev
+    ports:
+      - 32100:32100
+    volumes:
+      - ../../../packages/graphcap:/app/packages/graphcap
+      - ../../../apps/servers/inference_bridge/server/server:/app/apps/servers/inference_bridge/server/server
+      - ../../../workspace:/workspace
+    environment:
+      - HOST_PLATFORM=${HOST_PLATFORM:-linux}
+      - PYTHONPATH=/app/server
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}
+    env_file:
+      - ../../../workspace/config/.env
+    networks:
+      - graphcap
+    depends_on:
+      graphcap_postgres:
+        condition: service_healthy

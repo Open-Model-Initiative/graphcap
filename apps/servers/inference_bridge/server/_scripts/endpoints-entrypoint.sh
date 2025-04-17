@@ -26,18 +26,18 @@ check_dependencies() {
         log "Checking if dependencies need updating..."
         
         # Create new hash of current dependency files
-        local NEW_HASH=$(md5sum /app/server/pyproject.toml | cut -d' ' -f1)
+        local NEW_HASH=$(md5sum /app/apps/servers/inference_bridge/server/pyproject.toml | cut -d' ' -f1)
         local OLD_HASH=""
         
-        if [ -f /app/server/.dep_hash ]; then
-            OLD_HASH=$(cat /app/server/.dep_hash)
+        if [ -f /app/apps/servers/inference_bridge/server/.dep_hash ]; then
+            OLD_HASH=$(cat /app/apps/servers/inference_bridge/server/.dep_hash)
         fi
         
         # Compare hashes
         if [ "$NEW_HASH" != "$OLD_HASH" ]; then
             log "Dependencies changed, updating..."
             update_dependencies || return 1
-            echo "$NEW_HASH" > /app/server/.dep_hash
+            echo "$NEW_HASH" > /app/apps/servers/inference_bridge/server/.dep_hash
         else
             log "Dependencies up to date"
         fi
@@ -49,7 +49,7 @@ update_dependencies() {
     log "Updating dependencies..."
     
     # Ensure we're in the right directory
-    cd /app/server
+    cd /app/apps/servers/inference_bridge/server
     
     log "Installing package in editable mode..."
     uv pip install -e . || {
@@ -69,16 +69,11 @@ check_environment() {
     log "Current directory: $(pwd)"
     log "Directory contents:"
     ls -la
-    log "Installed packages:"
-    uv pip list || {
-        error "Failed to list packages"
-        return 1
-    }
 }
 
 # Main startup sequence
 main() {
-    cd /app/server
+    cd /app/apps/servers/inference_bridge/server
     
     log "🔍 Starting pre-flight checks..."
 
@@ -100,7 +95,7 @@ main() {
         --host 0.0.0.0 \
         --port 32100 \
         --reload \
-        --reload-dir /app/server/server
+        --reload-dir /app/apps/servers/inference_bridge/server/server
 }
 
 # Trap errors

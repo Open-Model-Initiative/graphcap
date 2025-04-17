@@ -1,0 +1,7 @@
+version: "3"
+
+tasks:
+  gcap-base:
+    desc: Build the graphcap-base Docker image
+    cmds:
+      - docker build --progress=plain -t graphcap-base:dev -f deploy/Dockerfile.base . 

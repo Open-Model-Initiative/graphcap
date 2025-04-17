@@ -1,28 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
+
+include:
+  - ./apps/servers/inference_bridge/docker-compose.inference.yml
 services:
-  inference_bridge:
-    container_name: inference_bridge
-    build:
-      context: ./apps/servers/inference_bridge
-      dockerfile: ./server/Dockerfile.server.dev
-    ports:
-      - 32100:32100
-    volumes:
-      - ./apps/servers/inference_bridge/graphcap:/app/graphcap
-      - ./apps/servers/inference_bridge/server/server:/app/server/server
-      - ./workspace:/workspace
-    environment:
-      - HOST_PLATFORM=${HOST_PLATFORM:-linux}
-      - PYTHONPATH=/app/server
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}
-    env_file:
-      - ./workspace/config/.env
-    networks:
-      - graphcap
-    depends_on:
-      graphcap_postgres:
-        condition: service_healthy
+
 
   graphcap_postgres:
     image: postgres:17
@@ -126,29 +108,7 @@ services:
     networks:
       - graphcap
 
-  graphcap_pipelines:
-    build:
-      context: ./apps/servers/inference_bridge
-      dockerfile: pipelines/Dockerfile.pipelines.dev
-    container_name: graphcap_pipelines
-    volumes:
-      - ./workspace:/workspace
-      - ./apps/servers/inference_bridge:/app
-    environment:
-      - DAGSTER_HOME=/workspace/.local/.dagster
-      - DAGSTER_PORT=32300
-      - DAGSTER_POSTGRES_USER=${POSTGRES_USER}
-      - DAGSTER_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DAGSTER_POSTGRES_DB=${POSTGRES_DB}
-      - PYTHONPATH=/app
-    ports:
-      - "32300:32300"
-    networks:
-      - graphcap
-    depends_on:
-      - graphcap_postgres
-    env_file:
-      - ./workspace/config/.env
+
 
   graphcap_data_service:
     container_name: graphcap_data_service
