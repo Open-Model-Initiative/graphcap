@@ -1,0 +1,28 @@
+# Define Bun version - must match the one used for the base image
+ARG BUN_VERSION=1.2
+
+# Stage 1: Use the pre-built base image containing all source and node_modules
+# Ensure you build the base image first (e.g., docker build -t graphcap-bun-base:latest -f ./deploy/Dockerfile.bun-base .)
+FROM graphcap-bun-base:latest AS builder
+
+# Stage 2: Define the final lean release stage
+FROM oven/bun:${BUN_VERSION} AS release
+
+WORKDIR /app
+
+# Copy necessary artifacts from the builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/lib/ ./packages/lib/
+COPY --from=builder /app/packages/datamodel/ ./packages/datamodel/
+
+# entrypoint.sh and drizzle.config.ts are within packages/datamodel/, copied above
+RUN chmod +x ./packages/datamodel/entrypoint.sh
+
+# Set final WORKDIR for the running application+
+WORKDIR /app/packages/datamodel
+
+# Expose the Drizzle Studio port
+EXPOSE 59151
+
+# Use the entrypoint path relative to the final WORKDIR
+ENTRYPOINT ["./entrypoint.sh"] 

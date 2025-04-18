@@ -1,0 +1,43 @@
+name: graphcap-datamodel-service 
+
+services:
+  graphcap_datamodel_studio:
+    container_name: graphcap_datamodel_studio
+    build:
+      context: ${REPO_ROOT}
+      dockerfile: packages/datamodel/Dockerfile.datamodel.dev
+    ports:
+      - "53151:53151" 
+    env_file:
+      - ${REPO_ROOT}/.env # Load environment variables from root .env
+    environment:
+      # Ensure DATABASE_URL is available, taking precedence from .env if set
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}}
+      - NODE_ENV=${NODE_ENV:-development}
+    networks:
+      - graphcap
+    depends_on:
+      graphcap_postgres:
+        condition: service_healthy 
+
+  graphcap_postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "35433:5432"
+    volumes:
+      - graphcap_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - graphcap
+
+
+volumes:
+  graphcap_db:

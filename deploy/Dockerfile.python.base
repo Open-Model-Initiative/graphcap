@@ -1,22 +1,16 @@
-FROM node:20-slim AS base
+FROM python:3.12-slim AS graphcap-base
 
-# Set up pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Set working directory
+# Create and expose a virtual environment for all workspace packages
+ENV VIRTUAL_ENV=/opt/venv
+RUN uv venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 WORKDIR /app
 
-# Copy lockfile and fetch dependencies (optimized for caching)
-COPY pnpm-lock.yaml .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
-
-# Copy the rest of the workspace
-COPY . .
-
-# Optional: Install all dependencies (including dev) if needed for a common build step
-# RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
-# Base image is ready for subsequent stages to build specific apps/packages
-
+COPY packages/graphcap ./packages/graphcap
+COPY pyproject.toml uv.lock ./
+RUN uv pip install --upgrade pip && \
+    uv sync

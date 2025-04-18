@@ -1,0 +1,22 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Start the Docker Compose services in watch mode
+    cmds:
+      - docker compose -f {{.REPO_ROOT}}/docker-compose.yml --env-file {{.REPO_ROOT}}/.env up graphcap_datamodel_studio --watch --build --remove-orphans
+
+  seed:
+    desc: Run the seed script inside the running media_server container
+    cmds:
+      - docker compose -f {{.REPO_ROOT}}/docker-compose.yml --env-file {{.REPO_ROOT}}/.env exec graphcap_datamodel_studio bun run /app/apps/servers/media_server/seed.ts
+
+  seed:reset:
+    desc: Run the seed script with --reset inside the running datamodel_studio container
+    cmds:
+      - docker compose -f {{.REPO_ROOT}}/docker-compose.yml --env-file {{.REPO_ROOT}}/.env exec graphcap_datamodel_studio bun run /app/apps/servers/media_server/seed.ts --reset
+
+  logs:
+    desc: Show the logs of the datamodel_studio container
+    cmds:
+      - docker compose -f {{.REPO_ROOT}}/docker-compose.yml --env-file {{.REPO_ROOT}}/.env logs -f graphcap_datamodel_studio
