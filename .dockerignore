@@ -1,5 +1,18 @@
+# Ignore node_modules directories anywhere in the project
+**/node_modules
+
+# Ignore other common files/dirs not needed in build context
 .git
+.vscode
+.idea
+**/*.env
+**/*.log
+**/*.log
+logs/
 .DS_Store
+dist/
+build/
+coverage/
 **/__pycache__
 **/*.pyc
 node_modules
@@ -12,3 +25,16 @@ test
 .env.development.local
 .env.test.local
 .env.production.local
+doc
+deploy
+logs 
+test
+.vscode
+.idea
+.cursor
+.cursorignore
+.gitattributes
+.github
+**/.local
+**/.venv
+**/.sonarlint

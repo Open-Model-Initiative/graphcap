@@ -1,28 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 name: graphcap
+
+include:
+  - ./apps/servers/inference_bridge/docker-compose.inference.yml
 services:
-  inference_bridge:
-    container_name: inference_bridge
-    build:
-      context: ./servers/inference_bridge
-      dockerfile: ./server/Dockerfile.server.dev
-    ports:
-      - 32100:32100
-    volumes:
-      - ./servers/inference_bridge/graphcap:/app/graphcap
-      - ./servers/inference_bridge/server/server:/app/server/server
-      - ./workspace:/workspace
-    environment:
-      - HOST_PLATFORM=${HOST_PLATFORM:-linux}
-      - PYTHONPATH=/app/server
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}
-    env_file:
-      - ./workspace/config/.env
-    networks:
-      - graphcap
-    depends_on:
-      graphcap_postgres:
-        condition: service_healthy
+
 
   graphcap_postgres:
     image: postgres:17
@@ -45,7 +27,7 @@ services:
   graphcap_studio:
     container_name: graphcap_ui
     build:
-      context: ./graphcap_studio
+      context: ./apps/frontend/graphcap_studio
       dockerfile: Dockerfile.client.dev
       args:
         - VITE_API_URL=http://localhost:32200/api
@@ -63,23 +45,23 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./graphcap_studio/src
+          path: ./apps/frontend/graphcap_studio/src
           target: /app/src
           ignore:
             - "**/.git"
             - "**/node_modules"
             - "**/.DS_Store"
         - action: sync
-          path: ./graphcap_studio/public
+          path: ./apps/frontend/graphcap_studio/public
           target: /app/public
         - action: sync
-          path: ./graphcap_studio/index.html
+          path: ./apps/frontend/graphcap_studio/index.html
           target: /app/index.html
         - action: sync
-          path: ./graphcap_studio/vite.config.ts
+          path: ./apps/frontend/graphcap_studio/vite.config.ts
           target: /app/vite.config.ts
         - action: sync+restart
-          path: ./graphcap_studio/pnpm-lock.yaml
+          path: ./apps/frontend/graphcap_studio/pnpm-lock.yaml
           target: /app/pnpm-lock.yaml
     environment:
       - NODE_ENV=${NODE_ENV:-development}
@@ -95,7 +77,7 @@ services:
   graphcap_media_server:
     container_name: graphcap_media_server
     build:
-      context: ./servers/media_server
+      context: ./apps/servers/media_server
       dockerfile: Dockerfile.media_server.dev
     ports:
       - "32400:32400"
@@ -109,14 +91,14 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./servers/media_server
+          path: ./apps/servers/media_server
           target: /app
           ignore:
             - "**/.git"
             - "**/node_modules"
             - "**/.DS_Store"
         - action: rebuild
-          path: ./servers/media_server/package.json
+          path: ./apps/servers/media_server/package.json
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:32400/health"]
       interval: 5m
@@ -126,34 +108,12 @@ services:
     networks:
       - graphcap
 
-  graphcap_pipelines:
-    build:
-      context: ./servers/inference_bridge
-      dockerfile: pipelines/Dockerfile.pipelines.dev
-    container_name: graphcap_pipelines
-    volumes:
-      - ./workspace:/workspace
-      - ./servers/inference_bridge:/app
-    environment:
-      - DAGSTER_HOME=/workspace/.local/.dagster
-      - DAGSTER_PORT=32300
-      - DAGSTER_POSTGRES_USER=${POSTGRES_USER}
-      - DAGSTER_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - DAGSTER_POSTGRES_DB=${POSTGRES_DB}
-      - PYTHONPATH=/app
-    ports:
-      - "32300:32300"
-    networks:
-      - graphcap
-    depends_on:
-      - graphcap_postgres
-    env_file:
-      - ./workspace/config/.env
+
 
   graphcap_data_service:
     container_name: graphcap_data_service
     build:
-      context: ./servers/data_service
+      context: ./apps/servers/data_service
       dockerfile: Dockerfile.data_service.dev
     ports:
       - "32550:32550"
@@ -166,7 +126,7 @@ services:
       - DEBUG=true  # Enable debug mode
     volumes:
       - ./workspace:/workspace
-      - ./servers/data_service/src:/app/src  # Mount src directory directly
+      - ./apps/servers/data_service/src:/app/src  # Mount src directory directly
     networks:
       - graphcap
     depends_on:

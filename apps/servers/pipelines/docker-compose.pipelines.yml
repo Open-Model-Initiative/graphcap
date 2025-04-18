@@ -1,0 +1,23 @@
+services:
+  graphcap_pipelines:
+    build:
+      context: ../../..
+      dockerfile: ./apps/servers/pipelines/Dockerfile.pipelines.dev
+    container_name: graphcap_pipelines
+    volumes:
+      - ./workspace:/workspace
+    environment:
+      - DAGSTER_HOME=/workspace/.local/.dagster
+      - DAGSTER_PORT=32300
+      - DAGSTER_POSTGRES_USER=${POSTGRES_USER}
+      - DAGSTER_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DAGSTER_POSTGRES_DB=${POSTGRES_DB}
+      - PYTHONPATH=/app
+    ports:
+      - "32300:32300"
+    networks:
+      - graphcap
+    depends_on:
+      - graphcap_postgres
+    env_file:
+      - ./workspace/config/.env

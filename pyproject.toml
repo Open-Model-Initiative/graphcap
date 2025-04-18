@@ -1,27 +1,3 @@
-[project]
-name = "graphcap_project"
-version = "0.1.0"
-description = "Graphcap is a tool for capturing and analyzing graph data."
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "click>=8.1.8",
-    "ipykernel>=6.29.5",
-    "ipywidgets>=8.1.5",
-    "openai>=1.66.3",
-    "python-dotenv>=1.0.1",
-    "termcolor>=2.5.0",
-    "toml>=0.10.2",
-]
-
-[project.optional-dependencies]
-dev = [
-    "build>=1.2.2.post1",
-    "contxt>=0.1.1",
-    "pytest>=8.3.4",
-    "ruff>=0.9.6",
-]
-
 [tool.ruff]
 # Exclude a variety of commonly ignored directories
 exclude = [
@@ -49,7 +25,7 @@ exclude = [
 ]
 
 # Source directories
-src = ["./servers/inference_bridge"]
+src = ["./apps/servers/inference_bridge", "./packages/graphcap"]
 
 # Same as Black
 line-length = 120
@@ -81,3 +57,11 @@ link-mode = "copy"
 dev-dependencies = [
     "pytest-asyncio>=0.25.3",
 ]
+
+# Configure uv workspace to include all packages under packages/
+[tool.uv.workspace]
+members = ["packages/graphcap", "servers/inference_bridge"]
+
+# Use workspace source for graphcap package
+[tool.uv.sources]
+graphcap = { workspace = true }

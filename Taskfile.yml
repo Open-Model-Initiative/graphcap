@@ -2,10 +2,10 @@ version: "3"
 dotenv: ['.env', '{{.ENV}}/.env', '{{.HOME}}/.env']
 
 includes:
-  data:      ./servers/data_service/Taskfile.data.yml
-  inference: ./servers/inference_bridge/server/Taskfile.inference.yml
-  studio:    ./graphcap_studio/Taskfile.studio.yml
-  models:    ./servers/model_runners/Task.models.yml
+  data:      ./apps/servers/data_service/Taskfile.data.yml
+  inference: ./apps/servers/inference_bridge/server/Taskfile.inference.yml
+  studio:    ./apps/frontend/graphcap_studio/Taskfile.studio.yml
+  build:     ./deploy/Taskfile.build.yml
 tasks:
   dev:
     desc: Start the Docker Compose services in watch mode

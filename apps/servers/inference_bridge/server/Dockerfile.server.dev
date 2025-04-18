@@ -1,0 +1,18 @@
+# Base Python stage using the graphcap-base image
+FROM graphcap-base:dev AS python-base
+WORKDIR /app
+ENV ENTRYPOINT_SCRIPT=/app/apps/servers/inference_bridge/server/_scripts/endpoints-entrypoint.sh
+
+COPY ./apps/servers/inference_bridge /app/apps/servers/inference_bridge
+
+# Install only the inference_bridge package in editable mode
+RUN uv pip install -e "/app/packages/graphcap" -e "/app/apps/servers/inference_bridge/server"
+
+# Set PYTHONPATH to ensure graphcap module can be found
+ENV PYTHONPATH=/app
+
+RUN chmod +x "$ENTRYPOINT_SCRIPT"
+
+EXPOSE 32100
+ENTRYPOINT ["/bin/bash", "-c", "exec $ENTRYPOINT_SCRIPT"]
+CMD ["tail", "-f", "/dev/null"]

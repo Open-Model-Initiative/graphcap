@@ -1,0 +1,21 @@
+{
+  "name": "graphcap-monorepo",
+  "private": true,
+  "version": "0.0.1",
+  "description": "GraphCap Monorepo",
+  "scripts": {
+    "build": "pnpm -r --filter=\"./apps/**\" build",
+    "dev": "pnpm -r --parallel --filter=\"./apps/**\" dev",
+    "lint": "pnpm -r --parallel lint",
+    "lint:biome": "pnpm biome lint ./apps ./packages",
+    "format:biome": "pnpm biome format --write ./apps ./packages",
+    "test": "pnpm -r --parallel test",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "typescript": "^5.4.5", 
+    "@types/node": "^20.12.12" 
+  },
+  "packageManager": "pnpm@9.1.4"
+} 

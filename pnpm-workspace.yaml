@@ -1,0 +1,9 @@
+packages:
+  - 'apps/frontend/**'
+  - 'apps/servers/data_service'
+  - 'packages/media-processing'
+
+# syncInjectedDepsAfterScripts:
+#   - build
+
+# injectWorkspacePackages: true 
