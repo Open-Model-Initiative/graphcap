@@ -9,3 +9,11 @@ ENV BUN_INSTALL="/usr/local"
 RUN curl -fsSL https://bun.sh/install | bash
 # Add bun to PATH (adjust if BUN_INSTALL changes)
 ENV PATH="/root/.bun/bin:${PATH}"
+
+# Bring in workspace packages so pnpm can resolve workspace:* deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/lib ./packages/lib
+COPY packages/datamodel ./packages/datamodel
+
+# Install & link all workspace projects (including lib & datamodel)
+RUN pnpm install --frozen-lockfile

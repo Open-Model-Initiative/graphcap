@@ -9,6 +9,7 @@ includes:
 tasks:
   dev:
     desc: Start the Docker Compose services in watch mode
+    deps: [build:bases]
     cmds:
       - docker compose --env-file ./workspace/config/.env up --watch --build 
 

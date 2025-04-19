@@ -2,6 +2,8 @@ packages:
   - 'apps/frontend/**'
   - 'apps/servers/data_service'
   - 'packages/media-processing'
+  - 'packages/datamodel'
+  - 'packages/lib'
 
 # syncInjectedDepsAfterScripts:
 #   - build
