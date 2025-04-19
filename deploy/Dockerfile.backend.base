@@ -1,8 +1,9 @@
 # Base image for Backend applications (Node.js, Bun)
 # Use the ts-base image as our starting point
 FROM graphcap-ts-base:dev AS base
-
-RUN apt-get update && apt-get install -y curl unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl lsof net-tools postgresql-client procps unzip wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Bun
 ENV BUN_INSTALL="/usr/local"

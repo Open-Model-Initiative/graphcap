@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+FROM graphcap-backend-base:dev AS base
+
+COPY apps/servers/data_service/ ./apps/servers/data_service/
+WORKDIR /app/apps/servers/data_service
+RUN pnpm install --filter=graphcap-data-service --frozen-lockfile
+
+
+# Expose ports
+EXPOSE 32550
+EXPOSE 32501
+RUN chmod +x /app/apps/servers/data_service/entrypoint.sh 
+# Use our debug entrypoint script
+ENTRYPOINT ["/app/apps/servers/data_service/entrypoint.sh"] 

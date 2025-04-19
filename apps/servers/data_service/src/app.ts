@@ -15,7 +15,6 @@ import { z } from 'zod';
 
 import { batchQueueRoutes } from './api/routes/batch_queue';
 import { logTestRoutes } from './api/routes/log_test';
-import { checkDatabaseConnection } from './db/init';
 import { env } from './env';
 import { providerRoutes } from './features/provider_config/routes';
 import { errorHandlerMiddleware, notFoundHandler } from './utils/error-handler';
@@ -117,32 +116,6 @@ const dbHealthCheckRoute = createRoute({
       },
     },
   },
-});
-
-app.openapi(dbHealthCheckRoute, async (c) => {
-  try {
-    const isConnected = await checkDatabaseConnection();
-    
-    if (isConnected) {
-      return c.json({
-        status: 'ok',
-        database: 'connected',
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      return c.json({
-        status: 'error',
-        error: 'Database connection failed',
-        timestamp: new Date().toISOString(),
-      }, 500);
-    }
-  } catch (error) {
-    return c.json({
-      status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown database error',
-      timestamp: new Date().toISOString(),
-    }, 500);
-  }
 });
 
 // API routes with v1 prefix

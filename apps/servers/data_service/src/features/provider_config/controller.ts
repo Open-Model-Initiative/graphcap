@@ -5,11 +5,11 @@
  * This module defines the controller functions for provider management.
  */
 
+import { dbClient } from "@graphcap/datamodel/src/db";
+import { providerModels, providerRateLimits, providers } from "@graphcap/datamodel/src/schema";
 import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import type { Logger } from "pino";
-import { db } from "../../db";
-import { providerModels, providerRateLimits, providers } from "../../db/schema";
 import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
 import { processApiKeyForUpdate } from "./api-key-manager";
 import type { Provider, ProviderCreate, ProviderUpdate } from "./schemas";
@@ -29,7 +29,7 @@ export const getProviders = async (c: Context) => {
 	logger.debug("Fetching all providers");
 
 	try {
-		const allProviders = await db.query.providers.findMany({
+		const allProviders = await dbClient.query.providers.findMany({
 			with: {
 				models: true,
 				rateLimits: true,
@@ -102,7 +102,7 @@ export const getProvider = async (c: Context) => {
 		// @ts-ignore - Hono OpenAPI validation types are not properly recognized
 		const { id: paramId } = c.req.valid("param") as ValidatedParams;
 		if (id === paramId) {
-			const provider = await db.query.providers.findFirst({
+			const provider = await dbClient.query.providers.findFirst({
 				where: eq(providers.id, Number.parseInt(id)),
 				with: {
 					models: true,
@@ -283,7 +283,7 @@ const handleProviderCreateError = (c: Context, error: unknown) => {
  * Creates provider data in the database
  */
 const saveProviderToDatabase = async (
-	tx: typeof db,
+	tx: typeof dbClient,
 	providerData: Omit<ProviderCreate, "models" | "rateLimits">,
 	models?: ProviderCreate["models"],
 	rateLimits?: ProviderCreate["rateLimits"],
@@ -497,7 +497,7 @@ const logFieldChanges = (
  * Processes model updates
  */
 const processModelUpdates = async (
-	tx: typeof db,
+	tx: typeof dbClient,
 	id: string,
 	models: ProviderUpdate["models"],
 ) => {
@@ -538,7 +538,7 @@ const processModelUpdates = async (
  * Processes rate limit updates
  */
 const processRateLimitUpdates = async (
-	tx: typeof db,
+	tx: typeof dbClient,
 	id: string,
 	rateLimits: ProviderUpdate["rateLimits"],
 ) => {
@@ -575,7 +575,7 @@ const processRateLimitUpdates = async (
  * Handles database updates for a provider
  */
 const updateProviderInDatabase = async (
-	tx: typeof db,
+	tx: typeof dbClient,
 	id: string,
 	providerData: Partial<ProviderUpdate>,
 	models?: ProviderUpdate["models"],
@@ -663,7 +663,7 @@ const handleProviderUpdateError = (c: Context, error: unknown) => {
  * Checks if a provider exists
  */
 const checkProviderExists = async (id: string): Promise<boolean> => {
-	const provider = await db.query.providers.findFirst({
+	const provider = await dbClient.query.providers.findFirst({
 		where: eq(providers.id, Number.parseInt(id)),
 	});
 	return !!provider;
@@ -673,7 +673,7 @@ const checkProviderExists = async (id: string): Promise<boolean> => {
  * Fetches existing provider with models and rate limits
  */
 const fetchExistingProvider = async (id: string): Promise<Provider | null> => {
-	const provider = await db.query.providers.findFirst({
+	const provider = await dbClient.query.providers.findFirst({
 		where: eq(providers.id, Number.parseInt(id)),
 		with: {
 			models: true,
@@ -735,7 +735,7 @@ const fetchAndLogRateLimits = async (
 
 	// Query for existing rate limits
 	const existingRateLimitsQuery =
-		await db.query.providerRateLimits.findFirst({
+		await dbClient.query.providerRateLimits.findFirst({
 			where: eq(providerRateLimits.providerId, Number.parseInt(id)),
 		});
 
@@ -849,7 +849,7 @@ export const updateProvider = async (c: Context) => {
 		await fetchAndLogRateLimits(logger, id, existingProvider, rateLimits);
 
 		// Update the provider in the database
-		const result = await db.transaction(async (tx) => {
+		const result = await dbClient.transaction(async (tx) => {
 			return updateProviderInDatabase(tx, id, providerData, models, rateLimits);
 		});
 
@@ -883,7 +883,7 @@ export const deleteProvider = async (c: Context) => {
 		}
 
 		// Delete provider (cascade will handle related records)
-		await db.delete(providers).where(eq(providers.id, Number.parseInt(id)));
+		await dbClient.delete(providers).where(eq(providers.id, Number.parseInt(id)));
 
 		logger.info({ providerId: id }, "Provider deleted successfully");
 		return c.json({

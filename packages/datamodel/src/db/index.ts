@@ -5,11 +5,11 @@
  * This module initializes the database connection using Drizzle ORM with PostgreSQL.
  */
 
+import { env } from '@graphcap/lib/env';
+import { logger } from '@graphcap/lib/src/utils/logger';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { env } from '../env';
 import * as schema from '../schema';
-import { logger } from '../utils/logger';
 
 // Create a PostgreSQL connection pool with error handling
 const pool = new Pool({
@@ -30,7 +30,7 @@ pool.on('connect', () => {
 });
 
 // Initialize Drizzle ORM with the connection pool and schema
-export const db = drizzle(pool, { schema });
+export const dbClient = drizzle(pool, { schema });
 
 // Export a function to close the database connection
 export const closeDatabase = async () => {
