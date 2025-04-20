@@ -1,14 +1,27 @@
+# syntax=docker/dockerfile:1.4
 # SPDX-License-Identifier: Apache-2.0
-FROM graphcap-backend-base:dev AS base
 
-COPY apps/servers/data_service/ ./apps/servers/data_service/
-WORKDIR /app/apps/servers/data_service
-RUN pnpm install --filter=graphcap-data-service --frozen-lockfile
+# Use the backend base image which includes Node, pnpm, and Bun
+FROM graphcap-backend-base:dev
 
+WORKDIR /app
 
-# Expose ports
-EXPOSE 32550
-EXPOSE 32501
-RUN chmod +x /app/apps/servers/data_service/entrypoint.sh 
-# Use our debug entrypoint script
-ENTRYPOINT ["/app/apps/servers/data_service/entrypoint.sh"] 
+# Copy relevant package sources required by data-service
+COPY packages/lib packages/lib
+COPY packages/datamodel packages/datamodel
+COPY apps/servers/data_service apps/servers/data_service
+
+# Install all workspace dependencies
+RUN pnpm install --frozen-lockfile
+
+# Set working directory to the specific service
+WORKDIR /app/
+
+# Ensure entrypoint script is executable
+RUN chmod +x /app/apps/servers/data_service/entrypoint.sh
+
+# Expose necessary ports
+EXPOSE 32550 
+
+# Use the entrypoint script to start the service in dev mode
+ENTRYPOINT ["/app/apps/servers/data_service/entrypoint.sh"]

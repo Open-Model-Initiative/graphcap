@@ -11,8 +11,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 # Add bun to PATH (adjust if BUN_INSTALL changes)
 ENV PATH="/root/.bun/bin:${PATH}"
 
-# Bring in workspace packages so pnpm can resolve workspace:* deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# Copy common ts packages
 COPY packages/lib ./packages/lib
 COPY packages/datamodel ./packages/datamodel
 

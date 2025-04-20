@@ -8,6 +8,9 @@ RUN corepack enable
 
 WORKDIR /app
 
+# Copy pnpm configuration file
+COPY .npmrc .
+
 # Fetch dependencies based on pnpm lockfile for caching
 COPY pnpm-lock.yaml .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile

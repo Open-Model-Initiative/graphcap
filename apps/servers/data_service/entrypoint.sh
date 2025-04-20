@@ -33,5 +33,10 @@ while ! pg_isready -d "$DATABASE_URL" >/dev/null 2>&1; do
 done
 echo "Database connection successful!"
 
-echo "=== Starting application ==="
-exec bun run dev
+echo "=== Listing installed packages for data-service from /app/apps/servers/data_service ==="
+(cd /app/apps/servers/data_service && pnpm list --depth=0)
+echo "=================================================================================="
+
+echo "=== Starting application from /app/apps/servers/data_service ==="
+cd /app/apps/servers/data_service
+exec pnpm run dev
