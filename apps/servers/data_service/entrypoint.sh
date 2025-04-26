@@ -5,7 +5,6 @@
 
 echo "=== Starting entrypoint script ==="
 echo "Date: $(date)"
-
 # Print environment variables
 echo "=== Environment Variables ==="
 echo "NODE_ENV: $NODE_ENV"
@@ -50,31 +49,3 @@ ls -la /app/apps/servers/data_service/node_modules/@graphcap/datamodel
 
 echo "Starting data service from $PWD"
 exec pnpm run dev --filter @graphcap/data-service
-
-# --- Debugging Section (kept for reference, commented out) ---
-# echo "--- Current directory ---"
-# pwd
-# 
-# echo "--- Listing current directory (data_service) ---"
-# ls -la
-# 
-# echo "--- Listing node_modules/@graphcap ---"
-# ls -la node_modules/@graphcap || echo "Error listing node_modules/@graphcap"
-# 
-# echo "--- Checking symlink target for @graphcap/lib ---"
-# SYMLINK_PATH="node_modules/@graphcap/lib"
-# if [ -L "$SYMLINK_PATH" ]; then
-#     TARGET_PATH=$(readlink -f "$SYMLINK_PATH")
-#     echo "Symlink '$SYMLINK_PATH' points to: $TARGET_PATH"
-#     echo "--- Listing target directory ($TARGET_PATH) ---"
-#     ls -la "$TARGET_PATH" || echo "Error listing target directory: $TARGET_PATH"
-# else
-#     echo "Error: '$SYMLINK_PATH' is not a symlink or does not exist."
-# fi
-# 
-# echo "--- pnpm root ---"
-# pnpm root
-# 
-# echo "=== Debugging checks complete. Keeping container alive... ==="
-# # Keep the container running for inspection
-tail -f /dev/null
