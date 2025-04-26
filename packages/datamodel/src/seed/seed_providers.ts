@@ -5,9 +5,10 @@
  * This script seeds the database with predefined provider configurations.
  */
 
-import { dbClient, providerModels, providers } from '@graphcap/datamodel';
 import { logger } from '@graphcap/lib';
 import { eq } from 'drizzle-orm';
+import { dbClient } from '../db';
+import { providerModels, providers } from '../schema';
 
 // Define interfaces for provider configurations
 interface RateLimits {

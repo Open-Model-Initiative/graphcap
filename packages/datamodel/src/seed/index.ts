@@ -7,7 +7,7 @@
  */
 
 import { logger } from '@graphcap/lib';
-import { seedProviders } from '../features/provider_config/seed_providers';
+import { seedProviders } from './seed_providers';
 
 /**
  * Main seed function that orchestrates all seeding operations

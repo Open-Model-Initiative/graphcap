@@ -4,8 +4,8 @@ packages:
   - 'packages/media-processing'
   - 'packages/datamodel'
   - 'packages/lib'
-
+nodeLinker: hoisted 
 # syncInjectedDepsAfterScripts:
-#   - build
+# - build
 
 # injectWorkspacePackages: true 

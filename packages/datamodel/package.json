@@ -20,6 +20,7 @@
 		"@hono/zod-openapi": "^0.18.4",
 		"zod-to-json-schema": "^3.24.5",
 		"@scalar/hono-api-reference": "^0.5.184",
+		"pg": "^8.15.0",
 		"stoker": "1.4.2"
 	},
 	"devDependencies": {

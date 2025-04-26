@@ -13,10 +13,9 @@ import { secureHeaders } from 'hono/secure-headers';
 import { timing } from 'hono/timing';
 import { z } from 'zod';
 
-import { logger } from '@graphcap/lib';
+import { env, logger } from '@graphcap/lib';
 import { batchQueueRoutes } from './api/routes/batch_queue';
 import { logTestRoutes } from './api/routes/log_test';
-import { env } from './env';
 import { providerRoutes } from './features/provider_config/routes';
 import { errorHandlerMiddleware, notFoundHandler } from './utils/error-handler';
 import { createDetailedLoggingMiddleware, createPinoLoggerMiddleware } from './utils/pino-middleware';
@@ -35,10 +34,9 @@ app.use('*', secureHeaders());
 
 // Add pino logger middleware
 app.use('*', createPinoLoggerMiddleware());
-
+const API_PREFIX = '/api';
 // Add detailed logging middleware for API routes
 app.use('/api/*', createDetailedLoggingMiddleware());
-app.use(`${env.API_PREFIX}/*`, createDetailedLoggingMiddleware());
 
 // Health check endpoint
 const healthCheckRoute = createRoute({
@@ -74,7 +72,7 @@ app.openapi(healthCheckRoute, (c) => {
 });
 
 // Add alias for API v1 health endpoint
-app.get(`${env.API_PREFIX}/v1/health`, (c) => {
+app.get(`${API_PREFIX}/v1/health`, (c) => {
   return c.json({
     status: 'ok',
     service: 'graphcap-data-service',
@@ -119,21 +117,21 @@ const dbHealthCheckRoute = createRoute({
 });
 
 // API routes with v1 prefix
-app.route(`${env.API_PREFIX}/v1/providers`, providerRoutes);
-app.route(`${env.API_PREFIX}/v1/perspectives/batch`, batchQueueRoutes);
-app.route(`${env.API_PREFIX}/v1/logs`, logTestRoutes);
+app.route(`${API_PREFIX}/v1/providers`, providerRoutes);
+app.route(`${API_PREFIX}/v1/perspectives/batch`, batchQueueRoutes);
+app.route(`${API_PREFIX}/v1/logs`, logTestRoutes);
 
 // OpenAPI documentation
 app.doc('openapi', {
   openapi: '3.0.0',
   info: {
-    title: 'GraphCap Data Service API',
+    title: 'GraphCap Data Service API Reference',
     version: '1.0.0',
     description: 'API for managing GraphCap provider configurations and batch perspective jobs',
   },
   servers: [
     {
-      url: `http://localhost:${env.PORT}`,
+      url: `http://localhost:${env.DATA_SERVICE_PORT}`,
       description: 'Local development server',
     },
   ],

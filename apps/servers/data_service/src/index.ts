@@ -5,13 +5,12 @@
  * Main entry point for the data service API.
  */
 
-import { logger } from "@graphcap/lib";
+import { env, logger } from "@graphcap/lib";
 import app from "./app";
-import { env } from "./env";
 
 // Start server using Bun's built-in server
 if (import.meta.main) {
-	const port = Number.parseInt(env.PORT);
+	const port = env.DATA_SERVICE_PORT;
 
 	logger.info(`Data service preparing to start on port ${port}`);
 	logger.info(

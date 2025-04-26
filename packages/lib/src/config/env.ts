@@ -22,7 +22,8 @@ const EnvSchema = z
 			.default("debug"),
 		DATABASE_URL: z.string().url(),
 		DATABASE_AUTH_TOKEN: z.string().optional(),
-		MEDIA_SERVER_PORT: z.coerce.number().default(59150),
+		MEDIA_SERVER_PORT: z.coerce.number().default(32150),
+		DATA_SERVICE_PORT: z.coerce.number().default(32550),
 		POSTGRES_HOST: z.string().default("graphcap_postgres"),
 		ENCRYPTION_KEY: z.string()
 	})
