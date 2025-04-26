@@ -15,7 +15,8 @@ ENV PATH="/root/.bun/bin:${PATH}"
 # Stage 2: Fetch dependencies based only on lockfile
 #########################################################
 FROM base AS deps-fetch
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.9.0 --activate
+
 WORKDIR /app
 # Copy only package manifests and lockfile
 COPY package.json \
@@ -53,7 +54,7 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 #########################################################
 FROM base AS dev
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.9.0 --activate
 # Copy root config files needed for pnpm workspace commands
 COPY package.json \
     pnpm-lock.yaml \

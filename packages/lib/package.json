@@ -3,7 +3,8 @@
 	"version": "0.1.0",
 	"type": "module",
 	"exports": {
-		".": "./index.ts"
+		".": "./index.ts",
+		"./config/env": "./src/config/env.ts"
 	},
 	"dependencies": {
 		"@hono/zod-openapi": "^0.18.4",
