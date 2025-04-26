@@ -24,6 +24,7 @@ const EnvSchema = z
 		DATABASE_AUTH_TOKEN: z.string().optional(),
 		MEDIA_SERVER_PORT: z.coerce.number().default(59150),
 		POSTGRES_HOST: z.string().default("graphcap_postgres"),
+		ENCRYPTION_KEY: z.string()
 	})
 	.superRefine((input, ctx) => {
 		if (input.NODE_ENV === "production" && !input.DATABASE_AUTH_TOKEN) {
@@ -37,10 +38,11 @@ const EnvSchema = z
 		}
 	});
 
-export type env = z.infer<typeof EnvSchema>;
+// Export the environment schema type
+export type EnvType = z.infer<typeof EnvSchema>;
 
-// eslint-disable-next-line ts/no-redeclare
-const { data: env, error } = EnvSchema.safeParse(process.env);
+// Parse the environment
+const { data, error } = EnvSchema.safeParse(process.env);
 
 if (error) {
 	console.error("❌ Invalid env:");
@@ -48,4 +50,12 @@ if (error) {
 	process.exit(1);
 }
 
+if (!data) {
+	throw new Error('env is not provided');
+}
+
+// Export the parsed environment values
+export const env = data;
+
+// For backwards compatibility with code that imports from '@graphcap/lib/env'
 export default env;

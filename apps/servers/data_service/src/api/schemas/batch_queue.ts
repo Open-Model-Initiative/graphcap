@@ -5,8 +5,8 @@
  * Zod schemas for batch queue job validation.
  */
 
+import { JOB_TYPE } from '@graphcap/datamodel/src/schema/batch_queue';
 import { z } from 'zod';
-import { JOB_ITEM_STATUS, JOB_STATUS, JOB_TYPE } from '../../db/schema/batch_queue';
 
 // Job creation schema
 export const batchJobCreateSchema = z.object({

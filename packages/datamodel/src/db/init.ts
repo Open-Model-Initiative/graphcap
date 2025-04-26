@@ -5,9 +5,9 @@
  * This module provides functions to initialize the database and check its health.
  */
 
-import { db } from './index';
-import { logger } from '../utils/logger';
+import { logger } from '@graphcap/lib';
 import { sql } from 'drizzle-orm';
+import { dbClient } from './index';
 
 /**
  * Check database connection
@@ -17,7 +17,7 @@ import { sql } from 'drizzle-orm';
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
     // Execute a simple query to check if the database is accessible
-    await db.execute(sql`SELECT 1 as connected`);
+    await dbClient.execute(sql`SELECT 1 as connected`);
     // If we get here without an error, the connection is successful
     return true;
   } catch (error) {

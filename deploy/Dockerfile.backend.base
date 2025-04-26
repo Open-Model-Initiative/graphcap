@@ -8,12 +8,9 @@ RUN apt-get update && apt-get install -y curl lsof net-tools postgresql-client p
 # Install Bun
 ENV BUN_INSTALL="/usr/local"
 RUN curl -fsSL https://bun.sh/install | bash
-# Add bun to PATH (adjust if BUN_INSTALL changes)
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Copy common ts packages
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/lib ./packages/lib
 COPY packages/datamodel ./packages/datamodel
-
-# Install & link all workspace projects (including lib & datamodel)
-RUN pnpm install --frozen-lockfile

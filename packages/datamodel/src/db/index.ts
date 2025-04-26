@@ -5,8 +5,7 @@
  * This module initializes the database connection using Drizzle ORM with PostgreSQL.
  */
 
-import { env } from '@graphcap/lib/env';
-import { logger } from '@graphcap/lib/src/utils/logger';
+import { env, logger } from '@graphcap/lib';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from '../schema';

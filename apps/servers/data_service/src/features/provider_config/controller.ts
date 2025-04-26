@@ -5,12 +5,12 @@
  * This module defines the controller functions for provider management.
  */
 
-import { dbClient } from "@graphcap/datamodel/src/db";
+import { dbClient } from "@graphcap/datamodel/";
 import { providerModels, providerRateLimits, providers } from "@graphcap/datamodel/src/schema";
+import { decryptApiKey, encryptApiKey } from "@graphcap/lib";
 import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import type { Logger } from "pino";
-import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
 import { processApiKeyForUpdate } from "./api-key-manager";
 import type { Provider, ProviderCreate, ProviderUpdate } from "./schemas";
 

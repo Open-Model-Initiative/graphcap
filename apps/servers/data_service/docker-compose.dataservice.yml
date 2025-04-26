@@ -17,6 +17,8 @@ services:
       volumes:
         - ../../../workspace:/workspace
         - ./src:/app/apps/servers/data_service/src  # Mount src directory directly
+        # - ../../../packages/datamodel:/app/packages/datamodel
+        # - ../../../packages/lib:/app/packages/lib
       networks:
         - graphcap
       depends_on:

@@ -6,7 +6,11 @@
  */
 
 import CryptoJS from 'crypto-js';
-import { env } from '../env';
+import env from '../config/env';
+
+if (!env) {
+	throw new Error('ENCRYPTION_KEY is not set');
+}
 
 /**
  * Encrypts an API key using AES encryption

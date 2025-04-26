@@ -6,7 +6,9 @@
  */
 
 import pino from 'pino';
-import { env } from '../env';
+import env from '../config/env';
+
+
 
 // Define request and response types for serializers
 interface PinoRequest {
@@ -23,8 +25,8 @@ interface PinoResponse {
 
 // Configure logger based on environment
 const loggerConfig = {
-  level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-  transport: env.NODE_ENV !== 'production' 
+  level: (env?.NODE_ENV ?? 'development') === 'production' ? 'info' : 'debug',
+  transport: (env?.NODE_ENV ?? 'development') !== 'production' 
     ? {
         target: 'pino-pretty',
         options: {
@@ -63,7 +65,7 @@ const loggerConfig = {
   // Base object included in every log
   base: {
     service: 'graphcap-data-service',
-    env: env.NODE_ENV,
+    env: env?.NODE_ENV ?? 'development',
   },
 };
 

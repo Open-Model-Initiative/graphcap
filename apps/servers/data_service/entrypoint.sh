@@ -32,11 +32,37 @@ while ! pg_isready -d "$DATABASE_URL" >/dev/null 2>&1; do
     sleep 1
 done
 echo "Database connection successful!"
+echo "Rebuilding deps"
+rm -rf node_modules
+pnpm i --filter @graphcap/data-service
 
-echo "=== Listing installed packages for data-service from /app/apps/servers/data_service ==="
-(cd /app/apps/servers/data_service && pnpm list --depth=0)
-echo "=================================================================================="
+echo "Starting data service from $PWD"
+exec pnpm run dev --filter @graphcap/data-service
 
-echo "=== Starting application from /app/apps/servers/data_service ==="
-cd /app/apps/servers/data_service
-exec pnpm run dev
+# --- Debugging Section (kept for reference, commented out) ---
+# echo "--- Current directory ---"
+# pwd
+# 
+# echo "--- Listing current directory (data_service) ---"
+# ls -la
+# 
+# echo "--- Listing node_modules/@graphcap ---"
+# ls -la node_modules/@graphcap || echo "Error listing node_modules/@graphcap"
+# 
+# echo "--- Checking symlink target for @graphcap/lib ---"
+# SYMLINK_PATH="node_modules/@graphcap/lib"
+# if [ -L "$SYMLINK_PATH" ]; then
+#     TARGET_PATH=$(readlink -f "$SYMLINK_PATH")
+#     echo "Symlink '$SYMLINK_PATH' points to: $TARGET_PATH"
+#     echo "--- Listing target directory ($TARGET_PATH) ---"
+#     ls -la "$TARGET_PATH" || echo "Error listing target directory: $TARGET_PATH"
+# else
+#     echo "Error: '$SYMLINK_PATH' is not a symlink or does not exist."
+# fi
+# 
+# echo "--- pnpm root ---"
+# pnpm root
+# 
+# echo "=== Debugging checks complete. Keeping container alive... ==="
+# # Keep the container running for inspection
+tail -f /dev/null

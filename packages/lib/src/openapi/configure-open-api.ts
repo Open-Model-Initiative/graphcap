@@ -4,7 +4,7 @@ import type { AppOpenAPI } from "./types";
 
 import type { z } from "@hono/zod-openapi";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import packageJSON from "../../datamodel/package.json" with { type: "json" };
+import packageJSON from "../../../datamodel/package.json" with { type: "json" };
 
 export default function configureOpenAPI(app: AppOpenAPI, name: string) {
 	app.doc("/doc", {

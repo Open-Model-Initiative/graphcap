@@ -13,12 +13,12 @@ import { secureHeaders } from 'hono/secure-headers';
 import { timing } from 'hono/timing';
 import { z } from 'zod';
 
+import { logger } from '@graphcap/lib';
 import { batchQueueRoutes } from './api/routes/batch_queue';
 import { logTestRoutes } from './api/routes/log_test';
 import { env } from './env';
 import { providerRoutes } from './features/provider_config/routes';
 import { errorHandlerMiddleware, notFoundHandler } from './utils/error-handler';
-import { logger } from './utils/logger';
 import { createDetailedLoggingMiddleware, createPinoLoggerMiddleware } from './utils/pino-middleware';
 
 // Create OpenAPI Hono app
