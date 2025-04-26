@@ -5,9 +5,9 @@
  * Utility for handling and formatting errors in a consistent way.
  */
 
+import { logger } from "@graphcap/lib";
 import type { Context } from "hono";
 import { ZodError } from "zod";
-import { logger } from "./logger";
 
 interface ErrorResponse {
 	status: "error";

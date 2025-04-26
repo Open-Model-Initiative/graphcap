@@ -6,11 +6,6 @@ tasks:
     cmds:
       - docker build --progress=plain -t graphcap-base:dev -f deploy/Dockerfile.python.base .
 
-  ts-base:
-    desc: Build the graphcap-ts-base Docker image (Node + pnpm)
-    cmds:
-      - docker build --progress=plain -t graphcap-ts-base:dev -f deploy/Dockerfile.ts.base .
-
   backend-base:
     desc: Build the graphcap-backend-base Docker image (FROM ts-base + Bun)
     cmds:
@@ -20,5 +15,4 @@ tasks:
     desc: Build all base images
     cmds:
       - task build:gcap-base
-      - task build:ts-base
       - task build:backend-base

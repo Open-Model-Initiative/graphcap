@@ -5,8 +5,7 @@
  * This module handles API key encryption, decryption, and management operations.
  */
 
-import { decryptApiKey, encryptApiKey } from "../../utils/encryption";
-import { logger } from "../../utils/logger";
+import { decryptApiKey, encryptApiKey, logger } from "@graphcap/lib";
 import type { Provider } from "./schemas";
 
 // Simple type for objects with an optional API key property

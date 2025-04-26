@@ -1,3 +1,3 @@
-import env from "./config/env";
+export * from "./src/config/env";
+export * from "./src/util";
 
-export { env };

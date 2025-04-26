@@ -5,6 +5,7 @@ includes:
   data:      ./apps/servers/data_service/Taskfile.data.yml
   inference: ./apps/servers/inference_bridge/server/Taskfile.inference.yml
   studio:    ./apps/frontend/graphcap_studio/Taskfile.studio.yml
+  db:        ./packages/datamodel/Taskfile.datamodel.yml
   build:     ./deploy/Taskfile.build.yml
 tasks:
   dev:
@@ -29,6 +30,7 @@ tasks:
         platforms: [linux, darwin]
       - cmd: cmd /c copy .\\workspace\\config\\.env.template .\\workspace\\config\\.env
         platforms: [windows]
+      - task: build:bases
 
 
 

@@ -7,9 +7,12 @@ cd /app/packages/datamodel
 echo "Current working directory: $(pwd)"
 echo "Running database migrations..."
 # Directly run the drizzle-kit migrate command
-bunx drizzle-kit migrate --config=drizzle.config.ts
+# Use pnpm to ensure it uses the workspace version and config
+pnpm run db:migrate 
 echo "Migrations complete."
 
-# Start Drizzle Studio, explicitly passing the config file
 echo "Starting Drizzle Studio..."
-bunx drizzle-kit studio --config=drizzle.config.ts --host 0.0.0.0 --port 59151 
+# Use pnpm run to execute the script defined in package.json, passing host/port
+pnpm run db:studio 
+echo "Drizzle Kit Studio started in background on 0.0.0.0:32151"
+tail -f /dev/null

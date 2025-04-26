@@ -2,8 +2,10 @@ packages:
   - 'apps/frontend/**'
   - 'apps/servers/data_service'
   - 'packages/media-processing'
-
+  - 'packages/datamodel'
+  - 'packages/lib'
+nodeLinker: hoisted 
 # syncInjectedDepsAfterScripts:
-#   - build
+# - build
 
 # injectWorkspacePackages: true 

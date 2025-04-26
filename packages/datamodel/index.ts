@@ -1,3 +1,5 @@
-import dbClient from "./src/db";
+import { dbClient } from "./src/db";
 
-export default dbClient;
+export * from "./src/schema";
+export { dbClient };
+

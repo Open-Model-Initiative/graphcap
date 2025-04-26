@@ -4,12 +4,12 @@ services:
   graphcap_datamodel_studio:
     container_name: graphcap_datamodel_studio
     build:
-      context: ${REPO_ROOT}
+      context: ../..
       dockerfile: packages/datamodel/Dockerfile.datamodel.dev
     ports:
       - "53151:53151" 
     env_file:
-      - ${REPO_ROOT}/.env # Load environment variables from root .env
+      - ../../workspace/config/.env 
     environment:
       # Ensure DATABASE_URL is available, taking precedence from .env if set
       - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@graphcap_postgres:5432/${POSTGRES_DB}}

@@ -3,26 +3,9 @@ name: graphcap
 
 include:
   - ./apps/servers/inference_bridge/docker-compose.inference.yml
+  - ./apps/servers/data_service/docker-compose.dataservice.yml
+  - ./packages/datamodel/docker-compose.datamodel.yml
 services:
-
-
-  graphcap_postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "35433:5432"
-    volumes:
-      - graphcap_db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - graphcap
 
   graphcap_studio:
     container_name: graphcap_ui
@@ -108,38 +91,6 @@ services:
     networks:
       - graphcap
 
-
-
-  graphcap_data_service:
-    container_name: graphcap_data_service
-    build:
-      context: ./apps/servers/data_service
-      dockerfile: Dockerfile.data_service.dev
-    ports:
-      - "32550:32550"
-      - "32501:32501"  # Drizzle Kit Studio port
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - PORT=32550
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-graphcap_postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
-      - WORKSPACE_PATH=/workspace
-      - DEBUG=true  # Enable debug mode
-    volumes:
-      - ./workspace:/workspace
-      - ./apps/servers/data_service/src:/app/src  # Mount src directory directly
-    networks:
-      - graphcap
-    depends_on:
-      graphcap_postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:32550/health"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    env_file:
-      - ./workspace/config/.env
 
 volumes:
   graphcap_db:

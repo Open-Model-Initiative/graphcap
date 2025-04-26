@@ -5,10 +5,10 @@
  * Sets up structured logging with hono-pino.
  */
 
+import { logger } from "@graphcap/lib";
 import type { Context } from "hono";
 import { pinoLogger } from "hono-pino";
 import type { Logger } from "pino";
-import { logger } from "./logger";
 
 // Define our logger property in the Hono context variables
 declare module "hono" {

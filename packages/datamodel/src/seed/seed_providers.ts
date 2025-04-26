@@ -5,10 +5,10 @@
  * This script seeds the database with predefined provider configurations.
  */
 
+import { logger } from '@graphcap/lib';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db/index';
-import { providerModels, providers } from '../../db/schema';
-import { logger } from '../../utils/logger';
+import { dbClient } from '../db';
+import { providerModels, providers } from '../schema';
 
 // Define interfaces for provider configurations
 interface RateLimits {
@@ -91,7 +91,7 @@ export async function seedProviders() {
       logger.info(`Processing provider: ${name}`);
       
       // Check if provider already exists
-      const existingProvider = await db.query.providers.findFirst({
+      const existingProvider = await dbClient.query.providers.findFirst({
         where: eq(providers.name, name)
       });
       
@@ -101,7 +101,7 @@ export async function seedProviders() {
       }
       
       // Insert provider
-      const [insertedProvider] = await db.insert(providers).values({
+      const [insertedProvider] = await dbClient.insert(providers).values({
         name,
         kind: providerConfig.kind,
         environment: providerConfig.environment,
@@ -114,7 +114,7 @@ export async function seedProviders() {
       // Insert models if provided
       if ('models' in providerConfig && Array.isArray(providerConfig.models)) {
         for (const modelName of providerConfig.models) {
-          await db.insert(providerModels).values({
+          await dbClient.insert(providerModels).values({
             providerId: insertedProvider.id,
             name: modelName,
             isEnabled: true
