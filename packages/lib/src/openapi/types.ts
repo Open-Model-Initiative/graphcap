@@ -1,5 +1,5 @@
 import type { OpenAPIHono, RouteConfig, RouteHandler } from "@hono/zod-openapi";
-import type { Context, Env, Handler, MiddlewareHandler, Schema } from "hono";
+import type { Env, Schema } from "hono";
 import type { PinoLogger } from "hono-pino";
 
 export interface AppBindings {
@@ -27,6 +27,4 @@ export type JsonValue =
 export type JsonObject = { [key: string]: JsonValue };
 
 // Define a generic type for Hono handlers in this application
-export type AppEnv = Env & {
-	// ... existing code ...
-};
+export type AppEnv = Env 
