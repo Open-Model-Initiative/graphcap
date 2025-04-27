@@ -20,6 +20,7 @@
     "zod": "^3.24.2",
     "@graphcap/datamodel": "workspace:*",
     "@graphcap/lib": "workspace:*",
+    "@graphcap/lib-backend": "workspace:*",
 		"hono": "^4.7.6",
     "hono-pino": "^0.8.0"
   },

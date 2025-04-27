@@ -35,6 +35,7 @@ COPY package.json \
     ./
 COPY packages/datamodel/package.json ./packages/datamodel/package.json
 COPY packages/lib/package.json ./packages/lib/package.json
+COPY packages/lib-backend/package.json ./packages/lib-backend/package.json
 COPY apps/servers/data_service/package.json ./apps/servers/data_service/package.json
 
 # Fetch dependencies - this layer is cached if lockfile doesn't change
@@ -52,6 +53,7 @@ COPY package.json \
     ./
 COPY packages/lib packages/lib
 COPY packages/datamodel packages/datamodel
+COPY packages/lib-backend packages/lib-backend
 COPY apps/servers/data_service apps/servers/data_service
 
 # Install using offline mode - uses fetched packages and links workspace projects
@@ -74,13 +76,14 @@ COPY package.json \
 # Copy source code needed at runtime
 COPY packages/lib packages/lib
 COPY packages/datamodel packages/datamodel
+COPY packages/lib-backend packages/lib-backend
 COPY apps/servers/data_service apps/servers/data_service
 
 # Copy the FULLY constructed node_modules from the linking stage
 COPY --from=deps-link /app/node_modules /app/node_modules
 COPY --from=deps-link /app/apps/servers/data_service/node_modules /app/apps/servers/data_service/node_modules
-COPY --from=deps-link /app/packages/lib/node_modules /app/packages/lib/node_modules
 COPY --from=deps-link /app/packages/datamodel/node_modules /app/packages/datamodel/node_modules
+COPY --from=deps-link /app/packages/lib-backend/node_modules /app/packages/lib-backend/node_modules
 
 # Ensure entrypoint script is executable
 RUN chmod +x /app/apps/servers/data_service/entrypoint.sh
