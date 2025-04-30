@@ -5,6 +5,9 @@
 	"exports": {
 		".": "./index.ts"
 	},
+	"scripts": {
+		"test": "vitest"
+	},
 	"dependencies": {
 		"@hono/zod-openapi": "^0.18.4",
 		"@scalar/hono-api-reference": "^0.5.184",
@@ -15,6 +18,10 @@
 		"zod": "^3.24.2",
 		"zod-to-json-schema": "^3.24.5",
 		"@graphcap/lib": "workspace:*"
+	},
+	"devDependencies": {
+		"vite": "^6.3.4",
+		"vitest": "^2.1.9"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
