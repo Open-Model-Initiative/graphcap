@@ -9,13 +9,15 @@
     "lint": "pnpm -r --parallel lint",
     "lint:biome": "pnpm biome lint ./apps ./packages",
     "format:biome": "pnpm biome format --write ./apps ./packages",
-    "test": "pnpm -r --parallel test",
+    "test": "vitest",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
     "typescript": "^5.4.5", 
-    "@types/node": "^20.12.12" 
+    "@types/node": "^20.12.12",
+    "vite": "^6.3.4",
+    "vitest": "^2.1.9" 
   },
   "packageManager": "pnpm@10.9.0"
 } 
