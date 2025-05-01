@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@graphcap/ui/components",
+    "utils": "@graphcap/ui/lib/utils",
+    "ui": "@graphcap/ui/components/ui",
+    "lib": "@graphcap/ui/lib",
+    "hooks": "@graphcap/ui/hooks"
+  },
+  "iconLibrary": "lucide"
+}

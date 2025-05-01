@@ -5,6 +5,7 @@ on:
     branches: [ "main"]
     paths:
       - 'doc/**'
+      - 'packages/graphcap-ui/**'
       - '.github/workflows/documentation.yml'
 
 permissions:
@@ -17,15 +18,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - name: Install dependencies
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install dependencies (Python & Node)
         run: |
           pip install sphinx pydata-sphinx-theme myst_parser
+          pnpm install
       - name: Sphinx build
         run: |
           sphinx-build doc _build
+      - name: Storybook build
+        run: |
+          pnpm --filter @graphcap/ui build-storybook -o ../../_build/storybook
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/doc_sandbox') }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}

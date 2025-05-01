@@ -84,6 +84,14 @@ Development
    dev/servers/media_server
    dev/caption_pipeline
 
+# Add the new Storybook link section here
+UI Components (Storybook)
+=========================
+
+Browse interactive UI components documentation:
+
+* `UI Component Library (Storybook) </storybook/>`_
+
 Indices and tables
 ==================
 
