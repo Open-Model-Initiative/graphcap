@@ -4,34 +4,32 @@
 // CRUD handlers for provider configurations following the same style as
 // `persons/person.handlers.ts` but with extra logic to encrypt/decrypt API keys.
 
-import { dbClient } from "@graphcap/datamodel";
+import { dbClient, providers as ProvidersTable } from "@graphcap/datamodel";
 import { decryptApiKey, encryptApiKey } from "@graphcap/lib";
 import type { AppRouteHandler } from "@graphcap/lib-backend";
 import { notFoundSchema } from "@graphcap/lib-backend";
 import { eq } from "drizzle-orm";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 
-import { providers as ProvidersTable } from "@graphcap/datamodel";
 
 import { processApiKeyForUpdate } from "./api-key-manager";
 import type {
-    CreateProviderRoute,
-    GetProviderRoute,
-    ListProvidersRoute,
-    PatchProviderRoute,
-    RemoveProviderRoute,
+  CreateProviderRoute,
+  GetProviderRoute,
+  ListProvidersRoute,
+  PatchProviderRoute,
+  RemoveProviderRoute,
 } from "./provider.routes";
 import type { InsertProvider, PatchProvider } from "./provider.schema";
 
 // ---------------------------------------------------------------------------
 // Helper to decrypt the apiKey field before returning the record
 // ---------------------------------------------------------------------------
-async function decryptProvider(provider: unknown) {
-  const record = provider as { apiKey: string | null };
-  if (record && record.apiKey) {
-    record.apiKey = await decryptApiKey(record.apiKey);
+async function decryptProvider<T extends { apiKey?: string | null }>(provider: T): Promise<T> {
+  if (provider?.apiKey) {
+    provider.apiKey = await decryptApiKey(provider.apiKey);
   }
-  return record;
+  return provider;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,7 +53,7 @@ export const listProviders: AppRouteHandler<ListProvidersRoute> = async (c) => {
 // CREATE
 // ---------------------------------------------------------------------------
 export const createProvider: AppRouteHandler<CreateProviderRoute> = async (c) => {
-  const data = c.req.valid("json") as InsertProvider;
+  const data = c.req.valid("json");
 
   // Encrypt apiKey if provided
   const recordToInsert = { ...data } as InsertProvider & { apiKey?: string | null };
@@ -88,7 +86,7 @@ export const getProvider: AppRouteHandler<GetProviderRoute> = async (c) => {
   });
 
   if (!item) {
-    return c.json(notFoundSchema, HttpStatusCodes.NOT_FOUND);
+    return c.json({ message: "Provider not found" }, HttpStatusCodes.NOT_FOUND);
   }
 
   const decrypted = await decryptProvider(item);
@@ -100,7 +98,7 @@ export const getProvider: AppRouteHandler<GetProviderRoute> = async (c) => {
 // ---------------------------------------------------------------------------
 export const patchProvider: AppRouteHandler<PatchProviderRoute> = async (c) => {
   const { id } = c.req.valid("param");
-  const updates = c.req.valid("json") as PatchProvider;
+  const updates = c.req.valid("json");
 
   // Ensure record exists
   const [existing] = await dbClient
@@ -110,7 +108,7 @@ export const patchProvider: AppRouteHandler<PatchProviderRoute> = async (c) => {
     .limit(1);
 
   if (!existing) {
-    return c.json(notFoundSchema, HttpStatusCodes.NOT_FOUND);
+    return c.json({ message: "Provider not found" }, HttpStatusCodes.NOT_FOUND);
   }
 
   if (Object.keys(updates).length === 0) {
@@ -122,7 +120,7 @@ export const patchProvider: AppRouteHandler<PatchProviderRoute> = async (c) => {
   // Handle apiKey encryption logic
   let encryptedApiKey: string | null | undefined = undefined;
   if (Object.prototype.hasOwnProperty.call(updates, "apiKey")) {
-    encryptedApiKey = await processApiKeyForUpdate({ apiKey: existing.apiKey }, updates.apiKey as string | null | undefined);
+    encryptedApiKey = await processApiKeyForUpdate({ apiKey: existing.apiKey }, updates.apiKey);
   }
 
   const updatePayload = { ...updates } as Partial<PatchProvider & { apiKey: string | null }>;
