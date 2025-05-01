@@ -6,7 +6,7 @@
  */
 
 import { decryptApiKey, encryptApiKey, logger } from "@graphcap/lib";
-import type { Provider } from "./schemas";
+import type { SelectProvider as Provider } from "./provider.schema";
 
 // Simple type for objects with an optional API key property
 export type WithApiKey = {

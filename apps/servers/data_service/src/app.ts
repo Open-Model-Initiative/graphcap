@@ -7,7 +7,7 @@
 
 import { configureOpenAPI, createApp } from "@graphcap/lib-backend";
 import { cors } from "hono/cors";
-import { providerRoutes } from './features/provider_config/routes';
+import providerRouter from './features/provider_config/provider.index';
 import indexRoute from './routes/index.route';
 
 // Define API prefix
@@ -23,7 +23,7 @@ app.use(`${API_PREFIX}/*`, cors());
 // API routes with v1 prefix
 const api = app
   .route("/api", indexRoute)
-  .route("/api/providers", providerRoutes);
+  .route("/api/providers", providerRouter);
 
 // --- Export the type of the chained routes ---
 export type AppType = typeof api;
