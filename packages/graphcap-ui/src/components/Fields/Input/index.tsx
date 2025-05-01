@@ -1,6 +1,6 @@
 import { cn } from "@graphcap/ui/utils";
-import { cva, VariantProps } from "class-variance-authority";
-import { ComponentProps, forwardRef } from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { type ComponentProps, forwardRef } from "react";
 
 const inputStyles = cva([
   "w-full",

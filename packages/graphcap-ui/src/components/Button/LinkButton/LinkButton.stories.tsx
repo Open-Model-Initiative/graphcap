@@ -17,7 +17,7 @@ const StorybookRouterWrapper = ({
 }) => {
   // Create root route that renders children directly
   const rootRoute = createRootRoute({
-    component: () => <>{children}</>,
+    component: () => children,
   });
 
   // Use React.useMemo to prevent router recreation on re-renders within Storybook
@@ -27,7 +27,7 @@ const StorybookRouterWrapper = ({
         routeTree: rootRoute,
         history: createMemoryHistory({ initialEntries: ["/"] }),
       }),
-    []
+    [rootRoute]
   );
 
   return <RouterProvider router={router} />;

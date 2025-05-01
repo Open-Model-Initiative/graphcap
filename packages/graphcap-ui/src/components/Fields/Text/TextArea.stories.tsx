@@ -159,27 +159,29 @@ export const AutoGrowing: Story = {
 };
 
 // Interactive textarea with character count
-export const WithCharacterCount: Story = {
-  render: () => {
-    const maxLength = 100;
-    const [value, setValue] = useState("");
-    const charCount = value.length;
+const TextareaWithCharacterCount = () => {
+  const maxLength = 100;
+  const [value, setValue] = useState("");
+  const charCount = value.length;
 
-    return (
-      <div className="space-y-2 max-w-md">
-        <Textarea
-          placeholder="Start typing..."
-          value={value}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-            setValue(e.target.value)
-          }
-          maxLength={maxLength}
-          autoGrow
-        />
-        <div className="text-xs text-right text-gray-500">
-          {charCount}/{maxLength} characters
-        </div>
+  return (
+    <div className="space-y-2 max-w-md">
+      <Textarea
+        placeholder="Start typing..."
+        value={value}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+          setValue(e.target.value)
+        }
+        maxLength={maxLength}
+        autoGrow
+      />
+      <div className="text-xs text-right text-gray-500">
+        {charCount}/{maxLength} characters
       </div>
-    );
-  },
+    </div>
+  );
+};
+
+export const WithCharacterCount: Story = {
+  render: () => <TextareaWithCharacterCount />
 };

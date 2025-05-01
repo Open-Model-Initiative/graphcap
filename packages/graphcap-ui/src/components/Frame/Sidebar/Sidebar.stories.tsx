@@ -2,19 +2,19 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { FileTextIcon, HomeIcon, SettingsIcon, UsersIcon } from "lucide-react";
 
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarInset,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarProvider,
-    SidebarTrigger,
-} from ".";
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "./Sidebar";
 
 // Common sidebar content to reuse across stories
 const SidebarMenuContent = () => (
@@ -191,8 +191,8 @@ export const DoubleSidebar: Story = {
 
     return (
       <div className="grid grid-cols-2 gap-4 p-4">
-        {variants.map((variant, i) => (
-          <div key={i} className="border rounded-lg overflow-hidden h-96">
+        {variants.map((variant, _i) => (
+          <div key={variant.side} className="border rounded-lg overflow-hidden h-96">
             <div className="p-2 border-b bg-gray-50">
               <h3 className="font-semibold">{variant.side}</h3>
             </div>
