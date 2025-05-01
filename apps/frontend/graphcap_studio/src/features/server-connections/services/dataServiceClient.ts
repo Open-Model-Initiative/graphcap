@@ -7,33 +7,27 @@
 
 import type { ServerConnection } from "@/types/server-connection-types";
 import { hc } from "hono/client";
+import type { AppType } from "../../../../../../servers/data_service/src/app";
 import { DEFAULT_URLS, SERVER_IDS } from "../constants";
 
-/**
- * Interface for the Data Service client
- */
-export interface DataServiceClient {
-	providers: {
-		$get: () => Promise<Response>;
-		$post: (options: { json: unknown }) => Promise<Response>;
-		":id": {
-			$get: (options: { param: { id: string } }) => Promise<Response>;
-			$put: (options: {
-				param: { id: string };
-				json: unknown;
-			}) => Promise<Response>;
-			$delete: (options: { param: { id: string } }) => Promise<Response>;
-		};
-	};
-	health: {
-		$get: () => Promise<Response>;
-	};
-}
+// ---------------------------------------------------------------------------
+// Derived type for the RPC client – we get full typing directly from AppType.
+// ---------------------------------------------------------------------------
+export type DataServiceClient = ReturnType<typeof hc<AppType>>;
 
 /**
- * Get the Data Service URL from server connections
+ * Resolve the base URL for the data-service.
+ *
+ * During local development Vite proxies any request starting with `/api` to
+ * the backend (see `vite.config.ts`). Therefore, when `baseUrl` is an empty
+ * string the client will make calls such as `/api/providers`, which are
+ * automatically proxied.  When a server connection is supplied (e.g. a remote
+ * deployment), we fall back to that absolute URL so the same client works in
+ * production.
  */
-export function getDataServiceUrl(connections: ServerConnection[]): string {
+export function getDataServiceBaseUrl(
+	connections: ServerConnection[] = [],
+): string {
 	const dataServiceConnection = connections.find(
 		(conn) => conn.id === SERVER_IDS.DATA_SERVICE,
 	);
@@ -41,14 +35,26 @@ export function getDataServiceUrl(connections: ServerConnection[]): string {
 	return (
 		dataServiceConnection?.url ??
 		import.meta.env.VITE_DATA_SERVICE_URL ??
-		DEFAULT_URLS[SERVER_IDS.DATA_SERVICE]
+		DEFAULT_URLS[SERVER_IDS.DATA_SERVICE] ??
+		"" // Fallback to same-origin + Vite proxy
 	);
 }
 
 /**
- * Create a Hono client for the Data Service
+ * Factory that returns a fully-typed RPC client for the GraphCap Data Service.
+ *
+ * Example usage:
+ * ```ts
+ * const client = createDataServiceClient();
+ * const providers = await (await client.api.providers.$get()).json();
+ * ```
  */
-export function createDataServiceClient(connections: ServerConnection[]): DataServiceClient {
-	const baseUrl = getDataServiceUrl(connections);
-	return hc(`${baseUrl}/api/v1`) as unknown as DataServiceClient;
+export function createDataServiceClient(
+	connections: ServerConnection[] = [],
+	baseUrlOverride?: string,
+): DataServiceClient {
+	const baseUrl = baseUrlOverride ?? getDataServiceBaseUrl(connections);
+	// NOTE: `hc` automatically appends route paths like `/api/providers`, so we
+	// should NOT include the `/api` prefix in the baseUrl.
+	return hc<AppType>(baseUrl);
 } 

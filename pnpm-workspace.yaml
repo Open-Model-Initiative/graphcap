@@ -3,7 +3,8 @@ packages:
   - 'apps/servers/data_service'
   - 'packages/media-processing'
   - 'packages/datamodel'
-  - 'packages/lib'
+  - 'packages/lib' 
+  - 'packages/lib-backend'
 nodeLinker: hoisted 
 # syncInjectedDepsAfterScripts:
 # - build

@@ -2,7 +2,7 @@ import { pinoLogger as logger } from "hono-pino";
 import pino from "pino";
 import pretty from "pino-pretty";
 
-import env from "../config/env";
+import { env } from "@graphcap/lib";
 
 export function pinoLogger() {
 	if (!env) {

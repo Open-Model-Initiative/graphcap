@@ -74,7 +74,6 @@ COPY packages/datamodel packages/datamodel
 
 # Copy the FULLY constructed node_modules from the linking stage
 COPY --from=deps-link /app/node_modules /app/node_modules
-COPY --from=deps-link /app/packages/lib/node_modules /app/packages/lib/node_modules
 COPY --from=deps-link /app/packages/datamodel/node_modules /app/packages/datamodel/node_modules
 
 # Ensure entrypoint script is executable

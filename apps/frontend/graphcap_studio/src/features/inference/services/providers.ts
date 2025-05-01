@@ -17,7 +17,7 @@ import type {
 	ProviderCreate,
 	ProviderUpdate,
 	ServerProviderConfig,
-	SuccessResponse
+	SuccessResponse,
 } from "@/types/provider-config-types";
 import type { ServerConnection } from "@/types/server-connection-types";
 import { debugError, debugLog } from "@/utils/logger";
@@ -34,13 +34,6 @@ export const queryKeys = {
 	providerModels: (providerName: string) =>
 		["providers", "models", providerName] as const,
 };
-
-/**
- * Extended Error interface with cause property
- */
-interface ErrorWithCause extends Error {
-	cause?: unknown;
-}
 
 /**
  * Custom error for service connection issues
@@ -64,6 +57,121 @@ function getDataServiceConnectionStatus(connections: ServerConnection[]) {
 		isConnected: dataServiceConnection?.status === "connected",
 		connection: dataServiceConnection
 	};
+}
+
+/**
+ * Common query configuration options
+ */
+const defaultQueryOptions = {
+	staleTime: 1000 * 60 * 5, // 5 minutes
+	retry: 1,
+	retryDelay: 2000, // 2 second delay between retries
+	refetchOnWindowFocus: false,
+};
+
+/**
+ * Generic function to handle API response errors
+ */
+async function handleApiError(response: Response, errorContext: string): Promise<never> {
+	try {
+		const errorData = await response.json();
+		debugError(COMPONENT_NAME, `${errorContext} error:`, errorData);
+		
+		// Check if we have a structured error response
+		if (errorData && typeof errorData === 'object') {
+			if ('status' in errorData && errorData.status === "error") {
+				throw errorData;
+			}
+			
+			if ('validationErrors' in errorData) {
+				throw errorData;
+			}
+			
+			if ('message' in errorData) {
+				throw new Error(errorData.message as string);
+			}
+			
+			if ('detail' in errorData) {
+				throw new Error(errorData.detail as string);
+			}
+		}
+		
+		// Fallback error
+		throw new Error(`${errorContext}: ${response.status}`);
+	} catch (parseError) {
+		// If we can't parse the error as JSON, throw the original error or a general one
+		if (parseError instanceof Error && !parseError.message.includes(errorContext)) {
+			throw parseError;
+		}
+		throw new Error(`${errorContext}: ${response.status}`);
+	}
+}
+
+/**
+ * Type transformer for API results
+ * This function handles any necessary type conversions between backend and frontend
+ */
+function transformApiResult<T>(data: unknown): T {
+	// For Provider and Provider[], we need to ensure id is a string
+	if (Array.isArray(data)) {
+		// Handle array of providers
+		return data.map(item => ({
+			...item,
+			id: item.id?.toString() ?? "",
+			isEnabled: item.isEnabled ?? false,
+			environment: item.environment as "cloud" | "local",
+			createdAt: item.createdAt ?? new Date().toISOString(),
+			updatedAt: item.updatedAt ?? new Date().toISOString(),
+		})) as T;
+	}
+	
+	if (data && typeof data === 'object' && 'id' in data) {
+		// Handle single provider
+		const item = data as Record<string, unknown>;
+		return {
+			...item,
+			id: item.id?.toString() ?? "",
+			isEnabled: item.isEnabled ?? false,
+			environment: item.environment as "cloud" | "local",
+			createdAt: item.createdAt ?? new Date().toISOString(),
+			updatedAt: item.updatedAt ?? new Date().toISOString(),
+		} as T;
+	}
+	
+	// For other types, just cast
+	return data as T;
+}
+
+/**
+ * Generic function to fetch data from the Data Service API
+ */
+async function fetchFromDataService<T>(
+	connections: ServerConnection[],
+	apiCall: (client: ReturnType<typeof createDataServiceClient>) => Promise<Response>,
+	errorContext: string
+): Promise<T> {
+	// Check connection status
+	const { isConnected } = getDataServiceConnectionStatus(connections);
+	
+	if (!isConnected) {
+		debugLog(COMPONENT_NAME, "Data service not connected");
+		throw new ServiceConnectionError("Data service not connected");
+	}
+	
+	try {
+		const client = createDataServiceClient(connections);
+		const response = await apiCall(client);
+		
+		if (!response.ok) {
+			return handleApiError(response, errorContext);
+		}
+
+		const data = await response.json();
+		return transformApiResult<T>(data);
+	} catch (error) {
+		debugError(COMPONENT_NAME, `Error in ${errorContext}:`, error);
+		throw error;
+	}
 }
 
 /**
@@ -93,44 +201,27 @@ export function useDataServiceConnected() {
  */
 export function useProviders() {
 	const { connections } = useServerConnectionsContext();
-	const { isConnected } = getDataServiceConnectionStatus(connections);
 	
-	debugLog(COMPONENT_NAME, "useProviders init:", { isConnected });
+	debugLog(COMPONENT_NAME, "useProviders init");
 	
 	return useSuspenseQuery({
 		queryKey: queryKeys.providers,
 		queryFn: async () => {
-			// Check connection status directly inside query function
-			// instead of using the value captured from the hook closure
-			const currentConnectionStatus = getDataServiceConnectionStatus(connections);
-			const currentIsConnected = currentConnectionStatus.isConnected;
-			
-			debugLog(COMPONENT_NAME, "Executing providers query:", { isConnected: currentIsConnected });
-			
-			if (!currentIsConnected) {
-				// When data service is not connected, return empty array
-				debugLog(COMPONENT_NAME, "Data service not connected, returning empty array");
-				return [];
-			}
-			
 			try {
-				const client = createDataServiceClient(connections);
-				const response = await client.providers.$get();
-				
-				if (!response.ok) {
-					debugError(COMPONENT_NAME, "Failed response:", response.status);
-					throw new Error(`Failed to fetch providers: ${response.status}`);
-				}
-	
-				const data = await response.json() as Provider[];
-				debugLog(COMPONENT_NAME, "Received providers:", { count: data.length });
-				return data;
+				return await fetchFromDataService<Provider[]>(
+					connections,
+					(client) => client.api.providers.$get(),
+					"Failed to fetch providers"
+				);
 			} catch (error) {
-				debugError(COMPONENT_NAME, "Error in providers query:", error);
+				if (error instanceof ServiceConnectionError) {
+					// Return empty array when not connected
+					return [] as Provider[];
+				}
 				throw error;
 			}
 		},
-		staleTime: 1000 * 60 * 5, // 5 minutes
+		...defaultQueryOptions,
 	});
 }
 
@@ -149,25 +240,14 @@ export function useProvidersWhenConnected() {
 	const result = useQuery({
 		queryKey: queryKeys.providers,
 		queryFn: async () => {
-			try {
-				const client = createDataServiceClient(connections);
-				const response = await client.providers.$get();
-				
-				if (!response.ok) {
-					debugError(COMPONENT_NAME, "Failed response:", response.status);
-					throw new Error(`Failed to fetch providers: ${response.status}`);
-				}
-	
-				const data = await response.json() as Provider[];
-				debugLog(COMPONENT_NAME, "Received providers:", { count: data.length });
-				return data;
-			} catch (error) {
-				debugError(COMPONENT_NAME, "Error in providers query:", error);
-				throw error;
-			}
+			return await fetchFromDataService<Provider[]>(
+				connections,
+				(client) => client.api.providers.$get(),
+				"Failed to fetch providers"
+			);
 		},
 		enabled: isConnected,
-		staleTime: 1000 * 60 * 5, // 5 minutes
+		...defaultQueryOptions,
 	});
 	
 	// When connection state changes to connected, trigger a providers refetch
@@ -193,30 +273,26 @@ export function useProvider(id: number) {
 	return useSuspenseQuery({
 		queryKey: queryKeys.provider(id),
 		queryFn: async () => {
-			// Check connection status directly inside query function
-			const { isConnected } = getDataServiceConnectionStatus(connections);
-			
-			if (!isConnected || !id) {
-				// Return null when not connected or no valid ID
+			if (!id) {
 				return null;
 			}
 			
 			try {
-				const client = createDataServiceClient(connections);
-				const response = await client.providers[":id"].$get({
-					param: { id: id.toString() },
-				});
-	
-				if (!response.ok) {
-					throw new Error(`Failed to fetch provider: ${response.status}`);
-				}
-	
-				return response.json() as Promise<Provider>;
+				return await fetchFromDataService<Provider>(
+					connections,
+					(client) => client.api.providers[":id"].$get({
+						param: { id },
+					}),
+					`Failed to fetch provider ${id}`
+				);
 			} catch (error) {
-				console.error(`Error fetching provider ${id}:`, error);
+				if (error instanceof ServiceConnectionError) {
+					return null;
+				}
 				throw error;
 			}
 		},
+		...defaultQueryOptions,
 	});
 }
 
@@ -229,42 +305,13 @@ export function useCreateProvider() {
 
 	return useMutation({
 		mutationFn: async (provider: ProviderCreate) => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers.$post({
-				json: provider,
-			});
-
-			if (!response.ok) {
-				// Try to get detailed error information
-				try {
-					const errorData = await response.json();
-					console.error("Provider creation error:", errorData);
-
-					// Check if we have a structured error response
-					if (errorData.status === "error" || errorData.validationErrors) {
-						throw errorData;
-					}
-
-					// Simple error with a message
-					if (errorData.message) {
-						throw new Error(errorData.message);
-					}
-
-					// Fallback error
-					throw new Error(`Failed to create provider: ${response.status}`);
-				} catch (parseError) {
-					// If we can't parse the error as JSON, throw a general error
-					if (
-						parseError instanceof Error &&
-						parseError.message !== "Failed to create provider"
-					) {
-						throw parseError;
-					}
-					throw new Error(`Failed to create provider: ${response.status}`);
-				}
-			}
-
-			return response.json() as Promise<Provider>;
+			return await fetchFromDataService<Provider>(
+				connections,
+				(client) => client.api.providers.$post({
+					json: provider,
+				}),
+				"Failed to create provider"
+			);
 		},
 		onSuccess: () => {
 			// Invalidate providers query to refetch the list
@@ -286,23 +333,29 @@ export function useUpdateProvider() {
 			
 			const apiData = { ...data };
 			
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"].$put({
-				param: { id: id.toString() },
-				json: apiData,
-			});
+			// We need to handle this separately due to the typing issue with $put
+			try {
+				const client = createDataServiceClient(connections);
+				// Use .patch instead of .put, as the API supports PATCH operations for partial updates
+				const response = await client.api.providers[":id"].$patch({
+					param: { id },
+					json: apiData,
+				});
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				console.error("Provider update error:", errorData);
-				throw errorData;
+				if (!response.ok) {
+					return handleApiError(response, "Provider update failed");
+				}
+
+				const data = await response.json();
+				return transformApiResult<Provider>(data);
+			} catch (error) {
+				debugError(COMPONENT_NAME, "Error updating provider:", error);
+				throw error;
 			}
-
-			return response.json() as Promise<Provider>;
 		},
 		onSuccess: (data) => {
 			// Convert string ID to number for query invalidation
-			const numericId = typeof data.id === 'string' ? Number.parseInt(data.id, 10) : data.id;
+			const numericId = typeof data.id === 'string' ? Number.parseInt(data.id, 10) : data.id as number;
 			
 			// Invalidate specific provider query
 			queryClient.invalidateQueries({ queryKey: queryKeys.provider(numericId) });
@@ -321,16 +374,13 @@ export function useDeleteProvider() {
 
 	return useMutation({
 		mutationFn: async (id: number) => {
-			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"].$delete({
-				param: { id: id.toString() },
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to delete provider: ${response.status}`);
-			}
-
-			return response.json() as Promise<SuccessResponse>;
+			return await fetchFromDataService<SuccessResponse>(
+				connections,
+				(client) => client.api.providers[":id"].$delete({
+					param: { id },
+				}),
+				"Failed to delete provider"
+			);
 		},
 		onSuccess: (_, id) => {
 			// Invalidate specific provider query
@@ -352,49 +402,26 @@ export function useTestProviderConnection() {
 			providerName,
 			config,
 		}: { providerName: string; config: ServerProviderConfig }) => {
-			const client = createInferenceBridgeClient(connections);
+			try {
+				const client = createInferenceBridgeClient(connections);
+				console.log("Testing connection with config:", JSON.stringify(config));
 
-			console.log("Testing connection with config:", JSON.stringify(config));
+				const response = await client.providers[":provider_name"][
+					"test-connection"
+				].$post({
+					param: { provider_name: providerName },
+					json: config,
+				});
 
-			const response = await client.providers[":provider_name"][
-				"test-connection"
-			].$post({
-				param: { provider_name: providerName },
-				json: config,
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				console.error("Error response:", errorData);
-
-				if (errorData.status === "error" && errorData.details) {
-					const error = new Error(
-						errorData.message || "Connection test failed",
-					) as ErrorWithCause;
-					error.cause = errorData;
-					throw error;
+				if (!response.ok) {
+					return handleApiError(response, "Connection test failed");
 				}
 
-				// Handle different error formats
-				if (errorData.detail) {
-					throw new Error(errorData.detail);
-				}
-
-				if (errorData.message) {
-					throw new Error(errorData.message);
-				}
-
-				if (typeof errorData === "object") {
-					const error = new Error("Connection test failed") as ErrorWithCause;
-					error.cause = errorData;
-					throw error;
-				}
-
-				// Fallback to simple error
-				throw new Error(`Connection test failed: ${response.status}`);
+				return await response.json();
+			} catch (error) {
+				debugError(COMPONENT_NAME, "Error testing provider connection:", error);
+				throw error;
 			}
-
-			return response.json();
 		},
 	});
 }

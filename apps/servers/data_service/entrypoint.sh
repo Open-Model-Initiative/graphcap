@@ -45,6 +45,8 @@ ls -la /app/apps/servers/data_service/node_modules/@graphcap/lib
 echo "--- Listing node_modules/@graphcap/datamodel ---"
 ls -la /app/apps/servers/data_service/node_modules/@graphcap/datamodel
 
+echo "--- Listing node_modules/@graphcap/lib-backend ---"
+ls -la /app/apps/servers/data_service/node_modules/@graphcap/lib-backend
 
 
 echo "Starting data service from $PWD"
