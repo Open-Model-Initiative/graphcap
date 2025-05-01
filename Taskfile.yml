@@ -32,5 +32,8 @@ tasks:
         platforms: [windows]
       - task: build:bases
 
-
+  storybook:
+    desc: Start the Storybook server
+    cmds:
+      - pnpm run --filter @graphcap/ui storybook
 

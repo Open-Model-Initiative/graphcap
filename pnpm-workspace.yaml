@@ -5,6 +5,7 @@ packages:
   - 'packages/datamodel'
   - 'packages/lib' 
   - 'packages/lib-backend'
+  - 'packages/graphcap-ui'
 nodeLinker: hoisted 
 # syncInjectedDepsAfterScripts:
 # - build
