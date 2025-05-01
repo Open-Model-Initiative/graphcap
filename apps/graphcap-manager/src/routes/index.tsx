@@ -15,7 +15,7 @@ function Index() {
     if (data && !error) {
       toast.success("✅ Healthy API response");
     }
-  }, [data, error]);
+  }, [data, error, toast]);
 
   return (
     <div className="mt-4 space-y-4">
