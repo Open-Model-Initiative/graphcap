@@ -38,9 +38,16 @@ async function decryptProvider(provider: unknown) {
 // LIST
 // ---------------------------------------------------------------------------
 export const listProviders: AppRouteHandler<ListProvidersRoute> = async (c) => {
-  const items = await dbClient.select().from(ProvidersTable);
+  // Use query API with relations to include models
+  const providers = await dbClient.query.providers.findMany({
+    with: {
+      models: true,
+      rateLimits: true,
+    },
+  });
+  
   // Decrypt keys in parallel
-  const decrypted = await Promise.all(items.map((i) => decryptProvider(i)));
+  const decrypted = await Promise.all(providers.map((provider) => decryptProvider(provider)));
   return c.json(decrypted, HttpStatusCodes.OK);
 };
 
@@ -70,11 +77,15 @@ export const createProvider: AppRouteHandler<CreateProviderRoute> = async (c) =>
 // ---------------------------------------------------------------------------
 export const getProvider: AppRouteHandler<GetProviderRoute> = async (c) => {
   const { id } = c.req.valid("param");
-  const [item] = await dbClient
-    .select()
-    .from(ProvidersTable)
-    .where(eq(ProvidersTable.id, id))
-    .limit(1);
+  
+  // Use query API with relations to include models
+  const item = await dbClient.query.providers.findFirst({
+    where: eq(ProvidersTable.id, id),
+    with: {
+      models: true,
+      rateLimits: true,
+    },
+  });
 
   if (!item) {
     return c.json(notFoundSchema, HttpStatusCodes.NOT_FOUND);
