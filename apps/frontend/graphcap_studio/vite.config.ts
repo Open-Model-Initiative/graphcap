@@ -1,7 +1,7 @@
-import { resolve } from "path";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 // SPDX-License-Identifier: Apache-2.0
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -11,6 +11,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": resolve(__dirname, "./src"),
+			
 		},
 	},
 	server: {
@@ -29,6 +30,23 @@ export default defineConfig({
 			clientPort: 32200, // Important for Docker
 			overlay: true, // Show errors as overlay
 		},
+		proxy: {
+			"/api": {
+			  target: "http://localhost:32550",
+			  changeOrigin: true,
+			  secure: false,
+			},
+			"/inference": {
+				target: "http://localhost:32100",
+				changeOrigin: true,
+				secure: false,
+			},
+			"/media": {
+				target: "http://localhost:32400",
+				changeOrigin: true,
+				secure: false,
+			},
+		}, 
 	},
 	// Add build options for production
 	build: {

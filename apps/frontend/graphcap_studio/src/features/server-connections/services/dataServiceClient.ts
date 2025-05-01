@@ -7,8 +7,8 @@
 
 import type { ServerConnection } from "@/types/server-connection-types";
 import { hc } from "hono/client";
+import { AppType } from "../../../../../../servers/data_service/src/app";
 import { DEFAULT_URLS, SERVER_IDS } from "../constants";
-
 /**
  * Interface for the Data Service client
  */
