@@ -16,7 +16,7 @@ export default defineConfig({
     proxy: {
       // Proxy /api requests to the local graphcap-server instance
       "/api": {
-        target: "http://localhost:5174",
+        target: "http://localhost:32550",
         changeOrigin: true,
         secure: false,
       },

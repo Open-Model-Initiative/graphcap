@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { HomeIcon, InfoIcon } from "lucide-react";
+import { FileTextIcon, HomeIcon, InfoIcon } from "lucide-react";
 
 import {
   NavigationMenu,
@@ -38,6 +38,20 @@ export function MainNavbar() {
                   <div className="inline-flex items-center gap-2">
                     <InfoIcon className="h-4 w-4" />
                     <span>About</span>
+                  </div>
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  to="/providers"
+                  className="[&.active]:font-bold"
+                  activeProps={{ className: "data-[active=true]" }}
+                >
+                  <div className="inline-flex items-center gap-2">
+                    <FileTextIcon className="h-4 w-4" />
+                    <span>Providers</span>
                   </div>
                 </Link>
               </NavigationMenuLink>
