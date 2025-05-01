@@ -8,6 +8,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { SERVER_IDS } from "../constants";
+import { createDataServiceClient } from "./dataServiceClient";
 
 /**
  * Interface for health check response
@@ -249,31 +250,14 @@ export async function checkDataServiceHealth(url: string): Promise<boolean> {
 	}
 	
 	try {
-		// Normalize URL once at the beginning
-		const normalizedUrl = url.endsWith("/") ? url.slice(0, -1) : url;
-
-		// Try the main API endpoint directly - just make one attempt
-		try {
-			const apiResponse = await fetch(`${normalizedUrl}/api/v1/health`, {
-				method: "GET",
-				headers: {
-					Accept: "application/json",
-				},
-				// Set a timeout to prevent long-hanging requests
-				signal: AbortSignal.timeout(5000),
-			});
-
-			if (apiResponse.ok) {
-				const data = (await apiResponse.json()) as HealthCheckResponse;
-				// Check if the response contains a valid status
-				return data.status === "ok" || data.status === "healthy";
-			}
-		} catch (error) {
-			console.warn("Error checking Data Service at /api/v1/health:", error);
+		// Use RPC client for health check (typed)
+		const client = createDataServiceClient([], url);
+		const res = await client.api.health.$get();
+		if (!res.ok) {
+			return false;
 		}
-
-		// Fallback to the standard /health endpoint
-		return checkServerHealth(url);
+		const data = (await res.json()) as HealthCheckResponse;
+		return data.status === "ok" || data.status === "healthy";
 	} catch (error) {
 		console.error("Error checking Data Service health:", error);
 		return false;

@@ -115,7 +115,7 @@ export function useProviders() {
 			
 			try {
 				const client = createDataServiceClient(connections);
-				const response = await client.providers.$get();
+				const response = await client.api.providers.$get();
 				
 				if (!response.ok) {
 					debugError(COMPONENT_NAME, "Failed response:", response.status);
@@ -151,7 +151,7 @@ export function useProvidersWhenConnected() {
 		queryFn: async () => {
 			try {
 				const client = createDataServiceClient(connections);
-				const response = await client.providers.$get();
+				const response = await client.api.providers.$get();
 				
 				if (!response.ok) {
 					debugError(COMPONENT_NAME, "Failed response:", response.status);
@@ -203,7 +203,7 @@ export function useProvider(id: number) {
 			
 			try {
 				const client = createDataServiceClient(connections);
-				const response = await client.providers[":id"].$get({
+				const response = await client.api.providers[":id"].$get({
 					param: { id: id.toString() },
 				});
 	
@@ -230,7 +230,7 @@ export function useCreateProvider() {
 	return useMutation({
 		mutationFn: async (provider: ProviderCreate) => {
 			const client = createDataServiceClient(connections);
-			const response = await client.providers.$post({
+			const response = await client.api.providers.$post({
 				json: provider,
 			});
 
@@ -287,7 +287,7 @@ export function useUpdateProvider() {
 			const apiData = { ...data };
 			
 			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"].$put({
+			const response = await client.api.providers[":id"].$put({
 				param: { id: id.toString() },
 				json: apiData,
 			});
@@ -322,7 +322,7 @@ export function useDeleteProvider() {
 	return useMutation({
 		mutationFn: async (id: number) => {
 			const client = createDataServiceClient(connections);
-			const response = await client.providers[":id"].$delete({
+			const response = await client.api.providers[":id"].$delete({
 				param: { id: id.toString() },
 			});
 

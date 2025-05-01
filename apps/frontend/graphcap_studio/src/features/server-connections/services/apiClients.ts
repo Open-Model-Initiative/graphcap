@@ -7,18 +7,10 @@
 
 // Re-export everything from dataServiceClient.ts
 export {
-	type DataServiceClient,
-	getDataServiceUrl, 
-	createDataServiceClient,
+	createDataServiceClient, getDataServiceBaseUrl, type DataServiceClient
 } from "./dataServiceClient";
 
 // Re-export everything from inferenceBridgeClient.ts
 export {
-	type InferenceBridgeClient,
-	type ProviderClient,
-	type PerspectivesClient,
-	getInferenceBridgeUrl,
-	createInferenceBridgeClient,
-	createProviderClient,
-	createPerspectivesClient,
-} from "./inferenceBridgeClient"; 
+	createInferenceBridgeClient, createPerspectivesClient, createProviderClient, getInferenceBridgeUrl, type InferenceBridgeClient, type PerspectivesClient, type ProviderClient
+} from "./inferenceBridgeClient";

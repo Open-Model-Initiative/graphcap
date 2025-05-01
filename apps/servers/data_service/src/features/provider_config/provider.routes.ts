@@ -19,7 +19,7 @@ const tags = ["Providers"];
 // LIST
 // ----------------------------------------------------------------------------
 export const listProviders = createRoute({
-  path: "/providers",
+  path: "/",
   method: "get",
   tags,
   summary: "List all provider configurations",
@@ -35,7 +35,7 @@ export const listProviders = createRoute({
 // CREATE
 // ----------------------------------------------------------------------------
 export const createProvider = createRoute({
-  path: "/providers",
+  path: "/",
   method: "post",
   tags,
   summary: "Create a new provider configuration",
@@ -55,7 +55,7 @@ export const createProvider = createRoute({
 // GET ONE
 // ----------------------------------------------------------------------------
 export const getProvider = createRoute({
-  path: "/providers/{id}",
+  path: "/{id}",
   method: "get",
   tags,
   summary: "Get a single provider configuration by ID",
@@ -76,7 +76,7 @@ export const getProvider = createRoute({
 // PATCH (partial update)
 // ----------------------------------------------------------------------------
 export const patchProvider = createRoute({
-  path: "/providers/{id}",
+  path: "/{id}",
   method: "patch",
   tags,
   summary: "Update an existing provider configuration",
@@ -98,7 +98,7 @@ export const patchProvider = createRoute({
 // DELETE
 // ----------------------------------------------------------------------------
 export const removeProvider = createRoute({
-  path: "/providers/{id}",
+  path: "/{id}",
   method: "delete",
   tags,
   summary: "Delete a provider configuration by ID",
