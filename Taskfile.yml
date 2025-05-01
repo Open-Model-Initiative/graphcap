@@ -37,3 +37,7 @@ tasks:
     cmds:
       - pnpm run --filter @graphcap/ui storybook
 
+  manager:
+    desc: Start the manager
+    cmds:
+      - pnpm run --filter @graphcap/manager dev

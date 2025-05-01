@@ -1,5 +1,6 @@
 packages:
   - 'apps/frontend/**'
+  - 'apps/graphcap-manager'
   - 'apps/servers/data_service'
   - 'packages/media-processing'
   - 'packages/datamodel'
