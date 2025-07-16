@@ -21,6 +21,8 @@ This guide summarises the steps required to run **graphcap** locally. It mirrors
    ```
 3. Review the generated `workspace/config/.env` file and update sensitive values such as `POSTGRES_USER`, `POSTGRES_PASSWORD` and `ENCRYPTION_KEY` before starting the services.
 
+4. Review the `docker-compose.override.example.yml` file. If any changes must be made to the main `docker-compose.yml` file, copy the override example file and rename it `docker-compose.override.yml`, then make any necessary adjustments in that file.
+
 ## Starting the services
 
 Start all containers defined in `docker-compose.yml`:
