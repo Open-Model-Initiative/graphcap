@@ -7,6 +7,7 @@ includes:
   studio:    ./apps/frontend/graphcap_studio/Taskfile.studio.yml
   db:        ./packages/datamodel/Taskfile.datamodel.yml
   build:     ./deploy/Taskfile.build.yml
+  models:    ./packages/model_runners/Task.models.yml
 tasks:
   dev:
     desc: Start the Docker Compose services in watch mode

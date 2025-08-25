@@ -2,7 +2,7 @@ version: '3'
 
 vars:
   HOST_PORT: 12434
-  SCRIPT_DIR: ./servers/model_runners
+  SCRIPT_DIR: ./packages/model_runners
   UNIFIED_SCRIPT: '{{.SCRIPT_DIR}}/_run_vllm_model.sh'
   IMAGE_NAME: vllm/vllm-openai:latest
   SERVED_MODEL_NAME: vision-worker
